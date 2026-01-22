@@ -1,0 +1,89 @@
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import Image from "next/image"
+
+const resultData = [
+  {
+    id: 1,
+    image: "/placeholder.png",
+    title: "｛關係樣本｝影展—《金魚缸小姐》、《二號球衣》",
+    date: "2025-08-01",
+    description: "中大性別小彩坊此次邀請《二號球衣》、《金魚缸小姐》兩部短片及導演-巫虹儀至中央大學進行映後座談。《金魚缸小姐》直面女同志情慾，突破台灣影視",
+  },
+  {
+    id: 2,
+    image: "/placeholder.png",
+    title: "跨性別互動講座",
+    date: "2025-01-01",
+    description: "跨越：自由之身 跨性別互動講座本次的互動講座我們邀請到北市大性／別研究社的社長",
+  },
+  {
+    id: 3,
+    image: "/placeholder.png",
+    title: "Card Title",
+    date: "2025-01-01",
+    description: "Card Description",
+  },
+  {
+    id: 4,
+    image: "/placeholder.png",
+    title: "Card Title",
+    date: "2025-01-01",
+    description: "Card Description",
+  },
+  {
+    id: 5,
+    image: "/placeholder.png",
+    title: "Card Title",
+    date: "2025-01-01",
+    description: "Card Description",
+  },
+  {
+    id: 6,
+    image: "/placeholder.png",
+    title: "Card Title",
+    date: "2025-01-01",
+    description: "Card Description",
+  },
+]
+
+export function HomeResult() {
+  return (
+    <div className="container max-w-7xl mx-auto p-4 flex flex-col gap-6">
+      <h2 className="text-2xl font-bold">最新成果</h2>
+      <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
+        {resultData.map((item) => (
+          <Card key={item.id} className="py-0 hover:scale-102 transition-all duration-200">
+            <CardHeader>
+              <div className="flex justify-center">
+                <Image src={item.image} alt={item.title} width={300} height={300} />
+              </div>
+              <CardTitle className="text-xl font-bold">{item.title}</CardTitle>
+              <CardDescription className="text-right">{item.date}</CardDescription>
+              <Separator />
+            </CardHeader>
+            <CardContent className="h-full">
+              <p>{item.description}</p>
+            </CardContent>
+            <CardFooter className="bg-muted p-4 justify-end">
+              <Button className="text-base">
+                查看詳情
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+      <div className="flex justify-center">
+        <Button size="lg" className="px-12 text-lg">探索更多</Button>
+      </div>
+    </div>
+  )
+}
