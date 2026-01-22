@@ -60,7 +60,7 @@ export default function LoginPage() {
               />
             </div>
             {error && (
-              <p className="text-sm text-destructive text-center">{error}</p>
+              <p className="text-md font-bold text-destructive text-center">錯誤的帳號或密碼！</p>
             )}
           </div>
           <div className="flex flex-col gap-2">
