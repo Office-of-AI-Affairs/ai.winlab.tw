@@ -48,7 +48,7 @@ export function HomeCarousel() {
       <CarouselContent className="ml-0">
         {carouselSlides.map((slide) => (
           <CarouselItem key={slide.id} className="pl-0">
-            <div className="relative w-full aspect-3/1 min-h-[300px] md:min-h-[400px] lg:min-h-[500px]">
+            <div className="relative w-full aspect-5/2 min-h-[300px] md:min-h-[400px] lg:min-h-[500px]">
               {/* Background Image */}
               <div
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -57,12 +57,12 @@ export function HomeCarousel() {
                 }}
               />
               {/* Dark Overlay */}
-              <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/40 to-black/20" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-black/0" />
               {/* Content */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-white px-4 md:px-8">
-                <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-center mb-4 drop-shadow-lg">
+              <div className="absolute inset-0 flex flex-col items-center justify-end text-white px-4 md:px-8 pb-12 md:pb-16">
+                <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-center mb-4 drop-shadow-lg">
                   {slide.title}
-                </h1>
+                </h2>
                 <a
                   href={slide.link}
                   className="text-sm md:text-lg lg:text-xl text-center max-w-3xl hover:text-amber-300 transition-colors duration-300 drop-shadow-md"

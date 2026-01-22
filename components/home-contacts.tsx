@@ -3,7 +3,7 @@ import { Phone } from "lucide-react";
 export function HomeContacts() {
   return (
     <div className="container max-w-7xl mx-auto p-4 flex flex-col gap-6">
-      <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+      <div className="bg-card text-card-foreground flex flex-col gap-6 py-6">
         <div className="flex lg:flex-row flex-col gap-6 w-full">
           <div className="flex flex-col gap-6 justify-center items-center w-full">
             <h2 className="text-2xl font-bold">聯絡我們</h2>
