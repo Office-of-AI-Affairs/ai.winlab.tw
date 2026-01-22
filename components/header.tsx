@@ -80,7 +80,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b">
+    <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-6">
         <Link href="/" className="text-xl sm:text-2xl font-bold whitespace-nowrap">
           NYCU AI 專責辦公室

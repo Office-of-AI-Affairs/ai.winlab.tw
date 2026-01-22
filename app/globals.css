@@ -71,7 +71,7 @@
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  --radius: 0.625rem;
+  --radius: 1rem;
   --sidebar: oklch(0.985 0.002 247.839);
   --sidebar-foreground: oklch(0.13 0.028 261.692);
   --sidebar-primary: oklch(0.546 0.245 262.881);
@@ -123,4 +123,62 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Tiptap Editor Typography Styles */
+.prose {
+  h1 {
+    @apply scroll-m-20 text-4xl font-extrabold tracking-tight text-balance;
+  }
+  h2 {
+    @apply scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0 mt-8;
+  }
+  h3 {
+    @apply scroll-m-20 text-2xl font-semibold tracking-tight mt-6;
+  }
+  h4 {
+    @apply scroll-m-20 text-xl font-semibold tracking-tight mt-4;
+  }
+  p {
+    @apply leading-7 not-first:mt-4;
+  }
+  blockquote {
+    @apply mt-6 border-l-2 pl-6 italic;
+  }
+  ul {
+    @apply my-6 ml-6 list-disc [&>li]:mt-2;
+  }
+  ol {
+    @apply my-6 ml-6 list-decimal [&>li]:mt-2;
+  }
+  li {
+    @apply leading-7;
+  }
+  code {
+    @apply bg-muted relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold;
+  }
+  pre {
+    @apply my-4 overflow-x-auto rounded-lg bg-muted p-4;
+  }
+  hr {
+    @apply my-6 border-border;
+  }
+  a {
+    @apply text-primary underline underline-offset-4 hover:text-primary/80;
+  }
+  strong {
+    @apply font-bold;
+  }
+  em {
+    @apply italic;
+  }
+  s {
+    @apply line-through;
+  }
+}
+
+/* Tiptap placeholder style */
+.tiptap p.is-editor-empty:first-child::before {
+  @apply text-muted-foreground pointer-events-none float-left h-0;
+  content: attr(data-placeholder);
 }

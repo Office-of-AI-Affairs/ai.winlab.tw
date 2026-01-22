@@ -13,42 +13,42 @@ const competitionData = [
     id: 1,
     image: "/placeholder.png",
     title: "Google",
-    date: "2002-11-21",
+    date: "1998-09-04",
     link: "https://www.google.com",
   },
   {
     id: 2,
     image: "/placeholder.png",
     title: "Google",
-    date: "2002-11-21",
+    date: "1998-09-04",
     link: "https://www.google.com",
   },
   {
     id: 3,
     image: "/placeholder.png",
     title: "Google",
-    date: "2002-11-21",
+    date: "1998-09-04",
     link: "https://www.google.com",
   },
   {
     id: 4,
     image: "/placeholder.png",
     title: "Google",
-    date: "2002-11-21",
+    date: "1998-09-04",
     link: "https://www.google.com",
   },
   {
     id: 5,
     image: "/placeholder.png",
     title: "Google",
-    date: "2002-11-21",
+    date: "1998-09-04",
     link: "https://www.google.com",
   },
   {
     id: 6,
     image: "/placeholder.png",
     title: "Google",
-    date: "2002-11-21",
+    date: "1998-09-04",
     link: "https://www.google.com",
   },
 ]
@@ -74,7 +74,7 @@ export function HomeCompetition() {
       </div>
       <div className="flex justify-center">
         <Link href="/competition">
-          <Button size="lg" className="px-12 text-lg">探索更多</Button>
+          <Button variant="secondary" size="lg" className="px-12 text-lg">探索更多</Button>
         </Link>
       </div>
     </div>

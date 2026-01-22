@@ -19,14 +19,14 @@ const carouselSlides = [
     image: "/carousel/1.jpg",
     title: "AI架構師實戰班 Cloud × Core × Edge",
     subtitle: "零程式基礎也能上手，專注架構與應用而非深度程式開發",
-    link: "#",
+    link: "/announcement/db26de82-204f-4008-8189-56f3a9563d71",
   },
   {
     id: 2,
     image: "/carousel/2.jpg",
     title: "AI架構師實戰班 Cloud × Core × Edge",
     subtitle: "零程式基礎也能上手，專注架構與應用而非深度程式開發",
-    link: "#",
+    link: "/announcement/db26de82-204f-4008-8189-56f3a9563d71",
   },
 ]
 
