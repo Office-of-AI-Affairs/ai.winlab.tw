@@ -1,4 +1,5 @@
 import "@/app/globals.css";
+import { AuthProvider } from "@/components/auth-provider";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Separator } from "@/components/ui/separator";
@@ -30,18 +31,20 @@ export default function RootLayout({
     <html lang="zh-TW" suppressHydrationWarning>
       <body className={`${notoSans.variable} ${notoSansMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <div className="relative min-h-dvh">
-            <div className="relative flex flex-col min-h-dvh">
-              <div className="fixed top-0 left-0 right-0 z-50 bg-background/75 backdrop-blur-md shadow-lg">
-                <Header />
-                <Separator />
+          <AuthProvider>
+            <div className="relative min-h-dvh">
+              <div className="relative flex flex-col min-h-dvh">
+                <div className="fixed top-0 left-0 right-0 z-50 bg-background/75 backdrop-blur-md shadow-lg">
+                  <Header />
+                  <Separator />
+                </div>
+                <div className="flex-1 pt-16">
+                  {children}
+                </div>
+                <Footer />
               </div>
-              <div className="flex-1 pt-16">
-                {children}
-              </div>
-              <Footer />
             </div>
-          </div>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
