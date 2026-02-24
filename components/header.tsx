@@ -136,13 +136,6 @@ export function Header() {
       >
         <div ref={panelRef} className="max-w-6xl mx-auto px-4 pb-4">
           <div className="flex flex-col text-lg font-bold">
-            <Link
-              href="/"
-              className="font-instrument-serif text-2xl rounded-lg px-3 py-2 hover:bg-black/10 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
-              onClick={() => setOpen(false)}
-            >
-              AI Office
-            </Link>
             {navItems.map((item) => (
               <Link
                 key={item.href}

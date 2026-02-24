@@ -18,14 +18,24 @@ import Image from "next/image";
 import Link from "next/link";
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 type ResultWithMeta = Result & {
   author_name?: string | null;
   team_name?: string | null;
 };
 
-export default function ResultPage() {
+function ResultPageFallback() {
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-12 pb-16">
+      <div className="flex justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    </div>
+  );
+}
+
+function ResultPageContent() {
   const { user, isAdmin } = useAuth();
   const router = useRouter();
   const supabase = createClient();
@@ -269,6 +279,14 @@ export default function ResultPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResultPage() {
+  return (
+    <Suspense fallback={<ResultPageFallback />}>
+      <ResultPageContent />
+    </Suspense>
   );
 }
 
