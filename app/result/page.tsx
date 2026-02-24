@@ -65,7 +65,18 @@ function ResultPageContent() {
     const { data, error } = await query;
     if (error) { setIsLoading(false); return; }
 
-    const rows = (data as Result[]) || [];
+    // Client-side draft filtering for non-admins:
+    // only show drafts the user owns (personal) or leads (team)
+    const leaderTeamIds = new Set(leaderTeams.map((t) => t.id));
+    const filtered = !user || isAdmin
+      ? data as Result[]
+      : (data as Result[]).filter((r) =>
+          r.status === "published" ||
+          r.author_id === user.id ||
+          (r.type === "team" && r.team_id && leaderTeamIds.has(r.team_id))
+        );
+
+    const rows = filtered || [];
     const resultIds = rows.map((r) => r.id);
 
     const authorIds = [...new Set(rows.map((r) => r.author_id).filter(Boolean))] as string[];
@@ -108,7 +119,7 @@ function ResultPageContent() {
       }))
     );
     setIsLoading(false);
-  }, [supabase, user, resultTab]);
+  }, [supabase, user, isAdmin, resultTab, leaderTeams]);
 
   useEffect(() => { fetchResults(); }, [fetchResults]);
 
@@ -200,12 +211,12 @@ function ResultPageContent() {
         <h1 className="text-3xl font-bold">最新成果</h1>
         {user && (
           <div className="flex items-center gap-2">
-            {resultTab === "personal" ? (
-              <Button variant="secondary" onClick={handleCreatePersonalResult} disabled={isCreating}>
-                {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                新增個人成果
-              </Button>
-            ) : leaderTeams.length === 0 ? (
+            <Button variant="secondary" onClick={handleCreatePersonalResult} disabled={isCreating}>
+              {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              新增個人成果
+            </Button>
+            {/* TODO: 團隊成果新增功能暫時隱藏
+            {resultTab === "team" && (leaderTeams.length === 0 ? (
               <span className="text-sm text-muted-foreground">請先建立隊伍並擔任組長才能新增團隊成果</span>
             ) : (
               <select
@@ -217,7 +228,8 @@ function ResultPageContent() {
                 <option value="">選擇隊伍新增團隊成果…</option>
                 {leaderTeams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
-            )}
+            ))}
+            */}
           </div>
         )}
       </div>
@@ -248,10 +260,11 @@ function ResultPageContent() {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 border-b border-border pb-2">
+          {/* TODO: 團隊 tab 暫時隱藏 */}
+          {/* <div className="flex gap-2 border-b border-border pb-2">
             <Button variant={resultTab === "personal" ? "default" : "ghost"} size="sm" onClick={() => setResultTab("personal")}>個人</Button>
             <Button variant={resultTab === "team" ? "default" : "ghost"} size="sm" onClick={() => setResultTab("team")}>團隊</Button>
-          </div>
+          </div> */}
 
           {isLoading ? (
             <div className="flex justify-center py-8">
@@ -264,8 +277,14 @@ function ResultPageContent() {
           ) : (
             <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
               {filteredResults.map((item) => {
+                const leaderTeamIds = new Set(leaderTeams.map((t) => t.id));
+                const canEdit = !!user && (
+                  isAdmin ||
+                  item.author_id === user.id ||
+                  (item.type === "team" && !!item.team_id && leaderTeamIds.has(item.team_id))
+                );
                 const card = <ResultCard item={item} isExternalImage={isExternalImage} />;
-                return user ? (
+                return canEdit ? (
                   <button type="button" key={item.id} className="text-left w-full h-full"
                     onClick={() => router.push(`/result/${item.id}/edit`)}>
                     {card}

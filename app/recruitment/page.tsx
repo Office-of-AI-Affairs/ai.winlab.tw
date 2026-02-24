@@ -44,7 +44,7 @@ export default function RecruitmentPage() {
     setIsCreating(true);
     const { data, error } = await supabase
       .from("competitions")
-      .insert({ title: "新企業徵才", link: "", image: "/placeholder.png", date: new Date().toISOString().slice(0, 10), description: null })
+      .insert({ title: "新企業徵才", link: "", image: "/placeholder.png", date: new Date().toISOString().slice(0, 10), description: null, location: null, positions: null })
       .select()
       .single();
     if (error) { setIsCreating(false); return; }
@@ -86,11 +86,21 @@ export default function RecruitmentPage() {
                     <Link2 className="w-4 h-4" />
                   </div>
                 </div>
-                <CardHeader className="pb-4 flex-1">
+                <CardHeader className="pb-4 flex-1 flex flex-col gap-2">
                   <CardTitle className="text-xl font-bold">{item.title || "(無標題)"}</CardTitle>
-                  <CardDescription className="text-right">{item.date || "—"}</CardDescription>
                   {item.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{item.description}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
+                  )}
+                  {item.positions && item.positions.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {item.positions.map((pos, i) => (
+                        <span key={i} className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm font-medium">
+                          {pos.name}
+                          {pos.location && <span className="text-muted-foreground">· {pos.location}</span>}
+                          <span className="text-muted-foreground">× {pos.count}</span>
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </CardHeader>
               </Card>

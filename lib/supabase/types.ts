@@ -93,6 +93,12 @@ export type Contact = {
   sort_order: number;
 };
 
+export type RecruitmentPosition = {
+  name: string;
+  count: number;
+  location: string | null;
+};
+
 export type Recruitment = {
   id: string;
   created_at: string;
@@ -102,6 +108,8 @@ export type Recruitment = {
   image: string | null;
   date: string;
   description: string | null;
+  location: string | null;
+  positions: RecruitmentPosition[] | null;
 };
 
 export type Tag = {

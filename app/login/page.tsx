@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 import { type FormEvent, useState } from "react";
 
 export default function LoginPage() {
@@ -38,7 +39,12 @@ export default function LoginPage() {
               <Input id="email" name="email" type="email" placeholder="your@email.com" required />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="password">密碼</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">密碼</Label>
+                <Link href="/forgot-password" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  忘記密碼？
+                </Link>
+              </div>
               <Input id="password" name="password" type="password" required />
             </div>
             {error && (

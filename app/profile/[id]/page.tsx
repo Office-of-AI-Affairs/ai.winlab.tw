@@ -6,8 +6,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
-import type { Result, Team } from "@/lib/supabase/types";
-import { ArrowLeft, Link2, Mail, Phone, User, Users } from "lucide-react";
+import type { Result } from "@/lib/supabase/types";
+import { ArrowLeft, Link2, Mail, Phone, User } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -19,7 +19,7 @@ export default async function ProfilePage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [profileRes, resultsRes, membersRes] = await Promise.all([
+  const [profileRes, resultsRes] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, display_name, avatar_url, phone, social_links")
@@ -32,19 +32,21 @@ export default async function ProfilePage({
       .eq("status", "published")
       .eq("type", "personal")
       .order("date", { ascending: false }),
-    supabase.from("team_members").select("team_id").eq("user_id", id),
+    // TODO: 隊伍功能暫時隱藏
+    // supabase.from("team_members").select("team_id").eq("user_id", id),
   ]);
 
   if (profileRes.error || !profileRes.data) notFound();
 
   const profile = profileRes.data;
   const results = (resultsRes.data as Result[]) || [];
-  const teamIds = (membersRes.data || []).map((m) => m.team_id);
-  let teams: Team[] = [];
-  if (teamIds.length > 0) {
-    const { data } = await supabase.from("teams").select("*").in("id", teamIds);
-    teams = (data as Team[]) || [];
-  }
+  // TODO: 隊伍功能暫時隱藏
+  // const teamIds = (membersRes.data || []).map((m) => m.team_id);
+  // let teams: Team[] = [];
+  // if (teamIds.length > 0) {
+  //   const { data } = await supabase.from("teams").select("*").in("id", teamIds);
+  //   teams = (data as Team[]) || [];
+  // }
 
   const displayName = profile.display_name || "未知使用者";
   const socialLinks = profile.social_links || [];
@@ -76,7 +78,7 @@ export default async function ProfilePage({
         <div>
           <h1 className="text-2xl font-bold">{displayName}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {results.length} 篇個人成果 · {teams.length} 個隊伍
+            {results.length} 篇個人成果
           </p>
         </div>
       </div>
@@ -85,7 +87,7 @@ export default async function ProfilePage({
       <Card className="mb-10">
         <CardHeader>
           <CardTitle>個人資訊</CardTitle>
-          <CardDescription>姓名、聯絡方式與所屬隊伍</CardDescription>
+          <CardDescription>姓名與聯絡方式</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <dl className="grid gap-4 sm:grid-cols-1">
@@ -133,25 +135,7 @@ export default async function ProfilePage({
                 </div>
               </div>
             )}
-            {teams.length > 0 && (
-              <div className="flex items-start gap-3">
-                <Users className="w-4 h-4 shrink-0 mt-0.5 text-muted-foreground" />
-                <div>
-                  <dt className="text-sm font-medium text-muted-foreground">隊伍</dt>
-                  <dd className="mt-0.5 flex flex-wrap gap-2">
-                    {teams.map((t) => (
-                      <Link
-                        key={t.id}
-                        href={`/team/${t.id}`}
-                        className="inline-flex items-center rounded-md bg-muted px-2.5 py-1 text-sm font-medium hover:bg-muted/80 transition-colors"
-                      >
-                        {t.name}
-                      </Link>
-                    ))}
-                  </dd>
-                </div>
-              </div>
-            )}
+            {/* TODO: 隊伍功能暫時隱藏 */}
           </dl>
         </CardContent>
       </Card>

@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/client";
-import type { Result, Team, TeamInvitation } from "@/lib/supabase/types";
-import { Loader2, Plus, Trash2, Users, Trophy, Link2 } from "lucide-react";
+import type { Result } from "@/lib/supabase/types";
+import { Loader2, Plus, Trash2, Trophy, Link2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -30,11 +30,6 @@ export default function AccountPage() {
   const [phone, setPhone] = useState("");
   const [socialLinks, setSocialLinks] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-
-  // Teams
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [invitations, setInvitations] = useState<TeamInvitation[]>([]);
-  const [isLoadingTeams, setIsLoadingTeams] = useState(true);
 
   // Results
   const [results, setResults] = useState<Result[]>([]);
@@ -54,74 +49,24 @@ export default function AccountPage() {
     }
   }, [profile]);
 
-  const fetchMyTeams = useCallback(async () => {
-    if (!user) return;
-    setIsLoadingTeams(true);
-    const { data: members } = await supabase
-      .from("team_members")
-      .select("team_id")
-      .eq("user_id", user.id);
-    const ids = (members || []).map((m) => m.team_id);
-    if (ids.length === 0) {
-      setTeams([]);
-      setIsLoadingTeams(false);
-      return;
-    }
-    const { data: teamsData } = await supabase
-      .from("teams")
-      .select("*")
-      .in("id", ids);
-    setTeams((teamsData as Team[]) || []);
-    setIsLoadingTeams(false);
-  }, [supabase, user]);
-
-  const fetchInvitations = useCallback(async () => {
-    if (!user?.email) return;
-    const { data } = await supabase
-      .from("team_invitations")
-      .select("*")
-      .eq("email", user.email)
-      .eq("status", "pending");
-    setInvitations((data as TeamInvitation[]) || []);
-  }, [supabase, user?.email]);
-
   const fetchMyResults = useCallback(async () => {
     if (!user) return;
     setIsLoadingResults(true);
-
-    // Get all team IDs the user belongs to
-    const { data: memberRows } = await supabase
-      .from("team_members")
-      .select("team_id")
-      .eq("user_id", user.id);
-    const teamIds = (memberRows || []).map((m) => m.team_id);
-
-    // Fetch results authored by user OR linked to user's teams
-    let query = supabase
+    const { data } = await supabase
       .from("results")
       .select("*")
+      .eq("author_id", user.id)
+      .eq("type", "personal")
       .order("date", { ascending: false });
-
-    if (teamIds.length > 0) {
-      query = query.or(
-        `author_id.eq.${user.id},team_id.in.(${teamIds.join(",")})`
-      );
-    } else {
-      query = query.eq("author_id", user.id);
-    }
-
-    const { data } = await query;
     setResults((data as Result[]) || []);
     setIsLoadingResults(false);
   }, [supabase, user]);
 
   useEffect(() => {
     if (user) {
-      fetchMyTeams();
-      fetchInvitations();
       fetchMyResults();
     }
-  }, [user, fetchMyTeams, fetchInvitations, fetchMyResults]);
+  }, [user, fetchMyResults]);
 
   const handleSaveProfile = async () => {
     if (!user) return;
@@ -136,29 +81,6 @@ export default function AccountPage() {
       .eq("id", user.id);
     await refreshProfile();
     setIsSaving(false);
-  };
-
-  const handleAcceptInvite = async (invitationId: string, teamId: string) => {
-    if (!user) return;
-    await supabase.from("team_members").insert({
-      team_id: teamId,
-      user_id: user.id,
-      role: "member",
-    });
-    await supabase
-      .from("team_invitations")
-      .update({ status: "accepted" })
-      .eq("id", invitationId);
-    fetchInvitations();
-    fetchMyTeams();
-  };
-
-  const handleRejectInvite = async (invitationId: string) => {
-    await supabase
-      .from("team_invitations")
-      .update({ status: "rejected" })
-      .eq("id", invitationId);
-    fetchInvitations();
   };
 
   const addSocialLink = () => setSocialLinks((prev) => [...prev, ""]);
@@ -262,68 +184,13 @@ export default function AccountPage() {
         </CardContent>
       </Card>
 
+      {/* TODO: 隊伍功能暫時隱藏 */}
       {/* Pending invitations */}
-      {invitations.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>待處理邀請</CardTitle>
-            <CardDescription>您已被邀請加入以下隊伍</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            {invitations.map((inv) => (
-              <InvitationRow
-                key={inv.id}
-                invitationId={inv.id}
-                teamId={inv.team_id}
-                onAccept={handleAcceptInvite}
-                onReject={handleRejectInvite}
-                supabase={supabase}
-              />
-            ))}
-          </CardContent>
-        </Card>
-      )}
+      {/* {invitations.length > 0 && ( ... )} */}
 
+      {/* TODO: 隊伍功能暫時隱藏 */}
       {/* Teams */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            我的隊伍
-          </CardTitle>
-          <CardDescription>您所屬的隊伍列表</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          {isLoadingTeams ? (
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          ) : teams.length === 0 ? (
-            <p className="text-sm text-muted-foreground">您尚未加入任何隊伍</p>
-          ) : (
-            <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {teams.map((t) => (
-                <li key={t.id}>
-                  <Link
-                    href={`/account/teams/${t.id}`}
-                    className="block rounded-lg border p-3 transition-transform duration-200 hover:scale-[1.01] hover:shadow-sm"
-                  >
-                    <span className="font-medium">{t.name}</span>
-                    {t.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5">
-                        {t.description}
-                      </p>
-                    )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-          <Link href="/account/teams">
-            <Button variant="secondary" className="w-full sm:w-auto">
-              管理隊伍 / 建立新隊伍
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
+      {/* <Card> ... 我的隊伍 ... </Card> */}
 
       {/* Results */}
       <Card>
@@ -332,7 +199,7 @@ export default function AccountPage() {
             <Trophy className="w-5 h-5" />
             我的活動成果
           </CardTitle>
-          <CardDescription>您參與或所屬隊伍的活動成果</CardDescription>
+          <CardDescription>您的個人活動成果</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoadingResults ? (
@@ -370,7 +237,7 @@ export default function AccountPage() {
                       {item.title || "(無標題)"}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {item.date || "—"} · {item.type === "personal" ? "個人" : "團隊"}
+                      {item.date || "—"}
                     </p>
                   </div>
                 </Link>
@@ -386,49 +253,6 @@ export default function AccountPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
-}
-
-function InvitationRow({
-  invitationId,
-  teamId,
-  onAccept,
-  onReject,
-  supabase,
-}: {
-  invitationId: string;
-  teamId: string;
-  onAccept: (invId: string, teamId: string) => void;
-  onReject: (invId: string) => void;
-  supabase: ReturnType<typeof createClient>;
-}) {
-  const [teamName, setTeamName] = useState<string>("");
-  useEffect(() => {
-    supabase
-      .from("teams")
-      .select("name")
-      .eq("id", teamId)
-      .single()
-      .then(({ data }) =>
-        setTeamName((data as { name: string } | null)?.name ?? "")
-      );
-  }, [supabase, teamId]);
-  return (
-    <div className="flex items-center justify-between rounded-lg border p-3">
-      <span>{teamName || "…"}</span>
-      <div className="flex gap-2">
-        <Button size="sm" onClick={() => onAccept(invitationId, teamId)}>
-          接受
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => onReject(invitationId)}
-        >
-          拒絕
-        </Button>
-      </div>
     </div>
   );
 }
