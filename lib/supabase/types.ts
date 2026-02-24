@@ -82,6 +82,17 @@ export type OrganizationMember = {
   sort_order: number;
 };
 
+export type Contact = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  position: string | null;
+  phone: string | null;
+  email: string | null;
+  sort_order: number;
+};
+
 export type Recruitment = {
   id: string;
   created_at: string;
