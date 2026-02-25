@@ -1,25 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { ResultCard, type ResultWithMeta } from "@/components/result-card";
 import { createClient } from "@/lib/supabase/client";
 import type { Result } from "@/lib/supabase/types";
-import { Loader2, Link2, User, Users } from "lucide-react";
-import Image from "next/image";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-
-type ResultWithMeta = Result & {
-  author_name?: string | null;
-  team_name?: string | null;
-};
 
 export function HomeResult() {
   const supabase = createClient();
@@ -32,6 +19,7 @@ export function HomeResult() {
         .from("results")
         .select("*")
         .eq("status", "published")
+        .order("pinned", { ascending: false })
         .order("date", { ascending: false })
         .limit(6);
 
@@ -78,9 +66,6 @@ export function HomeResult() {
     fetchResults();
   }, [supabase]);
 
-  const isExternalImage = (src: string | null | undefined) =>
-    !!(src && (src.startsWith("http://") || src.startsWith("https://")));
-
   return (
     <div className="container max-w-6xl mx-auto py-16 px-4 flex flex-col gap-8">
       <h2 className="text-2xl font-bold border-l-4 border-primary pl-3">最新成果</h2>
@@ -92,55 +77,11 @@ export function HomeResult() {
         <div className="text-center py-8 text-muted-foreground">目前沒有成果</div>
       ) : (
         <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
-          {results.map((item) => {
-            const publisherName =
-              item.type === "team"
-                ? item.team_name || "未知隊伍"
-                : item.author_name || "匿名";
-
-            return (
-              <Link href={`/result/${item.id}`} key={item.id} className="h-full">
-                <Card className="py-0 h-full flex flex-col transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] overflow-hidden">
-                  <div className="relative w-full aspect-video shrink-0">
-                    <Image
-                      src={item.header_image || "/placeholder.png"}
-                      alt={item.title}
-                      fill
-                      className="object-cover"
-                      unoptimized={isExternalImage(item.header_image)}
-                    />
-                    <div className="absolute top-2 right-2 rounded-full bg-black/50 p-1.5 text-white pointer-events-none" aria-hidden>
-                      <Link2 className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <CardHeader className="shrink-0 pb-2">
-                    <CardTitle className="text-xl font-bold line-clamp-2">
-                      {item.title}
-                    </CardTitle>
-                    <Separator />
-                  </CardHeader>
-                  <CardContent className="flex-1">
-                    <p className="line-clamp-3 text-muted-foreground text-sm">
-                      {item.summary || "（無摘要）"}
-                    </p>
-                  </CardContent>
-                  <CardFooter className="pt-0 pb-4">
-                    <div className="flex items-center justify-between w-full gap-2 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        {item.type === "team" ? (
-                          <Users className="w-3.5 h-3.5 shrink-0" />
-                        ) : (
-                          <User className="w-3.5 h-3.5 shrink-0" />
-                        )}
-                        <span className="truncate">{publisherName}</span>
-                      </div>
-                      <span className="shrink-0">{item.date || "—"}</span>
-                    </div>
-                  </CardFooter>
-                </Card>
-              </Link>
-            );
-          })}
+          {results.map((item) => (
+            <Link href={`/result/${item.id}`} key={item.id} className="h-full">
+              <ResultCard item={item} />
+            </Link>
+          ))}
         </div>
       )}
       <div className="flex justify-center">
