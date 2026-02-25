@@ -24,13 +24,13 @@ export default function AnnouncementPage() {
       .select("*")
       .order("date", { ascending: false });
 
-    if (!user) query.eq("status", "published");
+    if (!isAdmin) query.eq("status", "published");
 
     const { data, error } = await query;
     if (error) console.error("Error fetching announcements:", error);
     else setAnnouncements(data || []);
     setIsLoading(false);
-  }, [supabase, user]);
+  }, [supabase, isAdmin]);
 
   useEffect(() => {
     fetchAnnouncements();
@@ -69,7 +69,7 @@ export default function AnnouncementPage() {
       ) : (
         <AnnouncementTable
           announcements={announcements}
-          showStatus={!!user}
+          showStatus={isAdmin}
           onRowClick={(item) =>
             router.push(isAdmin ? `/announcement/${item.id}/edit` : `/announcement/${item.id}`)
           }
