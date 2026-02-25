@@ -10,10 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/client";
 import type { Result, ResultTag, ResultType, Tag, Team } from "@/lib/supabase/types";
-import { Loader2, Link2, Plus, User, Users } from "lucide-react";
+import { Loader2, Pin, Plus, User, Users } from "lucide-react";
+const instrumentSerif = { fontFamily: "var(--font-instrument-serif)" };
 import Image from "next/image";
 import Link from "next/link";
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
@@ -111,13 +111,14 @@ function ResultPageContent() {
 
     setAllTags((tagsRes.data as Tag[]) || []);
     setResultTagMap(rtMap);
-    setResults(
-      rows.map((r) => ({
-        ...r,
-        author_name: r.author_id ? profileMap[r.author_id] : null,
-        team_name: r.team_id ? teamMap[r.team_id] : null,
-      }))
-    );
+    const mapped = rows.map((r) => ({
+      ...r,
+      author_name: r.author_id ? profileMap[r.author_id] : null,
+      team_name: r.team_id ? teamMap[r.team_id] : null,
+    }));
+    // Pinned items first, then by date (query already sorted by date)
+    mapped.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+    setResults(mapped);
     setIsLoading(false);
   }, [supabase, user, isAdmin, resultTab, leaderTeams]);
 
@@ -204,6 +205,15 @@ function ResultPageContent() {
   const isExternalImage = (src: string | null | undefined) =>
     !!(src && (src.startsWith("http://") || src.startsWith("https://")));
 
+  const handlePinToggle = async (id: string, pinned: boolean) => {
+    await supabase.from("results").update({ pinned }).eq("id", id);
+    setResults((prev) => {
+      const updated = prev.map((r) => r.id === id ? { ...r, pinned } : r);
+      updated.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+      return updated;
+    });
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-12 pb-16">
       {/* Page title */}
@@ -283,12 +293,19 @@ function ResultPageContent() {
                   item.author_id === user.id ||
                   (item.type === "team" && !!item.team_id && leaderTeamIds.has(item.team_id))
                 );
-                const card = <ResultCard item={item} isExternalImage={isExternalImage} />;
+                const card = (
+                  <ResultCard
+                    item={item}
+                    isExternalImage={isExternalImage}
+                    isAdmin={isAdmin}
+                    onPinToggle={handlePinToggle}
+                  />
+                );
                 return canEdit ? (
-                  <button type="button" key={item.id} className="text-left w-full h-full"
+                  <div key={item.id} className="cursor-pointer h-full"
                     onClick={() => router.push(`/result/${item.id}/edit`)}>
                     {card}
-                  </button>
+                  </div>
                 ) : (
                   <Link href={`/result/${item.id}`} key={item.id} className="h-full">{card}</Link>
                 );
@@ -309,34 +326,50 @@ export default function ResultPage() {
   );
 }
 
-function ResultCard({ item, isExternalImage }: {
+function ResultCard({ item, isExternalImage, isAdmin, onPinToggle }: {
   item: ResultWithMeta;
   isExternalImage: (src: string | null | undefined) => boolean;
+  isAdmin?: boolean;
+  onPinToggle?: (id: string, pinned: boolean) => void;
 }) {
   const publisherName = item.type === "team" ? item.team_name || "未知隊伍" : item.author_name || "匿名";
   return (
-    <Card className="py-0 h-full flex flex-col transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] overflow-hidden">
+    <Card className="py-0 h-full flex flex-col gap-4 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] overflow-hidden">
       <div className="relative w-full aspect-video shrink-0">
         <Image src={item.header_image || "/placeholder.png"} alt={item.title} fill
           className="object-cover" unoptimized={isExternalImage(item.header_image)} />
-        <div className="absolute top-2 right-2 rounded-full bg-black/50 p-1.5 text-white pointer-events-none" aria-hidden>
-          <Link2 className="w-4 h-4" />
-        </div>
+        {isAdmin ? (
+          <button
+            type="button"
+            aria-label={item.pinned ? "取消釘選" : "釘選"}
+            onClick={(e) => { e.stopPropagation(); onPinToggle?.(item.id, !item.pinned); }}
+            className={`absolute top-2 right-2 rounded-full p-1.5 transition-opacity duration-150 text-white ${
+              item.pinned
+                ? "bg-black/50 opacity-100"
+                : "bg-black/50 opacity-40 hover:opacity-80"
+            }`}
+          >
+            <Pin className="w-4 h-4" fill={item.pinned ? "currentColor" : "none"} />
+          </button>
+        ) : item.pinned ? (
+          <div className="absolute top-2 right-2 rounded-full bg-black/50 p-1.5 text-white pointer-events-none" aria-hidden>
+            <Pin className="w-4 h-4" fill="currentColor" />
+          </div>
+        ) : null}
       </div>
-      <CardHeader className="shrink-0 pb-2">
+      <CardHeader className="shrink-0 pb-0">
         <CardTitle className="text-xl font-bold line-clamp-2">{item.title || "(無標題)"}</CardTitle>
-        <Separator />
       </CardHeader>
-      <CardContent className="flex-1">
+      <CardContent className="flex-1 pt-1">
         <p className="line-clamp-3 text-muted-foreground text-sm">{item.summary || "（無摘要）"}</p>
       </CardContent>
       <CardFooter className="pt-0 pb-4">
         <div className="flex items-center justify-between w-full gap-2 text-sm text-muted-foreground">
           <div className="flex items-center gap-1.5 min-w-0">
             {item.type === "team" ? <Users className="w-3.5 h-3.5 shrink-0" /> : <User className="w-3.5 h-3.5 shrink-0" />}
-            <span className="truncate">{publisherName}</span>
+            <span className="truncate" style={instrumentSerif}>{publisherName}</span>
           </div>
-          <span className="shrink-0">{item.date || "—"}</span>
+          <span className="shrink-0" style={instrumentSerif}>{item.date || "—"}</span>
         </div>
       </CardFooter>
     </Card>

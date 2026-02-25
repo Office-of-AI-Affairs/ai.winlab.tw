@@ -113,8 +113,8 @@ export function Header() {
             </Link>
           ))}
           {isAdmin && (
-            <Link href="/carousel" className="nav-bracket inline-block transition-transform duration-200 active:scale-[0.98]">
-              橫幅
+            <Link href="/settings" className="nav-bracket inline-block transition-transform duration-200 active:scale-[0.98]">
+              系統設定
             </Link>
           )}
           {renderAuthSection()}
@@ -153,11 +153,11 @@ export function Header() {
             ))}
             {isAdmin && (
               <Link
-                href="/carousel"
+                href="/settings"
                 className="rounded-lg px-3 py-2 hover:bg-black/10 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 onClick={() => setOpen(false)}
               >
-                橫幅
+                系統設定
               </Link>
             )}
             {renderAuthSection(true)}

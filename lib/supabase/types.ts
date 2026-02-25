@@ -140,4 +140,5 @@ export type Result = {
   author_id: string | null;
   type: ResultType;
   team_id: string | null;
+  pinned: boolean;
 };
