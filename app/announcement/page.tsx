@@ -78,7 +78,7 @@ export default function AnnouncementPage() {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted h-12">
-                <TableHead className="text-base font-bold pl-6">公告日期</TableHead>
+                <TableHead className="text-base font-bold pl-8">公告日期</TableHead>
                 <TableHead className="text-base font-bold">類別</TableHead>
                 <TableHead className="text-base font-bold whitespace-normal">標題</TableHead>
                 {user && <TableHead className="text-base font-bold">狀態</TableHead>}
@@ -95,7 +95,7 @@ export default function AnnouncementPage() {
                     )
                   }
                 >
-                  <TableCell className="text-base pl-6">{item.date}</TableCell>
+                  <TableCell className="text-base pl-8">{item.date}</TableCell>
                   <TableCell className="text-base">{item.category}</TableCell>
                   <TableCell className="text-base whitespace-normal">{item.title || "(無標題)"}</TableCell>
                   {isAdmin && (
