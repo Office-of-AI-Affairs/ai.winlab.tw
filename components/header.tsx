@@ -104,7 +104,7 @@ export function Header() {
     <header className="sticky top-0 z-50 bg-transparent text-black border-b">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-6 text-xl font-bold">
         <Link href="/" className="inline-block transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
-          <Image src="/logo.png" alt="Office of AI Affairs" height={40} width={220} className="h-10 w-auto" priority />
+          <Image src="/logo.png" alt="Office of AI Affairs" height={56} width={308} className="h-14 w-auto" priority />
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
