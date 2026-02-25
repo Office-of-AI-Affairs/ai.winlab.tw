@@ -98,8 +98,8 @@ export function HomeCarousel() {
                     backgroundImage: `url(${slide.image || "/placeholder.png"})`,
                   }}
                 />
-                {/* Dark Overlay - subtle gradient */}
-                <div className="absolute inset-0 bg-linear-to-t from-black/50 via-black/20 to-transparent" />
+                {/* Dark Overlay - gradient only on bottom 50% */}
+                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-black/60 to-transparent" />
                 {/* Content - pointer-events-none so the whole banner receives the click */}
                 <div className="absolute inset-0 flex flex-col items-center justify-end text-white px-4 md:px-8 pb-12 md:pb-16 pointer-events-none">
                   <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-center mb-3">

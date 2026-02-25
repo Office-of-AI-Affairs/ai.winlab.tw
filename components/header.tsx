@@ -3,6 +3,7 @@
 import { useAuth } from "@/components/auth-provider";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, TextAlignJustify } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
@@ -102,8 +103,8 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 bg-transparent text-black border-b">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-6 text-xl font-bold">
-        <Link href="/" className="font-instrument-serif inline-block text-3xl sm:text-4xl whitespace-nowrap transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
-          AI Office
+        <Link href="/" className="inline-block transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
+          <Image src="/logo.png" alt="Office of AI Affairs" height={40} width={220} className="h-10 w-auto" priority />
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
