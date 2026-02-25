@@ -11,6 +11,7 @@ import type { Announcement } from "@/lib/supabase/types";
 import TiptapImage from "@tiptap/extension-image";
 import { generateHTML } from "@tiptap/html";
 import StarterKit from "@tiptap/starter-kit";
+import Youtube from "@tiptap/extension-youtube";
 import { ArrowLeft, Check, Eye, EyeOff, Loader2, Save, Send, Trash2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -75,6 +76,7 @@ export default function AnnouncementEditPage() {
         ? generateHTML(announcement.content, [
             StarterKit,
             TiptapImage.configure({ HTMLAttributes: { class: "rounded-lg max-w-full h-auto" } }),
+            Youtube,
           ])
         : "<p>（無內容）</p>",
     [announcement?.content]

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import TiptapImage from "@tiptap/extension-image";
 import { generateHTML } from "@tiptap/html";
 import StarterKit from "@tiptap/starter-kit";
+import Youtube from "@tiptap/extension-youtube";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -23,6 +24,7 @@ export default async function PrivacyPage() {
     ? generateHTML(data.content as any, [
         StarterKit,
         TiptapImage.configure({ HTMLAttributes: { class: "rounded-lg max-w-full h-auto" } }),
+        Youtube,
       ])
     : null;
 

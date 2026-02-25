@@ -1,6 +1,7 @@
 import TiptapImage from "@tiptap/extension-image";
 import { generateHTML } from "@tiptap/html";
 import StarterKit from "@tiptap/starter-kit";
+import Youtube from "@tiptap/extension-youtube";
 import { User, Users } from "lucide-react";
 import Link from "next/link";
 import type { Result } from "@/lib/supabase/types";
@@ -20,6 +21,7 @@ export function ResultDetail({ result, publisherInfo }: Props) {
       ? generateHTML(result.content, [
           StarterKit,
           TiptapImage.configure({ HTMLAttributes: { class: "rounded-lg max-w-full h-auto" } }),
+          Youtube,
         ])
       : "<p>（無內容）</p>";
 

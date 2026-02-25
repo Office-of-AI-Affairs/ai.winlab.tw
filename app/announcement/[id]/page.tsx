@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Image from "@tiptap/extension-image";
 import { generateHTML } from "@tiptap/html";
 import StarterKit from "@tiptap/starter-kit";
+import Youtube from "@tiptap/extension-youtube";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -29,6 +30,7 @@ export default async function AnnouncementDetailPage({
       ? generateHTML(announcement.content, [
           StarterKit,
           Image.configure({ HTMLAttributes: { class: "rounded-lg max-w-full h-auto" } }),
+          Youtube,
         ])
       : "<p>（無內容）</p>";
 

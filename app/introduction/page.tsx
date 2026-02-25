@@ -8,6 +8,7 @@ import type { Introduction } from "@/lib/supabase/types";
 import Image from "@tiptap/extension-image";
 import { generateHTML } from "@tiptap/html";
 import StarterKit from "@tiptap/starter-kit";
+import Youtube from "@tiptap/extension-youtube";
 import { Loader2, Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -35,6 +36,7 @@ export default function IntroductionPage() {
         ? generateHTML(introduction.content, [
             StarterKit,
             Image.configure({ HTMLAttributes: { class: "rounded-lg max-w-full h-auto" } }),
+            Youtube,
           ])
         : "",
     [introduction?.content]

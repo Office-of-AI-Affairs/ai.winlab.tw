@@ -7,6 +7,7 @@ import FileHandler from "@tiptap/extension-file-handler";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
+import Youtube from "@tiptap/extension-youtube";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {
@@ -24,6 +25,7 @@ import {
   Redo,
   Strikethrough,
   Undo,
+  Youtube as YoutubeIcon,
 } from "lucide-react";
 import { useCallback, useEffect } from "react";
 import { Button } from "./ui/button";
@@ -104,6 +106,13 @@ export function TiptapEditor({
         allowedMimeTypes: IMAGE_MIME_TYPES,
         onDrop: handleImageDrop,
         onPaste: handleImagePaste,
+      }),
+      Youtube.configure({
+        width: 640,
+        height: 360,
+        HTMLAttributes: {
+          class: "rounded-lg w-full aspect-video",
+        },
       }),
     ],
     content,
@@ -258,6 +267,18 @@ export function TiptapEditor({
             className={editor.isActive({ textAlign: "right" }) ? "bg-muted" : ""}
           >
             <AlignRight className="w-4 h-4" />
+          </Button>
+          <div className="w-px h-6 bg-border mx-1 self-center" />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              const url = window.prompt("請輸入 YouTube 影片網址");
+              if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run();
+            }}
+          >
+            <YoutubeIcon className="w-4 h-4" />
           </Button>
           <div className="w-px h-6 bg-border mx-1 self-center" />
           <Button
