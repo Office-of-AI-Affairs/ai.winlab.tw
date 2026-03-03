@@ -100,7 +100,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 bg-nycu text-white">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-6 text-xl font-bold">
-        <Link href="/" className="inline-block text-2xl sm:text-3xl whitespace-nowrap transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
+        <Link href="/" className="inline-block text-2xl transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
           Office of AI Affairs
         </Link>
 
