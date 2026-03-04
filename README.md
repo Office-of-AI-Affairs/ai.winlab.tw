@@ -1,47 +1,115 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NYCU AI Office Website
+
+Official website for the National Yang Ming Chiao Tung University (NYCU) Office of AI Affairs.
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Backend**: Supabase (PostgreSQL + Auth + Storage)
+- **Package Manager**: Bun
+- **Styling**: Tailwind CSS v4 + shadcn/ui
+- **Rich Text Editor**: Tiptap
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the site.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+bun dev      # Start development server
+bun build    # Build for production
+bun start    # Start production server
+bun lint     # Run ESLint
+```
 
-## Learn More
+## Environment Variables
 
-To learn more about Next.js, take a look at the following resources:
+Create a `.env.local` file with:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Page Structure
 
-## Announcement images (Supabase Storage)
+### Public Pages
 
-The announcement editor supports drag-and-drop and paste for images. Images are uploaded to Supabase Storage.
+| Route                               | Description                                                                |
+| ----------------------------------- | -------------------------------------------------------------------------- |
+| `/`                                 | Home (carousel, introduction, organization, announcements, events)         |
+| `/introduction`                     | Office introduction                                                        |
+| `/organization`                     | Organization member listing                                                |
+| `/announcement`                     | Global announcements list                                                  |
+| `/announcement/[id]`                | Announcement detail                                                        |
+| `/result`                           | Global results list                                                        |
+| `/result/[id]`                      | Result detail                                                              |
+| `/recruitment`                      | Global recruitment listing                                                 |
+| `/profile/[id]`                     | Author profile page                                                        |
+| `/team/[id]`                        | Team detail page                                                           |
+| `/privacy`                          | Privacy policy                                                             |
+| `/events`                           | Events listing                                                             |
+| `/events/[slug]`                    | Event detail page (announcements / results / recruitment tabs via `?tab=`) |
+| `/events/[slug]/announcements/[id]` | Event announcement detail                                                  |
+| `/events/[slug]/results/[id]`       | Event result detail                                                        |
 
-**One-time setup:**
+### Content Management (Login Required)
 
-1. In [Supabase Dashboard](https://supabase.com/dashboard) → **Storage** → **New bucket**
+| Route                                    | Description              |
+| ---------------------------------------- | ------------------------ |
+| `/announcement/[id]/edit`                | Edit announcement        |
+| `/result/[id]/edit`                      | Edit result              |
+| `/recruitment/[id]/edit`                 | Edit recruitment         |
+| `/introduction/edit`                     | Edit office introduction |
+| `/events/[slug]/edit`                    | Edit event metadata      |
+| `/events/[slug]/announcements/[id]/edit` | Edit event announcement  |
+| `/events/[slug]/results/[id]/edit`       | Edit event result        |
+| `/events/[slug]/recruitment/[id]/edit`   | Edit event recruitment   |
+
+### Account Pages (Login Required)
+
+| Route                 | Description                                   |
+| --------------------- | --------------------------------------------- |
+| `/account`            | Profile, team membership, pending invitations |
+| `/account/teams`      | Team list / create team                       |
+| `/account/teams/[id]` | Team detail + invite members                  |
+
+### Admin Only
+
+| Route                     | Description              |
+| ------------------------- | ------------------------ |
+| `/settings`               | System settings          |
+| `/settings/users`         | User management          |
+| `/organization/[id]/edit` | Edit organization member |
+| `/carousel/[id]/edit`     | Edit carousel slide      |
+| `/contacts/[id]/edit`     | Edit contact info        |
+| `/privacy/edit`           | Edit privacy policy      |
+
+## Data Model
+
+- **Announcement**: Global (`event_id IS NULL`) or event-scoped (`event_id IS NOT NULL`). Event-scoped announcements are excluded from the global `/announcement` page.
+- **Result**: `type: personal | team`, optionally linked to an event via `event_id`.
+- **Recruitment** (DB table: `competitions`): Job postings, optionally linked to an event. Event-scoped entries are excluded from the global `/recruitment` page.
+- **Event**: Container with `slug`, `pinned`, and `sort_order`. Pinned events appear directly in the header navigation.
+
+## Supabase Storage Setup (One-time)
+
+All images are stored in the `announcement-images` bucket (public).
+
+1. Supabase Dashboard → **Storage** → **New bucket**
    - Name: `announcement-images`
    - Public bucket: **ON**
-2. In **SQL Editor**, run the script `supabase/storage-policies.sql` to allow authenticated uploads and public read.
+2. Run `supabase/storage-policies.sql` in the **SQL Editor**
 
-## Deploy on Vercel
+Image path prefixes by content type:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Announcement inline images: root
+- Result cover images: `results/`
+- Recruitment images: `recruitment/`
+- Organization member photos: `organization/`
+- Event cover images: `events/`
