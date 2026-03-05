@@ -1,81 +1,30 @@
-"use client";
-
-import { useAuth } from "@/components/auth-provider";
-import { AnnouncementTable } from "@/components/announcement-table";
-import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
+import { AnnouncementPageClient } from "./client";
+import { createClient } from "@/lib/supabase/server";
 import type { Announcement } from "@/lib/supabase/types";
-import { Loader2, Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
 
-export default function AnnouncementPage() {
-  const { user, isAdmin } = useAuth();
-  const router = useRouter();
-  const supabase = createClient();
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
+export default async function AnnouncementPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  const fetchAnnouncements = useCallback(async () => {
-    setIsLoading(true);
-    const query = supabase
-      .from("announcements")
-      .select("*")
-      .is("event_id", null)
-      .order("date", { ascending: false });
+  let isAdmin = false;
+  if (user) {
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    isAdmin = profile?.role === "admin";
+  }
 
-    if (!isAdmin) query.eq("status", "published");
-
-    const { data, error } = await query;
-    if (error) console.error("Error fetching announcements:", error);
-    else setAnnouncements(data || []);
-    setIsLoading(false);
-  }, [supabase, isAdmin]);
-
-  useEffect(() => {
-    fetchAnnouncements();
-  }, [fetchAnnouncements]);
-
-  const handleCreateAnnouncement = async () => {
-    if (!user || !isAdmin) return;
-    setIsCreating(true);
-    const { data, error } = await supabase
-      .from("announcements")
-      .insert({ title: "新公告", category: "一般", content: {}, status: "draft", author_id: user.id, event_id: null })
-      .select()
-      .single();
-    if (error) { setIsCreating(false); return; }
-    router.push(`/announcement/${data.id}/edit`);
-  };
+  const query = supabase
+    .from("announcements")
+    .select("*")
+    .is("event_id", null)
+    .order("date", { ascending: false });
+  if (!isAdmin) query.eq("status", "published");
+  const { data: announcements } = await query;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12 flex flex-col gap-8">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold">最新公告</h1>
-        {isAdmin && (
-          <Button variant="secondary" onClick={handleCreateAnnouncement} disabled={isCreating}>
-            {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-            新增公告
-          </Button>
-        )}
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
-      ) : announcements.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">目前沒有公告</div>
-      ) : (
-        <AnnouncementTable
-          announcements={announcements}
-          showStatus={isAdmin}
-          onRowClick={(item) =>
-            router.push(isAdmin ? `/announcement/${item.id}/edit` : `/announcement/${item.id}`)
-          }
-        />
-      )}
-    </div>
+    <AnnouncementPageClient
+      announcements={(announcements as Announcement[]) ?? []}
+      isAdmin={isAdmin}
+      userId={user?.id ?? null}
+    />
   );
 }
