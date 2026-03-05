@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import type { Recruitment, RecruitmentPosition } from "@/lib/supabase/types";
 import { uploadRecruitmentImage } from "@/lib/upload-image";
+import { isExternalImage } from "@/lib/utils";
 import { toast } from "sonner";
 import { ArrowLeft, Check, ImagePlus, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -136,7 +137,7 @@ export default function EventRecruitmentEditPage() {
           <div className="flex items-start gap-4">
             <div className="relative w-40 aspect-video rounded-lg overflow-hidden bg-muted shrink-0">
               <Image src={recruitment.image || "/placeholder.png"} alt={recruitment.title} fill className="object-cover"
-                unoptimized={!!(recruitment.image && (recruitment.image.startsWith("http://") || recruitment.image.startsWith("https://")))} />
+                unoptimized={isExternalImage(recruitment.image)} />
             </div>
             <div className="flex flex-col gap-2">
               <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleImageUpload} />

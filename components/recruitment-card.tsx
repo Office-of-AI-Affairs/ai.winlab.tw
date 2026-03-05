@@ -7,13 +7,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { Recruitment } from "@/lib/supabase/types";
+import { isExternalImage } from "@/lib/utils";
 import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
-
-function isExternalUrl(src: string | null | undefined): boolean {
-  if (!src) return false;
-  return src.startsWith("http://") || src.startsWith("https://");
-}
 
 export function RecruitmentCard({ item }: { item: Recruitment }) {
   return (
@@ -24,7 +20,7 @@ export function RecruitmentCard({ item }: { item: Recruitment }) {
           alt={item.title}
           fill
           className="object-cover"
-          unoptimized={isExternalUrl(item.image)}
+          unoptimized={isExternalImage(item.image)}
         />
         <div
           className="absolute top-2 right-2 rounded-full bg-black/50 p-1.5 text-white pointer-events-none"

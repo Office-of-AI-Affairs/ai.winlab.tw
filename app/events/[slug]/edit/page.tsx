@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import type { Event } from "@/lib/supabase/types";
 import { uploadEventImage } from "@/lib/upload-image";
+import { isExternalImage } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -189,7 +190,7 @@ export default function EventEditPage() {
                 alt={event.name}
                 fill
                 className="object-cover"
-                unoptimized={!!(event.cover_image && (event.cover_image.startsWith("http://") || event.cover_image.startsWith("https://")))}
+                unoptimized={isExternalImage(event.cover_image)}
               />
             </div>
             <div className="flex flex-col gap-2">

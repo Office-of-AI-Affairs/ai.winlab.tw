@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import type { CarouselSlide } from "@/lib/supabase/types";
+import { isExternalImage } from "@/lib/utils";
 import { ArrowLeft, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -142,7 +143,7 @@ export default function CarouselPage() {
                     alt={slide.title}
                     fill
                     className="object-cover"
-                    unoptimized={!!(slide.image?.startsWith("http"))}
+                    unoptimized={isExternalImage(slide.image)}
                   />
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">

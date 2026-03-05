@@ -14,6 +14,7 @@ import type {
   OrganizationMember,
   OrganizationMemberCategory,
 } from "@/lib/supabase/types";
+import { isExternalImage } from "@/lib/utils";
 import { Loader2, Plus } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -24,10 +25,6 @@ const CATEGORIES: { value: OrganizationMemberCategory; label: string }[] = [
   { value: "industry_academy", label: "產學聯盟" },
   { value: "alumni", label: "校友" },
 ];
-
-function isExternalUrl(src: string | null | undefined): boolean {
-  return !!(src && (src.startsWith("http://") || src.startsWith("https://")));
-}
 
 export default function OrganizationPage() {
   const { isAdmin } = useAuth();
@@ -128,7 +125,7 @@ export default function OrganizationPage() {
                     alt={member.name}
                     fill
                     className="object-cover"
-                    unoptimized={isExternalUrl(member.image)}
+                    unoptimized={isExternalImage(member.image)}
                   />
                 </div>
                 <CardHeader className="shrink-0 pb-4">

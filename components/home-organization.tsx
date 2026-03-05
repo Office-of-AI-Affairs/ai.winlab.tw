@@ -9,17 +9,11 @@ import {
 } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import type { OrganizationMember } from "@/lib/supabase/types";
+import { isExternalImage } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-
-function isExternalUrl(src: string | null | undefined): boolean {
-  return !!(
-    src &&
-    (src.startsWith("http://") || src.startsWith("https://"))
-  );
-}
 
 export function HomeOrganization() {
   const supabase = createClient();
@@ -72,7 +66,7 @@ export function HomeOrganization() {
                     alt={member.name}
                     fill
                     className="object-cover"
-                    unoptimized={isExternalUrl(member.image)}
+                    unoptimized={isExternalImage(member.image)}
                   />
                 </div>
                 <CardHeader className="shrink-0 pb-4">

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import type { Result, Tag } from "@/lib/supabase/types";
 import { uploadResultImage } from "@/lib/upload-image";
+import { isExternalImage } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -218,7 +219,7 @@ export default function ResultEditPage() {
             <div className="flex items-start gap-4">
               <div className="relative w-40 aspect-video rounded-lg overflow-hidden bg-muted shrink-0">
                 <Image src={result.header_image || "/placeholder.png"} alt={result.title} fill className="object-cover"
-                  unoptimized={!!(result.header_image && (result.header_image.startsWith("http://") || result.header_image.startsWith("https://")))} />
+                  unoptimized={isExternalImage(result.header_image)} />
               </div>
               <div className="flex flex-col gap-2">
                 <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleImageUpload} />

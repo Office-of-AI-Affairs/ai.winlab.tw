@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import type { CarouselSlide } from "@/lib/supabase/types";
 import { uploadCarouselImage } from "@/lib/upload-image";
+import { isExternalImage } from "@/lib/utils";
 import { toast } from "sonner";
 import { ArrowLeft, Check, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -217,7 +218,7 @@ export default function CarouselEditPage() {
                 alt={slide.title}
                 fill
                 className="object-cover"
-                unoptimized={!!(slide.image?.startsWith("http"))}
+                unoptimized={isExternalImage(slide.image)}
               />
             </div>
             <div className="flex flex-col gap-2">

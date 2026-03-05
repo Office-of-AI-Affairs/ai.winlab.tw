@@ -11,6 +11,7 @@ import type {
   OrganizationMemberCategory,
 } from "@/lib/supabase/types";
 import { uploadOrganizationImage } from "@/lib/upload-image";
+import { isExternalImage } from "@/lib/utils";
 import { toast } from "sonner";
 import { ArrowLeft, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -22,13 +23,6 @@ const CATEGORIES: { value: OrganizationMemberCategory; label: string }[] = [
   { value: "industry_academy", label: "產學聯盟" },
   { value: "alumni", label: "校友" },
 ];
-
-function isExternalUrl(src: string | null | undefined): boolean {
-  return !!(
-    src &&
-    (src.startsWith("http://") || src.startsWith("https://"))
-  );
-}
 
 export default function OrganizationMemberEditPage() {
   const { isAdmin, isLoading: authLoading } = useAuth();
@@ -213,7 +207,7 @@ export default function OrganizationMemberEditPage() {
                 alt={member.name}
                 fill
                 className="object-cover"
-                unoptimized={isExternalUrl(member.image)}
+                unoptimized={isExternalImage(member.image)}
               />
             </div>
             <input
