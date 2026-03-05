@@ -3,6 +3,7 @@
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 import { ArrowLeft, Download, Loader2, Upload } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -113,7 +114,7 @@ export default function SettingsUsersPage() {
     const text = await file.text();
     const rows = parseImportCSV(text);
     if (rows.length === 0) {
-      alert("CSV 格式錯誤或無有效資料。請確認標頭包含 name 和 email 欄位。");
+      toast.error("CSV 格式錯誤或無有效資料。請確認標頭包含 name 和 email 欄位。");
       return;
     }
 
@@ -125,7 +126,7 @@ export default function SettingsUsersPage() {
     });
 
     if (error) {
-      alert(error.message ?? "匯入失敗");
+      toast.error(error.message ?? "匯入失敗");
     } else {
       setImportResult(result);
       await fetchUsers();

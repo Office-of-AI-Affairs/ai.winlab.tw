@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import type { CarouselSlide } from "@/lib/supabase/types";
 import { uploadCarouselImage } from "@/lib/upload-image";
+import { toast } from "sonner";
 import { ArrowLeft, Check, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
@@ -98,8 +99,7 @@ export default function CarouselEditPage() {
     e.target.value = "";
 
     if ("error" in result) {
-      console.error(result.error);
-      alert(result.error);
+      toast.error(result.error);
     } else {
       setSlide({ ...slide, image: result.url });
     }

@@ -4,9 +4,11 @@ import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import type { Event } from "@/lib/supabase/types";
 import { uploadEventImage } from "@/lib/upload-image";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   Check,
@@ -136,7 +138,7 @@ export default function EventEditPage() {
     setIsUploadingImage(true);
     const result = await uploadEventImage(file);
     e.target.value = "";
-    if ("error" in result) { alert(result.error); }
+    if ("error" in result) { toast.error(result.error); }
     else { setEvent({ ...event, cover_image: result.url }); }
     setIsUploadingImage(false);
   };
@@ -231,9 +233,9 @@ export default function EventEditPage() {
         {/* Description */}
         <div className="flex flex-col gap-1">
           <Label htmlFor="description" className="text-sm mx-2">活動簡介</Label>
-          <textarea
+          <Textarea
             id="description"
-            className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground resize-y"
+            className="min-h-[80px] resize-y"
             value={event.description ?? ""}
             onChange={(e) => setEvent({ ...event, description: e.target.value || null })}
             placeholder="活動簡短介紹（選填）"

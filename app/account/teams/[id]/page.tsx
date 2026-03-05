@@ -4,6 +4,7 @@ import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -194,8 +195,8 @@ export default function TeamDetailPage() {
               </div>
               <div className="grid gap-2">
                 <Label>簡介（選填）</Label>
-                <textarea
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm resize-y"
+                <Textarea
+                  className="min-h-[80px] resize-y"
                   value={team.description ?? ""}
                   onChange={(e) =>
                     setTeam({ ...team, description: e.target.value || null })

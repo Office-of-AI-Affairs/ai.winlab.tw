@@ -317,7 +317,7 @@ export default function AccountPage() {
                           : "bg-yellow-100 text-yellow-700"
                       }`}
                     >
-                      {item.status === "published" ? "已發佈" : "草稿"}
+                      {item.status === "published" ? "已發布" : "草稿"}
                     </span>
                   </div>
                   <div className="p-3">

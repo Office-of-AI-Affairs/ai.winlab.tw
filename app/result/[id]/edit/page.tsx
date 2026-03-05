@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import type { Result, Tag } from "@/lib/supabase/types";
 import { uploadResultImage } from "@/lib/upload-image";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   Check,
@@ -156,7 +157,7 @@ export default function ResultEditPage() {
     setIsUploadingImage(true);
     const uploadResult = await uploadResultImage(file);
     e.target.value = "";
-    if ("error" in uploadResult) { alert(uploadResult.error); }
+    if ("error" in uploadResult) { toast.error(uploadResult.error); }
     else { setResult({ ...result, header_image: uploadResult.url }); }
     setIsUploadingImage(false);
   };

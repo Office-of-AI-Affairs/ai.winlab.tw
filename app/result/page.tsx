@@ -5,7 +5,7 @@ import { ResultCard, type ResultWithMeta } from "@/components/result-card";
 import { ResultTagSidebar } from "@/components/result-tag-sidebar";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import type { Result, ResultTag, ResultType, Tag, Team } from "@/lib/supabase/types";
+import type { Result, ResultTag, Tag, Team } from "@/lib/supabase/types";
 import { Loader2, Plus } from "lucide-react";
 import Link from "next/link";
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
@@ -26,7 +26,6 @@ function ResultPageContent() {
   const { user, isAdmin } = useAuth();
   const router = useRouter();
   const supabase = createClient();
-  const [resultTab, setResultTab] = useState<ResultType>("personal");
   const [results, setResults] = useState<ResultWithMeta[]>([]);
   const [resultTagMap, setResultTagMap] = useState<Record<string, string[]>>({}); // result_id → [tag_ids]
   const [allTags, setAllTags] = useState<Tag[]>([]);
@@ -44,7 +43,7 @@ function ResultPageContent() {
     const query = supabase
       .from("results")
       .select("*")
-      .eq("type", resultTab)
+      .eq("type", "personal")
       .order("date", { ascending: false });
 
     if (!user) query.eq("status", "published");
@@ -107,7 +106,7 @@ function ResultPageContent() {
     mapped.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
     setResults(mapped);
     setIsLoading(false);
-  }, [supabase, user, isAdmin, resultTab, leaderTeams]);
+  }, [supabase, user, isAdmin, leaderTeams]);
 
   useEffect(() => { fetchResults(); }, [fetchResults]);
 
@@ -177,18 +176,6 @@ function ResultPageContent() {
     router.push(`/result/${data.id}/edit`);
   };
 
-  const handleCreateTeamResult = async (teamId: string) => {
-    if (!user) return;
-    setIsCreating(true);
-    const { data, error } = await supabase.from("results").insert({
-      title: "新成果", date: new Date().toISOString().slice(0, 10),
-      header_image: "/placeholder.png", summary: "", content: {},
-      status: "draft", author_id: user.id, type: "team", team_id: teamId,
-    }).select().single();
-    if (error) { setIsCreating(false); return; }
-    router.push(`/result/${data.id}/edit`);
-  };
-
   const handlePinToggle = async (id: string, pinned: boolean) => {
     await supabase.from("results").update({ pinned }).eq("id", id);
     setResults((prev) => {
@@ -204,27 +191,10 @@ function ResultPageContent() {
       <div className="flex items-center justify-between gap-4 mb-8">
         <h1 className="text-3xl font-bold">最新成果</h1>
         {user && (
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" onClick={handleCreatePersonalResult} disabled={isCreating}>
-              {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              新增個人成果
-            </Button>
-            {/* TODO: 團隊成果新增功能暫時隱藏
-            {resultTab === "team" && (leaderTeams.length === 0 ? (
-              <span className="text-sm text-muted-foreground">請先建立隊伍並擔任組長才能新增團隊成果</span>
-            ) : (
-              <select
-                className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm"
-                value=""
-                onChange={(e) => { if (e.target.value) handleCreateTeamResult(e.target.value); }}
-                disabled={isCreating}
-              >
-                <option value="">選擇隊伍新增團隊成果…</option>
-                {leaderTeams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </select>
-            ))}
-            */}
-          </div>
+          <Button variant="secondary" onClick={handleCreatePersonalResult} disabled={isCreating}>
+            {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            新增個人成果
+          </Button>
         )}
       </div>
 
@@ -252,13 +222,6 @@ function ResultPageContent() {
             />
             <div className="mt-4 border-b" />
           </div>
-
-          {/* Tabs */}
-          {/* TODO: 團隊 tab 暫時隱藏 */}
-          {/* <div className="flex gap-2 border-b border-border pb-2">
-            <Button variant={resultTab === "personal" ? "default" : "ghost"} size="sm" onClick={() => setResultTab("personal")}>個人</Button>
-            <Button variant={resultTab === "team" ? "default" : "ghost"} size="sm" onClick={() => setResultTab("team")}>團隊</Button>
-          </div> */}
 
           {isLoading ? (
             <div className="flex justify-center py-8">

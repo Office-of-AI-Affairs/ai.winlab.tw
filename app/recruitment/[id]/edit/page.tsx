@@ -4,9 +4,11 @@ import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import type { Recruitment, RecruitmentPosition } from "@/lib/supabase/types";
 import { uploadRecruitmentImage } from "@/lib/upload-image";
+import { toast } from "sonner";
 import { ArrowLeft, Check, ImagePlus, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
@@ -86,7 +88,7 @@ export default function RecruitmentEditPage() {
     setIsUploadingImage(true);
     const result = await uploadRecruitmentImage(file);
     e.target.value = "";
-    if ("error" in result) { alert(result.error); }
+    if ("error" in result) { toast.error(result.error); }
     else { setRecruitment({ ...recruitment, image: result.url }); }
     setIsUploadingImage(false);
   };
@@ -183,9 +185,9 @@ export default function RecruitmentEditPage() {
         {/* Description */}
         <div className="flex flex-col gap-1">
           <Label htmlFor="description" className="text-sm mx-2">簡介</Label>
-          <textarea
+          <Textarea
             id="description"
-            className="flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground resize-y"
+            className="min-h-[100px] resize-y"
             value={recruitment.description ?? ""}
             onChange={(e) => setRecruitment({ ...recruitment, description: e.target.value || null })}
             placeholder="公司或職缺簡介（選填）"

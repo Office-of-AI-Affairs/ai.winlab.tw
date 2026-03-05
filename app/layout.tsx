@@ -2,6 +2,7 @@ import "@/app/globals.css";
 import { AuthProvider } from "@/components/auth-provider";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
+import { Toaster } from "@/components/ui/sonner";
 import { SquircleNoScript } from "@squircle-js/react";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
@@ -35,17 +36,16 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <NuqsAdapter>
             <AuthProvider>
-              <div className="relative min-h-dvh">
-                <div className="relative flex flex-col min-h-dvh">
-                  <div className="fixed top-0 left-0 right-0 z-50 bg-background/70 backdrop-blur-md border-b border-background/10">
-                    <Header />
-                  </div>
-                  <div className="flex-1 pt-16">
-                    {children}
-                  </div>
-                  <Footer />
+              <div className="relative flex flex-col min-h-dvh">
+                <div className="fixed top-0 left-0 right-0 z-50 bg-background/70 backdrop-blur-md border-b border-background/10">
+                  <Header />
                 </div>
+                <div className="flex-1 pt-16">
+                  {children}
+                </div>
+                <Footer />
               </div>
+              <Toaster />
             </AuthProvider>
           </NuqsAdapter>
         </ThemeProvider>

@@ -4,12 +4,14 @@ import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import type {
   OrganizationMember,
   OrganizationMemberCategory,
 } from "@/lib/supabase/types";
 import { uploadOrganizationImage } from "@/lib/upload-image";
+import { toast } from "sonner";
 import { ArrowLeft, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
@@ -114,8 +116,7 @@ export default function OrganizationMemberEditPage() {
     e.target.value = "";
 
     if ("error" in result) {
-      console.error(result.error);
-      alert(result.error);
+      toast.error(result.error);
     } else {
       setMember({ ...member, image: result.url });
     }
@@ -193,8 +194,8 @@ export default function OrganizationMemberEditPage() {
 
         <div className="grid gap-2">
           <Label>簡介</Label>
-          <textarea
-            className="flex min-h-[120px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base placeholder:text-muted-foreground md:text-sm resize-y"
+          <Textarea
+            className="min-h-[120px] resize-y"
             value={member.summary ?? ""}
             onChange={(e) =>
               setMember({ ...member, summary: e.target.value || null })
