@@ -52,29 +52,37 @@ export default function EventDetailPage() {
   }, [supabase, isAdmin]);
 
   const fetchResults = useCallback(async (eventId: string) => {
-    type ResultRow = Result & {
-      profiles: { display_name: string | null } | null;
-      teams: { name: string } | null;
-    };
-
     const query = supabase
       .from("results")
-      .select("*, profiles!author_id(display_name), teams!team_id(name)")
+      .select("*")
       .eq("event_id", eventId)
       .order("pinned", { ascending: false })
       .order("date", { ascending: false });
     if (!isAdmin) query.eq("status", "published");
-
     const { data } = await query;
-    const rows = (data as ResultRow[]) || [];
+    const rows = (data as Result[]) || [];
 
-    setResults(
-      rows.map((r) => ({
-        ...r,
-        author_name: r.profiles?.display_name ?? null,
-        team_name: r.teams?.name ?? null,
-      }))
+    const authorIds = [...new Set(rows.map((r) => r.author_id).filter(Boolean))] as string[];
+    const teamIds = [...new Set(rows.map((r) => r.team_id).filter(Boolean))] as string[];
+    const [profilesRes, teamsRes] = await Promise.all([
+      authorIds.length
+        ? supabase.from("profiles").select("id, display_name").in("id", authorIds)
+        : Promise.resolve({ data: [] }),
+      teamIds.length
+        ? supabase.from("teams").select("id, name").in("id", teamIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+    const profileMap = Object.fromEntries(
+      ((profilesRes.data || []) as { id: string; display_name: string | null }[]).map((p) => [p.id, p.display_name])
     );
+    const teamMap = Object.fromEntries(
+      ((teamsRes.data || []) as { id: string; name: string }[]).map((t) => [t.id, t.name])
+    );
+    setResults(rows.map((r) => ({
+      ...r,
+      author_name: r.author_id ? profileMap[r.author_id] : null,
+      team_name: r.team_id ? teamMap[r.team_id] : null,
+    })));
   }, [supabase, isAdmin]);
 
   const fetchRecruitments = useCallback(async (eventId: string) => {
