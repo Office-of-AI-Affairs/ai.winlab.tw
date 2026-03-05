@@ -49,3 +49,4 @@ next-env.d.ts
 .mcp.json
 
 scripts/*
+.worktrees/
