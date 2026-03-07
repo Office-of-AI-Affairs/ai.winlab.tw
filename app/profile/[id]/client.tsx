@@ -92,13 +92,19 @@ export function ProfilePageClient({
     { key: "resume" as const, label: "履歷連結", icon: FileText, value: resume, setter: setResume },
   ];
 
+  function safeHref(url: string | null | undefined): string | undefined {
+    if (!url) return undefined;
+    const trimmed = url.trim();
+    return /^https?:\/\//i.test(trimmed) ? trimmed : undefined;
+  }
+
   const displayNameValue = profile.display_name || "未知使用者";
   const structuredLinks = [
-    { key: "linkedin", label: "LinkedIn", href: profile.linkedin, icon: Linkedin },
-    { key: "facebook", label: "Facebook", href: profile.facebook, icon: Facebook },
-    { key: "github", label: "GitHub", href: profile.github, icon: Github },
-    { key: "website", label: "個人網站", href: profile.website, icon: Globe },
-    { key: "resume", label: "履歷", href: profile.resume, icon: FileText },
+    { key: "linkedin", label: "LinkedIn", href: safeHref(profile.linkedin), icon: Linkedin },
+    { key: "facebook", label: "Facebook", href: safeHref(profile.facebook), icon: Facebook },
+    { key: "github", label: "GitHub", href: safeHref(profile.github), icon: Github },
+    { key: "website", label: "個人網站", href: safeHref(profile.website), icon: Globe },
+    { key: "resume", label: "履歷", href: safeHref(profile.resume), icon: FileText },
   ].filter((l) => l.href);
   const extraLinks = (profile.social_links as string[]) || [];
 
@@ -247,7 +253,10 @@ export function ProfilePageClient({
                     <input
                       value={link}
                       onChange={(e) => updateSocialLink(idx, e.target.value)}
-                      onBlur={() => saveExtraLinks(socialLinks)}
+                      onBlur={(e) => {
+                        const next = socialLinks.map((l, i) => i === idx ? e.target.value : l);
+                        saveExtraLinks(next);
+                      }}
                       placeholder="https://..."
                       className="flex-1 text-sm bg-transparent border-b border-border focus:border-foreground outline-none pb-0.5"
                     />
@@ -270,17 +279,21 @@ export function ProfilePageClient({
               </div>
             ) : extraLinks.length > 0 ? (
               <div className="flex flex-col gap-1">
-                {extraLinks.map((url: string) => (
-                  <a
-                    key={url}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary underline underline-offset-2 truncate hover:opacity-80"
-                  >
-                    {url}
-                  </a>
-                ))}
+                {extraLinks.map((url: string) => {
+                  const safe = safeHref(url);
+                  if (!safe) return null;
+                  return (
+                    <a
+                      key={url}
+                      href={safe}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary underline underline-offset-2 truncate hover:opacity-80"
+                    >
+                      {url}
+                    </a>
+                  );
+                })}
               </div>
             ) : null}
           </aside>
