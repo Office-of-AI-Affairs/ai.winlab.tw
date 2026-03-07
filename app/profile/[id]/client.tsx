@@ -106,9 +106,9 @@ export function ProfilePageClient({
   const extraLinks = (profile.social_links as string[]) || [];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12 flex flex-col gap-8">
+    <div className="max-w-6xl mx-auto px-4 py-12">
       {/* Top bar */}
-      <div className="flex items-center justify-end gap-4">
+      <div className="flex items-center justify-end gap-4 mb-8">
         {isOwner && (
           <Button
             variant={isEditMode ? "secondary" : "outline"}
@@ -266,138 +266,144 @@ export function ProfilePageClient({
         </Card>
       ) : (
         /* ── Preview / Public Mode ──────────────────────────────── */
-        <>
-          {/* Profile header */}
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-              {profile.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profile.avatar_url}
-                  alt={displayNameValue}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <User className="w-8 h-8 text-muted-foreground" />
-              )}
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">{displayNameValue}</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {results.filter((r) => r.status === "published").length} 篇個人成果
-              </p>
-            </div>
-          </div>
-
-          {/* Profile details */}
-          <Card>
-            <CardHeader>
-              <CardTitle>個人資訊</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-5">
-              {profile.bio && (
-                <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
-                  {profile.bio}
+        <div className="flex flex-col md:flex-row md:gap-16">
+          {/* LEFT COLUMN */}
+          <aside className="md:w-72 shrink-0 md:sticky md:top-20 md:self-start mb-10 md:mb-0">
+            {/* Profile header */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                {profile.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={profile.avatar_url}
+                    alt={displayNameValue}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-8 h-8 text-muted-foreground" />
+                )}
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">{displayNameValue}</h1>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {results.filter((r) => r.status === "published").length} 篇個人成果
                 </p>
-              )}
-              {structuredLinks.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {structuredLinks.map(({ key, label, href, icon: Icon }) => (
-                    <a
-                      key={key}
-                      href={href!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-sm font-medium hover:bg-muted transition-colors"
-                    >
-                      <Icon className="w-3.5 h-3.5" />
-                      {label}
-                    </a>
-                  ))}
-                </div>
-              )}
-              {extraLinks.length > 0 && (
-                <div className="flex flex-col gap-1">
-                  <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                    <Link2 className="w-3.5 h-3.5" />
-                    額外連結
+              </div>
+            </div>
+
+            {/* Profile details */}
+            <Card>
+              <CardHeader>
+                <CardTitle>個人資訊</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-5">
+                {profile.bio && (
+                  <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+                    {profile.bio}
                   </p>
-                  <div className="flex flex-col gap-1">
-                    {extraLinks.map((url: string, i: number) => (
+                )}
+                {structuredLinks.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {structuredLinks.map(({ key, label, href, icon: Icon }) => (
                       <a
-                        key={i}
-                        href={url}
+                        key={key}
+                        href={href!}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-primary underline underline-offset-2 break-all hover:opacity-80"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-sm font-medium hover:bg-muted transition-colors"
                       >
-                        {url}
+                        <Icon className="w-3.5 h-3.5" />
+                        {label}
                       </a>
                     ))}
                   </div>
+                )}
+                {extraLinks.length > 0 && (
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                      <Link2 className="w-3.5 h-3.5" />
+                      額外連結
+                    </p>
+                    <div className="flex flex-col gap-1">
+                      {extraLinks.map((url: string, i: number) => (
+                        <a
+                          key={i}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary underline underline-offset-2 break-all hover:opacity-80"
+                        >
+                          {url}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {!profile.bio && structuredLinks.length === 0 && extraLinks.length === 0 && (
+                  <p className="text-sm text-muted-foreground">尚未填寫個人資訊</p>
+                )}
+              </CardContent>
+            </Card>
+          </aside>
+
+          {/* RIGHT COLUMN */}
+          <main className="flex-1 min-w-0">
+            {/* Results */}
+            <div>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Trophy className="w-5 h-5" />
+                個人成果
+              </h2>
+              {results.length === 0 ? (
+                <p className="text-muted-foreground text-sm">尚無成果紀錄。</p>
+              ) : (
+                <div className="flex flex-col divide-y">
+                  {results.map((result) => (
+                    <Link
+                      key={result.id}
+                      href={isOwner ? `/result/${result.id}/edit` : `/result/${result.id}`}
+                      className="py-6 group flex flex-col gap-1 hover:bg-muted/30 -mx-4 px-4 transition-colors rounded-lg"
+                    >
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-muted-foreground">{result.date}</p>
+                        {isOwner && (
+                          <span
+                            className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                              result.status === "published"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}
+                          >
+                            {result.status === "published" ? "已發布" : "草稿"}
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-xl font-semibold group-hover:underline underline-offset-2">
+                        {result.title || "(無標題)"}
+                      </h3>
+                      {result.summary && (
+                        <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">
+                          {result.summary}
+                        </p>
+                      )}
+                      {result.header_image && (
+                        <div className="relative w-full max-w-xs aspect-video rounded-md overflow-hidden bg-muted mt-2">
+                          <Image
+                            src={result.header_image}
+                            alt={result.title}
+                            fill
+                            className="object-cover"
+                            unoptimized={isExternalImage(result.header_image)}
+                          />
+                        </div>
+                      )}
+                    </Link>
+                  ))}
                 </div>
               )}
-              {!profile.bio && structuredLinks.length === 0 && extraLinks.length === 0 && (
-                <p className="text-sm text-muted-foreground">尚未填寫個人資訊</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Results */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Trophy className="w-5 h-5" />
-              個人成果
-            </h2>
-            {results.length === 0 ? (
-              <p className="text-muted-foreground text-sm">尚無成果紀錄。</p>
-            ) : (
-              <div className="flex flex-col divide-y">
-                {results.map((result) => (
-                  <Link
-                    key={result.id}
-                    href={isOwner ? `/result/${result.id}/edit` : `/result/${result.id}`}
-                    className="py-6 group flex flex-col gap-1 hover:bg-muted/30 -mx-4 px-4 transition-colors rounded-lg"
-                  >
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm text-muted-foreground">{result.date}</p>
-                      {isOwner && (
-                        <span
-                          className={`text-xs px-1.5 py-0.5 rounded font-medium ${
-                            result.status === "published"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
-                          {result.status === "published" ? "已發布" : "草稿"}
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="text-xl font-semibold group-hover:underline underline-offset-2">
-                      {result.title || "(無標題)"}
-                    </h3>
-                    {result.summary && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">
-                        {result.summary}
-                      </p>
-                    )}
-                    {result.header_image && (
-                      <div className="relative w-full max-w-xs aspect-video rounded-md overflow-hidden bg-muted mt-2">
-                        <Image
-                          src={result.header_image}
-                          alt={result.title}
-                          fill
-                          className="object-cover"
-                          unoptimized={isExternalImage(result.header_image)}
-                        />
-                      </div>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        </>
+            </div>
+          </main>
+        </div>
       )}
     </div>
   );
