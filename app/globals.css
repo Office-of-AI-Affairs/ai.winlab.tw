@@ -159,7 +159,9 @@
   padding-left: 0.15rem;
 }
 .nav-bracket:hover::before,
-.nav-bracket:hover::after {
+.nav-bracket:hover::after,
+.nav-bracket-active::before,
+.nav-bracket-active::after {
   opacity: 1;
 }
 

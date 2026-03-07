@@ -45,7 +45,7 @@ export function ResultCard({
         {showStatus && (
           <Badge
             variant={item.status === "published" ? "default" : "secondary"}
-            className="absolute top-2 right-2"
+            className="absolute top-2 left-2"
           >
             {item.status === "published" ? "已發布" : "草稿"}
           </Badge>

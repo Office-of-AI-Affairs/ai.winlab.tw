@@ -3,6 +3,7 @@
 import { useAuth } from "@/components/auth-provider";
 import { Loader2, TextAlignJustify } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const staticNavItems = [
@@ -13,7 +14,10 @@ const staticNavItems = [
 
 export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: string }[] }) {
   const { user, profile, isLoading, signOut, isAdmin } = useAuth();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href));
   const panelRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -44,9 +48,11 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
   }, [open]);
 
   const renderAuthSection = (isMobile = false) => {
-    const badgeClass = isMobile
-      ? "rounded-lg px-3 py-2 hover:bg-black/10 text-left w-full transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
-      : "inline-flex items-center rounded-full border border-black/10 bg-black/5 px-3 py-1 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] hover:bg-black/10";
+    const profileHref = user ? `/profile/${user.id}` : "/account";
+    const profileActive = isActive(profileHref);
+    const profileClass = isMobile
+      ? `rounded-lg px-3 py-2 hover:bg-black/10 text-left w-full transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${profileActive ? "bg-black/15" : ""}`
+      : `nav-bracket inline-block transition-transform duration-200 active:scale-[0.98] ${profileActive ? "nav-bracket-active" : ""}`;
     const btnClass = isMobile
       ? "rounded-lg px-3 py-2 hover:bg-black/10 text-left w-full transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
       : "nav-bracket inline-block transition-transform duration-200 active:scale-[0.98] cursor-pointer";
@@ -60,8 +66,8 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
           }
         >
           <Link
-            href={user ? `/profile/${user.id}` : "/account"}
-            className={badgeClass}
+            href={profileHref}
+            className={profileClass}
             onClick={isMobile ? () => setOpen(false) : undefined}
           >
             {displayLabel}
@@ -105,20 +111,20 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
 
         <nav className="hidden min-[1152px]:flex items-center gap-8 text-lg">
           {staticNavItems.map((item) => (
-            <Link key={item.href} href={item.href} className="nav-bracket inline-block transition-transform duration-200 active:scale-[0.98]">
+            <Link key={item.href} href={item.href} className={`nav-bracket inline-block transition-transform duration-200 active:scale-[0.98] ${isActive(item.href) ? "nav-bracket-active" : ""}`}>
               {item.label}
             </Link>
           ))}
           {pinnedEvents.map((event) => (
-            <Link key={event.slug} href={`/events/${event.slug}`} className="nav-bracket inline-block transition-transform duration-200 active:scale-[0.98]">
+            <Link key={event.slug} href={`/events/${event.slug}`} className={`nav-bracket inline-block transition-transform duration-200 active:scale-[0.98] ${isActive(`/events/${event.slug}`) ? "nav-bracket-active" : ""}`}>
               {event.name}
             </Link>
           ))}
-          <Link href="/events" className="nav-bracket inline-block transition-transform duration-200 active:scale-[0.98]">
+          <Link href="/events" className={`nav-bracket inline-block transition-transform duration-200 active:scale-[0.98] ${isActive("/events") ? "nav-bracket-active" : ""}`}>
             活動
           </Link>
           {isAdmin && (
-            <Link href="/settings" className="nav-bracket inline-block transition-transform duration-200 active:scale-[0.98]">
+            <Link href="/settings" className={`nav-bracket inline-block transition-transform duration-200 active:scale-[0.98] ${isActive("/settings") ? "nav-bracket-active" : ""}`}>
               設定
             </Link>
           )}
@@ -150,7 +156,7 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
               <Link
                 key={item.href}
                 href={item.href}
-                className="rounded-lg px-3 py-2 hover:bg-black/10 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                className={`rounded-lg px-3 py-2 hover:bg-black/10 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${isActive(item.href) ? "bg-black/15" : ""}`}
                 onClick={() => setOpen(false)}
               >
                 {item.label}
@@ -160,7 +166,7 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
               <Link
                 key={event.slug}
                 href={`/events/${event.slug}`}
-                className="rounded-lg px-3 py-2 hover:bg-black/10 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                className={`rounded-lg px-3 py-2 hover:bg-black/10 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${isActive(`/events/${event.slug}`) ? "bg-black/15" : ""}`}
                 onClick={() => setOpen(false)}
               >
                 {event.name}
@@ -168,7 +174,7 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
             ))}
             <Link
               href="/events"
-              className="rounded-lg px-3 py-2 hover:bg-black/10 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              className={`rounded-lg px-3 py-2 hover:bg-black/10 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${isActive("/events") ? "bg-black/15" : ""}`}
               onClick={() => setOpen(false)}
             >
               活動
@@ -176,7 +182,7 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
             {isAdmin && (
               <Link
                 href="/settings"
-                className="rounded-lg px-3 py-2 hover:bg-black/10 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                className={`rounded-lg px-3 py-2 hover:bg-black/10 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${isActive("/settings") ? "bg-black/15" : ""}`}
                 onClick={() => setOpen(false)}
               >
                 設定
