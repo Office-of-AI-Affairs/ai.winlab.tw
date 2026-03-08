@@ -218,7 +218,7 @@ export function ProfilePageClient({
 
   return (
     <main className="flex items-center justify-center">
-      <div className="max-w-5xl w-full">
+      <div className="max-w-6xl w-full">
         <div className="grid p-6 gap-6">
 
           <Block variant="ghost" className="flex items-center justify-between">
