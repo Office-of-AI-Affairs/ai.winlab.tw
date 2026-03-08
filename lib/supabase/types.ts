@@ -1,3 +1,14 @@
+export type ExternalResult = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  link: string | null;
+  image: string | null;
+};
+
 export type CarouselSlide = {
   id: string;
   created_at: string;

@@ -1,6 +1,6 @@
 import { ProfilePageClient } from "./client";
 import { createClient } from "@/lib/supabase/server";
-import type { Profile, Result } from "@/lib/supabase/types";
+import type { ExternalResult, Profile, Result } from "@/lib/supabase/types";
 import { redirect } from "next/navigation";
 
 export default async function ProfilePage({
@@ -14,7 +14,7 @@ export default async function ProfilePage({
 
   const isOwner = user?.id === id;
 
-  const [profileRes, resultsRes] = await Promise.all([
+  const [profileRes, resultsRes, externalResultsRes] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, display_name, avatar_url, bio, phone, linkedin, facebook, github, website, resume, social_links")
@@ -26,6 +26,11 @@ export default async function ProfilePage({
       .eq("author_id", id)
       .eq("type", "personal")
       .order("date", { ascending: false }),
+    supabase
+      .from("external_results")
+      .select("*")
+      .eq("user_id", id)
+      .order("created_at", { ascending: false }),
   ]);
 
   if (profileRes.error || !profileRes.data) redirect("/");
@@ -38,8 +43,8 @@ export default async function ProfilePage({
     for (const e of events ?? []) eventSlugMap[e.id] = e.slug;
   }
 
-  const allResults = rawResults;
-  const results = isOwner ? allResults : allResults.filter((r) => r.status === "published");
+  const results = isOwner ? rawResults : rawResults.filter((r) => r.status === "published");
+  const externalResults = (externalResultsRes.data as ExternalResult[]) || [];
 
   return (
     <ProfilePageClient
@@ -47,6 +52,7 @@ export default async function ProfilePage({
       results={results}
       isOwner={isOwner}
       eventSlugMap={eventSlugMap}
+      initialExternalResults={externalResults}
     />
   );
 }
