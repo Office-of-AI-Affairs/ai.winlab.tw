@@ -22,7 +22,7 @@ const TABS: { value: Tab; label: string }[] = [
   { value: "recruitment", label: "徵才" },
 ];
 
-const tabParser = parseAsStringLiteral(["announcements", "results", "recruitment"] as const).withDefault("announcements");
+const tabParser = parseAsStringLiteral(["announcements", "results", "recruitment"] as const).withDefault("results");
 
 export function EventDetailClient({
   event,
