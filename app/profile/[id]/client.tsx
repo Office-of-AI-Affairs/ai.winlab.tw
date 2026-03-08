@@ -430,7 +430,7 @@ export function ProfilePageClient({
             <div className="col-span-1 lg:col-span-2 grid gap-6 content-start">
 
 
-              {results.length === 0 ? (
+              {results.length === 0 && externalResults.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-12 text-center">尚無成果紀錄</p>
               ) : (
                 results.map((result) => (
