@@ -52,3 +52,4 @@ export const uploadRecruitmentImage = (file: File) => uploadImage(file, "recruit
 export const uploadResultImage = (file: File) => uploadImage(file, "results/");
 export const uploadEventImage = (file: File) => uploadImage(file, "events/");
 export const uploadOrganizationImage = (file: File) => uploadImage(file, "organization/");
+export const uploadExternalResultImage = (file: File) => uploadImage(file, "external-results/");

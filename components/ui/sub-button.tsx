@@ -6,7 +6,7 @@ type SubButtonProps = {
   href?: string;
   target?: string;
   rel?: string;
-  onClick?: () => void;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
   className?: string;
   children?: React.ReactNode;
 };

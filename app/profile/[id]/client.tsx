@@ -3,6 +3,7 @@
 import { useAuth } from "@/components/auth-provider";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Block } from "@/components/ui/block";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,11 +17,13 @@ import { Label } from "@/components/ui/label";
 import { SubButton } from "@/components/ui/sub-button";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
-import { isExternalImage } from "@/lib/utils";
 import type { ExternalResult, Profile, Result } from "@/lib/supabase/types";
+import { uploadExternalResultImage } from "@/lib/upload-image";
+import { isExternalImage } from "@/lib/utils";
 import {
   ArrowLeftIcon,
   EyeOff,
+  ImagePlus,
   Loader2,
   Pencil,
   Plus,
@@ -28,7 +31,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 function mergeAllLinks(profile: Profile): string[] {
   const structured = [
@@ -88,7 +91,37 @@ export function ProfilePageClient({
   const [externalResults, setExternalResults] = useState<ExternalResult[]>(initialExternalResults);
   const [exDialogOpen, setExDialogOpen] = useState(false);
   const [exSaving, setExSaving] = useState(false);
+  const [exUploadingImage, setExUploadingImage] = useState(false);
+  const [exEditingId, setExEditingId] = useState<string | null>(null);
   const [exForm, setExForm] = useState({ title: "", description: "", link: "", image: "" });
+  const exFileInputRef = useRef<HTMLInputElement>(null);
+
+  const openNewDialog = () => {
+    setExEditingId(null);
+    setExForm({ title: "", description: "", link: "", image: "" });
+    setExDialogOpen(true);
+  };
+
+  const openEditDialog = (ext: ExternalResult) => {
+    setExEditingId(ext.id);
+    setExForm({
+      title: ext.title,
+      description: ext.description ?? "",
+      link: ext.link ?? "",
+      image: ext.image ?? "",
+    });
+    setExDialogOpen(true);
+  };
+
+  const handleExImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setExUploadingImage(true);
+    const result = await uploadExternalResultImage(file);
+    e.target.value = "";
+    if ("url" in result) setExForm((f) => ({ ...f, image: result.url }));
+    setExUploadingImage(false);
+  };
 
   const saveField = async (field: string, value: string | null) => {
     if (!user) return;
@@ -137,19 +170,28 @@ export function ProfilePageClient({
     if (!user || !exForm.title.trim()) return;
     setExSaving(true);
     const supabase = createClient();
-    const { data } = await supabase
-      .from("external_results")
-      .insert({
-        user_id: user.id,
-        title: exForm.title.trim(),
-        description: exForm.description.trim() || null,
-        link: exForm.link.trim() || null,
-        image: exForm.image.trim() || null,
-      })
-      .select()
-      .single();
-    if (data) setExternalResults((prev) => [data as ExternalResult, ...prev]);
-    setExForm({ title: "", description: "", link: "", image: "" });
+    const payload = {
+      title: exForm.title.trim(),
+      description: exForm.description.trim() || null,
+      link: exForm.link.trim() || null,
+      image: exForm.image.trim() || null,
+    };
+    if (exEditingId) {
+      const { data } = await supabase
+        .from("external_results")
+        .update(payload)
+        .eq("id", exEditingId)
+        .select()
+        .single();
+      if (data) setExternalResults((prev) => prev.map((r) => r.id === exEditingId ? data as ExternalResult : r));
+    } else {
+      const { data } = await supabase
+        .from("external_results")
+        .insert({ user_id: user.id, ...payload })
+        .select()
+        .single();
+      if (data) setExternalResults((prev) => [data as ExternalResult, ...prev]);
+    }
     setExSaving(false);
     setExDialogOpen(false);
   };
@@ -184,7 +226,7 @@ export function ProfilePageClient({
               <ArrowLeftIcon className="size-4" /> 返回首頁
             </SubButton>
             {isOwner && (
-              <SubButton onClick={() => setExDialogOpen(true)}>
+              <SubButton onClick={openNewDialog}>
                 <Plus className="size-4" /> 新增外部成果
               </SubButton>
             )}
@@ -193,7 +235,7 @@ export function ProfilePageClient({
           <Dialog open={exDialogOpen} onOpenChange={setExDialogOpen}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>新增外部成果</DialogTitle>
+                <DialogTitle>{exEditingId ? "編輯外部成果" : "新增外部成果"}</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4">
                 <div className="grid gap-2">
@@ -221,17 +263,52 @@ export function ProfilePageClient({
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label>圖片網址</Label>
-                  <Input
-                    value={exForm.image}
-                    onChange={(e) => setExForm((f) => ({ ...f, image: e.target.value }))}
-                    placeholder="https://..."
-                  />
+                  <Label>封面圖片</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+                      {exForm.image && (
+                        <Image src={exForm.image} alt="preview" fill className="object-cover" unoptimized />
+                      )}
+                    </div>
+                    <div className="flex flex-col justify-center gap-2">
+                      <input
+                        ref={exFileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        className="hidden"
+                        onChange={handleExImageUpload}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={exUploadingImage}
+                        onClick={() => exFileInputRef.current?.click()}
+                      >
+                        {exUploadingImage ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
+                        {exUploadingImage ? "上傳中…" : "上傳圖片"}
+                      </Button>
+                      <p className="text-xs text-muted-foreground">JPEG、PNG、GIF、WebP，最大 5MB</p>
+                    </div>
+                  </div>
                 </div>
-                <Button onClick={submitExternalResult} disabled={exSaving || !exForm.title.trim()}>
-                  {exSaving && <Loader2 className="size-4 animate-spin" />}
-                  新增
-                </Button>
+                <div className="flex items-center justify-between gap-2">
+                  {exEditingId && (
+                    <Button
+                      variant="destructive"
+                      onClick={() => { deleteExternalResult(exEditingId); setExDialogOpen(false); }}
+                    >
+                      <Trash2 className="size-4" /> 刪除
+                    </Button>
+                  )}
+                  <Button
+                    className="ml-auto"
+                    onClick={submitExternalResult}
+                    disabled={exSaving || !exForm.title.trim()}
+                  >
+                    {exSaving && <Loader2 className="size-4 animate-spin" />}
+                    {exEditingId ? "儲存" : "新增"}
+                  </Button>
+                </div>
               </div>
             </DialogContent>
           </Dialog>
@@ -358,16 +435,14 @@ export function ProfilePageClient({
               ) : (
                 results.map((result) => (
                   <Link key={result.id} href={resultHref(result)}>
-                    <Block className="grid grid-cols-2 gap-6 hover:scale-101 transition-all duration-200">
+                    <Block className="grid lg:grid-cols-2 gap-6 hover:scale-101 transition-all duration-200">
                       <div className="grid gap-2">
                         <div className="flex items-center gap-2">
                           <h3 className="text-lg font-bold break-keep">
                             {result.title || "(無標題)"}
                           </h3>
                           {isOwner && result.status === "draft" && (
-                            <span className="shrink-0 text-xs px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700 font-medium">
-                              草稿
-                            </span>
+                            <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-200">草稿</Badge>
                           )}
                         </div>
                         {result.summary && (
@@ -396,32 +471,22 @@ export function ProfilePageClient({
 
               {/* External results */}
               {externalResults.map((ext) => {
-                const content = (
-                  <Block className="grid grid-cols-2 gap-6 hover:scale-101 transition-all duration-200">
+                const card = (
+                  <Block className="grid lg:grid-cols-2 gap-6 hover:scale-101 transition-all duration-200">
                     <div className="grid gap-2">
-                      <h3 className="text-lg font-bold break-keep">{ext.title}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-bold break-keep">{ext.title}</h3>
+                        {isOwner && (
+                          <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">外部</Badge>
+                        )}
+                      </div>
                       {ext.description && (
                         <p className="text-sm text-muted-foreground line-clamp-3">{ext.description}</p>
-                      )}
-                      {isOwner && (
-                        <button
-                          type="button"
-                          onClick={(e) => { e.preventDefault(); deleteExternalResult(ext.id); }}
-                          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors w-fit"
-                        >
-                          <Trash2 className="size-3" /> 刪除
-                        </button>
                       )}
                     </div>
                     <AspectRatio ratio={16 / 9}>
                       {ext.image ? (
-                        <Image
-                          src={ext.image}
-                          alt={ext.title}
-                          fill
-                          className="object-cover rounded-[2rem]"
-                          unoptimized
-                        />
+                        <Image src={ext.image} alt={ext.title} fill className="object-cover rounded-[2rem]" unoptimized />
                       ) : (
                         <div className="w-full h-full rounded-[2rem] bg-primary" />
                       )}
@@ -429,12 +494,18 @@ export function ProfilePageClient({
                   </Block>
                 );
 
+                if (isOwner) {
+                  return (
+                    <button key={ext.id} type="button" className="text-left w-full" onClick={() => openEditDialog(ext)}>
+                      {card}
+                    </button>
+                  );
+                }
+
                 return ext.link ? (
-                  <Link key={ext.id} href={ext.link} target="_blank" rel="noopener noreferrer">
-                    {content}
-                  </Link>
+                  <Link key={ext.id} href={ext.link} target="_blank" rel="noopener noreferrer">{card}</Link>
                 ) : (
-                  <div key={ext.id}>{content}</div>
+                  <div key={ext.id}>{card}</div>
                 );
               })}
 
