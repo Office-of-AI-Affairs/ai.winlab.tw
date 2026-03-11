@@ -219,7 +219,7 @@ export function ProfilePageClient({
   return (
     <main className="flex items-center justify-center">
       <div className="max-w-6xl w-full">
-        <div className="grid p-6 gap-6">
+        <div className="grid p-4 gap-4">
 
           <Block variant="ghost" className="flex items-center justify-between">
             <SubButton href="/">
@@ -313,7 +313,7 @@ export function ProfilePageClient({
             </DialogContent>
           </Dialog>
 
-          <div className="w-full grid lg:grid-cols-3 gap-6">
+          <div className="w-full grid lg:grid-cols-3 gap-4">
 
             {/* LEFT: profile */}
             <div className="col-span-1">
@@ -427,7 +427,7 @@ export function ProfilePageClient({
             </div>
 
             {/* RIGHT: results */}
-            <div className="col-span-1 lg:col-span-2 grid gap-6 content-start">
+            <div className="col-span-1 lg:col-span-2 grid gap-4 content-start">
 
 
               {results.length === 0 && externalResults.length === 0 ? (
@@ -435,8 +435,23 @@ export function ProfilePageClient({
               ) : (
                 results.map((result) => (
                   <Link key={result.id} href={resultHref(result)}>
-                    <Block className="grid lg:grid-cols-2 gap-6 hover:scale-101 transition-all duration-200">
-                      <div className="grid gap-2">
+                    <Block className="overflow-hidden flex flex-col lg:grid lg:grid-cols-2 gap-4 hover:scale-101 transition-all duration-200">
+                      <div className="-mx-6 -mt-6 lg:hidden">
+                        <AspectRatio ratio={16 / 9}>
+                          {result.header_image && result.header_image !== "/placeholder.png" ? (
+                            <Image
+                              src={result.header_image}
+                              alt={result.title}
+                              fill
+                              className="object-cover"
+                              unoptimized={isExternalImage(result.header_image)}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-primary" />
+                          )}
+                        </AspectRatio>
+                      </div>
+                      <div className="grid gap-2 lg:content-center">
                         <div className="flex items-center gap-2">
                           <h3 className="text-lg font-bold break-keep">
                             {result.title || "(無標題)"}
@@ -451,19 +466,21 @@ export function ProfilePageClient({
                           </p>
                         )}
                       </div>
-                      <AspectRatio ratio={16 / 9}>
-                        {result.header_image && result.header_image !== "/placeholder.png" ? (
-                          <Image
-                            src={result.header_image}
-                            alt={result.title}
-                            fill
-                            className="object-cover rounded-[2rem]"
-                            unoptimized={isExternalImage(result.header_image)}
-                          />
-                        ) : (
-                          <div className="w-full h-full rounded-[2rem] bg-primary" />
-                        )}
-                      </AspectRatio>
+                      <div className="hidden lg:block -my-6 -mr-6">
+                        <AspectRatio ratio={16 / 9}>
+                          {result.header_image && result.header_image !== "/placeholder.png" ? (
+                            <Image
+                              src={result.header_image}
+                              alt={result.title}
+                              fill
+                              className="object-cover"
+                              unoptimized={isExternalImage(result.header_image)}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-primary" />
+                          )}
+                        </AspectRatio>
+                      </div>
                     </Block>
                   </Link>
                 ))
@@ -472,8 +489,17 @@ export function ProfilePageClient({
               {/* External results */}
               {externalResults.map((ext) => {
                 const card = (
-                  <Block className="grid lg:grid-cols-2 gap-6 hover:scale-101 transition-all duration-200">
-                    <div className="grid gap-2">
+                  <Block className="overflow-hidden flex flex-col lg:grid lg:grid-cols-2 gap-4 hover:scale-101 transition-all duration-200">
+                    <div className="-mx-6 -mt-6 lg:hidden">
+                      <AspectRatio ratio={16 / 9}>
+                        {ext.image ? (
+                          <Image src={ext.image} alt={ext.title} fill className="object-cover" unoptimized />
+                        ) : (
+                          <div className="w-full h-full bg-primary" />
+                        )}
+                      </AspectRatio>
+                    </div>
+                    <div className="grid gap-2 lg:content-center">
                       <div className="flex items-center gap-2">
                         <h3 className="text-lg font-bold break-keep">{ext.title}</h3>
                         {isOwner && (
@@ -484,13 +510,15 @@ export function ProfilePageClient({
                         <p className="text-sm text-muted-foreground line-clamp-3">{ext.description}</p>
                       )}
                     </div>
-                    <AspectRatio ratio={16 / 9}>
-                      {ext.image ? (
-                        <Image src={ext.image} alt={ext.title} fill className="object-cover rounded-[2rem]" unoptimized />
-                      ) : (
-                        <div className="w-full h-full rounded-[2rem] bg-primary" />
-                      )}
-                    </AspectRatio>
+                    <div className="hidden lg:block -my-6 -mr-6">
+                      <AspectRatio ratio={16 / 9}>
+                        {ext.image ? (
+                          <Image src={ext.image} alt={ext.title} fill className="object-cover" unoptimized />
+                        ) : (
+                          <div className="w-full h-full bg-primary" />
+                        )}
+                      </AspectRatio>
+                    </div>
                   </Block>
                 );
 

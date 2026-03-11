@@ -104,7 +104,7 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
 
   return (
     <header className="sticky top-0 z-50 bg-nycu text-white">
-      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-6 text-xl font-bold">
+      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-6 text-xl font-bold">
         <Link href="/" className="inline-block text-2xl tracking-widest transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
           人工智慧專責辦公室
         </Link>
