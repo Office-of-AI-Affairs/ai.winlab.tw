@@ -124,10 +124,33 @@ export type Contact = {
   sort_order: number;
 };
 
+export type RecruitmentPositionType =
+  | "full_time"
+  | "internship"
+  | "part_time"
+  | "remote";
+
 export type RecruitmentPosition = {
   name: string;
-  count: number;
   location: string | null;
+  type: RecruitmentPositionType;
+  count: number;
+  salary: string | null;
+  responsibilities: string | null;
+  requirements: string | null;
+  nice_to_have: string | null;
+};
+
+export type ApplicationMethod = {
+  email?: string;
+  url?: string;
+  other?: string;
+};
+
+export type ContactInfo = {
+  name?: string;
+  email?: string;
+  phone?: string;
 };
 
 export type Recruitment = {
@@ -137,10 +160,13 @@ export type Recruitment = {
   title: string;
   link: string;
   image: string | null;
-  date: string;
-  description: string | null;
-  location: string | null;
+  company_description: string | null;
+  start_date: string;
+  end_date: string | null;
   positions: RecruitmentPosition[] | null;
+  application_method: ApplicationMethod | null;
+  contact: ContactInfo | null;
+  required_documents: string | null;
   event_id: string | null;
 };
 
