@@ -11,6 +11,7 @@ import type { Introduction } from "@/lib/supabase/types";
 import TiptapImage from "@tiptap/extension-image";
 import { generateHTML } from "@tiptap/html";
 import StarterKit from "@tiptap/starter-kit";
+import { useAutoSave } from "@/hooks/use-auto-save";
 import { ArrowLeft, Check, Eye, EyeOff, Loader2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -112,6 +113,8 @@ export default function IntroductionEditPage() {
     }
     setIsSaving(false);
   };
+
+  useAutoSave({ hasChanges, onSave: handleSave });
 
   if (isLoading || authLoading) {
     return (

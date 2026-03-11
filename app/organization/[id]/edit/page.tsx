@@ -13,6 +13,7 @@ import type {
 import { uploadOrganizationImage } from "@/lib/upload-image";
 import { isExternalImage } from "@/lib/utils";
 import { toast } from "sonner";
+import { useAutoSave } from "@/hooks/use-auto-save";
 import { ArrowLeft, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
@@ -100,6 +101,8 @@ export default function OrganizationMemberEditPage() {
     }
     setIsSaving(false);
   };
+
+  useAutoSave({ hasChanges, onSave: handleSave });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

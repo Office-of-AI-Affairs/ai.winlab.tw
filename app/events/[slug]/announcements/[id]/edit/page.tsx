@@ -12,6 +12,7 @@ import TiptapImage from "@tiptap/extension-image";
 import { generateHTML } from "@tiptap/html";
 import StarterKit from "@tiptap/starter-kit";
 import Youtube from "@tiptap/extension-youtube";
+import { useAutoSave } from "@/hooks/use-auto-save";
 import { ArrowLeft, Check, Eye, EyeOff, Loader2, Save, Send, Trash2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -81,6 +82,8 @@ export default function EventAnnouncementEditPage() {
     if (!error) setSavedAnnouncement({ ...announcement });
     setIsSaving(false);
   };
+
+  useAutoSave({ hasChanges, onSave: handleSave });
 
   const handlePublish = async () => {
     if (!announcement) return;

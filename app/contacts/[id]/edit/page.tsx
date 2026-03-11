@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import type { Contact } from "@/lib/supabase/types";
+import { useAutoSave } from "@/hooks/use-auto-save";
 import { ArrowLeft, Check, Loader2, Save, Trash2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -84,6 +85,8 @@ export default function ContactEditPage() {
     }
     setIsSaving(false);
   };
+
+  useAutoSave({ hasChanges, onSave: handleSave });
 
   const handleDelete = async () => {
     if (!confirm("確定要刪除此聯絡人嗎？")) return;

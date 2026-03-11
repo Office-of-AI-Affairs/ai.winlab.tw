@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Recruitment, RecruitmentPosition } from "@/lib/supabase/types";
 import { uploadRecruitmentImage } from "@/lib/upload-image";
 import { isExternalImage } from "@/lib/utils";
+import { useAutoSave } from "@/hooks/use-auto-save";
 import { toast } from "sonner";
 import { ArrowLeft, Check, ImagePlus, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -82,6 +83,8 @@ export default function RecruitmentEditPage() {
     if (!error) setSavedRecruitment({ ...recruitment });
     setIsSaving(false);
   };
+
+  useAutoSave({ hasChanges, onSave: handleSave });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Result } from "@/lib/supabase/types";
 import { uploadResultImage } from "@/lib/upload-image";
 import { isExternalImage } from "@/lib/utils";
+import { useAutoSave } from "@/hooks/use-auto-save";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -97,6 +98,8 @@ export default function EventResultEditPage() {
     if (!error) setSavedResult({ ...result });
     setIsSaving(false);
   };
+
+  useAutoSave({ hasChanges, onSave: handleSave });
 
   const handlePublish = async () => {
     if (!result) return;

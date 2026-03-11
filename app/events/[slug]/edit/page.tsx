@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Event } from "@/lib/supabase/types";
 import { uploadEventImage } from "@/lib/upload-image";
 import { isExternalImage } from "@/lib/utils";
+import { useAutoSave } from "@/hooks/use-auto-save";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -103,6 +104,8 @@ export default function EventEditPage() {
     }
     setIsSaving(false);
   };
+
+  useAutoSave({ hasChanges, onSave: handleSave });
 
   const handlePublish = async () => {
     if (!event) return;
