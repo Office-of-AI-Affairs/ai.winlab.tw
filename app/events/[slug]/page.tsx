@@ -46,7 +46,7 @@ export default async function EventDetailPage({
   const [announcementsRes, resultsRes, recruitmentsRes] = await Promise.all([
     announcementsQuery,
     resultsQuery,
-    supabase.from("competitions").select("*").eq("event_id", event.id).order("date", { ascending: false }),
+    supabase.from("competitions").select("*").eq("event_id", event.id).order("start_date", { ascending: false }),
   ]);
 
   // Resolve author/team names for results

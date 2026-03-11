@@ -1,14 +1,13 @@
 "use client";
 
 import { RecruitmentCard } from "@/components/recruitment-card";
+import { RecruitmentSheet } from "@/components/recruitment-sheet";
 import { ResultCard, type ResultWithMeta } from "@/components/result-card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth-provider";
 import { createClient } from "@/lib/supabase/client";
 import type { Announcement, Event, Recruitment } from "@/lib/supabase/types";
-import { isExternalImage } from "@/lib/utils";
 import { ArrowLeft, Loader2, Pencil, Plus } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
@@ -70,18 +69,11 @@ export function EventDetailClient({
     router.push(`/events/${slug}/results/${data.id}/edit`);
   };
 
-  const handleCreateRecruitment = async () => {
-    if (!user) return;
-    setIsCreating(true);
-    const supabase = createClient();
-    const { data, error } = await supabase.from("competitions").insert({
-      title: "新徵才", link: "", image: "/placeholder.png",
-      date: new Date().toISOString().slice(0, 10), description: null,
-      location: null, positions: null, event_id: event.id,
-    }).select().single();
-    if (error) { setIsCreating(false); return; }
-    router.push(`/events/${slug}/recruitment/${data.id}/edit`);
-  };
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingRecruitment, setEditingRecruitment] = useState<Recruitment | null>(null);
+
+  const openCreateSheet = () => { setEditingRecruitment(null); setSheetOpen(true); };
+  const openEditSheet = (r: Recruitment) => { setEditingRecruitment(r); setSheetOpen(true); };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12 flex flex-col gap-8">
@@ -222,8 +214,8 @@ export function EventDetailClient({
         <div className="flex flex-col gap-6">
           {isAdmin && (
             <div className="flex justify-end">
-              <Button variant="secondary" onClick={handleCreateRecruitment} disabled={isCreating}>
-                {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              <Button variant="secondary" onClick={openCreateSheet}>
+                <Plus className="w-4 h-4" />
                 新增徵才
               </Button>
             </div>
@@ -232,19 +224,14 @@ export function EventDetailClient({
             <div className="text-center py-12 text-muted-foreground">目前沒有徵才資訊</div>
           ) : (
             <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
-              {recruitments.map((item) =>
-                isAdmin ? (
-                  <Link href={`/events/${slug}/recruitment/${item.id}/edit`} key={item.id} className="h-full">
-                    <RecruitmentCard item={item} />
-                  </Link>
-                ) : (
-                  <Link href={item.link || "#"} key={item.id} className="h-full" target="_blank" rel="noopener noreferrer">
-                    <RecruitmentCard item={item} />
-                  </Link>
-                )
-              )}
+              {recruitments.map((item) => (
+                <Link href={`/events/${slug}/recruitment/${item.id}`} key={item.id} className="h-full">
+                  <RecruitmentCard item={item} onEdit={isAdmin ? () => openEditSheet(item) : undefined} />
+                </Link>
+              ))}
             </div>
           )}
+          <RecruitmentSheet open={sheetOpen} onOpenChange={setSheetOpen} recruitment={editingRecruitment} eventId={event.id} />
         </div>
       )}
     </div>
