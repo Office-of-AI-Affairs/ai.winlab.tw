@@ -1,7 +1,7 @@
 "use client";
 
 import { RecruitmentCard } from "@/components/recruitment-card";
-import { RecruitmentSheet } from "@/components/recruitment-sheet";
+import { RecruitmentDialog } from "@/components/recruitment-dialog";
 import { ResultCard, type ResultWithMeta } from "@/components/result-card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth-provider";
@@ -231,7 +231,7 @@ export function EventDetailClient({
               ))}
             </div>
           )}
-          <RecruitmentSheet open={sheetOpen} onOpenChange={setSheetOpen} recruitment={editingRecruitment} eventId={event.id} />
+          <RecruitmentDialog open={sheetOpen} onOpenChange={setSheetOpen} recruitment={editingRecruitment} eventId={event.id} />
         </div>
       )}
     </div>

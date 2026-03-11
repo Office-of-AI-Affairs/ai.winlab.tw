@@ -24,13 +24,13 @@ import type {
 } from "@/lib/supabase/types";
 
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Collapsible,
   CollapsibleContent,
@@ -113,19 +113,19 @@ function formDataFromRecruitment(r: Recruitment): FormData {
   };
 }
 
-type RecruitmentSheetProps = {
+type RecruitmentDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   recruitment: Recruitment | null;
   eventId: string | null;
 };
 
-export function RecruitmentSheet({
+export function RecruitmentDialog({
   open,
   onOpenChange,
   recruitment,
   eventId,
-}: RecruitmentSheetProps) {
+}: RecruitmentDialogProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<FormData>(getDefaults);
@@ -291,17 +291,16 @@ export function RecruitmentSheet({
   const isEditMode = recruitment !== null;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="w-full sm:max-w-[640px] flex flex-col p-0"
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="max-w-2xl max-h-[90vh] flex flex-col p-0"
       >
-        <SheetHeader className="px-6 pt-6 pb-0">
-          <SheetTitle>{isEditMode ? "編輯徵才" : "新增徵才"}</SheetTitle>
-          <SheetDescription>
+        <DialogHeader className="px-6 pt-6 pb-0">
+          <DialogTitle>{isEditMode ? "編輯徵才" : "新增徵才"}</DialogTitle>
+          <DialogDescription>
             {isEditMode ? "修改徵才資訊" : "建立新的徵才項目"}
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
         {/* Scrollable form body */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
@@ -691,7 +690,7 @@ export function RecruitmentSheet({
         </div>
 
         {/* Footer */}
-        <SheetFooter className="px-6 py-4 border-t flex-row gap-2">
+        <DialogFooter className="px-6 py-4 border-t flex-row gap-2">
           {isEditMode && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -724,8 +723,8 @@ export function RecruitmentSheet({
             {saving && <Loader2 className="size-4 animate-spin mr-1" />}
             {isEditMode ? "儲存" : "建立"}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

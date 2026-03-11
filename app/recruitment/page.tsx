@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/components/auth-provider";
 import { RecruitmentCard } from "@/components/recruitment-card";
-import { RecruitmentSheet } from "@/components/recruitment-sheet";
+import { RecruitmentDialog } from "@/components/recruitment-dialog";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import type { Recruitment } from "@/lib/supabase/types";
@@ -65,7 +65,7 @@ export default function RecruitmentPage() {
         </div>
       )}
 
-      <RecruitmentSheet open={sheetOpen} onOpenChange={setSheetOpen} recruitment={editingRecruitment} eventId={null} />
+      <RecruitmentDialog open={sheetOpen} onOpenChange={setSheetOpen} recruitment={editingRecruitment} eventId={null} />
     </div>
   );
 }

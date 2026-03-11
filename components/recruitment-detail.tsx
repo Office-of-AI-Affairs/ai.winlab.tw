@@ -41,85 +41,84 @@ export function RecruitmentDetail({
   const positionCount = recruitment.positions?.length ?? 0;
 
   return (
-    <div className="space-y-8">
+    <div>
       {/* Back link */}
       <Link
         href={backHref}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-10"
       >
         <ArrowLeft className="w-4 h-4" />
         {backLabel}
       </Link>
 
-      {/* Header */}
-      <div className="space-y-4">
-        {recruitment.image && (
-          <div className="relative w-full max-h-80 aspect-video overflow-hidden rounded-lg">
-            <Image
-              src={recruitment.image}
-              alt={recruitment.title}
-              fill
-              className="object-cover"
-              unoptimized={isExternalImage(recruitment.image)}
-            />
-          </div>
-        )}
-        <h1 className="text-3xl font-bold tracking-tight text-balance">
-          {recruitment.title}
-        </h1>
-        {recruitment.link && (
-          <a
-            href={recruitment.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ExternalLink className="w-4 h-4" />
-            前往網站
-          </a>
-        )}
-      </div>
-
-      {/* Company description */}
-      {recruitment.company_description && (
-        <div>
-          <p className="whitespace-pre-line text-muted-foreground">
-            {recruitment.company_description}
-          </p>
+      {/* Cover image */}
+      {recruitment.image && (
+        <div className="relative w-full max-h-80 aspect-video rounded-lg overflow-hidden mb-8">
+          <Image
+            src={recruitment.image}
+            alt={recruitment.title}
+            fill
+            className="object-cover"
+            unoptimized={isExternalImage(recruitment.image)}
+          />
         </div>
       )}
 
-      {/* Recruitment info bar */}
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-        <div className="flex items-center gap-1.5">
-          <Calendar className="w-4 h-4 text-muted-foreground" />
-          <span>
-            {recruitment.start_date} ~{" "}
-            {recruitment.end_date ?? "截止日未定"}
+      {/* Title section */}
+      <div className="max-w-6xl mb-8">
+        <h1 className="text-4xl font-extrabold tracking-tight text-balance mb-4">
+          {recruitment.title}
+        </h1>
+        <div className="flex items-center gap-2 text-base text-muted-foreground">
+          {recruitment.link && (
+            <>
+              <a
+                href={recruitment.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+              >
+                <ExternalLink className="w-4 h-4" />
+                前往網站
+              </a>
+              <span>&middot;</span>
+            </>
+          )}
+          <span className="inline-flex items-center gap-1.5">
+            <Calendar className="w-4 h-4" />
+            {recruitment.start_date} ~ {recruitment.end_date ?? "截止日未定"}
           </span>
           {isExpired && (
             <span className="ml-1.5 px-2 py-0.5 text-xs font-medium rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
               已截止
             </span>
           )}
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Briefcase className="w-4 h-4 text-muted-foreground" />
-          <span>
+          <span>&middot;</span>
+          <span className="inline-flex items-center gap-1.5">
+            <Briefcase className="w-4 h-4" />
             {positionCount > 0 ? `${positionCount} 個職缺` : "暫無職缺"}
           </span>
         </div>
       </div>
 
-      <hr />
+      <hr className="mb-8" />
+
+      {/* Company description */}
+      {recruitment.company_description && (
+        <div className="mb-10">
+          <p className="whitespace-pre-line text-base text-muted-foreground leading-relaxed">
+            {recruitment.company_description}
+          </p>
+        </div>
+      )}
 
       {/* Positions list */}
       {recruitment.positions && recruitment.positions.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-5 mb-10">
           {recruitment.positions.map((position, index) => (
             <div
               key={index}
-              className="rounded-lg border p-5 space-y-3"
+              className="rounded-xl border p-6 space-y-4"
             >
               {/* Position header */}
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -191,8 +190,8 @@ export function RecruitmentDetail({
         (recruitment.application_method.email ||
           recruitment.application_method.url ||
           recruitment.application_method.other) && (
-          <div className="space-y-3">
-            <h2 className="text-xl font-semibold">應徵方式</h2>
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold mb-3">應徵方式</h2>
             <div className="space-y-2 text-sm">
               {recruitment.application_method.email && (
                 <div className="flex items-center gap-1.5">
@@ -232,8 +231,8 @@ export function RecruitmentDetail({
         (recruitment.contact.name ||
           recruitment.contact.email ||
           recruitment.contact.phone) && (
-          <div className="space-y-3">
-            <h2 className="text-xl font-semibold">聯絡窗口</h2>
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold mb-3">聯絡窗口</h2>
             <div className="space-y-2 text-sm">
               {recruitment.contact.name && (
                 <div className="flex items-center gap-1.5">
@@ -269,9 +268,9 @@ export function RecruitmentDetail({
 
       {/* Required documents */}
       {recruitment.required_documents && (
-        <div className="space-y-3">
-          <h2 className="text-xl font-semibold">應備文件</h2>
-          <p className="whitespace-pre-line text-sm text-muted-foreground">
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold mb-3">應備文件</h2>
+          <p className="whitespace-pre-line text-base text-muted-foreground">
             {recruitment.required_documents}
           </p>
         </div>
