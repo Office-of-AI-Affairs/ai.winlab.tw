@@ -141,14 +141,14 @@ export function RecruitmentDetail({
               {position.salary && (
                 <div className="flex items-center gap-1.5 text-sm">
                   <Wallet className="w-4 h-4 text-muted-foreground" />
-                  <span>{position.salary}</span>
+                  <span><strong>薪資範圍：</strong>{position.salary}</span>
                 </div>
               )}
 
               {/* Responsibilities */}
               {position.responsibilities && (
                 <div className="space-y-1">
-                  <h3 className="text-sm font-medium text-muted-foreground">
+                  <h3 className="text-sm font-bold">
                     工作內容
                   </h3>
                   <p className="whitespace-pre-line text-sm">
@@ -160,7 +160,7 @@ export function RecruitmentDetail({
               {/* Requirements */}
               {position.requirements && (
                 <div className="space-y-1">
-                  <h3 className="text-sm font-medium text-muted-foreground">
+                  <h3 className="text-sm font-bold">
                     必備條件
                   </h3>
                   <p className="whitespace-pre-line text-sm">
@@ -172,7 +172,7 @@ export function RecruitmentDetail({
               {/* Nice-to-have */}
               {position.nice_to_have && (
                 <div className="space-y-1">
-                  <h3 className="text-sm font-medium text-muted-foreground">
+                  <h3 className="text-sm font-bold">
                     加分條件
                   </h3>
                   <p className="whitespace-pre-line text-sm">
