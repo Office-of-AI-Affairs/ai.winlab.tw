@@ -147,11 +147,11 @@ export function RecruitmentDetail({
 
               {/* Responsibilities */}
               {position.responsibilities && (
-                <div className="space-y-1">
-                  <h3 className="text-sm font-bold">
+                <div className="border-l-2 border-primary/30 pl-4 space-y-1.5 pt-2">
+                  <h3 className="text-base font-bold">
                     工作內容
                   </h3>
-                  <p className="whitespace-pre-line text-sm">
+                  <p className="whitespace-pre-line text-sm text-muted-foreground">
                     {position.responsibilities}
                   </p>
                 </div>
@@ -159,11 +159,11 @@ export function RecruitmentDetail({
 
               {/* Requirements */}
               {position.requirements && (
-                <div className="space-y-1">
-                  <h3 className="text-sm font-bold">
+                <div className="border-l-2 border-primary/30 pl-4 space-y-1.5 pt-2">
+                  <h3 className="text-base font-bold">
                     必備條件
                   </h3>
-                  <p className="whitespace-pre-line text-sm">
+                  <p className="whitespace-pre-line text-sm text-muted-foreground">
                     {position.requirements}
                   </p>
                 </div>
@@ -171,11 +171,11 @@ export function RecruitmentDetail({
 
               {/* Nice-to-have */}
               {position.nice_to_have && (
-                <div className="space-y-1">
-                  <h3 className="text-sm font-bold">
+                <div className="border-l-2 border-primary/30 pl-4 space-y-1.5 pt-2">
+                  <h3 className="text-base font-bold">
                     加分條件
                   </h3>
-                  <p className="whitespace-pre-line text-sm">
+                  <p className="whitespace-pre-line text-sm text-muted-foreground">
                     {position.nice_to_have}
                   </p>
                 </div>
