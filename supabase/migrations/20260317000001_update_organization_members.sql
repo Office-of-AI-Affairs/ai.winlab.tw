@@ -6,16 +6,20 @@ ALTER TABLE organization_members
   ADD COLUMN website TEXT,
   ADD COLUMN member_role TEXT;
 
--- 2. Create new enum type
-CREATE TYPE organization_member_category_new
-  AS ENUM ('core', 'legal_entity', 'industry');
-
--- 3. Migrate all existing rows to 'core'
+-- 2. Update check constraint to new category values
+-- (temporarily allow both old and new to enable data migration)
 ALTER TABLE organization_members
-  ALTER COLUMN category DROP DEFAULT,
-  ALTER COLUMN category TYPE organization_member_category_new
-    USING 'core'::organization_member_category_new;
+  DROP CONSTRAINT organization_members_category_check,
+  ADD CONSTRAINT organization_members_category_check
+    CHECK (category = ANY (ARRAY['core'::text, 'legal_entity'::text, 'industry'::text, 'ai_newcomer'::text, 'industry_academy'::text, 'alumni'::text]));
 
--- 4. Swap enum type
-DROP TYPE organization_member_category;
-ALTER TYPE organization_member_category_new RENAME TO organization_member_category;
+-- 3. Migrate existing rows to 'core'
+UPDATE organization_members
+  SET category = 'core'
+  WHERE category IN ('ai_newcomer', 'industry_academy', 'alumni');
+
+-- 4. Apply final constraint with new values only
+ALTER TABLE organization_members
+  DROP CONSTRAINT organization_members_category_check,
+  ADD CONSTRAINT organization_members_category_check
+    CHECK (category = ANY (ARRAY['core'::text, 'legal_entity'::text, 'industry'::text]));
