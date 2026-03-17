@@ -20,9 +20,9 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const CATEGORIES: { value: OrganizationMemberCategory; label: string }[] = [
-  { value: "ai_newcomer", label: "AI新秀" },
-  { value: "industry_academy", label: "產學聯盟" },
-  { value: "alumni", label: "校友" },
+  { value: "core", label: "核心成員" },
+  { value: "legal_entity", label: "法人" },
+  { value: "industry", label: "產業" },
 ];
 
 export default function OrganizationMemberEditPage() {
@@ -47,7 +47,12 @@ export default function OrganizationMemberEditPage() {
         (member.image ?? "") !== (savedMember.image ?? "") ||
         (member.link ?? "") !== (savedMember.link ?? "") ||
         member.category !== savedMember.category ||
-        member.sort_order !== savedMember.sort_order
+        member.sort_order !== savedMember.sort_order ||
+        (member.school ?? "") !== (savedMember.school ?? "") ||
+        (member.research_areas ?? "") !== (savedMember.research_areas ?? "") ||
+        (member.email ?? "") !== (savedMember.email ?? "") ||
+        (member.website ?? "") !== (savedMember.website ?? "") ||
+        (member.member_role ?? "") !== (savedMember.member_role ?? "")
       : false;
 
   const fetchMember = useCallback(async () => {
@@ -91,6 +96,11 @@ export default function OrganizationMemberEditPage() {
         link: member.link || null,
         category: member.category,
         sort_order: member.sort_order,
+        school: member.school || null,
+        research_areas: member.research_areas || null,
+        email: member.email || null,
+        website: member.website || null,
+        member_role: member.member_role || null,
       })
       .eq("id", id);
 
@@ -259,6 +269,54 @@ export default function OrganizationMemberEditPage() {
                 sort_order: parseInt(e.target.value, 10) || 0,
               })
             }
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label>職稱（選填）</Label>
+          <Input
+            value={member.member_role ?? ""}
+            onChange={(e) => setMember({ ...member, member_role: e.target.value || null })}
+            placeholder="例：主任、副主任、合聘專家"
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label>最高學歷（選填）</Label>
+          <Input
+            value={member.school ?? ""}
+            onChange={(e) => setMember({ ...member, school: e.target.value || null })}
+            placeholder="例：國立台灣大學（電機博士）"
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label>研究領域（選填）</Label>
+          <Textarea
+            className="min-h-[80px] resize-y"
+            value={member.research_areas ?? ""}
+            onChange={(e) => setMember({ ...member, research_areas: e.target.value || null })}
+            placeholder="研究領域（以頓號或換行分隔）"
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label>Email（選填）</Label>
+          <Input
+            type="email"
+            value={member.email ?? ""}
+            onChange={(e) => setMember({ ...member, email: e.target.value || null })}
+            placeholder="professor@university.edu.tw"
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label>個人網頁（選填）</Label>
+          <Input
+            type="url"
+            value={member.website ?? ""}
+            onChange={(e) => setMember({ ...member, website: e.target.value || null })}
+            placeholder="https://..."
           />
         </div>
 

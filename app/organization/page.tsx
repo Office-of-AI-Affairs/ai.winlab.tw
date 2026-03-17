@@ -2,7 +2,7 @@ import { OrganizationPageClient } from "./client";
 import { createClient } from "@/lib/supabase/server";
 import type { OrganizationMember, OrganizationMemberCategory } from "@/lib/supabase/types";
 
-const CATEGORIES: OrganizationMemberCategory[] = ["ai_newcomer", "industry_academy", "alumni"];
+const CATEGORIES: OrganizationMemberCategory[] = ["core", "legal_entity", "industry"];
 
 export default async function OrganizationPage() {
   const supabase = await createClient();
