@@ -446,8 +446,8 @@ export function RecruitmentDialog({
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <span
-                          role="button"
+                        <button
+                          type="button"
                           className="p-1 hover:bg-destructive/10 hover:text-destructive rounded"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -455,7 +455,7 @@ export function RecruitmentDialog({
                           }}
                         >
                           <Trash2 className="size-3.5" />
-                        </span>
+                        </button>
                         <ChevronDown className="size-4 transition-transform [[data-state=open]_&]:rotate-180" />
                       </div>
                     </button>

@@ -11,6 +11,7 @@ const homeAnnouncementTable = readFileSync(resolve(process.cwd(), "components/ho
 const recruitmentPage = readFileSync(resolve(process.cwd(), "app/recruitment/page.tsx"), "utf8")
 const eventClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/client.tsx"), "utf8")
 const recruitmentCard = readFileSync(resolve(process.cwd(), "components/recruitment-card.tsx"), "utf8")
+const recruitmentDialog = readFileSync(resolve(process.cwd(), "components/recruitment-dialog.tsx"), "utf8")
 
 describe("accessibility contracts", () => {
   test("root layout provides a skip link and a main landmark", () => {
@@ -39,5 +40,9 @@ describe("accessibility contracts", () => {
     assert.ok(!recruitmentPage.includes("<Link href={`/recruitment/${item.id}`}"))
     assert.ok(eventClient.includes("href={`/events/${slug}/recruitment/${item.id}`}"))
     assert.ok(!eventClient.includes("<Link href={`/events/${slug}/recruitment/${item.id}`}"))
+  })
+
+  test("interactive controls do not rely on role=button shims", () => {
+    assert.ok(!recruitmentDialog.includes('role="button"'))
   })
 })
