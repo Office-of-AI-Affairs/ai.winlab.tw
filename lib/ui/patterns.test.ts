@@ -7,6 +7,10 @@ import { getAutoLinkProps, pageSectionVariants, pageShellVariants } from "./patt
 
 const globalsCss = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8")
 const agentsMd = readFileSync(resolve(process.cwd(), "AGENTS.md"), "utf8")
+const homeIntroduction = readFileSync(resolve(process.cwd(), "components/home-introduction.tsx"), "utf8")
+const recruitmentDialog = readFileSync(resolve(process.cwd(), "components/recruitment-dialog.tsx"), "utf8")
+const organizationMemberDialog = readFileSync(resolve(process.cwd(), "components/organization-member-dialog.tsx"), "utf8")
+const tiptapEditor = readFileSync(resolve(process.cwd(), "components/tiptap-editor.tsx"), "utf8")
 
 function collectProjectFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((entry) => {
@@ -91,6 +95,13 @@ describe("global UI patterns", () => {
     })
 
     assert.deepEqual(offenders, [])
+  })
+
+  test("uses typographic ellipsis in user-facing copy where the repo already standardizes it", () => {
+    assert.ok(!homeIntroduction.includes('+ "..."'))
+    assert.ok(!recruitmentDialog.includes("上傳中..."))
+    assert.ok(!organizationMemberDialog.includes("上傳中..."))
+    assert.ok(!tiptapEditor.includes("開始撰寫公告內容..."))
   })
 })
 

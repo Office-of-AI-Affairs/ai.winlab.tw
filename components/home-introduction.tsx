@@ -17,7 +17,7 @@ export async function HomeIntroduction() {
       : "";
 
   const truncatedText =
-    contentText.length > 150 ? contentText.slice(0, 150) + "..." : contentText;
+    contentText.length > 150 ? `${contentText.slice(0, 150)}…` : contentText;
 
   return (
     <div className="bg-muted/40 py-20 px-4">
