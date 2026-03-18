@@ -5,6 +5,7 @@ import { AppLink } from "@/components/app-link";
 import { PageShell } from "@/components/page-shell";
 import { UsersTable, type UserRow } from "@/components/users-table";
 import { createClient } from "@/lib/supabase/client";
+import { buildUsersCsv, parseUsersCsv } from "@/lib/users-csv";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -15,57 +16,13 @@ const roleLabel: Record<string, string> = {
   user: "一般用戶",
 };
 
-// ── CSV helpers ──────────────────────────────────────────────
-
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-  for (const ch of line) {
-    if (ch === '"') { inQuotes = !inQuotes; }
-    else if (ch === "," && !inQuotes) { result.push(current); current = ""; }
-    else { current += ch; }
-  }
-  result.push(current);
-  return result.map((s) => s.trim().replace(/^"|"$/g, ""));
-}
-
-function parseImportCSV(text: string): { name: string; email: string }[] {
-  const lines = text.trim().split(/\r?\n/);
-  if (lines.length < 2) return [];
-  const headers = parseCSVLine(lines[0]).map((h) => h.toLowerCase());
-  const nameIdx = headers.findIndex((h) => h === "name");
-  const emailIdx = headers.findIndex((h) => h === "email");
-  if (emailIdx === -1) return [];
-  return lines
-    .slice(1)
-    .filter((l) => l.trim())
-    .map((l) => {
-      const cols = parseCSVLine(l);
-      return {
-        name: nameIdx !== -1 ? cols[nameIdx] ?? "" : "",
-        email: cols[emailIdx] ?? "",
-      };
-    })
-    .filter((u) => u.email);
-}
-
 function exportUsersCSV(users: UserRow[]) {
-  const headers = ["name", "email", "role", "joined"];
-  const rows = users.map((u) => [
-    u.display_name ?? "",
-    u.email,
-    u.role,
-    new Date(u.created_at).toISOString().split("T")[0],
-  ]);
-  const csv = [headers, ...rows]
-    .map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
-    .join("\n");
+  const { csv, filename } = buildUsersCsv(users);
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `users-${new Date().toISOString().split("T")[0]}.csv`;
+  a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -120,7 +77,7 @@ export default function SettingsUsersPage() {
     if (!file) return;
 
     const text = await file.text();
-    const rows = parseImportCSV(text);
+    const rows = parseUsersCsv(text);
     if (rows.length === 0) {
       toast.error("CSV 格式錯誤或無有效資料。請確認標頭包含 name 和 email 欄位。");
       return;
