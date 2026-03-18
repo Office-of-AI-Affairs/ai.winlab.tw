@@ -47,7 +47,7 @@ function OrgNode({
   return (
     <div
       ref={nodeRef}
-      className={`flex flex-col items-center justify-center text-center px-4 py-3 bg-card min-w-[110px] border transition-all duration-200 ${
+      className={`flex flex-col items-center justify-center rounded-[1rem] bg-card px-4 py-3 text-center min-w-[110px] border transition-all duration-200 ${
         highlighted
           ? "border-foreground/40 border-2 shadow-sm"
           : "border-border"
