@@ -42,16 +42,6 @@ export function OrganizationPageClient({
     setDialogOpen(true);
   };
 
-  const handleCardClick = (member: OrganizationMember) => {
-    if (isAdmin) {
-      openEdit(member);
-      return;
-    }
-    if (member.website) {
-      window.open(member.website, "_blank", "noopener,noreferrer");
-    }
-  };
-
   return (
     <div className="max-w-6xl mx-auto px-4 py-12 flex flex-col gap-10">
       <OrgChart activeTab={tab} />
@@ -84,17 +74,10 @@ export function OrganizationPageClient({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {members.map((member) => {
-              const isClickable = isAdmin || !!member.website;
-              return (
-                <Card
-                  key={member.id}
-                  className={`py-0 overflow-hidden flex flex-col ${
-                    isClickable
-                      ? "cursor-pointer interactive-scale"
-                      : ""
-                  }`}
-                  onClick={isClickable ? () => handleCardClick(member) : undefined}
-                >
+              const showWebsiteLink = !isAdmin && !!member.website;
+
+              const memberContent = (
+                <>
                   <div className="relative w-full aspect-square shrink-0 overflow-hidden">
                     <Image
                       src={member.image || "/placeholder.png"}
@@ -131,7 +114,6 @@ export function OrganizationPageClient({
                           <AppLink
                             href={`mailto:${member.email}`}
                             className="flex items-center gap-2 text-base text-muted-foreground"
-                            onClick={(e) => e.stopPropagation()}
                           >
                             <Mail className="w-4 h-4 shrink-0" />
                             <span className="truncate">{member.email}</span>
@@ -139,8 +121,38 @@ export function OrganizationPageClient({
                         )}
                       </div>
                     )}
+
+                    {showWebsiteLink && (
+                      <div className="pt-2">
+                        <AppLink
+                          href={member.website!}
+                          className="inline-flex items-center text-sm font-medium text-foreground"
+                        >
+                          前往網站
+                        </AppLink>
+                      </div>
+                    )}
                   </div>
-                </Card>
+                </>
+              );
+
+              return (
+                isAdmin ? (
+                  <button
+                    key={member.id}
+                    type="button"
+                    className="text-left"
+                    onClick={() => openEdit(member)}
+                  >
+                    <Card className="py-0 overflow-hidden flex flex-col cursor-pointer interactive-scale h-full">
+                      {memberContent}
+                    </Card>
+                  </button>
+                ) : (
+                  <Card key={member.id} className="py-0 overflow-hidden flex flex-col h-full">
+                    {memberContent}
+                  </Card>
+                )
               );
             })}
           </div>

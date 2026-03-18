@@ -1,4 +1,5 @@
 import "@/app/globals.css";
+import { AppLink } from "@/components/app-link";
 import { AuthProvider } from "@/components/auth-provider";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
@@ -47,10 +48,17 @@ export default async function RootLayout({
           <NuqsAdapter>
             <AuthProvider>
               <div className="relative flex flex-col min-h-dvh">
+                <AppLink
+                  href="#main-content"
+                  interactive={false}
+                  className="sr-only absolute left-4 top-4 z-[60] rounded-md bg-background px-3 py-2 text-sm font-medium text-foreground shadow-md focus:not-sr-only focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  跳至主要內容
+                </AppLink>
                 <Header pinnedEvents={pinnedEvents ?? []} />
-                <div className="flex-1">
+                <main id="main-content" className="flex-1">
                   {children}
-                </div>
+                </main>
                 <Footer />
               </div>
               <Toaster />
