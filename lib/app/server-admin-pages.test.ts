@@ -15,6 +15,13 @@ const organizationPage = readFileSync(resolve(process.cwd(), "app/organization/p
 const settingsPage = readFileSync(resolve(process.cwd(), "app/settings/page.tsx"), "utf8")
 const announcementEditPage = readFileSync(resolve(process.cwd(), "app/announcement/[id]/edit/page.tsx"), "utf8")
 const eventEditPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/edit/page.tsx"), "utf8")
+const contactEditPage = readFileSync(resolve(process.cwd(), "app/contacts/[id]/edit/page.tsx"), "utf8")
+const privacyEditPage = readFileSync(resolve(process.cwd(), "app/privacy/edit/page.tsx"), "utf8")
+const introductionEditPage = readFileSync(resolve(process.cwd(), "app/introduction/edit/page.tsx"), "utf8")
+const carouselEditPage = readFileSync(resolve(process.cwd(), "app/carousel/[id]/edit/page.tsx"), "utf8")
+const organizationEditPage = readFileSync(resolve(process.cwd(), "app/organization/[id]/edit/page.tsx"), "utf8")
+const eventAnnouncementEditPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/page.tsx"), "utf8")
+const resultEditPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/page.tsx"), "utf8")
 
 describe("server admin page contracts", () => {
   test("carousel, contacts, and settings users pages are server-gated", () => {
@@ -67,5 +74,36 @@ describe("server admin page contracts", () => {
     }
     assert.ok(existsSync(resolve(process.cwd(), "app/announcement/[id]/edit/client.tsx")))
     assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/edit/client.tsx")))
+  })
+
+  test("remaining admin edit routes are server-gated wrappers around client editors", () => {
+    for (const content of [
+      contactEditPage,
+      privacyEditPage,
+      introductionEditPage,
+      carouselEditPage,
+      organizationEditPage,
+      eventAnnouncementEditPage,
+    ]) {
+      assert.ok(!content.includes('"use client"'))
+      assert.ok(content.includes('from "@/lib/supabase/require-admin-server"'))
+      assert.ok(content.includes('from "./client"'))
+      assert.ok(!content.includes("useAuth("))
+      assert.ok(!content.includes("useEffect("))
+    }
+    assert.ok(existsSync(resolve(process.cwd(), "app/contacts/[id]/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/privacy/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/introduction/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/carousel/[id]/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/organization/[id]/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/client.tsx")))
+  })
+
+  test("result edit route is server-gated before the client editor mounts", () => {
+    assert.ok(!resultEditPage.includes('"use client"'))
+    assert.ok(resultEditPage.includes('from "@/lib/supabase/get-viewer"'))
+    assert.ok(resultEditPage.includes('from "./client"'))
+    assert.ok(!resultEditPage.includes("useAuth("))
+    assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/client.tsx")))
   })
 })
