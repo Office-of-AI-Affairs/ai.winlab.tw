@@ -199,7 +199,8 @@ Defined in `app/globals.css`:
 
 ## Delivery workflow
 
-- Treat each completed implementation topic as its own unit of work and create a git commit after the relevant code, tests, and docs for that topic are verified.
+- Treat each completed implementation topic as its own unit of work and create a git commit as soon as the relevant code, tests, and docs for that topic are verified.
+- Do not pause to ask for permission before making a topic-scoped commit once verification is complete.
 - Before proposing a push, run the relevant local verification commands for the current topic.
 - When the overall requested goal is finished, stop and ask the user to confirm before pushing anything upstream.
 - Do not push on the user's behalf until they explicitly confirm that the final state is ready.
