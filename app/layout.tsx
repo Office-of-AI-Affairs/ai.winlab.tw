@@ -4,6 +4,7 @@ import { AuthProvider } from "@/components/auth-provider";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Toaster } from "@/components/ui/sonner";
+import type { Profile } from "@/lib/supabase/types";
 import { createClient } from "@/lib/supabase/server";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
@@ -34,6 +35,20 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let initialProfile: Profile | null = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+    initialProfile = (profile as Profile | null) ?? null;
+  }
+
   const { data: pinnedEvents } = await supabase
     .from("events")
     .select("name, slug")
@@ -46,7 +61,7 @@ export default async function RootLayout({
       <body className={`${notoSans.variable} ${notoSansMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <NuqsAdapter>
-            <AuthProvider>
+            <AuthProvider initialUser={user ?? null} initialProfile={initialProfile}>
               <div className="relative flex flex-col min-h-dvh">
                 <AppLink
                   href="#main-content"

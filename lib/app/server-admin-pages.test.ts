@@ -22,6 +22,8 @@ const carouselEditPage = readFileSync(resolve(process.cwd(), "app/carousel/[id]/
 const organizationEditPage = readFileSync(resolve(process.cwd(), "app/organization/[id]/edit/page.tsx"), "utf8")
 const eventAnnouncementEditPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/page.tsx"), "utf8")
 const resultEditPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/page.tsx"), "utf8")
+const rootLayout = readFileSync(resolve(process.cwd(), "app/layout.tsx"), "utf8")
+const authProvider = readFileSync(resolve(process.cwd(), "components/auth-provider.tsx"), "utf8")
 
 describe("server admin page contracts", () => {
   test("carousel, contacts, and settings users pages are server-gated", () => {
@@ -105,5 +107,15 @@ describe("server admin page contracts", () => {
     assert.ok(resultEditPage.includes('from "./client"'))
     assert.ok(!resultEditPage.includes("useAuth("))
     assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/client.tsx")))
+  })
+
+  test("root auth provider is server-seeded instead of booting from an empty client state", () => {
+    assert.ok(rootLayout.includes("<AuthProvider"))
+    assert.ok(rootLayout.includes("initialUser={"))
+    assert.ok(rootLayout.includes("initialProfile={"))
+    assert.ok(authProvider.includes("initialUser?: User | null"))
+    assert.ok(authProvider.includes("initialProfile?: Profile | null"))
+    assert.ok(authProvider.includes("useState<User | null>(initialUser ?? null)"))
+    assert.ok(authProvider.includes("useState<Profile | null>(initialProfile ?? null)"))
   })
 })

@@ -25,11 +25,19 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const userIdRef = useRef<string | null>(null);
+export function AuthProvider({
+  children,
+  initialUser,
+  initialProfile,
+}: {
+  children: React.ReactNode;
+  initialUser?: User | null;
+  initialProfile?: Profile | null;
+}) {
+  const [user, setUser] = useState<User | null>(initialUser ?? null);
+  const [profile, setProfile] = useState<Profile | null>(initialProfile ?? null);
+  const [isLoading, setIsLoading] = useState(initialUser === undefined ? true : false);
+  const userIdRef = useRef<string | null>(initialUser?.id ?? null);
   const supabase = createClient();
   const router = useRouter();
   const userId = user?.id ?? null;
@@ -73,21 +81,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [fetchProfile, userId]);
 
   useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user: u },
-      } = await supabase.auth.getUser();
+    if (initialUser === undefined) {
+      const getUser = async () => {
+        const {
+          data: { user: u },
+        } = await supabase.auth.getUser();
         userIdRef.current = u?.id ?? null;
         setUser(u);
-      if (u?.id) {
-        await fetchProfile(u.id);
-      } else {
-        setProfile(null);
-      }
-      setIsLoading(false);
-    };
+        if (u?.id) {
+          await fetchProfile(u.id);
+        } else {
+          setProfile(null);
+        }
+        setIsLoading(false);
+      };
 
-    getUser();
+      void getUser();
+    }
 
     const {
       data: { subscription },
@@ -118,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase.auth, fetchProfile]);
+  }, [supabase.auth, fetchProfile, initialUser]);
 
   const signIn = useCallback(
     async (email: string, password: string) => {
