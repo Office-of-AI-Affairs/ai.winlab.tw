@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Recruitment } from "@/lib/supabase/types";
 import { isExternalImage } from "@/lib/utils";
 import { Pencil } from "lucide-react";
@@ -69,6 +70,25 @@ export function RecruitmentCard({ item, onEdit }: RecruitmentCardProps) {
               已截止
             </span>
           )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function RecruitmentCardSkeleton() {
+  return (
+    <Card className="py-0 h-full flex flex-col gap-4 overflow-hidden">
+      <Skeleton className="aspect-video w-full rounded-none" />
+      <CardHeader className="shrink-0 pb-0">
+        <Skeleton className="h-7 w-3/4 rounded-lg" />
+      </CardHeader>
+      <CardContent className="flex-1 pt-1 pb-4 flex flex-col gap-2">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-2/3" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-5 w-14 rounded-full" />
         </div>
       </CardContent>
     </Card>

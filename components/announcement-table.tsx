@@ -1,5 +1,6 @@
 "use client";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -65,6 +66,59 @@ export function AnnouncementTable({
                   >
                     {item.status === "published" ? "已發布" : "草稿"}
                   </span>
+                </TableCell>
+              )}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+export function AnnouncementTableSkeleton({
+  rows = 6,
+  showStatus = false,
+}: {
+  rows?: number;
+  showStatus?: boolean;
+}) {
+  return (
+    <div className="rounded-xl border border-border overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted h-12">
+            <TableHead className="text-base font-bold" style={{ paddingLeft: "1.25rem" }}>
+              <Skeleton className="h-4 w-16" />
+            </TableHead>
+            <TableHead className="text-base font-bold">
+              <Skeleton className="h-4 w-12" />
+            </TableHead>
+            <TableHead className="text-base font-bold whitespace-normal">
+              <Skeleton className="h-4 w-20" />
+            </TableHead>
+            {showStatus && (
+              <TableHead className="text-base font-bold">
+                <Skeleton className="h-4 w-12" />
+              </TableHead>
+            )}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: rows }).map((_, index) => (
+            <TableRow key={index} className="h-12">
+              <TableCell className="text-base" style={{ paddingLeft: "1.25rem" }}>
+                <Skeleton className="h-4 w-20" />
+              </TableCell>
+              <TableCell className="text-base">
+                <Skeleton className="h-4 w-16" />
+              </TableCell>
+              <TableCell className="text-base whitespace-normal">
+                <Skeleton className="h-4 w-full" />
+              </TableCell>
+              {showStatus && (
+                <TableCell className="text-base">
+                  <Skeleton className="h-4 w-12" />
                 </TableCell>
               )}
             </TableRow>
