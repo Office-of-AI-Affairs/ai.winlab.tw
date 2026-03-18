@@ -13,6 +13,8 @@ const eventsPage = readFileSync(resolve(process.cwd(), "app/events/page.tsx"), "
 const eventDetailPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/page.tsx"), "utf8")
 const organizationPage = readFileSync(resolve(process.cwd(), "app/organization/page.tsx"), "utf8")
 const settingsPage = readFileSync(resolve(process.cwd(), "app/settings/page.tsx"), "utf8")
+const announcementEditPage = readFileSync(resolve(process.cwd(), "app/announcement/[id]/edit/page.tsx"), "utf8")
+const eventEditPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/edit/page.tsx"), "utf8")
 
 describe("server admin page contracts", () => {
   test("carousel, contacts, and settings users pages are server-gated", () => {
@@ -53,5 +55,17 @@ describe("server admin page contracts", () => {
       assert.ok(content.includes("getViewer(") || content.includes("await getViewer("))
       assert.ok(!content.includes('.from("profiles").select("role")'))
     }
+  })
+
+  test("announcement and event edit routes are server-gated wrappers around client editors", () => {
+    for (const content of [announcementEditPage, eventEditPage]) {
+      assert.ok(!content.includes('"use client"'))
+      assert.ok(content.includes('from "@/lib/supabase/require-admin-server"'))
+      assert.ok(content.includes('from "./client"'))
+      assert.ok(!content.includes("useAuth("))
+      assert.ok(!content.includes("useEffect("))
+    }
+    assert.ok(existsSync(resolve(process.cwd(), "app/announcement/[id]/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/edit/client.tsx")))
   })
 })
