@@ -96,14 +96,14 @@ export default function ResetPasswordPage() {
 
         <Card className="p-8">
           {pageState === "waiting" && (
-            <div className="flex flex-col items-center gap-3 py-4">
+            <div role="status" className="flex flex-col items-center gap-3 py-4">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
               <p className="text-sm text-muted-foreground">驗證中…</p>
             </div>
           )}
 
           {(isInvalidLink || pageState === "invalid") && (
-            <div className="flex flex-col items-center gap-4 py-4">
+            <div role="alert" className="flex flex-col items-center gap-4 py-4">
               <XCircle className="w-10 h-10 text-destructive" />
               <div className="text-center">
                 <p className="font-medium">連結無效或已過期</p>
@@ -116,7 +116,7 @@ export default function ResetPasswordPage() {
           )}
 
           {pageState === "success" && (
-            <div className="flex flex-col items-center gap-4 py-4">
+            <div role="status" className="flex flex-col items-center gap-4 py-4">
               <CheckCircle2 className="w-10 h-10 text-green-600" />
               <div className="text-center">
                 <p className="font-medium">密碼已更新</p>
@@ -132,14 +132,14 @@ export default function ResetPasswordPage() {
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="password">新密碼</Label>
-                <Input id="password" name="password" type="password" placeholder="至少 6 字元，含大小寫與特殊符號" required />
+                <Input id="password" name="password" type="password" autoComplete="new-password" placeholder="至少 6 字元，含大小寫與特殊符號" required />
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="confirm">確認新密碼</Label>
-                <Input id="confirm" name="confirm" type="password" placeholder="再次輸入新密碼" required />
+                <Input id="confirm" name="confirm" type="password" autoComplete="new-password" placeholder="再次輸入新密碼" required />
               </div>
               {error && (
-                <p className="text-sm font-medium text-destructive text-center">{error}</p>
+                <p role="alert" className="text-sm font-medium text-destructive text-center">{error}</p>
               )}
               <Button type="submit" className="w-full mt-1" disabled={isLoading}>
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "更新密碼"}

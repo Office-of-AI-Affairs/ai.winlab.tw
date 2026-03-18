@@ -69,7 +69,11 @@ function UsersTable({
       </div>
 
       {importResult && (
-        <div className="mb-8 flex flex-col gap-1 rounded-xl border bg-muted/40 px-4 py-3 text-sm">
+        <div
+          role="status"
+          aria-live="polite"
+          className="mb-8 flex flex-col gap-1 rounded-xl border bg-muted/40 px-4 py-3 text-sm"
+        >
           <p className="font-medium">
             匯入完成：成功建立 {importResult.created} 位，跳過 {importResult.skipped} 位重複用戶
           </p>

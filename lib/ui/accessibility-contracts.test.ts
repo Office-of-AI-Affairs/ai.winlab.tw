@@ -13,6 +13,10 @@ const eventClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/clien
 const recruitmentCard = readFileSync(resolve(process.cwd(), "components/recruitment-card.tsx"), "utf8")
 const recruitmentDialog = readFileSync(resolve(process.cwd(), "components/recruitment-dialog.tsx"), "utf8")
 const tiptapEditor = readFileSync(resolve(process.cwd(), "components/tiptap-editor.tsx"), "utf8")
+const loginPage = readFileSync(resolve(process.cwd(), "app/login/page.tsx"), "utf8")
+const forgotPasswordPage = readFileSync(resolve(process.cwd(), "app/forgot-password/page.tsx"), "utf8")
+const resetPasswordPage = readFileSync(resolve(process.cwd(), "app/reset-password/page.tsx"), "utf8")
+const usersTable = readFileSync(resolve(process.cwd(), "components/users-table.tsx"), "utf8")
 
 describe("accessibility contracts", () => {
   test("root layout provides a skip link and a main landmark", () => {
@@ -52,5 +56,17 @@ describe("accessibility contracts", () => {
     assert.ok(tiptapEditor.includes('ariaLabel="插入 YouTube 影片"'))
     assert.ok(tiptapEditor.includes("focus-within:ring-2"))
     assert.ok(tiptapEditor.includes("focus-within:ring-ring"))
+  })
+
+  test("auth flows and import feedback expose autocomplete and live regions", () => {
+    assert.ok(loginPage.includes('autoComplete="email"'))
+    assert.ok(loginPage.includes('autoComplete="current-password"'))
+    assert.ok(loginPage.includes('role="alert"'))
+    assert.ok(forgotPasswordPage.includes('autoComplete="email"'))
+    assert.ok(forgotPasswordPage.includes('role="status"'))
+    assert.ok(resetPasswordPage.includes('autoComplete="new-password"'))
+    assert.ok(resetPasswordPage.includes('role="status"'))
+    assert.ok(resetPasswordPage.includes('role="alert"'))
+    assert.ok(usersTable.includes('aria-live="polite"'))
   })
 })

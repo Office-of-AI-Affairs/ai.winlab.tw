@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
 
         <Card className="p-8">
           {sent ? (
-            <div className="flex flex-col items-center gap-4 py-4">
+            <div role="status" className="flex flex-col items-center gap-4 py-4">
               <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                 <Mail className="w-6 h-6 text-muted-foreground" />
               </div>
@@ -62,10 +62,10 @@ export default function ForgotPasswordPage() {
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="email">電子信箱</Label>
-                <Input id="email" name="email" type="email" placeholder="your@email.com" required />
+                <Input id="email" name="email" type="email" autoComplete="email" placeholder="your@email.com" required />
               </div>
               {error && (
-                <p className="text-sm font-medium text-destructive text-center">{error}</p>
+                <p role="alert" className="text-sm font-medium text-destructive text-center">{error}</p>
               )}
               <Button type="submit" className="w-full mt-1" disabled={isLoading}>
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "發送重設連結"}

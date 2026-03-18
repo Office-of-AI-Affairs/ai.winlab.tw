@@ -37,7 +37,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">電子信箱</Label>
-              <Input id="email" name="email" type="email" placeholder="your@email.com" required />
+              <Input id="email" name="email" type="email" autoComplete="email" placeholder="your@email.com" required />
             </div>
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
@@ -46,10 +46,10 @@ export default function LoginPage() {
                   忘記密碼？
                 </Link>
               </div>
-              <Input id="password" name="password" type="password" required />
+              <Input id="password" name="password" type="password" autoComplete="current-password" required />
             </div>
             {error && (
-              <p className="text-sm font-medium text-destructive text-center">錯誤的帳號或密碼</p>
+              <p role="alert" className="text-sm font-medium text-destructive text-center">錯誤的帳號或密碼</p>
             )}
             <Button type="submit" className="w-full mt-1" disabled={isLoading}>
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "登入"}
