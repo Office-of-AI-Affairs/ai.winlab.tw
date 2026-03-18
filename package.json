@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "check": "bun run test && bun run typecheck"
   },
   "dependencies": {
     "@paper-design/shaders-react": "^0.0.71",
