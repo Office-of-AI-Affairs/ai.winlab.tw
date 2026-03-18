@@ -194,6 +194,8 @@ Defined in `app/globals.css`:
 ## Maintenance note
 
 - When agent instructions need updates, edit this file instead of `CLAUDE.md`.
+- Keep `AGENTS.md` and `rules/*.md` in sync when repository guidance changes.
+- The remote branch should carry the latest committed versions of both `AGENTS.md` and `rules/*.md`.
 
 ## Delivery workflow
 
