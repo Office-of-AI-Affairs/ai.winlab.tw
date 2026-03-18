@@ -1,6 +1,6 @@
 import { SettingsMenu } from "@/components/settings-menu";
 import { PageShell } from "@/components/page-shell";
-import { createClient } from "@/lib/supabase/server";
+import { getViewer } from "@/lib/supabase/get-viewer";
 import { FileText, Image, Users } from "lucide-react";
 import { redirect } from "next/navigation";
 
@@ -26,17 +26,9 @@ const items = [
 ];
 
 export default async function SettingsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { user, isAdmin } = await getViewer();
   if (!user) redirect("/login");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role !== "admin") redirect("/");
+  if (!isAdmin) redirect("/");
 
   return (
     <PageShell className="block">

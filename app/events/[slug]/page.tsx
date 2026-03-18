@@ -1,5 +1,5 @@
 import { EventDetailClient } from "./client";
-import { createClient } from "@/lib/supabase/server";
+import { getViewer } from "@/lib/supabase/get-viewer";
 import type { Announcement, Event, Recruitment, Result } from "@/lib/supabase/types";
 import type { ResultWithMeta } from "@/components/result-card";
 import { redirect } from "next/navigation";
@@ -10,14 +10,7 @@ export default async function EventDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  let isAdmin = false;
-  if (user) {
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-    isAdmin = profile?.role === "admin";
-  }
+  const { supabase, user, isAdmin } = await getViewer();
 
   // Fetch event
   const eventQuery = supabase.from("events").select("*").eq("slug", slug);

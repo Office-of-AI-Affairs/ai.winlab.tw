@@ -1,18 +1,11 @@
 import { OrganizationPageClient } from "./client";
-import { createClient } from "@/lib/supabase/server";
+import { getViewer } from "@/lib/supabase/get-viewer";
 import type { OrganizationMember, OrganizationMemberCategory } from "@/lib/supabase/types";
 
 const CATEGORIES: OrganizationMemberCategory[] = ["core", "legal_entity", "industry"];
 
 export default async function OrganizationPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  let isAdmin = false;
-  if (user) {
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-    isAdmin = profile?.role === "admin";
-  }
+  const { supabase, isAdmin } = await getViewer();
 
   const { data: allMembers } = await supabase
     .from("organization_members")

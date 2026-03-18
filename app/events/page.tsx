@@ -3,20 +3,13 @@ import { EventsCreateButton } from "@/components/events-create-button";
 import { PageShell } from "@/components/page-shell";
 import { Block } from "@/components/ui/block";
 import { SubButton } from "@/components/ui/sub-button";
-import { createClient } from "@/lib/supabase/server";
+import { getViewer } from "@/lib/supabase/get-viewer";
 import type { Event } from "@/lib/supabase/types";
 import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
 
 export default async function EventsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  let isAdmin = false;
-  if (user) {
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-    isAdmin = profile?.role === "admin";
-  }
+  const { supabase, user, isAdmin } = await getViewer();
 
   const query = supabase
     .from("events")

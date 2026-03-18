@@ -1,16 +1,9 @@
 import { AnnouncementPageClient } from "./client";
-import { createClient } from "@/lib/supabase/server";
+import { getViewer } from "@/lib/supabase/get-viewer";
 import type { Announcement } from "@/lib/supabase/types";
 
 export default async function AnnouncementPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  let isAdmin = false;
-  if (user) {
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-    isAdmin = profile?.role === "admin";
-  }
+  const { supabase, user, isAdmin } = await getViewer();
 
   const query = supabase
     .from("announcements")
