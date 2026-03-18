@@ -6,6 +6,7 @@ import { describe, test } from "node:test"
 const carouselPage = readFileSync(resolve(process.cwd(), "app/carousel/page.tsx"), "utf8")
 const contactsPage = readFileSync(resolve(process.cwd(), "app/contacts/page.tsx"), "utf8")
 const settingsUsersPage = readFileSync(resolve(process.cwd(), "app/settings/users/page.tsx"), "utf8")
+const homeOrganization = readFileSync(resolve(process.cwd(), "components/home-organization.tsx"), "utf8")
 
 describe("server admin page contracts", () => {
   test("carousel, contacts, and settings users pages are server-gated", () => {
@@ -20,5 +21,13 @@ describe("server admin page contracts", () => {
     assert.ok(existsSync(resolve(process.cwd(), "app/carousel/client.tsx")))
     assert.ok(existsSync(resolve(process.cwd(), "app/contacts/client.tsx")))
     assert.ok(existsSync(resolve(process.cwd(), "app/settings/users/client.tsx")))
+  })
+
+  test("home organization section is server-renderable instead of client-fetched", () => {
+    assert.ok(!homeOrganization.includes('"use client"'))
+    assert.ok(homeOrganization.includes('from "@/lib/supabase/server"'))
+    assert.ok(!homeOrganization.includes('from "@/lib/supabase/client"'))
+    assert.ok(!homeOrganization.includes("useEffect("))
+    assert.ok(homeOrganization.includes("await createClient()"))
   })
 })

@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -7,47 +5,27 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 import type { OrganizationMember } from "@/lib/supabase/types";
 import { isExternalImage } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
-export function HomeOrganization() {
-  const supabase = createClient();
-  const [members, setMembers] = useState<OrganizationMember[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export async function HomeOrganization() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("organization_members")
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false })
+    .limit(6);
 
-  useEffect(() => {
-    const fetchMembers = async () => {
-      const { data, error } = await supabase
-        .from("organization_members")
-        .select("*")
-        .order("sort_order", { ascending: true })
-        .order("created_at", { ascending: false })
-        .limit(6);
-
-      if (error) {
-        console.error("Error fetching organization members:", error);
-      } else {
-        setMembers((data as OrganizationMember[]) || []);
-      }
-      setIsLoading(false);
-    };
-
-    fetchMembers();
-  }, [supabase]);
-
-  if (isLoading) {
-    return (
-      <div className="container max-w-6xl mx-auto py-16 px-4 flex justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+  if (error) {
+    console.error("Error fetching organization members:", error);
+    return null;
   }
 
+  const members = (data as OrganizationMember[]) ?? [];
   if (members.length === 0) {
     return null;
   }
