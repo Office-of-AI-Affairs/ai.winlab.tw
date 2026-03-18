@@ -52,9 +52,7 @@ export function AnnouncementPageClient({
         <AnnouncementTable
           announcements={announcements}
           showStatus={isAdmin}
-          onRowClick={(item) =>
-            router.push(isAdmin ? `/announcement/${item.id}/edit` : `/announcement/${item.id}`)
-          }
+          getHref={(item) => (isAdmin ? `/announcement/${item.id}/edit` : `/announcement/${item.id}`)}
         />
       )}
     </PageShell>

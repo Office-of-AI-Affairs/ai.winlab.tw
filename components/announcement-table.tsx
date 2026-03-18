@@ -1,5 +1,6 @@
 "use client";
 
+import { AppLink } from "@/components/app-link";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -13,11 +14,11 @@ import type { Announcement } from "@/lib/supabase/types";
 
 export function AnnouncementTable({
   announcements,
-  onRowClick,
+  getHref,
   showStatus = false,
 }: {
   announcements: Announcement[];
-  onRowClick: (item: Announcement) => void;
+  getHref: (item: Announcement) => string;
   showStatus?: boolean;
 }) {
   return (
@@ -42,32 +43,29 @@ export function AnnouncementTable({
           {announcements.map((item) => (
             <TableRow
               key={item.id}
-              className="cursor-pointer h-12 hover:bg-muted/60 transition-colors"
-              onClick={() => onRowClick(item)}
+              className="h-12 hover:bg-muted/60 transition-colors"
             >
-              <TableCell
-                className="text-base"
-                style={{ paddingLeft: "1.25rem" }}
-              >
-                {item.date}
-              </TableCell>
-              <TableCell className="text-base">{item.category}</TableCell>
-              <TableCell className="text-base whitespace-normal">
-                {item.title || "(無標題)"}
-              </TableCell>
-              {showStatus && (
-                <TableCell className="text-base">
-                  <span
-                    className={
-                      item.status === "published"
-                        ? "text-green-600"
-                        : "text-yellow-600"
-                    }
-                  >
-                    {item.status === "published" ? "已發布" : "草稿"}
+              <TableCell colSpan={showStatus ? 4 : 3} className="p-0">
+                <AppLink
+                  href={getHref(item)}
+                  className="grid min-h-12 w-full items-center text-base [grid-template-columns:8rem_7rem_minmax(0,1fr)] sm:[grid-template-columns:8rem_7rem_minmax(0,1fr)]"
+                >
+                  <span className="px-4 py-3" style={{ paddingLeft: "1.25rem" }}>
+                    {item.date}
                   </span>
-                </TableCell>
-              )}
+                  <span className="px-4 py-3">{item.category}</span>
+                  <span className="min-w-0 px-4 py-3 whitespace-normal">
+                    {item.title || "(無標題)"}
+                  </span>
+                  {showStatus && (
+                    <span
+                      className={`px-4 py-3 ${item.status === "published" ? "text-green-600" : "text-yellow-600"}`}
+                    >
+                      {item.status === "published" ? "已發布" : "草稿"}
+                    </span>
+                  )}
+                </AppLink>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
