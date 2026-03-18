@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const userIdRef = useRef<string | null>(null);
   const supabase = createClient();
   const router = useRouter();
+  const userId = user?.id ?? null;
 
   const fetchProfile = useCallback(
     async (uid: string) => {
@@ -68,16 +69,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const refreshProfile = useCallback(async () => {
-    if (user?.id) await fetchProfile(user.id);
-  }, [user?.id, fetchProfile]);
+    if (userId) await fetchProfile(userId);
+  }, [fetchProfile, userId]);
 
   useEffect(() => {
     const getUser = async () => {
       const {
         data: { user: u },
       } = await supabase.auth.getUser();
-      userIdRef.current = u?.id ?? null;
-      setUser(u);
+        userIdRef.current = u?.id ?? null;
+        setUser(u);
       if (u?.id) {
         await fetchProfile(u.id);
       } else {

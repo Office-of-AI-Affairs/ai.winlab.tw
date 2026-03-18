@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function EventResultEditPage() {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
@@ -56,37 +56,79 @@ export default function EventResultEditPage() {
         JSON.stringify(result.content) !== JSON.stringify(savedResult.content)
       : false;
 
-  const fetchResult = useCallback(async () => {
-    const { data, error } = await supabase.from("results").select("*").eq("id", id).single();
-    if (error) { router.push(`/events/${slug}?tab=results`); return; }
-
-    const r = { ...data, type: (data as Result).type ?? "personal", team_id: (data as Result).team_id ?? null } as Result;
-    setResult(r);
-    setSavedResult(r);
-
-    if (r.type === "team" && r.team_id) {
-      const { data: teamData } = await supabase.from("teams").select("name").eq("id", r.team_id).single();
-      setPublisherInfo({ name: teamData?.name || "未知團隊", href: `/team/${r.team_id}` });
-    } else if (r.author_id) {
-      const { data: profileData } = await supabase.from("profiles").select("display_name").eq("id", r.author_id).single();
-      setPublisherInfo({ name: profileData?.display_name || "未知使用者", href: `/profile/${r.author_id}` });
-    }
-
-    if (!user) { setCanEdit(false); }
-    else if (isAdmin) { setCanEdit(true); }
-    else if (r.author_id === user.id) { setCanEdit(true); }
-    else if (r.type === "team" && r.team_id) {
-      const { data: tm } = await supabase.from("team_members").select("role").eq("team_id", r.team_id).eq("user_id", user.id).single();
-      setCanEdit(tm?.role === "leader");
-    } else { setCanEdit(false); }
-
-    setIsLoading(false);
-  }, [supabase, id, slug, router, user, isAdmin]);
-
   useEffect(() => {
     if (!authLoading && !user) { router.push("/login"); return; }
-    if (user) fetchResult();
-  }, [user, authLoading, fetchResult, router]);
+    if (!user) return;
+    const currentUser = user;
+
+    let cancelled = false;
+
+    async function loadResult() {
+      const { data, error } = await supabase.from("results").select("*").eq("id", id).single();
+      if (error) {
+        router.push(`/events/${slug}?tab=results`);
+        return;
+      }
+
+      const loadedResult = {
+        ...data,
+        type: (data as Result).type ?? "personal",
+        team_id: (data as Result).team_id ?? null,
+      } as Result;
+
+      let nextPublisherInfo: PublisherInfo = null;
+
+      if (loadedResult.type === "team" && loadedResult.team_id) {
+        const { data: teamData } = await supabase
+          .from("teams")
+          .select("name")
+          .eq("id", loadedResult.team_id)
+          .single();
+        nextPublisherInfo = {
+          name: teamData?.name || "未知團隊",
+          href: `/team/${loadedResult.team_id}`,
+        };
+      } else if (loadedResult.author_id) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", loadedResult.author_id)
+          .single();
+        nextPublisherInfo = {
+          name: profileData?.display_name || "未知使用者",
+          href: `/profile/${loadedResult.author_id}`,
+        };
+      }
+
+      let nextCanEdit = false;
+
+      if (isAdmin || loadedResult.author_id === currentUser.id) {
+        nextCanEdit = true;
+      } else if (loadedResult.type === "team" && loadedResult.team_id) {
+        const { data: tm } = await supabase
+          .from("team_members")
+          .select("role")
+          .eq("team_id", loadedResult.team_id)
+          .eq("user_id", currentUser.id)
+          .single();
+        nextCanEdit = tm?.role === "leader";
+      }
+
+      if (cancelled) return;
+
+      setResult(loadedResult);
+      setSavedResult(loadedResult);
+      setPublisherInfo(nextPublisherInfo);
+      setCanEdit(nextCanEdit);
+      setIsLoading(false);
+    }
+
+    void loadResult();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, id, isAdmin, router, slug, supabase, user]);
 
   const handleSave = async () => {
     if (!result) return;

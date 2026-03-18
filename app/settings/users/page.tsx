@@ -96,8 +96,23 @@ export default function SettingsUsersPage() {
   useEffect(() => {
     if (!authLoading && !user) { router.push("/login"); return; }
     if (!authLoading && user && !isAdmin) { router.push("/"); return; }
-    if (user) fetchUsers();
-  }, [user, authLoading, isAdmin, fetchUsers, router]);
+    if (!user) return;
+
+    let cancelled = false;
+
+    async function loadUsers() {
+      const { data } = await supabase.rpc("get_all_users");
+      if (cancelled) return;
+      setUsers((data as UserRow[]) ?? []);
+      setIsLoading(false);
+    }
+
+    void loadUsers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, isAdmin, router, supabase, user]);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

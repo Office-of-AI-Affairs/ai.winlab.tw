@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ImagePlus, Loader2, Trash2 } from "lucide-react";
@@ -98,14 +98,12 @@ type Props = {
 export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCategory }: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [formData, setFormData] = useState<FormData>(() => getDefaults(defaultCategory));
+  const [formData, setFormData] = useState<FormData>(() =>
+    member ? formDataFromMember(member) : getDefaults(defaultCategory)
+  );
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
-
-  useEffect(() => {
-    setFormData(member ? formDataFromMember(member) : getDefaults(defaultCategory));
-  }, [member, defaultCategory]);
 
   function update<K extends keyof FormData>(key: K, value: FormData[K]) {
     setFormData((prev) => ({ ...prev, [key]: value }));

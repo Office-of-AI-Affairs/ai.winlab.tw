@@ -46,8 +46,33 @@ export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }:
   }, [supabase]);
 
   useEffect(() => {
-    fetchTags();
-  }, [fetchTags]);
+    let cancelled = false;
+
+    async function loadTags() {
+      const { data } = await supabase
+        .from("tags")
+        .select("*")
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+
+      if (cancelled) return;
+
+      const allTags = (data as Tag[]) || [];
+      const parents = allTags.filter((t) => t.parent_id === null);
+      const grouped: TagWithChildren[] = parents.map((p) => ({
+        ...p,
+        children: allTags.filter((c) => c.parent_id === p.id),
+      }));
+      setTags(grouped);
+      setIsLoading(false);
+    }
+
+    void loadTags();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
 
   const handleAddParent = async () => {
     if (!inputValue.trim()) return;

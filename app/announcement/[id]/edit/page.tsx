@@ -16,7 +16,7 @@ import Youtube from "@tiptap/extension-youtube";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import { ArrowLeft, Check, Eye, EyeOff, Loader2, Save, Send, Trash2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function AnnouncementEditPage() {
   const { user, isLoading: authLoading, isAdmin } = useAuth();
@@ -40,24 +40,6 @@ export default function AnnouncementEditPage() {
     JSON.stringify(announcement.content) !== JSON.stringify(savedAnnouncement.content)
     : false;
 
-  const fetchAnnouncement = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("announcements")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error) {
-      console.error("Error fetching announcement:", error);
-      router.push("/announcement");
-      return;
-    }
-
-    setAnnouncement(data);
-    setSavedAnnouncement(data);
-    setIsLoading(false);
-  }, [supabase, id, router]);
-
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/login");
@@ -67,21 +49,49 @@ export default function AnnouncementEditPage() {
       router.push(`/announcement/${id}`);
       return;
     }
-    if (user && isAdmin) {
-      fetchAnnouncement();
+    if (!(user && isAdmin)) return;
+
+    let cancelled = false;
+
+    async function loadAnnouncement() {
+      const { data, error } = await supabase
+        .from("announcements")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching announcement:", error);
+        router.push("/announcement");
+        return;
+      }
+
+      if (cancelled) return;
+
+      setAnnouncement(data);
+      setSavedAnnouncement(data);
+      setIsLoading(false);
     }
-  }, [user, isAdmin, authLoading, fetchAnnouncement, router, id]);
+
+    void loadAnnouncement();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, id, isAdmin, router, supabase, user]);
+
+  const announcementContent = announcement?.content;
 
   const previewContentHtml = useMemo(
     () =>
-      announcement?.content && Object.keys(announcement.content).length > 0
-        ? generateHTML(announcement.content, [
+      announcementContent && Object.keys(announcementContent).length > 0
+        ? generateHTML(announcementContent, [
             StarterKit,
             TiptapImage.configure({ HTMLAttributes: { class: "rounded-lg max-w-full h-auto" } }),
             Youtube,
           ])
         : "<p>（無內容）</p>",
-    [announcement?.content]
+    [announcementContent]
   );
 
   const handleSave = async () => {

@@ -14,7 +14,7 @@ import { useAutoSave } from "@/hooks/use-auto-save";
 import { ArrowLeft, Check, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function CarouselEditPage() {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
@@ -40,24 +40,6 @@ export default function CarouselEditPage() {
         slide.sort_order !== savedSlide.sort_order
       : false;
 
-  const fetchSlide = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("carousel_slides")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error) {
-      console.error("Error fetching carousel slide:", error);
-      router.push("/carousel");
-      return;
-    }
-
-    setSlide(data as CarouselSlide);
-    setSavedSlide(data as CarouselSlide);
-    setIsLoading(false);
-  }, [supabase, id, router]);
-
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/login");
@@ -67,8 +49,36 @@ export default function CarouselEditPage() {
       router.push("/");
       return;
     }
-    if (user && isAdmin) fetchSlide();
-  }, [user, authLoading, isAdmin, fetchSlide, router]);
+    if (!(user && isAdmin)) return;
+
+    let cancelled = false;
+
+    async function loadSlide() {
+      const { data, error } = await supabase
+        .from("carousel_slides")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching carousel slide:", error);
+        router.push("/carousel");
+        return;
+      }
+
+      if (cancelled) return;
+
+      setSlide(data as CarouselSlide);
+      setSavedSlide(data as CarouselSlide);
+      setIsLoading(false);
+    }
+
+    void loadSlide();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, id, isAdmin, router, supabase, user]);
 
   const handleSave = async () => {
     if (!slide) return;

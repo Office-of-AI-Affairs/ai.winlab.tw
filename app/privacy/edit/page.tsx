@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ArrowLeft, Check, Loader2, RotateCcw, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 type VersionRecord = {
   id: string;
@@ -35,27 +35,38 @@ export default function PrivacyEditPage() {
 
   const hasChanges = JSON.stringify(content) !== JSON.stringify(savedContent);
 
-  const fetchData = useCallback(async () => {
-    const { data } = await supabase
-      .from("privacy_policy")
-      .select("id, version, content, note, created_at, profiles!created_by(display_name)")
-      .order("version", { ascending: false });
-
-    if (data && data.length > 0) {
-      const typed = data as unknown as VersionRecord[];
-      setContent(typed[0].content);
-      setSavedContent(typed[0].content);
-      setLatestVersion(typed[0].version);
-      setVersions(typed);
-    }
-    setIsLoading(false);
-  }, [supabase]);
-
   useEffect(() => {
     if (!authLoading && !user) { router.push("/login"); return; }
     if (!authLoading && user && !isAdmin) { router.push("/privacy"); return; }
-    if (user) fetchData();
-  }, [user, authLoading, isAdmin, fetchData, router]);
+    if (!user) return;
+
+    let cancelled = false;
+
+    async function loadPrivacyData() {
+      const { data } = await supabase
+        .from("privacy_policy")
+        .select("id, version, content, note, created_at, profiles!created_by(display_name)")
+        .order("version", { ascending: false });
+
+      if (!cancelled && data && data.length > 0) {
+        const typed = data as unknown as VersionRecord[];
+        setContent(typed[0].content);
+        setSavedContent(typed[0].content);
+        setLatestVersion(typed[0].version);
+        setVersions(typed);
+      }
+
+      if (!cancelled) {
+        setIsLoading(false);
+      }
+    }
+
+    void loadPrivacyData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, isAdmin, router, supabase, user]);
 
   const handleSave = async () => {
     if (!hasChanges || !user) return;
@@ -69,7 +80,17 @@ export default function PrivacyEditPage() {
     if (!error) {
       setSavedContent({ ...content });
       setNote("");
-      await fetchData();
+      const { data } = await supabase
+        .from("privacy_policy")
+        .select("id, version, content, note, created_at, profiles!created_by(display_name)")
+        .order("version", { ascending: false });
+      if (data && data.length > 0) {
+        const typed = data as unknown as VersionRecord[];
+        setContent(typed[0].content);
+        setSavedContent(typed[0].content);
+        setLatestVersion(typed[0].version);
+        setVersions(typed);
+      }
     }
     setIsSaving(false);
   };

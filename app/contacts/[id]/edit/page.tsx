@@ -10,7 +10,7 @@ import type { Contact } from "@/lib/supabase/types";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import { ArrowLeft, Check, Loader2, Save, Trash2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function ContactEditPage() {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
@@ -34,24 +34,6 @@ export default function ContactEditPage() {
         contact.sort_order !== savedContact.sort_order
       : false;
 
-  const fetchContact = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("contacts")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error) {
-      console.error("Error fetching contact:", error);
-      router.push("/contacts");
-      return;
-    }
-
-    setContact(data as Contact);
-    setSavedContact(data as Contact);
-    setIsLoading(false);
-  }, [supabase, id, router]);
-
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/login");
@@ -61,8 +43,36 @@ export default function ContactEditPage() {
       router.push("/");
       return;
     }
-    if (user && isAdmin) fetchContact();
-  }, [authLoading, user, isAdmin, fetchContact, router]);
+    if (!(user && isAdmin)) return;
+
+    let cancelled = false;
+
+    async function loadContact() {
+      const { data, error } = await supabase
+        .from("contacts")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching contact:", error);
+        router.push("/contacts");
+        return;
+      }
+
+      if (cancelled) return;
+
+      setContact(data as Contact);
+      setSavedContact(data as Contact);
+      setIsLoading(false);
+    }
+
+    void loadContact();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, id, isAdmin, router, supabase, user]);
 
   const handleSave = async () => {
     if (!contact) return;

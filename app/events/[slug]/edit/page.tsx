@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function EventEditPage() {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
@@ -52,23 +52,38 @@ export default function EventEditPage() {
       event.sort_order !== savedEvent.sort_order
     : false;
 
-  const fetchEvent = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("events")
-      .select("*")
-      .eq("slug", slug)
-      .single();
-    if (error || !data) { router.push("/events"); return; }
-    setEvent(data as Event);
-    setSavedEvent(data as Event);
-    setIsLoading(false);
-  }, [supabase, slug, router]);
-
   useEffect(() => {
     if (!authLoading && !user) { router.push("/login"); return; }
     if (!authLoading && user && !isAdmin) { router.push("/events"); return; }
-    if (user && isAdmin) fetchEvent();
-  }, [user, isAdmin, authLoading, fetchEvent, router]);
+    if (!(user && isAdmin)) return;
+
+    let cancelled = false;
+
+    async function loadEvent() {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .eq("slug", slug)
+        .single();
+
+      if (error || !data) {
+        router.push("/events");
+        return;
+      }
+
+      if (cancelled) return;
+
+      setEvent(data as Event);
+      setSavedEvent(data as Event);
+      setIsLoading(false);
+    }
+
+    void loadEvent();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, isAdmin, router, slug, supabase, user]);
 
   const handleSave = async () => {
     if (!event) return;

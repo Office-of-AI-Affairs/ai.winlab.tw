@@ -18,7 +18,7 @@ import { useAutoSave } from "@/hooks/use-auto-save";
 import { ArrowLeft, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const CATEGORIES: { value: OrganizationMemberCategory; label: string }[] = [
   { value: "core", label: "核心成員" },
@@ -56,33 +56,41 @@ export default function OrganizationMemberEditPage() {
         (member.member_role ?? "") !== (savedMember.member_role ?? "")
       : false;
 
-  const fetchMember = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("organization_members")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error) {
-      console.error("Error fetching organization member:", error);
-      router.push("/organization");
-      return;
-    }
-
-    setMember(data as OrganizationMember);
-    setSavedMember(data as OrganizationMember);
-    setIsLoading(false);
-  }, [supabase, id, router]);
-
   useEffect(() => {
     if (!authLoading && !isAdmin) {
       router.push("/organization");
       return;
     }
-    if (isAdmin) {
-      fetchMember();
+    if (!isAdmin) return;
+
+    let cancelled = false;
+
+    async function loadMember() {
+      const { data, error } = await supabase
+        .from("organization_members")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching organization member:", error);
+        router.push("/organization");
+        return;
+      }
+
+      if (cancelled) return;
+
+      setMember(data as OrganizationMember);
+      setSavedMember(data as OrganizationMember);
+      setIsLoading(false);
     }
-  }, [isAdmin, authLoading, fetchMember, router]);
+
+    void loadMember();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, id, isAdmin, router, supabase]);
 
   const handleSave = async () => {
     if (!member) return;

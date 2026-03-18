@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Recruitment } from "@/lib/supabase/types";
 import { Loader2, Plus } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function RecruitmentPage() {
   const { isAdmin } = useAuth();
@@ -19,21 +19,33 @@ export default function RecruitmentPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingRecruitment, setEditingRecruitment] = useState<Recruitment | null>(null);
 
-  const fetchRecruitments = useCallback(async () => {
-    setIsLoading(true);
-    const { data, error } = await supabase
-      .from("competitions")
-      .select("*")
-      .is("event_id", null)
-      .order("start_date", { ascending: false });
-    if (error) console.error("Error fetching recruitments:", error);
-    else setRecruitments(data || []);
-    setIsLoading(false);
-  }, [supabase]);
-
   useEffect(() => {
-    fetchRecruitments();
-  }, [fetchRecruitments]);
+    let cancelled = false;
+
+    async function loadRecruitments() {
+      const { data, error } = await supabase
+        .from("competitions")
+        .select("*")
+        .is("event_id", null)
+        .order("start_date", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching recruitments:", error);
+      } else if (!cancelled) {
+        setRecruitments(data || []);
+      }
+
+      if (!cancelled) {
+        setIsLoading(false);
+      }
+    }
+
+    void loadRecruitments();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
 
   const openCreateSheet = () => { setEditingRecruitment(null); setSheetOpen(true); };
   const openEditSheet = (r: Recruitment) => { setEditingRecruitment(r); setSheetOpen(true); };

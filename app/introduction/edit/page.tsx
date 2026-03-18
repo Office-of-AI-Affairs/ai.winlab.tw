@@ -15,7 +15,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import { ArrowLeft, Check, Eye, EyeOff, Loader2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function IntroductionEditPage() {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
@@ -33,43 +33,6 @@ export default function IntroductionEditPage() {
     JSON.stringify(introduction.content) !== JSON.stringify(savedIntroduction.content)
     : false;
 
-  const fetchIntroduction = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("introduction")
-      .select("*")
-      .single();
-
-    if (error) {
-      console.error("Error fetching introduction:", error);
-      // If no data exists, create initial record
-      if (error.code === "PGRST116") {
-        const { data: newData, error: insertError } = await supabase
-          .from("introduction")
-          .insert({
-            title: "國立陽明交通大學 人工智慧專責辦公室",
-            content: {},
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          console.error("Error creating introduction:", insertError);
-          router.push("/introduction");
-          return;
-        }
-        setIntroduction(newData);
-        setSavedIntroduction(newData);
-      } else {
-        router.push("/introduction");
-        return;
-      }
-    } else {
-      setIntroduction(data);
-      setSavedIntroduction(data);
-    }
-    setIsLoading(false);
-  }, [supabase, router]);
-
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/login");
@@ -79,20 +42,71 @@ export default function IntroductionEditPage() {
       router.push("/introduction");
       return;
     }
-    if (user && isAdmin) {
-      fetchIntroduction();
+    if (!(user && isAdmin)) return;
+
+    let cancelled = false;
+
+    async function loadIntroduction() {
+      const { data, error } = await supabase
+        .from("introduction")
+        .select("*")
+        .single();
+
+      if (error) {
+        console.error("Error fetching introduction:", error);
+        if (error.code === "PGRST116") {
+          const { data: newData, error: insertError } = await supabase
+            .from("introduction")
+            .insert({
+              title: "國立陽明交通大學 人工智慧專責辦公室",
+              content: {},
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error("Error creating introduction:", insertError);
+            router.push("/introduction");
+            return;
+          }
+
+          if (cancelled) return;
+
+          setIntroduction(newData);
+          setSavedIntroduction(newData);
+          setIsLoading(false);
+          return;
+        }
+
+        router.push("/introduction");
+        return;
+      }
+
+      if (cancelled) return;
+
+      setIntroduction(data);
+      setSavedIntroduction(data);
+      setIsLoading(false);
     }
-  }, [user, isAdmin, authLoading, fetchIntroduction, router]);
+
+    void loadIntroduction();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, isAdmin, router, supabase, user]);
+
+  const introductionContent = introduction?.content;
 
   const previewContentHtml = useMemo(
     () =>
-      introduction?.content && Object.keys(introduction.content).length > 0
-        ? generateHTML(introduction.content, [
+      introductionContent && Object.keys(introductionContent).length > 0
+        ? generateHTML(introductionContent, [
             StarterKit,
             TiptapImage.configure({ HTMLAttributes: { class: "rounded-lg max-w-full h-auto" } }),
           ])
         : "",
-    [introduction?.content]
+    [introductionContent]
   );
 
   const handleSave = async () => {

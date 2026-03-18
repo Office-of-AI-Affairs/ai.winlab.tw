@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import type { JSONContent } from "@tiptap/core";
 import TiptapImage from "@tiptap/extension-image";
 import { generateHTML } from "@tiptap/html";
 import StarterKit from "@tiptap/starter-kit";
@@ -19,9 +20,8 @@ export default async function PrivacyPage() {
     .limit(1)
     .maybeSingle();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const contentHtml = data?.content && Object.keys(data.content).length > 0
-    ? generateHTML(data.content as any, [
+    ? generateHTML(data.content as JSONContent, [
         StarterKit,
         TiptapImage.configure({ HTMLAttributes: { class: "rounded-lg max-w-full h-auto" } }),
         Youtube,

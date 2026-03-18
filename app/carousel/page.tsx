@@ -17,7 +17,7 @@ import { ArrowLeft, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function CarouselPage() {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
@@ -28,18 +28,6 @@ export default function CarouselPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const fetchSlides = useCallback(async () => {
-    setIsLoading(true);
-    const { data, error } = await supabase
-      .from("carousel_slides")
-      .select("*")
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: true });
-    if (error) console.error("Error fetching carousel:", error);
-    else setSlides((data as CarouselSlide[]) || []);
-    setIsLoading(false);
-  }, [supabase]);
-
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/login");
@@ -49,8 +37,34 @@ export default function CarouselPage() {
       router.push("/");
       return;
     }
-    if (user && isAdmin) fetchSlides();
-  }, [authLoading, user, isAdmin, router, fetchSlides]);
+    if (!(user && isAdmin)) return;
+
+    let cancelled = false;
+
+    async function loadSlides() {
+      const { data, error } = await supabase
+        .from("carousel_slides")
+        .select("*")
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching carousel:", error);
+      } else if (!cancelled) {
+        setSlides((data as CarouselSlide[]) || []);
+      }
+
+      if (!cancelled) {
+        setIsLoading(false);
+      }
+    }
+
+    void loadSlides();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, isAdmin, router, supabase, user]);
 
   const handleCreate = async () => {
     if (!user || !isAdmin) return;
@@ -79,7 +93,14 @@ export default function CarouselPage() {
     setDeletingId(id);
     const { error } = await supabase.from("carousel_slides").delete().eq("id", id);
     if (error) console.error("Error deleting slide:", error);
-    else await fetchSlides();
+    else {
+      const { data } = await supabase
+        .from("carousel_slides")
+        .select("*")
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+      setSlides((data as CarouselSlide[]) || []);
+    }
     setDeletingId(null);
   };
 

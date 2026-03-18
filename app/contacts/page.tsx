@@ -9,7 +9,7 @@ import type { Contact } from "@/lib/supabase/types";
 import { ArrowLeft, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function ContactsAdminPage() {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
@@ -21,18 +21,6 @@ export default function ContactsAdminPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const fetchContacts = useCallback(async () => {
-    setIsLoading(true);
-    const { data, error } = await supabase
-      .from("contacts")
-      .select("*")
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: true });
-    if (error) console.error("Error fetching contacts:", error);
-    else setContacts((data as Contact[]) || []);
-    setIsLoading(false);
-  }, [supabase]);
-
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/login");
@@ -42,8 +30,34 @@ export default function ContactsAdminPage() {
       router.push("/");
       return;
     }
-    if (user && isAdmin) fetchContacts();
-  }, [authLoading, user, isAdmin, router, fetchContacts]);
+    if (!(user && isAdmin)) return;
+
+    let cancelled = false;
+
+    async function loadContacts() {
+      const { data, error } = await supabase
+        .from("contacts")
+        .select("*")
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching contacts:", error);
+      } else if (!cancelled) {
+        setContacts((data as Contact[]) || []);
+      }
+
+      if (!cancelled) {
+        setIsLoading(false);
+      }
+    }
+
+    void loadContacts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, isAdmin, router, supabase, user]);
 
   const handleCreate = async () => {
     if (!user || !isAdmin) return;
@@ -72,7 +86,14 @@ export default function ContactsAdminPage() {
     setDeletingId(id);
     const { error } = await supabase.from("contacts").delete().eq("id", id);
     if (error) console.error("Error deleting contact:", error);
-    else await fetchContacts();
+    else {
+      const { data } = await supabase
+        .from("contacts")
+        .select("*")
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+      setContacts((data as Contact[]) || []);
+    }
     setDeletingId(null);
   };
 

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
 
 type PageState = "waiting" | "ready" | "success" | "invalid";
@@ -15,20 +16,16 @@ type PageState = "waiting" | "ready" | "success" | "invalid";
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}$/;
 
 export default function ResetPasswordPage() {
+  const searchParams = useSearchParams();
   const [pageState, setPageState] = useState<PageState>("waiting");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasError = searchParams.get("error");
+  const hasCode = searchParams.get("code");
+  const isInvalidLink = Boolean(hasError || !hasCode);
 
   useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    const hasError = queryParams.get("error");
-    const hasCode = queryParams.get("code");
-
-    // Immediately invalid if there's an error param or no code at all
-    if (hasError || !hasCode) {
-      setPageState("invalid");
-      return;
-    }
+    if (isInvalidLink) return;
 
     // The browser Supabase client (singleton, initialised by AuthProvider)
     // automatically exchanges the ?code= PKCE token and fires PASSWORD_RECOVERY.
@@ -56,7 +53,7 @@ export default function ResetPasswordPage() {
       subscription.unsubscribe();
       clearTimeout(fallback);
     };
-  }, []);
+  }, [isInvalidLink]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -105,7 +102,7 @@ export default function ResetPasswordPage() {
             </div>
           )}
 
-          {pageState === "invalid" && (
+          {(isInvalidLink || pageState === "invalid") && (
             <div className="flex flex-col items-center gap-4 py-4">
               <XCircle className="w-10 h-10 text-destructive" />
               <div className="text-center">
@@ -131,7 +128,7 @@ export default function ResetPasswordPage() {
             </div>
           )}
 
-          {pageState === "ready" && (
+          {!isInvalidLink && pageState === "ready" && (
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="password">新密碼</Label>

@@ -147,12 +147,15 @@ export function OrganizationPageClient({
         )}
       </div>
 
-      <OrganizationMemberDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        member={editingMember}
-        defaultCategory={tab}
-      />
+      {dialogOpen && (
+        <OrganizationMemberDialog
+          key={editingMember?.id ?? `new-${tab}`}
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          member={editingMember}
+          defaultCategory={tab}
+        />
+      )}
     </div>
   );
 }
