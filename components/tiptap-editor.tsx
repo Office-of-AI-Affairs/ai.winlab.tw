@@ -291,7 +291,7 @@ export function TiptapEditor({
           </div>
         </div>
       )}
-      <div className="rounded-[2rem] border border-border bg-background focus-within:border-ring focus-within:ring-2 focus-within:ring-ring">
+      <div className="rounded-[2rem] bg-background focus-within:ring-2 focus-within:ring-ring">
         <EditorContent editor={editor} />
       </div>
     </div>

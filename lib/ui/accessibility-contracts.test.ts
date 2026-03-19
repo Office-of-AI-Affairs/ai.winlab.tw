@@ -72,6 +72,7 @@ describe("accessibility contracts", () => {
     assert.ok(tiptapEditor.includes('ariaLabel="插入 YouTube 影片"'))
     assert.ok(tiptapEditor.includes("focus-within:ring-2"))
     assert.ok(tiptapEditor.includes("focus-within:ring-ring"))
+    assert.ok(!tiptapEditor.includes("border border-border"))
   })
 
   test("auth flows and import feedback expose autocomplete and live regions", () => {
