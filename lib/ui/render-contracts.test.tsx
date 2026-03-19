@@ -18,6 +18,7 @@ import { BlockSkeleton } from "@/components/ui/block"
 const tiptapEditorSource = readFileSync(resolve(process.cwd(), "components/tiptap-editor.tsx"), "utf8")
 const tiptapSharedCommandsPath = resolve(process.cwd(), "components/tiptap-editor-shared.tsx")
 const tiptapDesktopBubbleMenuPath = resolve(process.cwd(), "components/tiptap-desktop-bubble-menu.tsx")
+const tiptapDesktopFloatingMenuPath = resolve(process.cwd(), "components/tiptap-desktop-floating-menu.tsx")
 
 describe("PageShell render contracts", () => {
   test("renders the dashboard shell classes", () => {
@@ -127,6 +128,12 @@ describe("tiptap editor render contracts", () => {
     assert.ok(existsSync(tiptapDesktopBubbleMenuPath))
     assert.ok(tiptapEditorSource.includes('from "./tiptap-desktop-bubble-menu"'))
     assert.ok(tiptapEditorSource.includes("<TiptapDesktopBubbleMenu"))
+  })
+
+  test("composes a dedicated desktop floating menu component for block insertion", () => {
+    assert.ok(existsSync(tiptapDesktopFloatingMenuPath))
+    assert.ok(tiptapEditorSource.includes('from "./tiptap-desktop-floating-menu"'))
+    assert.ok(tiptapEditorSource.includes("<TiptapDesktopFloatingMenu"))
   })
 })
 
