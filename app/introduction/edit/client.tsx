@@ -15,6 +15,7 @@ import { useAutoSave } from "@/hooks/use-auto-save";
 import { ArrowLeft, Check, Eye, EyeOff, Loader2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 export default function IntroductionEditPage() {
   const router = useRouter();
@@ -54,6 +55,7 @@ export default function IntroductionEditPage() {
 
           if (insertError) {
             console.error("Error creating introduction:", insertError);
+            toast.error("建立簡介內容失敗，已返回頁面");
             router.push("/introduction");
             return;
           }
@@ -66,6 +68,7 @@ export default function IntroductionEditPage() {
           return;
         }
 
+        toast.error("讀取簡介內容失敗，已返回頁面");
         router.push("/introduction");
         return;
       }
@@ -111,6 +114,7 @@ export default function IntroductionEditPage() {
 
     if (error) {
       console.error("Error saving introduction:", error);
+      toast.error("儲存簡介失敗，請稍後再試");
     } else {
       setSavedIntroduction({ ...introduction });
     }

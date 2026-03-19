@@ -26,6 +26,10 @@ const privacyEditPage = readFileSync(resolve(process.cwd(), "app/privacy/edit/pa
 const teamPage = readFileSync(resolve(process.cwd(), "app/team/[id]/page.tsx"), "utf8")
 const profileClient = readFileSync(resolve(process.cwd(), "app/profile/[id]/client.tsx"), "utf8")
 const organizationMemberDialog = readFileSync(resolve(process.cwd(), "components/organization-member-dialog.tsx"), "utf8")
+const carouselEditClient = readFileSync(resolve(process.cwd(), "app/carousel/[id]/edit/client.tsx"), "utf8")
+const contactEditClient = readFileSync(resolve(process.cwd(), "app/contacts/[id]/edit/client.tsx"), "utf8")
+const introductionEditClient = readFileSync(resolve(process.cwd(), "app/introduction/edit/client.tsx"), "utf8")
+const organizationEditClient = readFileSync(resolve(process.cwd(), "app/organization/[id]/edit/client.tsx"), "utf8")
 
 describe("accessibility contracts", () => {
   test("root layout provides a skip link and a main landmark", () => {
@@ -99,10 +103,25 @@ describe("accessibility contracts", () => {
     assert.ok(profileClient.includes('aria-label="個人簡介"'))
     assert.ok(profileClient.includes('aria-label={`連結 ${idx + 1}`}'))
     assert.ok(profileClient.includes('aria-label={`刪除連結 ${idx + 1}`}'))
+    assert.ok(!profileClient.includes("<input\n                        aria-label=\"姓名\""))
+    assert.ok(!profileClient.includes("<textarea\n                        aria-label=\"個人簡介\""))
+    assert.ok(profileClient.includes("<Input"))
+    assert.ok(profileClient.includes("<Textarea"))
   })
 
   test("icon-only destructive controls expose aria labels", () => {
     assert.ok(recruitmentDialog.includes('aria-label={`刪除職缺 ${index + 1}`}'))
     assert.ok(organizationMemberDialog.includes('aria-label="移除照片"'))
+  })
+
+  test("editor failure states surface user-visible toast feedback instead of console-only logging", () => {
+    for (const content of [
+      carouselEditClient,
+      contactEditClient,
+      introductionEditClient,
+      organizationEditClient,
+    ]) {
+      assert.ok(content.includes("toast.error("))
+    }
   })
 })

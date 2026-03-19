@@ -50,6 +50,7 @@ export default function CarouselEditPage() {
 
       if (error) {
         console.error("Error fetching carousel slide:", error);
+        toast.error("讀取橫幅失敗，已返回列表");
         router.push("/carousel");
         return;
       }
@@ -85,6 +86,7 @@ export default function CarouselEditPage() {
 
     if (error) {
       console.error("Error saving carousel slide:", error);
+      toast.error("儲存橫幅失敗，請稍後再試");
     } else {
       setSavedSlide({ ...slide });
     }
@@ -117,6 +119,7 @@ export default function CarouselEditPage() {
 
     if (error) {
       console.error("Error deleting slide:", error);
+      toast.error("刪除橫幅失敗，請稍後再試");
       setIsDeleting(false);
       return;
     }

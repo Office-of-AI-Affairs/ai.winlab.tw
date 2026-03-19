@@ -66,6 +66,7 @@ export default function OrganizationMemberEditPage() {
 
       if (error) {
         console.error("Error fetching organization member:", error);
+        toast.error("讀取成員資料失敗，已返回列表");
         router.push("/organization");
         return;
       }
@@ -143,6 +144,7 @@ export default function OrganizationMemberEditPage() {
 
     if (error) {
       console.error("Error deleting organization member:", error);
+      toast.error("刪除成員失敗，請稍後再試");
       setIsDeleting(false);
       return;
     }

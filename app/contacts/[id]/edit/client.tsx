@@ -10,6 +10,7 @@ import { useAutoSave } from "@/hooks/use-auto-save";
 import { ArrowLeft, Check, Loader2, Save, Trash2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function ContactEditPage() {
   const router = useRouter();
@@ -44,6 +45,7 @@ export default function ContactEditPage() {
 
       if (error) {
         console.error("Error fetching contact:", error);
+        toast.error("讀取聯絡人失敗，已返回列表");
         router.push("/contacts");
         return;
       }
@@ -79,6 +81,7 @@ export default function ContactEditPage() {
 
     if (error) {
       console.error("Error saving contact:", error);
+      toast.error("儲存聯絡人失敗，請稍後再試");
     } else {
       setSavedContact({ ...contact });
     }
@@ -94,6 +97,7 @@ export default function ContactEditPage() {
     const { error } = await supabase.from("contacts").delete().eq("id", id);
     if (error) {
       console.error("Error deleting contact:", error);
+      toast.error("刪除聯絡人失敗，請稍後再試");
       setIsDeleting(false);
       return;
     }

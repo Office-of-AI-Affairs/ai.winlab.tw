@@ -336,12 +336,12 @@ export function ProfilePageClient({
                 <div className="grid gap-2">
                   {isEditMode ? (
                     <div className="relative">
-                      <input
+                      <Input
                         aria-label="姓名"
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
                         onBlur={() => saveField("display_name", displayName)}
-                        className="text-xl text-foreground bg-transparent border-b border-border focus:border-foreground outline-none w-full pb-0.5"
+                        className="h-auto w-full rounded-none border-x-0 border-t-0 border-border bg-transparent px-0 pb-0.5 text-xl text-foreground shadow-none focus-visible:border-foreground focus-visible:ring-0"
                         placeholder="請輸入姓名"
                       />
                       {savingField === "display_name" && (
@@ -354,14 +354,14 @@ export function ProfilePageClient({
 
                   {isEditMode ? (
                     <div className="relative">
-                      <textarea
+                      <Textarea
                         aria-label="個人簡介"
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
                         onBlur={() => saveField("bio", bio)}
                         rows={3}
-                        className="w-full text-sm bg-transparent border-b border-border focus:border-foreground outline-none resize-none pb-0.5"
-                        placeholder="簡單介紹一下自己..."
+                        className="min-h-0 w-full rounded-none border-x-0 border-t-0 border-border bg-transparent px-0 pb-0.5 text-sm shadow-none focus-visible:border-foreground focus-visible:ring-0 resize-none"
+                        placeholder="簡單介紹一下自己…"
                       />
                       {savingField === "bio" && (
                         <Loader2 className="size-3 animate-spin absolute right-0 top-0 text-muted-foreground" />
