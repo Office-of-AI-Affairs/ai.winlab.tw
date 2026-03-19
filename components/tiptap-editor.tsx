@@ -161,11 +161,10 @@ export function TiptapEditor({
   }
 
   return (
-    <div className="flex flex-col gap-4 pb-24 md:pb-32">
+    <div data-slot="tiptap-editor" className="flex flex-col gap-4">
       {editable && (
-        <div className="fixed inset-x-0 bottom-0 z-30 pointer-events-none">
-          <div className="max-w-6xl mx-auto px-4 pb-4">
-            <div className="pointer-events-auto flex flex-wrap gap-1 p-2 bg-background/80 backdrop-blur-sm border rounded-lg shadow-sm">
+        <div className="overflow-x-auto">
+          <div className="flex min-w-max flex-wrap gap-1 rounded-lg border bg-background/80 p-2 shadow-sm backdrop-blur-sm">
           
           <ToolbarButton
             ariaLabel="粗體"
@@ -287,11 +286,13 @@ export function TiptapEditor({
           >
             <Redo className="w-4 h-4" />
           </ToolbarButton>
-            </div>
           </div>
         </div>
       )}
-      <div className="rounded-[2rem] bg-background focus-within:ring-2 focus-within:ring-ring">
+      <div
+        data-slot="tiptap-canvas"
+        className="rounded-[2rem] bg-background focus-within:ring-2 focus-within:ring-ring"
+      >
         <EditorContent editor={editor} />
       </div>
     </div>

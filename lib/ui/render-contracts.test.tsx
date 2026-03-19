@@ -1,4 +1,6 @@
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import { describe, test } from "node:test"
 
 import SettingsLoading from "@/app/settings/loading"
@@ -10,8 +12,11 @@ import { EventCardSkeleton } from "@/components/event-card"
 import { PageShell } from "@/components/page-shell"
 import { RecruitmentCardSkeleton } from "@/components/recruitment-card"
 import { SettingsMenuSkeleton } from "@/components/settings-menu"
+import { TiptapEditor } from "@/components/tiptap-editor"
 import { UsersTableSkeleton } from "@/components/users-table"
 import { BlockSkeleton } from "@/components/ui/block"
+
+const tiptapEditorSource = readFileSync(resolve(process.cwd(), "components/tiptap-editor.tsx"), "utf8")
 
 describe("PageShell render contracts", () => {
   test("renders the dashboard shell classes", () => {
@@ -95,6 +100,14 @@ describe("component-owned skeleton render contracts", () => {
     assert.ok(html.includes("<table"))
     assert.ok(html.includes("justify-between"))
     assert.ok(html.includes("text-right"))
+  })
+})
+
+describe("tiptap editor render contracts", () => {
+  test("defines a canvas-first editor shell instead of a fixed bottom toolbar wrapper", () => {
+    assert.ok(tiptapEditorSource.includes('data-slot="tiptap-editor"'))
+    assert.ok(tiptapEditorSource.includes('data-slot="tiptap-canvas"'))
+    assert.ok(!tiptapEditorSource.includes("fixed inset-x-0 bottom-0"))
   })
 })
 
