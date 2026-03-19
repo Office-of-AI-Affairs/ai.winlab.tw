@@ -12,7 +12,6 @@ import { EventCardSkeleton } from "@/components/event-card"
 import { PageShell } from "@/components/page-shell"
 import { RecruitmentCardSkeleton } from "@/components/recruitment-card"
 import { SettingsMenuSkeleton } from "@/components/settings-menu"
-import { TiptapEditor } from "@/components/tiptap-editor"
 import { UsersTableSkeleton } from "@/components/users-table"
 import { BlockSkeleton } from "@/components/ui/block"
 
@@ -108,6 +107,13 @@ describe("tiptap editor render contracts", () => {
     assert.ok(tiptapEditorSource.includes('data-slot="tiptap-editor"'))
     assert.ok(tiptapEditorSource.includes('data-slot="tiptap-canvas"'))
     assert.ok(!tiptapEditorSource.includes("fixed inset-x-0 bottom-0"))
+  })
+
+  test("matches read-mode document typography more closely than a padded widget shell", () => {
+    assert.ok(tiptapEditorSource.includes("prose prose-sm sm:prose-base max-w-none"))
+    assert.ok(tiptapEditorSource.includes("[&_img]:pt-4"))
+    assert.ok(tiptapEditorSource.includes("py-6"))
+    assert.ok(!tiptapEditorSource.includes("min-h-[300px] focus:outline-none p-4"))
   })
 })
 
