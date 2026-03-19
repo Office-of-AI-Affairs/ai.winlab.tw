@@ -14,6 +14,7 @@ const eventClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/clien
 const recruitmentCard = readFileSync(resolve(process.cwd(), "components/recruitment-card.tsx"), "utf8")
 const recruitmentDialog = readFileSync(resolve(process.cwd(), "components/recruitment-dialog.tsx"), "utf8")
 const tiptapEditor = readFileSync(resolve(process.cwd(), "components/tiptap-editor.tsx"), "utf8")
+const tiptapEditorShared = readFileSync(resolve(process.cwd(), "components/tiptap-editor-shared.tsx"), "utf8")
 const loginPage = readFileSync(resolve(process.cwd(), "app/login/page.tsx"), "utf8")
 const forgotPasswordPage = readFileSync(resolve(process.cwd(), "app/forgot-password/page.tsx"), "utf8")
 const resetPasswordPage = readFileSync(resolve(process.cwd(), "app/reset-password/page.tsx"), "utf8")
@@ -30,6 +31,9 @@ const carouselEditClient = readFileSync(resolve(process.cwd(), "app/carousel/[id
 const contactEditClient = readFileSync(resolve(process.cwd(), "app/contacts/[id]/edit/client.tsx"), "utf8")
 const introductionEditClient = readFileSync(resolve(process.cwd(), "app/introduction/edit/client.tsx"), "utf8")
 const organizationEditClient = readFileSync(resolve(process.cwd(), "app/organization/[id]/edit/client.tsx"), "utf8")
+const announcementEditClient = readFileSync(resolve(process.cwd(), "app/announcement/[id]/edit/client.tsx"), "utf8")
+const eventAnnouncementEditClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/client.tsx"), "utf8")
+const resultEditClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/client.tsx"), "utf8")
 
 describe("accessibility contracts", () => {
   test("root layout provides a skip link and a main landmark", () => {
@@ -68,8 +72,8 @@ describe("accessibility contracts", () => {
   })
 
   test("rich text editor exposes toolbar labels and visible focus affordances", () => {
-    assert.ok(tiptapEditor.includes('ariaLabel="粗體"'))
-    assert.ok(tiptapEditor.includes('ariaLabel="插入 YouTube 影片"'))
+    assert.ok(tiptapEditorShared.includes('ariaLabel: "粗體"'))
+    assert.ok(tiptapEditorShared.includes('ariaLabel: "插入 YouTube 影片"'))
     assert.ok(tiptapEditor.includes("focus-within:ring-2"))
     assert.ok(tiptapEditor.includes("focus-within:ring-ring"))
     assert.ok(!tiptapEditor.includes("border border-border"))
@@ -123,6 +127,19 @@ describe("accessibility contracts", () => {
       organizationEditClient,
     ]) {
       assert.ok(content.includes("toast.error("))
+    }
+  })
+
+  test("primary editor routes no longer rely on preview-mode toggles as the main writing flow", () => {
+    for (const content of [
+      announcementEditClient,
+      eventAnnouncementEditClient,
+      resultEditClient,
+      introductionEditClient,
+    ]) {
+      assert.ok(!content.includes("isPreview"))
+      assert.ok(!content.includes("預覽"))
+      assert.ok(content.includes("<TiptapEditor"))
     }
   })
 })

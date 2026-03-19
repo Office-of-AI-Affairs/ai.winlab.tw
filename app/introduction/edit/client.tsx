@@ -1,6 +1,5 @@
 "use client";
 
-import { IntroductionDetail } from "@/components/introduction-detail";
 import { PageShell } from "@/components/page-shell";
 import { TiptapEditor } from "@/components/tiptap-editor";
 import { Button } from "@/components/ui/button";
@@ -8,13 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import type { Introduction } from "@/lib/supabase/types";
-import TiptapImage from "@tiptap/extension-image";
-import { generateHTML } from "@tiptap/html";
-import StarterKit from "@tiptap/starter-kit";
 import { useAutoSave } from "@/hooks/use-auto-save";
-import { ArrowLeft, Check, Eye, EyeOff, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function IntroductionEditPage() {
@@ -25,7 +21,6 @@ export default function IntroductionEditPage() {
   const [savedIntroduction, setSavedIntroduction] = useState<Introduction | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isPreview, setIsPreview] = useState(false);
 
   const hasChanges = introduction && savedIntroduction
     ? introduction.title !== savedIntroduction.title ||
@@ -87,19 +82,6 @@ export default function IntroductionEditPage() {
     };
   }, [router, supabase]);
 
-  const introductionContent = introduction?.content;
-
-  const previewContentHtml = useMemo(
-    () =>
-      introductionContent && Object.keys(introductionContent).length > 0
-        ? generateHTML(introductionContent, [
-            StarterKit,
-            TiptapImage.configure({ HTMLAttributes: { class: "rounded-lg max-w-full h-auto" } }),
-          ])
-        : "",
-    [introductionContent]
-  );
-
   const handleSave = async () => {
     if (!introduction) return;
 
@@ -144,10 +126,6 @@ export default function IntroductionEditPage() {
             返回
           </Button>
           <div className="flex gap-2">
-            <Button variant={isPreview ? "secondary" : "ghost"} size="sm" onClick={() => setIsPreview(v => !v)}>
-              {isPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              {isPreview ? "編輯" : "預覽"}
-            </Button>
             <Button
               variant={hasChanges ? "outline" : "ghost"}
               onClick={handleSave}
@@ -165,7 +143,7 @@ export default function IntroductionEditPage() {
           </div>
         </div>
 
-        {!isPreview && <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1">
           <Label htmlFor="title" className="text-sm mx-2">標題</Label>
           <Input
             id="title"
@@ -175,22 +153,13 @@ export default function IntroductionEditPage() {
             }
             placeholder="請輸入標題"
           />
-        </div>}
+        </div>
       </div>
 
-      {isPreview ? (
-        <div className="py-12">
-          <IntroductionDetail
-            title={introduction.title}
-            contentHtml={previewContentHtml}
-          />
-        </div>
-      ) : (
-        <TiptapEditor
-          content={introduction.content}
-          onChange={(content) => setIntroduction({ ...introduction, content })}
-        />
-      )}
+      <TiptapEditor
+        content={introduction.content}
+        onChange={(content) => setIntroduction({ ...introduction, content })}
+      />
     </PageShell>
   );
 }

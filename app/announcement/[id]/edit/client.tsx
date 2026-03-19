@@ -1,6 +1,5 @@
 "use client";
 
-import { AnnouncementDetail } from "@/components/announcement-detail";
 import { PageShell } from "@/components/page-shell";
 import { TiptapEditor } from "@/components/tiptap-editor";
 import { Button } from "@/components/ui/button";
@@ -8,14 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import type { Announcement } from "@/lib/supabase/types";
-import TiptapImage from "@tiptap/extension-image";
-import { generateHTML } from "@tiptap/html";
-import StarterKit from "@tiptap/starter-kit";
-import Youtube from "@tiptap/extension-youtube";
 import { useAutoSave } from "@/hooks/use-auto-save";
-import { ArrowLeft, Check, Eye, EyeOff, Loader2, Save, Send, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Save, Send, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 export function AnnouncementEditClient({
   id,
@@ -32,7 +27,6 @@ export function AnnouncementEditClient({
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isPreview, setIsPreview] = useState(false);
 
   const hasChanges = announcement && savedAnnouncement
     ? announcement.title !== savedAnnouncement.title ||
@@ -40,20 +34,6 @@ export function AnnouncementEditClient({
     announcement.date !== savedAnnouncement.date ||
     JSON.stringify(announcement.content) !== JSON.stringify(savedAnnouncement.content)
     : false;
-
-  const announcementContent = announcement?.content;
-
-  const previewContentHtml = useMemo(
-    () =>
-      announcementContent && Object.keys(announcementContent).length > 0
-        ? generateHTML(announcementContent, [
-            StarterKit,
-            TiptapImage.configure({ HTMLAttributes: { class: "rounded-lg max-w-full h-auto" } }),
-            Youtube,
-          ])
-        : "<p>（無內容）</p>",
-    [announcementContent]
-  );
 
   const handleSave = async () => {
     if (!announcement) return;
@@ -135,10 +115,6 @@ export function AnnouncementEditClient({
             返回列表
           </Button>
           <div className="flex gap-2">
-            <Button variant={isPreview ? "secondary" : "ghost"} size="sm" onClick={() => setIsPreview(v => !v)}>
-              {isPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              {isPreview ? "編輯" : "預覽"}
-            </Button>
             <Button
               variant={hasChanges ? "outline" : "ghost"}
               onClick={handleSave}
@@ -180,7 +156,7 @@ export function AnnouncementEditClient({
           </div>
         </div>
 
-        {!isPreview && <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="flex flex-col gap-1">
             <Label htmlFor="date" className="text-sm mx-2">公告日期</Label>
             <Input
@@ -214,24 +190,13 @@ export function AnnouncementEditClient({
               placeholder="請輸入公告標題"
             />
           </div>
-        </div>}
+        </div>
       </div>
 
-      {isPreview ? (
-        <div className="py-12">
-          <AnnouncementDetail
-            title={announcement.title}
-            date={announcement.date}
-            category={announcement.category}
-            contentHtml={previewContentHtml}
-          />
-        </div>
-      ) : (
-        <TiptapEditor
-          content={announcement.content}
-          onChange={(content) => setAnnouncement({ ...announcement, content })}
-        />
-      )}
+      <TiptapEditor
+        content={announcement.content}
+        onChange={(content) => setAnnouncement({ ...announcement, content })}
+      />
     </PageShell>
   );
 }

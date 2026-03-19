@@ -1,6 +1,5 @@
 "use client";
 
-import { ResultDetail, type PublisherInfo } from "@/components/result-detail";
 import { TiptapEditor } from "@/components/tiptap-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +13,6 @@ import { toast } from "sonner";
 import {
   ArrowLeft,
   Check,
-  Eye,
-  EyeOff,
   ImagePlus,
   Loader2,
   Save,
@@ -30,14 +27,12 @@ type Props = {
   id: string;
   slug: string;
   initialResult: Result;
-  initialPublisherInfo: PublisherInfo;
 };
 
 export default function EventResultEditPage({
   id,
   slug,
   initialResult,
-  initialPublisherInfo,
 }: Props) {
   const router = useRouter();
   const supabase = createClient();
@@ -48,10 +43,7 @@ export default function EventResultEditPage({
   const [isPublishing, setIsPublishing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [isPreview, setIsPreview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [publisherInfo] = useState<PublisherInfo>(initialPublisherInfo);
 
   const hasChanges =
     result && savedResult
@@ -122,10 +114,6 @@ export default function EventResultEditPage({
             返回活動
           </Button>
           <div className="flex gap-2">
-            <Button variant={isPreview ? "secondary" : "ghost"} size="sm" onClick={() => setIsPreview(v => !v)}>
-              {isPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              {isPreview ? "編輯" : "預覽"}
-            </Button>
             <Button variant={hasChanges ? "outline" : "ghost"} onClick={handleSave} disabled={isSaving || !hasChanges}>
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : hasChanges ? <Save className="w-4 h-4" /> : <Check className="w-4 h-4 text-green-600" />}
               {hasChanges ? "儲存" : "已儲存"}
@@ -142,46 +130,38 @@ export default function EventResultEditPage({
         </div>
       </div>
 
-      {!isPreview && (
-        <div className="mt-6 grid grid-cols-1 gap-4">
-          <div className="flex flex-col gap-1">
-            <Label className="text-sm mx-2">封面圖片</Label>
-            <div className="flex items-start gap-4">
-              <div className="relative w-40 aspect-video rounded-lg overflow-hidden bg-muted shrink-0">
-                <Image src={result.header_image || "/placeholder.png"} alt={result.title} fill className="object-cover"
-                  unoptimized={isExternalImage(result.header_image)} />
-              </div>
-              <div className="flex flex-col gap-2">
-                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleImageUpload} />
-                <Button type="button" variant="outline" size="sm" disabled={isUploadingImage} onClick={() => fileInputRef.current?.click()}>
-                  {isUploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
-                  {isUploadingImage ? "上傳中…" : "上傳圖片"}
-                </Button>
-                <p className="text-xs text-muted-foreground">JPEG、PNG、GIF、WebP，最大 5MB</p>
-              </div>
+      <div className="mt-6 grid grid-cols-1 gap-4">
+        <div className="flex flex-col gap-1">
+          <Label className="text-sm mx-2">封面圖片</Label>
+          <div className="flex items-start gap-4">
+            <div className="relative w-40 aspect-video rounded-lg overflow-hidden bg-muted shrink-0">
+              <Image src={result.header_image || "/placeholder.png"} alt={result.title} fill className="object-cover"
+                unoptimized={isExternalImage(result.header_image)} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleImageUpload} />
+              <Button type="button" variant="outline" size="sm" disabled={isUploadingImage} onClick={() => fileInputRef.current?.click()}>
+                {isUploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
+                {isUploadingImage ? "上傳中…" : "上傳圖片"}
+              </Button>
+              <p className="text-xs text-muted-foreground">JPEG、PNG、GIF、WebP，最大 5MB</p>
             </div>
           </div>
-
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="title" className="text-sm mx-2">標題</Label>
-            <Input id="title" value={result.title} onChange={(e) => setResult({ ...result, title: e.target.value })} placeholder="請輸入成果標題" />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="summary" className="text-sm mx-2">摘要（卡片預覽用，選填）</Label>
-            <Input id="summary" value={result.summary} onChange={(e) => setResult({ ...result, summary: e.target.value })} placeholder="簡短描述，顯示於列表卡片" />
-          </div>
-
         </div>
-      )}
 
-      {isPreview ? (
-        <div className="py-12">
-          <ResultDetail result={result} publisherInfo={publisherInfo} />
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="title" className="text-sm mx-2">標題</Label>
+          <Input id="title" value={result.title} onChange={(e) => setResult({ ...result, title: e.target.value })} placeholder="請輸入成果標題" />
         </div>
-      ) : (
-        <TiptapEditor content={result.content} onChange={(content) => setResult({ ...result, content })} />
-      )}
+
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="summary" className="text-sm mx-2">摘要（卡片用，選填）</Label>
+          <Input id="summary" value={result.summary} onChange={(e) => setResult({ ...result, summary: e.target.value })} placeholder="簡短描述，顯示於列表卡片" />
+        </div>
+
+      </div>
+
+      <TiptapEditor content={result.content} onChange={(content) => setResult({ ...result, content })} />
     </div>
   );
 }

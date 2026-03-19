@@ -1,6 +1,5 @@
 "use client";
 
-import { AnnouncementDetail } from "@/components/announcement-detail";
 import { PageShell } from "@/components/page-shell";
 import { TiptapEditor } from "@/components/tiptap-editor";
 import { Button } from "@/components/ui/button";
@@ -8,14 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import type { Announcement } from "@/lib/supabase/types";
-import TiptapImage from "@tiptap/extension-image";
-import { generateHTML } from "@tiptap/html";
-import StarterKit from "@tiptap/starter-kit";
-import Youtube from "@tiptap/extension-youtube";
 import { useAutoSave } from "@/hooks/use-auto-save";
-import { ArrowLeft, Check, Eye, EyeOff, Loader2, Save, Send, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Save, Send, Trash2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function EventAnnouncementEditPage() {
   const router = useRouter();
@@ -30,7 +25,6 @@ export default function EventAnnouncementEditPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isPreview, setIsPreview] = useState(false);
 
   const hasChanges = announcement && savedAnnouncement
     ? announcement.title !== savedAnnouncement.title ||
@@ -67,20 +61,6 @@ export default function EventAnnouncementEditPage() {
       cancelled = true;
     };
   }, [id, router, slug, supabase]);
-
-  const announcementContent = announcement?.content;
-
-  const previewContentHtml = useMemo(
-    () =>
-      announcementContent && Object.keys(announcementContent).length > 0
-        ? generateHTML(announcementContent, [
-            StarterKit,
-            TiptapImage.configure({ HTMLAttributes: { class: "rounded-lg max-w-full h-auto" } }),
-            Youtube,
-          ])
-        : "<p>（無內容）</p>",
-    [announcementContent]
-  );
 
   const handleSave = async () => {
     if (!announcement) return;
@@ -138,10 +118,6 @@ export default function EventAnnouncementEditPage() {
             返回活動
           </Button>
           <div className="flex gap-2">
-            <Button variant={isPreview ? "secondary" : "ghost"} size="sm" onClick={() => setIsPreview(v => !v)}>
-              {isPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              {isPreview ? "編輯" : "預覽"}
-            </Button>
             <Button variant={hasChanges ? "outline" : "ghost"} onClick={handleSave} disabled={isSaving || !hasChanges}>
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : hasChanges ? <Save className="w-4 h-4" /> : <Check className="w-4 h-4 text-green-600" />}
               {hasChanges ? "儲存" : "已儲存"}
@@ -157,44 +133,31 @@ export default function EventAnnouncementEditPage() {
           </div>
         </div>
 
-        {!isPreview && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="date" className="text-sm mx-2">公告日期</Label>
-              <Input id="date" type="date" value={announcement.date}
-                onChange={(e) => setAnnouncement({ ...announcement, date: e.target.value })} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="category" className="text-sm mx-2">類別</Label>
-              <Input id="category" value={announcement.category}
-                onChange={(e) => setAnnouncement({ ...announcement, category: e.target.value })}
-                placeholder="請輸入類別" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="title" className="text-sm mx-2">標題</Label>
-              <Input id="title" value={announcement.title}
-                onChange={(e) => setAnnouncement({ ...announcement, title: e.target.value })}
-                placeholder="請輸入公告標題" />
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="date" className="text-sm mx-2">公告日期</Label>
+            <Input id="date" type="date" value={announcement.date}
+              onChange={(e) => setAnnouncement({ ...announcement, date: e.target.value })} />
           </div>
-        )}
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="category" className="text-sm mx-2">類別</Label>
+            <Input id="category" value={announcement.category}
+              onChange={(e) => setAnnouncement({ ...announcement, category: e.target.value })}
+              placeholder="請輸入類別" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="title" className="text-sm mx-2">標題</Label>
+            <Input id="title" value={announcement.title}
+              onChange={(e) => setAnnouncement({ ...announcement, title: e.target.value })}
+              placeholder="請輸入公告標題" />
+          </div>
+        </div>
       </div>
 
-      {isPreview ? (
-        <div className="py-12">
-          <AnnouncementDetail
-            title={announcement.title}
-            date={announcement.date}
-            category={announcement.category}
-            contentHtml={previewContentHtml}
-          />
-        </div>
-      ) : (
-        <TiptapEditor
-          content={announcement.content}
-          onChange={(content) => setAnnouncement({ ...announcement, content })}
-        />
-      )}
+      <TiptapEditor
+        content={announcement.content}
+        onChange={(content) => setAnnouncement({ ...announcement, content })}
+      />
     </PageShell>
   );
 }
