@@ -4,9 +4,10 @@ import type { Editor } from "@tiptap/react";
 import { useState } from "react";
 
 import {
+  blockCommands,
   headingCommands,
   listCommands,
-  mediaCommands,
+  runBlockCommand,
   textFormattingCommands,
   ToolbarButton,
 } from "@/components/tiptap-editor-shared";
@@ -33,14 +34,14 @@ export function TiptapMobileToolbar({ editor }: { editor: Editor | null }) {
         >
           {showInsertMenu && (
             <div className="flex flex-wrap gap-1 border-b border-border pb-2">
-              {[...headingCommands.slice(0, 2), ...listCommands, ...mediaCommands].map((command) => {
+              {blockCommands.map((command) => {
                 const Icon = command.icon;
                 return (
                   <ToolbarButton
                     key={command.ariaLabel}
                     ariaLabel={command.ariaLabel}
                     onClick={() => {
-                      command.onClick(editor);
+                      void runBlockCommand(editor, command);
                       setShowInsertMenu(false);
                     }}
                     className={command.isActive?.(editor) ? "bg-muted" : ""}

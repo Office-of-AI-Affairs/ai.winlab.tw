@@ -166,8 +166,9 @@ Defined in `app/globals.css`:
 
 - Desktop Tiptap editing should use contextual controls instead of a persistent full toolbar.
 - Desktop inline formatting should use `BubbleMenu`.
-- Desktop block insertion should use `FloatingMenu`.
+- Desktop block insertion should use `FloatingMenu`, including `/`-triggered insertion near the current cursor block when appropriate.
 - Mobile Tiptap editing should use a dedicated compact toolbar instead of desktop-style floating controls.
+- Mobile block insertion should stay behind an explicit `+` entry instead of copying the desktop floating interaction.
 - The editor canvas should stay visually close to read mode so editing and reading share the same document feel.
 - Prefer the editor canvas as the primary writing surface; do not reintroduce preview-first editing flows unless there is a route-specific product reason.
 

@@ -153,6 +153,8 @@ describe("tiptap editor render contracts", () => {
     assert.ok(existsSync(tiptapDesktopFloatingMenuPath))
     assert.ok(tiptapEditorSource.includes('from "./tiptap-desktop-floating-menu"'))
     assert.ok(tiptapEditorSource.includes("<TiptapDesktopFloatingMenu"))
+    assert.ok(readFileSync(tiptapDesktopFloatingMenuPath, "utf8").includes('data-slot="tiptap-slash-menu"'))
+    assert.ok(readFileSync(tiptapDesktopFloatingMenuPath, "utf8").includes('text.startsWith("/")'))
   })
 
   test("composes a dedicated mobile toolbar component", () => {
@@ -164,6 +166,7 @@ describe("tiptap editor render contracts", () => {
   test("mobile toolbar exposes a dedicated block insertion trigger", () => {
     assert.ok(tiptapMobileToolbarSource.includes('data-slot="tiptap-mobile-insert-trigger"'))
     assert.ok(tiptapMobileToolbarSource.includes("開啟插入選單"))
+    assert.ok(tiptapMobileToolbarSource.includes("blockCommands"))
   })
 })
 
