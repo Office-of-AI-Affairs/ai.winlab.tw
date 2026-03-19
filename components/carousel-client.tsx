@@ -9,16 +9,19 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { AppLink } from "@/components/app-link";
-import { useAuth } from "@/components/auth-provider";
 import type { CarouselSlide } from "@/lib/supabase/types";
 import Autoplay from "embla-carousel-autoplay";
 import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 
-export function CarouselClient({ slides }: { slides: CarouselSlide[] }) {
-  const { isAdmin } = useAuth();
-
+export function CarouselClient({
+  slides,
+  isAdmin,
+}: {
+  slides: CarouselSlide[];
+  isAdmin: boolean;
+}) {
   const plugin = React.useRef(
     Autoplay({ delay: 5000, stopOnInteraction: true })
   );

@@ -5,7 +5,6 @@ import { RecruitmentDialog } from "@/components/recruitment-dialog";
 import { ResultCard, type ResultWithMeta } from "@/components/result-card";
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/components/auth-provider";
 import { createClient } from "@/lib/supabase/client";
 import type { Announcement, Event, Recruitment } from "@/lib/supabase/types";
 import { ArrowLeft, Loader2, Pencil, Plus } from "lucide-react";
@@ -28,6 +27,7 @@ export function EventDetailClient({
   event,
   slug,
   isAdmin,
+  viewerUserId,
   announcements,
   results,
   recruitments,
@@ -35,35 +35,35 @@ export function EventDetailClient({
   event: Event;
   slug: string;
   isAdmin: boolean;
+  viewerUserId: string | null;
   announcements: Announcement[];
   results: ResultWithMeta[];
   recruitments: Recruitment[];
 }) {
-  const { user } = useAuth();
   const router = useRouter();
   const [tab, setTab] = useQueryState("tab", tabParser);
   const [isCreating, setIsCreating] = useState(false);
 
   const handleCreateAnnouncement = async () => {
-    if (!user) return;
+    if (!viewerUserId) return;
     setIsCreating(true);
     const supabase = createClient();
     const { data, error } = await supabase.from("announcements").insert({
       title: "新公告", category: "一般", content: {}, status: "draft",
-      author_id: user.id, event_id: event.id,
+      author_id: viewerUserId, event_id: event.id,
     }).select().single();
     if (error) { setIsCreating(false); return; }
     router.push(`/events/${slug}/announcements/${data.id}/edit`);
   };
 
   const handleCreateResult = async () => {
-    if (!user) return;
+    if (!viewerUserId) return;
     setIsCreating(true);
     const supabase = createClient();
     const { data, error } = await supabase.from("results").insert({
       title: "新成果", date: new Date().toISOString().slice(0, 10),
       header_image: "/placeholder.png", summary: "", content: {},
-      status: "draft", author_id: user.id, type: "personal", team_id: null,
+      status: "draft", author_id: viewerUserId, type: "personal", team_id: null,
       event_id: event.id,
     }).select().single();
     if (error) { setIsCreating(false); return; }
@@ -181,7 +181,7 @@ export function EventDetailClient({
 
       {tab === "results" && (
         <div className="flex flex-col gap-6">
-          {user && (
+          {viewerUserId && (
             <div className="flex justify-end">
               <Button variant="secondary" onClick={handleCreateResult} disabled={isCreating}>
                 {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
@@ -194,7 +194,7 @@ export function EventDetailClient({
           ) : (
             <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
               {results.map((item) => {
-                const isOwner = user?.id === item.author_id;
+                const isOwner = viewerUserId === item.author_id;
                 const showStatus = isAdmin || isOwner;
                 return (
                   <Link

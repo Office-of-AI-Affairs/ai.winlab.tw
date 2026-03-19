@@ -1,14 +1,14 @@
 import { IntroductionDetail } from "@/components/introduction-detail";
 import { IntroductionEditButton } from "@/components/introduction-edit-button";
 import { PageShell } from "@/components/page-shell";
-import { createClient } from "@/lib/supabase/server";
+import { getViewer } from "@/lib/supabase/get-viewer";
 import Image from "@tiptap/extension-image";
 import { generateHTML } from "@tiptap/html";
 import StarterKit from "@tiptap/starter-kit";
 import Youtube from "@tiptap/extension-youtube";
 
 export default async function IntroductionPage() {
-  const supabase = await createClient();
+  const { supabase, isAdmin } = await getViewer();
   const { data: introduction } = await supabase.from("introduction").select("*").single();
 
   const contentHtml =
@@ -25,7 +25,7 @@ export default async function IntroductionPage() {
       <IntroductionDetail
         title={introduction?.title || "國立陽明交通大學 人工智慧專責辦公室"}
         contentHtml={contentHtml}
-        actions={<IntroductionEditButton />}
+        actions={<IntroductionEditButton isAdmin={isAdmin} />}
       />
     </PageShell>
   );

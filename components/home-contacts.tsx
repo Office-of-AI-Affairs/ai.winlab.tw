@@ -1,6 +1,6 @@
 import { AppLink } from "@/components/app-link";
 import { ContactsEditButton } from "@/components/contacts-edit-button";
-import { createClient } from "@/lib/supabase/server";
+import { getViewer } from "@/lib/supabase/get-viewer";
 import type { Contact } from "@/lib/supabase/types";
 import { Mail, Phone } from "lucide-react";
 
@@ -16,7 +16,7 @@ const FALLBACK_CONTACT: Contact = {
 };
 
 export async function HomeContacts() {
-  const supabase = await createClient();
+  const { supabase, isAdmin } = await getViewer();
   const { data } = await supabase
     .from("contacts")
     .select("*")
@@ -31,7 +31,7 @@ export async function HomeContacts() {
         <div className="flex flex-col gap-3 w-full lg:w-auto">
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-bold border-l-4 border-primary pl-3">聯絡我們</h2>
-            <ContactsEditButton />
+            <ContactsEditButton isAdmin={isAdmin} />
           </div>
         </div>
         <div className="flex flex-col gap-8 shrink-0 w-full max-w-md mx-auto lg:mx-0 items-center lg:items-start text-center lg:text-left">

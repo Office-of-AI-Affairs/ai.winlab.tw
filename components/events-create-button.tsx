@@ -1,25 +1,31 @@
 "use client";
 
-import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function EventsCreateButton() {
-  const { user } = useAuth();
+export function EventsCreateButton({ userId }: { userId: string }) {
   const router = useRouter();
   const [isCreating, setIsCreating] = useState(false);
 
   const handleCreate = async () => {
-    if (!user) return;
     setIsCreating(true);
     const supabase = createClient();
     const tempSlug = `event-${Date.now()}`;
     const { data, error } = await supabase
       .from("events")
-      .insert({ name: "新活動", slug: tempSlug, description: null, cover_image: null, status: "draft", pinned: false, sort_order: 0 })
+      .insert({
+        name: "新活動",
+        slug: tempSlug,
+        description: null,
+        cover_image: null,
+        status: "draft",
+        pinned: false,
+        sort_order: 0,
+        author_id: userId,
+      })
       .select()
       .single();
     if (error) { setIsCreating(false); return; }

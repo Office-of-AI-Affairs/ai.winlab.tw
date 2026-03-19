@@ -71,6 +71,7 @@ export default async function EventDetailPage({
       event={event as Event}
       slug={slug}
       isAdmin={isAdmin}
+      viewerUserId={user?.id ?? null}
       announcements={(announcementsRes.data as Announcement[]) ?? []}
       results={results}
       recruitments={(recruitmentsRes.data as Recruitment[]) ?? []}

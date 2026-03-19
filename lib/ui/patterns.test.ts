@@ -11,6 +11,11 @@ const homeIntroduction = readFileSync(resolve(process.cwd(), "components/home-in
 const recruitmentDialog = readFileSync(resolve(process.cwd(), "components/recruitment-dialog.tsx"), "utf8")
 const organizationMemberDialog = readFileSync(resolve(process.cwd(), "components/organization-member-dialog.tsx"), "utf8")
 const tiptapEditor = readFileSync(resolve(process.cwd(), "components/tiptap-editor.tsx"), "utf8")
+const carouselClient = readFileSync(resolve(process.cwd(), "components/carousel-client.tsx"), "utf8")
+const introductionEditButton = readFileSync(resolve(process.cwd(), "components/introduction-edit-button.tsx"), "utf8")
+const contactsEditButton = readFileSync(resolve(process.cwd(), "components/contacts-edit-button.tsx"), "utf8")
+const eventsCreateButton = readFileSync(resolve(process.cwd(), "components/events-create-button.tsx"), "utf8")
+const eventDetailClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/client.tsx"), "utf8")
 
 function collectProjectFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((entry) => {
@@ -102,6 +107,19 @@ describe("global UI patterns", () => {
     assert.ok(!recruitmentDialog.includes("上傳中..."))
     assert.ok(!organizationMemberDialog.includes("上傳中..."))
     assert.ok(!tiptapEditor.includes("開始撰寫公告內容..."))
+  })
+
+  test("lightweight auth-aware client components do not depend on useAuth when server props can provide the same state", () => {
+    for (const content of [
+      carouselClient,
+      introductionEditButton,
+      contactsEditButton,
+      eventsCreateButton,
+      eventDetailClient,
+    ]) {
+      assert.ok(!content.includes('from "@/components/auth-provider"'))
+      assert.ok(!content.includes("useAuth("))
+    }
   })
 })
 

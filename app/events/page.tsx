@@ -27,7 +27,7 @@ export default async function EventsPage() {
         <SubButton href="/">
           <ArrowLeftIcon className="size-4" /> 返回首頁
         </SubButton>
-        {isAdmin && <EventsCreateButton />}
+        {isAdmin && user && <EventsCreateButton userId={user.id} />}
       </Block>
 
       <div className="w-full grid lg:grid-cols-3 gap-4">
