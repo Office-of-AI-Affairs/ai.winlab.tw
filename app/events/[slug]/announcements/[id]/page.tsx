@@ -1,9 +1,6 @@
 import { AnnouncementDetail } from "@/components/announcement-detail";
 import { createClient } from "@/lib/supabase/server";
-import Image from "@tiptap/extension-image";
-import { generateHTML } from "@tiptap/html";
-import StarterKit from "@tiptap/starter-kit";
-import Youtube from "@tiptap/extension-youtube";
+import { renderRichTextHtml } from "@/lib/ui/rich-text";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -38,14 +35,7 @@ export default async function EventAnnouncementDetailPage({
 
   if (error || !announcement) notFound();
 
-  const contentHtml =
-    announcement.content && Object.keys(announcement.content).length > 0
-      ? generateHTML(announcement.content, [
-          StarterKit,
-          Image.configure({ HTMLAttributes: { class: "rounded-lg max-w-full h-auto" } }),
-          Youtube,
-        ])
-      : "<p>（無內容）</p>";
+  const contentHtml = renderRichTextHtml(announcement.content) ?? "<p>（無內容）</p>";
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">

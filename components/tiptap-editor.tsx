@@ -1,10 +1,7 @@
 "use client";
 
-import {
-  uploadAnnouncementImage,
-} from "@/lib/upload-image";
-import {
-} from "./tiptap-editor-shared";
+import { uploadAnnouncementImage } from "@/lib/upload-image";
+import { editableRichTextDocumentClassName } from "@/lib/ui/rich-text";
 import { TiptapDesktopBubbleMenu } from "./tiptap-desktop-bubble-menu";
 import { TiptapDesktopFloatingMenu } from "./tiptap-desktop-floating-menu";
 import { TiptapMobileToolbar } from "./tiptap-mobile-toolbar";
@@ -110,8 +107,7 @@ export function TiptapEditor({
     },
     editorProps: {
       attributes: {
-        class:
-          "prose prose-sm sm:prose-base max-w-none min-h-[360px] px-0 py-6 sm:py-8 focus:outline-none [&_img]:pt-4",
+        class: editableRichTextDocumentClassName,
       },
     },
   });

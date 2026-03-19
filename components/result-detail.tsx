@@ -1,9 +1,6 @@
 import type { Result } from "@/lib/supabase/types";
 import { formatDate } from "@/lib/date";
-import TiptapImage from "@tiptap/extension-image";
-import Youtube from "@tiptap/extension-youtube";
-import { generateHTML } from "@tiptap/html";
-import StarterKit from "@tiptap/starter-kit";
+import { renderRichTextHtml, richTextDocumentClassName } from "@/lib/ui/rich-text";
 import { User, Users } from "lucide-react";
 import Link from "next/link";
 
@@ -15,14 +12,7 @@ type Props = {
 };
 
 export function ResultDetail({ result, publisherInfo }: Props) {
-  const contentHtml =
-    result.content && Object.keys(result.content).length > 0
-      ? generateHTML(result.content, [
-        StarterKit,
-        TiptapImage.configure({ HTMLAttributes: { class: "rounded-lg max-w-full h-auto" } }),
-        Youtube,
-      ])
-      : "<p>（無內容）</p>";
+  const contentHtml = renderRichTextHtml(result.content) ?? "<p>（無內容）</p>";
 
   return (
     <>
@@ -60,7 +50,7 @@ export function ResultDetail({ result, publisherInfo }: Props) {
 
       <div className="max-w-6xl">
         <div
-          className="prose prose-sm sm:prose-base max-w-none"
+          className={richTextDocumentClassName}
           dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
       </div>

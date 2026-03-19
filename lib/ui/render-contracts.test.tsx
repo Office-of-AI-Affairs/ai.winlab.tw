@@ -17,9 +17,19 @@ import { BlockSkeleton } from "@/components/ui/block"
 
 const tiptapEditorSource = readFileSync(resolve(process.cwd(), "components/tiptap-editor.tsx"), "utf8")
 const tiptapSharedCommandsPath = resolve(process.cwd(), "components/tiptap-editor-shared.tsx")
+const tiptapSharedCommandsSource = existsSync(tiptapSharedCommandsPath)
+  ? readFileSync(tiptapSharedCommandsPath, "utf8")
+  : ""
 const tiptapDesktopBubbleMenuPath = resolve(process.cwd(), "components/tiptap-desktop-bubble-menu.tsx")
 const tiptapDesktopFloatingMenuPath = resolve(process.cwd(), "components/tiptap-desktop-floating-menu.tsx")
+const tiptapDesktopBubbleMenuSource = existsSync(tiptapDesktopBubbleMenuPath)
+  ? readFileSync(tiptapDesktopBubbleMenuPath, "utf8")
+  : ""
 const tiptapMobileToolbarPath = resolve(process.cwd(), "components/tiptap-mobile-toolbar.tsx")
+const richTextContractPath = resolve(process.cwd(), "lib/ui/rich-text.ts")
+const richTextContractSource = existsSync(richTextContractPath)
+  ? readFileSync(richTextContractPath, "utf8")
+  : ""
 const tiptapMobileToolbarSource = existsSync(tiptapMobileToolbarPath)
   ? readFileSync(tiptapMobileToolbarPath, "utf8")
   : ""
@@ -117,15 +127,20 @@ describe("tiptap editor render contracts", () => {
   })
 
   test("matches read-mode document typography more closely than a padded widget shell", () => {
-    assert.ok(tiptapEditorSource.includes("prose prose-sm sm:prose-base max-w-none"))
-    assert.ok(tiptapEditorSource.includes("[&_img]:pt-4"))
-    assert.ok(tiptapEditorSource.includes("py-6"))
+    assert.ok(existsSync(richTextContractPath))
+    assert.ok(richTextContractSource.includes("richTextDocumentClassName"))
+    assert.ok(richTextContractSource.includes("editableRichTextDocumentClassName"))
+    assert.ok(richTextContractSource.includes("prose prose-sm sm:prose-base max-w-none [&_img]:pt-4"))
+    assert.ok(tiptapEditorSource.includes("editableRichTextDocumentClassName"))
     assert.ok(!tiptapEditorSource.includes("min-h-[300px] focus:outline-none p-4"))
   })
 
   test("extracts shared tiptap command definitions for future desktop and mobile controls", () => {
     assert.ok(existsSync(tiptapSharedCommandsPath))
-    assert.ok(tiptapEditorSource.includes('from "./tiptap-editor-shared"'))
+    assert.ok(tiptapSharedCommandsSource.includes("textFormattingCommands"))
+    assert.ok(tiptapSharedCommandsSource.includes("headingCommands"))
+    assert.ok(tiptapDesktopBubbleMenuSource.includes("textFormattingCommands"))
+    assert.ok(tiptapMobileToolbarSource.includes("textFormattingCommands"))
   })
 
   test("composes a dedicated desktop bubble menu component", () => {

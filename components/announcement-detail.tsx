@@ -1,7 +1,8 @@
 /**
- * Shared layout for announcement content: used by published detail page and edit preview.
- * Matches result page layout: no card padding, title first, then date + category (instrumentSerif), separator, prose.
+ * Shared layout for announcement content across read and edit surfaces.
  */
+
+import { richTextDocumentClassName } from "@/lib/ui/rich-text";
 
 type Props = {
   title: string;
@@ -34,7 +35,7 @@ export function AnnouncementDetail({ title, date, category, contentHtml }: Props
 
       <div className="max-w-6xl">
         <div
-          className="prose prose-sm sm:prose-base max-w-none [&_img]:pt-4"
+          className={richTextDocumentClassName}
           dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
       </div>

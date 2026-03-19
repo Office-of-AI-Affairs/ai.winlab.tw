@@ -1,10 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/date";
-import type { JSONContent } from "@tiptap/core";
-import TiptapImage from "@tiptap/extension-image";
-import { generateHTML } from "@tiptap/html";
-import StarterKit from "@tiptap/starter-kit";
-import Youtube from "@tiptap/extension-youtube";
+import { renderRichTextHtml, richTextDocumentClassName } from "@/lib/ui/rich-text";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -21,13 +17,7 @@ export default async function PrivacyPage() {
     .limit(1)
     .maybeSingle();
 
-  const contentHtml = data?.content && Object.keys(data.content).length > 0
-    ? generateHTML(data.content as JSONContent, [
-        StarterKit,
-        TiptapImage.configure({ HTMLAttributes: { class: "rounded-lg max-w-full h-auto" } }),
-        Youtube,
-      ])
-    : null;
+  const contentHtml = renderRichTextHtml(data?.content);
 
   const updatedAt = data?.created_at
     ? formatDate(data.created_at, "long")
@@ -45,7 +35,7 @@ export default async function PrivacyPage() {
 
       {contentHtml ? (
         <div
-          className="prose prose-neutral dark:prose-invert max-w-none"
+          className={richTextDocumentClassName}
           dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
       ) : (

@@ -1,9 +1,9 @@
 /**
- * Shared layout for introduction content: used by read-only page and edit preview.
- * Matches announcement/result layout: max-w-6xl, title (with optional actions), then prose.
+ * Shared layout for introduction content across read and edit surfaces.
  */
 
 import type { ReactNode } from "react";
+import { richTextDocumentClassName } from "@/lib/ui/rich-text";
 
 type Props = {
   title: string;
@@ -25,7 +25,7 @@ export function IntroductionDetail({ title, contentHtml, actions }: Props) {
       <div className="max-w-6xl">
         {contentHtml ? (
           <div
-            className="prose prose-sm sm:prose-base max-w-none [&_img]:pt-4"
+            className={richTextDocumentClassName}
             dangerouslySetInnerHTML={{ __html: contentHtml }}
           />
         ) : (

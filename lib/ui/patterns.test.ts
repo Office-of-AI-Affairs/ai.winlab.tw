@@ -21,6 +21,11 @@ const introductionEditButton = readFileSync(resolve(process.cwd(), "components/i
 const contactsEditButton = readFileSync(resolve(process.cwd(), "components/contacts-edit-button.tsx"), "utf8")
 const eventsCreateButton = readFileSync(resolve(process.cwd(), "components/events-create-button.tsx"), "utf8")
 const eventDetailClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/client.tsx"), "utf8")
+const richTextContract = readFileSync(resolve(process.cwd(), "lib/ui/rich-text.ts"), "utf8")
+const announcementDetail = readFileSync(resolve(process.cwd(), "components/announcement-detail.tsx"), "utf8")
+const introductionDetail = readFileSync(resolve(process.cwd(), "components/introduction-detail.tsx"), "utf8")
+const resultDetail = readFileSync(resolve(process.cwd(), "components/result-detail.tsx"), "utf8")
+const privacyPage = readFileSync(resolve(process.cwd(), "app/privacy/page.tsx"), "utf8")
 
 function collectProjectFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((entry) => {
@@ -131,6 +136,17 @@ describe("global UI patterns", () => {
       assert.ok(!content.includes('from "@/components/auth-provider"'))
       assert.ok(!content.includes("useAuth("))
     }
+  })
+
+  test("shares one rich-text contract across read and edit surfaces", () => {
+    assert.ok(richTextContract.includes("richTextDocumentClassName"))
+    assert.ok(richTextContract.includes("editableRichTextDocumentClassName"))
+    assert.ok(announcementDetail.includes("richTextDocumentClassName"))
+    assert.ok(introductionDetail.includes("richTextDocumentClassName"))
+    assert.ok(resultDetail.includes("richTextDocumentClassName"))
+    assert.ok(privacyPage.includes("richTextDocumentClassName"))
+    assert.ok(tiptapEditor.includes("editableRichTextDocumentClassName"))
+    assert.ok(!privacyPage.includes("prose-neutral dark:prose-invert"))
   })
 })
 
