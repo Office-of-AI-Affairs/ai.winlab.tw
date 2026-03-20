@@ -80,6 +80,18 @@ export function RecruitmentDetail({
           {recruitment.title}
         </h1>
         <div className="flex items-center gap-2 text-base text-muted-foreground">
+          {applicationLinks.map((link) => (
+            <span key={`${link.label}-${link.url}`} className="inline-flex items-center gap-1.5">
+              <AppLink
+                href={link.url}
+                className="inline-flex items-center gap-1.5 hover:underline"
+              >
+                <ExternalLink className="w-4 h-4" />
+                {link.label}
+              </AppLink>
+              <span>&middot;</span>
+            </span>
+          ))}
           <span className="inline-flex items-center gap-1.5">
             <Calendar className="w-4 h-4" />
             {recruitment.start_date} ~ {recruitment.end_date ?? "截止日未定"}
@@ -204,9 +216,6 @@ export function RecruitmentDetail({
                   <AppLink href={link.url} className="font-medium hover:underline">
                     {link.label}
                   </AppLink>
-                  <p className="break-all text-muted-foreground">
-                    {link.url}
-                  </p>
                 </div>
               </div>
             ))}
