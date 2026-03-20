@@ -13,10 +13,12 @@ import {
 import { toast } from "sonner";
 
 import { createClient } from "@/lib/supabase/client";
+import { normalizeApplicationMethod } from "@/lib/recruitment-application-method";
 import { uploadRecruitmentImage } from "@/lib/upload-image";
 import { isExternalImage } from "@/lib/utils";
 import type {
   ApplicationMethod,
+  ApplicationMethodLink,
   ContactInfo,
   Recruitment,
   RecruitmentPosition,
@@ -107,7 +109,7 @@ function formDataFromRecruitment(r: Recruitment): FormData {
     start_date: r.start_date,
     end_date: r.end_date,
     positions: r.positions ?? [],
-    application_method: r.application_method,
+    application_method: normalizeApplicationMethod(r.application_method),
     contact: r.contact,
     required_documents: r.required_documents,
   };
@@ -193,6 +195,53 @@ export function RecruitmentDialog({
     }));
   }
 
+  function updateApplicationMethodLink(
+    index: number,
+    field: keyof ApplicationMethodLink,
+    value: string,
+  ) {
+    setFormData((prev) => {
+      const nextLinks = [...(prev.application_method?.links ?? [])];
+      nextLinks[index] = {
+        ...nextLinks[index],
+        [field]: value,
+      };
+
+      return {
+        ...prev,
+        application_method: {
+          ...prev.application_method,
+          links: nextLinks,
+        },
+      };
+    });
+  }
+
+  function addApplicationMethodLink() {
+    setFormData((prev) => ({
+      ...prev,
+      application_method: {
+        ...prev.application_method,
+        links: [
+          ...(prev.application_method?.links ?? []),
+          { label: "", url: "" },
+        ],
+      },
+    }));
+  }
+
+  function removeApplicationMethodLink(index: number) {
+    setFormData((prev) => ({
+      ...prev,
+      application_method: {
+        ...prev.application_method,
+        links: (prev.application_method?.links ?? []).filter(
+          (_, currentIndex) => currentIndex !== index,
+        ),
+      },
+    }));
+  }
+
   function updateContact(field: keyof ContactInfo, value: string) {
     setFormData((prev) => ({
       ...prev,
@@ -228,8 +277,8 @@ export function RecruitmentDialog({
     const supabase = createClient();
 
     // Clean up optional fields
-    const am = formData.application_method;
-    const hasApplicationMethod = am && (am.email || am.url || am.other);
+    const am = normalizeApplicationMethod(formData.application_method);
+    const hasApplicationMethod = am !== null;
     const ct = formData.contact;
     const hasContact = ct && (ct.name || ct.email || ct.phone);
 
@@ -606,38 +655,98 @@ export function RecruitmentDialog({
           {/* 6. Application method */}
           <div className="space-y-3">
             <Label>應徵方式</Label>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <Label className="text-xs">Email</Label>
-                <Input
-                  type="email"
-                  value={formData.application_method?.email ?? ""}
-                  onChange={(e) =>
-                    updateApplicationMethod("email", e.target.value)
-                  }
-                  placeholder="hr@example.com"
-                />
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label className="text-xs">Email</Label>
+                  <Input
+                    type="email"
+                    value={formData.application_method?.email ?? ""}
+                    onChange={(e) =>
+                      updateApplicationMethod("email", e.target.value)
+                    }
+                    placeholder="hr@example.com"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">其他</Label>
+                  <Input
+                    value={formData.application_method?.other ?? ""}
+                    onChange={(e) =>
+                      updateApplicationMethod("other", e.target.value)
+                    }
+                    placeholder="其他方式"
+                  />
+                </div>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs">網址</Label>
-                <Input
-                  type="url"
-                  value={formData.application_method?.url ?? ""}
-                  onChange={(e) =>
-                    updateApplicationMethod("url", e.target.value)
-                  }
-                  placeholder="https://..."
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">其他</Label>
-                <Input
-                  value={formData.application_method?.other ?? ""}
-                  onChange={(e) =>
-                    updateApplicationMethod("other", e.target.value)
-                  }
-                  placeholder="其他方式"
-                />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <Label className="text-xs">具名連結</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addApplicationMethodLink}
+                  >
+                    <Plus className="size-4 mr-1" />
+                    新增連結
+                  </Button>
+                </div>
+                {(formData.application_method?.links ?? []).length > 0 ? (
+                  <div className="space-y-3">
+                    {(formData.application_method?.links ?? []).map(
+                      (link, index) => (
+                        <div
+                          key={`application-link-${index}`}
+                          className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] gap-3 items-end"
+                        >
+                          <div className="space-y-1">
+                            <Label className="text-xs">名稱</Label>
+                            <Input
+                              value={link.label}
+                              onChange={(e) =>
+                                updateApplicationMethodLink(
+                                  index,
+                                  "label",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="例：104"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">網址</Label>
+                            <Input
+                              type="url"
+                              value={link.url}
+                              onChange={(e) =>
+                                updateApplicationMethodLink(
+                                  index,
+                                  "url",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="https://..."
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`刪除連結 ${index + 1}`}
+                            onClick={() => removeApplicationMethodLink(index)}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    可新增 104、Instagram、Facebook、Official site 等多個網站連結。
+                  </p>
+                )}
               </div>
             </div>
           </div>

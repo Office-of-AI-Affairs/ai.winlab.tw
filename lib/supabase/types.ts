@@ -150,7 +150,13 @@ export type RecruitmentPosition = {
 export type ApplicationMethod = {
   email?: string;
   url?: string;
+  links?: ApplicationMethodLink[];
   other?: string;
+};
+
+export type ApplicationMethodLink = {
+  label: string;
+  url: string;
 };
 
 export type ContactInfo = {

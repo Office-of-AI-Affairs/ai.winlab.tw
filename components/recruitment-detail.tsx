@@ -1,4 +1,5 @@
 import { AppLink } from "@/components/app-link";
+import { getApplicationMethodLinks } from "@/lib/recruitment-application-method";
 import type {
   Recruitment,
   RecruitmentPositionType,
@@ -39,6 +40,12 @@ export function RecruitmentDetail({
     recruitment.end_date && new Date(recruitment.end_date) < new Date();
 
   const positionCount = recruitment.positions?.length ?? 0;
+  const applicationLinks = getApplicationMethodLinks(recruitment.application_method);
+  const hasApplicationMethod = !!(
+    recruitment.application_method?.email ||
+    recruitment.application_method?.other ||
+    applicationLinks.length > 0
+  );
 
   return (
     <div>
@@ -184,10 +191,7 @@ export function RecruitmentDetail({
       )}
 
       {/* Application method */}
-      {recruitment.application_method &&
-        (recruitment.application_method.email ||
-          recruitment.application_method.url ||
-          recruitment.application_method.other) && (
+      {recruitment.application_method && hasApplicationMethod && (
           <div className="mt-8">
             <h2 className="text-lg font-semibold mb-3">應徵方式</h2>
             <div className="space-y-2 text-sm">
@@ -202,17 +206,19 @@ export function RecruitmentDetail({
                   </AppLink>
                 </div>
               )}
-              {recruitment.application_method.url && (
-                <div className="flex items-center gap-1.5">
-                  <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                  <AppLink
-                    href={recruitment.application_method.url}
-                    className="hover:underline"
-                  >
-                    {recruitment.application_method.url}
-                  </AppLink>
+              {applicationLinks.map((link) => (
+                <div key={`${link.label}-${link.url}`} className="flex items-start gap-1.5">
+                  <ExternalLink className="w-4 h-4 text-muted-foreground mt-0.5" />
+                  <div className="min-w-0">
+                    <AppLink href={link.url} className="font-medium hover:underline">
+                      {link.label}
+                    </AppLink>
+                    <p className="text-muted-foreground break-all">
+                      {link.url}
+                    </p>
+                  </div>
                 </div>
-              )}
+              ))}
               {recruitment.application_method.other && (
                 <p className="text-muted-foreground">
                   {recruitment.application_method.other}
