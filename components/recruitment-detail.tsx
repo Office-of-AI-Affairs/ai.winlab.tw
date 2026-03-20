@@ -79,29 +79,26 @@ export function RecruitmentDetail({
         <h1 className="text-4xl font-extrabold tracking-tight text-balance mb-4">
           {recruitment.title}
         </h1>
-        <div className="flex items-center gap-2 text-base text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground sm:text-base">
           {applicationLinks.map((link) => (
-            <span key={`${link.label}-${link.url}`} className="inline-flex items-center gap-1.5">
-              <AppLink
-                href={link.url}
-                className="inline-flex items-center gap-1.5 hover:underline"
-              >
+            <AppLink
+              key={`${link.label}-${link.url}`}
+              href={link.url}
+              className="inline-flex max-w-full items-center gap-1.5 whitespace-normal break-words hover:underline"
+            >
                 <ExternalLink className="w-4 h-4" />
                 {link.label}
-              </AppLink>
-              <span>&middot;</span>
-            </span>
+            </AppLink>
           ))}
           <span className="inline-flex items-center gap-1.5">
             <Calendar className="w-4 h-4" />
             {recruitment.start_date} ~ {recruitment.end_date ?? "截止日未定"}
           </span>
           {isExpired && (
-            <span className="ml-1.5 px-2 py-0.5 text-xs font-medium rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+            <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
               已截止
             </span>
           )}
-          <span>&middot;</span>
           <span className="inline-flex items-center gap-1.5">
             <Briefcase className="w-4 h-4" />
             {positionCount > 0 ? `${positionCount} 個職缺` : "暫無職缺"}
