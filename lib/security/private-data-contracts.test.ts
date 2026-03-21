@@ -10,6 +10,13 @@ const migration = readFileSync(
   ),
   "utf8"
 )
+const publicTeamsMigration = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260321010000_add_public_teams.sql"
+  ),
+  "utf8"
+)
 const profilePage = readFileSync(resolve(process.cwd(), "app/profile/[id]/page.tsx"), "utf8")
 const profileLayout = readFileSync(resolve(process.cwd(), "app/profile/[id]/layout.tsx"), "utf8")
 const eventPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/page.tsx"), "utf8")
@@ -38,11 +45,23 @@ describe("private data contracts", () => {
     assert.ok(!migration.includes('create policy "Public read competition_private_details"'))
   })
 
+  test("migration publishes team names without exposing private team fields", () => {
+    assert.ok(publicTeamsMigration.includes("create table if not exists public.public_teams"))
+    assert.ok(publicTeamsMigration.includes("name text not null"))
+    assert.ok(publicTeamsMigration.includes('create policy "Anyone can read public_teams"'))
+    assert.ok(!publicTeamsMigration.includes("description"))
+    assert.ok(!publicTeamsMigration.includes("leader_id"))
+  })
+
   test("public profile reads no longer query private profile rows", () => {
     assert.ok(profilePage.includes('.from("public_profiles")'))
     assert.ok(profileLayout.includes('.from("public_profiles")'))
     assert.ok(eventPage.includes('.from("public_profiles")'))
     assert.ok(eventResultPage.includes('.from("public_profiles")'))
+    assert.ok(eventPage.includes('.from("public_teams")'))
+    assert.ok(eventResultPage.includes('.from("public_teams")'))
+    assert.ok(!eventPage.includes('.from("teams")'))
+    assert.ok(!eventResultPage.includes('.from("teams")'))
   })
 
   test("recruitment pages fetch summary rows separately from private details", () => {

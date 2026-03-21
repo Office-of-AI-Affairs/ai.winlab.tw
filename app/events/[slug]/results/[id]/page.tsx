@@ -76,7 +76,7 @@ export default async function EventResultDetailPage({
 
   let publisherInfo: PublisherInfo = null;
   if (result.type === "team" && result.team_id) {
-    const { data: team } = await supabase.from("teams").select("name").eq("id", result.team_id).single();
+    const { data: team } = await supabase.from("public_teams").select("name").eq("id", result.team_id).single();
     if (team) publisherInfo = { name: team.name, href: null };
   } else if (result.author_id) {
     const { data: profile } = await supabase.from("public_profiles").select("display_name").eq("id", result.author_id).single();

@@ -64,7 +64,7 @@ export default async function EventDetailPage({
       ? supabase.from("public_profiles").select("id, display_name").in("id", authorIds)
       : Promise.resolve({ data: [] }),
     teamIds.length
-      ? supabase.from("teams").select("id, name").in("id", teamIds)
+      ? supabase.from("public_teams").select("id, name").in("id", teamIds)
       : Promise.resolve({ data: [] }),
   ]);
   const profileMap = Object.fromEntries(

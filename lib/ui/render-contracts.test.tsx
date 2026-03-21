@@ -10,12 +10,13 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { AnnouncementTableSkeleton } from "@/components/announcement-table"
 import { EventCardSkeleton } from "@/components/event-card"
 import { PageShell } from "@/components/page-shell"
+import { ResultCard } from "@/components/result-card"
 import { RecruitmentCardSkeleton } from "@/components/recruitment-card"
 import { RecruitmentDetail } from "@/components/recruitment-detail"
 import { SettingsMenuSkeleton } from "@/components/settings-menu"
 import { UsersTableSkeleton } from "@/components/users-table"
 import { BlockSkeleton } from "@/components/ui/block"
-import type { Recruitment } from "@/lib/supabase/types"
+import type { Recruitment, Result } from "@/lib/supabase/types"
 
 const tiptapEditorSource = readFileSync(resolve(process.cwd(), "components/tiptap-editor.tsx"), "utf8")
 const tiptapSharedCommandsPath = resolve(process.cwd(), "components/tiptap-editor-shared.tsx")
@@ -69,6 +70,23 @@ const recruitmentFixture: Recruitment = {
   },
   required_documents: "履歷、成績單",
   event_id: null,
+}
+
+const teamResultFixture: Result = {
+  id: "res_1",
+  created_at: "2026-03-21T00:00:00.000Z",
+  updated_at: "2026-03-21T00:00:00.000Z",
+  title: "團隊作品",
+  date: "2026-03-21",
+  header_image: null,
+  summary: "這是摘要",
+  content: {},
+  status: "published",
+  author_id: null,
+  type: "team",
+  team_id: "team_1",
+  pinned: false,
+  event_id: "evt_1",
 }
 
 describe("PageShell render contracts", () => {
@@ -205,6 +223,15 @@ describe("component-owned skeleton render contracts", () => {
     assert.ok(html.includes("<table"))
     assert.ok(html.includes("justify-between"))
     assert.ok(html.includes("text-right"))
+  })
+
+  test("renders public team result cards with a visible publisher name", () => {
+    const html = renderToStaticMarkup(
+      <ResultCard item={{ ...teamResultFixture, team_name: "AI Rising Star 團隊" }} />
+    )
+
+    assert.ok(html.includes("AI Rising Star 團隊"))
+    assert.ok(!html.includes("未知隊伍"))
   })
 })
 
