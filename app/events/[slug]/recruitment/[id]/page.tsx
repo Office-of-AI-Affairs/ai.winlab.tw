@@ -10,6 +10,9 @@ export default async function EventRecruitmentDetailPage({
 }) {
   const { slug, id } = await params;
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: recruitment, error } = await supabase
     .from("competitions")
@@ -25,6 +28,7 @@ export default async function EventRecruitmentDetailPage({
         recruitment={recruitment as Recruitment}
         backHref={`/events/${slug}?tab=recruitment`}
         backLabel="返回活動"
+        canViewPrivateDetails={Boolean(user)}
       />
     </div>
   );

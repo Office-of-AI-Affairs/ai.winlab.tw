@@ -11,9 +11,11 @@ import { AnnouncementTableSkeleton } from "@/components/announcement-table"
 import { EventCardSkeleton } from "@/components/event-card"
 import { PageShell } from "@/components/page-shell"
 import { RecruitmentCardSkeleton } from "@/components/recruitment-card"
+import { RecruitmentDetail } from "@/components/recruitment-detail"
 import { SettingsMenuSkeleton } from "@/components/settings-menu"
 import { UsersTableSkeleton } from "@/components/users-table"
 import { BlockSkeleton } from "@/components/ui/block"
+import type { Recruitment } from "@/lib/supabase/types"
 
 const tiptapEditorSource = readFileSync(resolve(process.cwd(), "components/tiptap-editor.tsx"), "utf8")
 const tiptapSharedCommandsPath = resolve(process.cwd(), "components/tiptap-editor-shared.tsx")
@@ -33,6 +35,41 @@ const richTextContractSource = existsSync(richTextContractPath)
 const tiptapMobileToolbarSource = existsSync(tiptapMobileToolbarPath)
   ? readFileSync(tiptapMobileToolbarPath, "utf8")
   : ""
+
+const recruitmentFixture: Recruitment = {
+  id: "rec_1",
+  created_at: "2026-03-21T00:00:00.000Z",
+  updated_at: "2026-03-21T00:00:00.000Z",
+  title: "企業實習招募",
+  link: "https://example.com/apply",
+  image: null,
+  company_description: "這是公開簡介",
+  start_date: "2026-04-01",
+  end_date: "2026-05-01",
+  positions: [
+    {
+      name: "AI 實習生",
+      location: "Taipei",
+      type: "internship",
+      count: 2,
+      salary: "200/hr",
+      responsibilities: "建立模型",
+      requirements: "熟悉 Python",
+      nice_to_have: "有競賽經驗",
+    },
+  ],
+  application_method: {
+    email: "jobs@example.com",
+    other: "請附上履歷與作品集",
+  },
+  contact: {
+    name: "王小明",
+    email: "contact@example.com",
+    phone: "0912345678",
+  },
+  required_documents: "履歷、成績單",
+  event_id: null,
+}
 
 describe("PageShell render contracts", () => {
   test("renders the dashboard shell classes", () => {
@@ -88,6 +125,41 @@ describe("component-owned skeleton render contracts", () => {
     assert.ok(html.includes('data-slot="card"'))
     assert.ok(html.includes('data-slot="skeleton"'))
     assert.ok(html.includes("aspect-video"))
+  })
+
+  test("hides protected recruitment sections from signed-out viewers", () => {
+    const html = renderToStaticMarkup(
+      <RecruitmentDetail
+        recruitment={recruitmentFixture}
+        backHref="/recruitment"
+        backLabel="返回列表"
+        canViewPrivateDetails={false}
+      />
+    )
+
+    assert.ok(html.includes("這是公開簡介"))
+    assert.ok(html.includes("登入後可查看"))
+    assert.ok(!html.includes("AI 實習生"))
+    assert.ok(!html.includes("王小明"))
+    assert.ok(!html.includes("jobs@example.com"))
+    assert.ok(!html.includes("履歷、成績單"))
+  })
+
+  test("renders protected recruitment sections for signed-in viewers", () => {
+    const html = renderToStaticMarkup(
+      <RecruitmentDetail
+        recruitment={recruitmentFixture}
+        backHref="/recruitment"
+        backLabel="返回列表"
+        canViewPrivateDetails
+      />
+    )
+
+    assert.ok(html.includes("AI 實習生"))
+    assert.ok(html.includes("聯絡窗口"))
+    assert.ok(html.includes("應徵方式"))
+    assert.ok(html.includes("應備文件"))
+    assert.ok(!html.includes("登入後可查看"))
   })
 
   test("renders AnnouncementTableSkeleton rows in the table structure", () => {

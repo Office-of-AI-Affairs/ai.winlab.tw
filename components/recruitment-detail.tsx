@@ -1,4 +1,5 @@
 import { AppLink } from "@/components/app-link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getApplicationMethodLinks } from "@/lib/recruitment-application-method";
 import type {
   Recruitment,
@@ -22,6 +23,7 @@ type RecruitmentDetailProps = {
   recruitment: Recruitment;
   backHref: string;
   backLabel: string;
+  canViewPrivateDetails: boolean;
 };
 
 const POSITION_TYPE_LABELS: Record<RecruitmentPositionType, string> = {
@@ -35,6 +37,7 @@ export function RecruitmentDetail({
   recruitment,
   backHref,
   backLabel,
+  canViewPrivateDetails,
 }: RecruitmentDetailProps) {
   const isExpired =
     recruitment.end_date && new Date(recruitment.end_date) < new Date();
@@ -118,7 +121,9 @@ export function RecruitmentDetail({
       )}
 
       {/* Positions list */}
-      {recruitment.positions && recruitment.positions.length > 0 && (
+      {canViewPrivateDetails &&
+        recruitment.positions &&
+        recruitment.positions.length > 0 && (
         <div className="space-y-5 mb-10">
           {recruitment.positions.map((position, index) => (
             <div
@@ -190,8 +195,27 @@ export function RecruitmentDetail({
         </div>
       )}
 
+      {!canViewPrivateDetails && (
+        <Card className="mt-8 border-dashed">
+          <CardHeader className="gap-3">
+            <CardTitle className="text-xl">登入後可查看完整實習職缺資訊</CardTitle>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              實習職缺細節、應徵方式、應備文件與聯絡窗口皆放置於登入後專區，僅限合作企業與學員登入後查看。
+            </p>
+          </CardHeader>
+          <CardContent>
+            <AppLink
+              href="/login"
+              className="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-medium"
+            >
+              前往登入
+            </AppLink>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Application method */}
-      {hasApplicationMethod && (
+      {canViewPrivateDetails && hasApplicationMethod && (
         <div className="mt-8">
           <h2 className="text-lg font-semibold mb-3">應徵方式</h2>
           <div className="space-y-2 text-sm">
@@ -226,7 +250,8 @@ export function RecruitmentDetail({
       )}
 
       {/* Contact section */}
-      {recruitment.contact &&
+      {canViewPrivateDetails &&
+        recruitment.contact &&
         (recruitment.contact.name ||
           recruitment.contact.email ||
           recruitment.contact.phone) && (
@@ -266,7 +291,7 @@ export function RecruitmentDetail({
         )}
 
       {/* Required documents */}
-      {recruitment.required_documents && (
+      {canViewPrivateDetails && recruitment.required_documents && (
         <div className="mt-8">
           <h2 className="text-lg font-semibold mb-3">應備文件</h2>
           <p className="whitespace-pre-line text-base text-muted-foreground">

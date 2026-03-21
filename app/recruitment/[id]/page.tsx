@@ -10,6 +10,9 @@ export default async function RecruitmentDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: recruitment, error } = await supabase
     .from("competitions")
@@ -25,6 +28,7 @@ export default async function RecruitmentDetailPage({
         recruitment={recruitment as Recruitment}
         backHref="/recruitment"
         backLabel="返回列表"
+        canViewPrivateDetails={Boolean(user)}
       />
     </div>
   );
