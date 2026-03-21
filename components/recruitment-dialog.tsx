@@ -279,31 +279,69 @@ export function RecruitmentDialog({
     const ct = formData.contact;
     const hasContact = ct && (ct.name || ct.email || ct.phone);
 
-    const payload = {
+    const publicPayload = {
       title: formData.title.trim(),
       link: am?.links?.[0]?.url ?? "",
       image: formData.image,
       company_description: formData.company_description?.trim() || null,
       start_date: formData.start_date,
       end_date: formData.end_date || null,
+    };
+    const privatePayload = {
       positions: formData.positions.length > 0 ? formData.positions : null,
       application_method: hasApplicationMethod ? am : null,
       contact: hasContact ? ct : null,
       required_documents: formData.required_documents?.trim() || null,
     };
+    const hasPrivatePayload = Boolean(
+      privatePayload.positions ||
+      privatePayload.application_method ||
+      privatePayload.contact ||
+      privatePayload.required_documents
+    );
 
     let error;
     if (recruitment) {
-      // Edit mode
-      ({ error } = await supabase
+      const { error: publicError } = await supabase
         .from("competitions")
-        .update(payload)
-        .eq("id", recruitment.id));
+        .update(publicPayload)
+        .eq("id", recruitment.id);
+      error = publicError;
+
+      if (!error) {
+        if (hasPrivatePayload) {
+          const { error: privateError } = await supabase
+            .from("competition_private_details")
+            .upsert({
+              competition_id: recruitment.id,
+              ...privatePayload,
+            });
+          error = privateError;
+        } else {
+          const { error: privateError } = await supabase
+            .from("competition_private_details")
+            .delete()
+            .eq("competition_id", recruitment.id);
+          error = privateError;
+        }
+      }
     } else {
-      // Create mode
-      ({ error } = await supabase
+      const { data, error: publicError } = await supabase
         .from("competitions")
-        .insert({ ...payload, event_id: eventId }));
+        .insert({ ...publicPayload, event_id: eventId })
+        .select("id")
+        .single();
+      error = publicError;
+
+      if (!error && data?.id && hasPrivatePayload) {
+        const { error: privateError } = await supabase
+          .from("competition_private_details")
+          .insert({
+            competition_id: data.id,
+            ...privatePayload,
+          });
+        error = privateError;
+      }
     }
 
     setSaving(false);

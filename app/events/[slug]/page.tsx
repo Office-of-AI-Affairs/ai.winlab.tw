@@ -1,6 +1,14 @@
 import { EventDetailClient } from "./client";
 import { getViewer } from "@/lib/supabase/get-viewer";
-import type { Announcement, Event, Recruitment, Result } from "@/lib/supabase/types";
+import { composeRecruitment } from "@/lib/recruitment-records";
+import type {
+  Announcement,
+  Event,
+  Recruitment,
+  RecruitmentPrivateDetails,
+  RecruitmentSummary,
+  Result,
+} from "@/lib/supabase/types";
 import type { ResultWithMeta } from "@/components/result-card";
 import { redirect } from "next/navigation";
 
@@ -39,7 +47,11 @@ export default async function EventDetailPage({
   const [announcementsRes, resultsRes, recruitmentsRes] = await Promise.all([
     announcementsQuery,
     resultsQuery,
-    supabase.from("competitions").select("*").eq("event_id", event.id).order("start_date", { ascending: false }),
+    supabase
+      .from("competitions")
+      .select("id, created_at, updated_at, title, link, image, company_description, start_date, end_date, event_id")
+      .eq("event_id", event.id)
+      .order("start_date", { ascending: false }),
   ]);
 
   // Resolve author/team names for results
@@ -48,7 +60,7 @@ export default async function EventDetailPage({
   const teamIds = [...new Set(rawResults.map((r) => r.team_id).filter(Boolean))] as string[];
   const [profilesRes, teamsRes] = await Promise.all([
     authorIds.length
-      ? supabase.from("profiles").select("id, display_name").in("id", authorIds)
+      ? supabase.from("public_profiles").select("id, display_name").in("id", authorIds)
       : Promise.resolve({ data: [] }),
     teamIds.length
       ? supabase.from("teams").select("id, name").in("id", teamIds)
@@ -66,6 +78,29 @@ export default async function EventDetailPage({
     team_name: r.team_id ? teamMap[r.team_id] : null,
   }));
 
+  const recruitmentSummaries = (recruitmentsRes.data as RecruitmentSummary[]) ?? [];
+  let recruitments: Recruitment[] = recruitmentSummaries.map((item) =>
+    composeRecruitment(item)
+  );
+
+  if (isAdmin && recruitmentSummaries.length > 0) {
+    const { data: privateRows } = await supabase
+      .from("competition_private_details")
+      .select("competition_id, created_at, updated_at, positions, application_method, contact, required_documents")
+      .in("competition_id", recruitmentSummaries.map((item) => item.id));
+
+    const privateMap = new Map(
+      ((privateRows as RecruitmentPrivateDetails[] | null) ?? []).map((item) => [
+        item.competition_id,
+        item,
+      ])
+    );
+
+    recruitments = recruitmentSummaries.map((item) =>
+      composeRecruitment(item, privateMap.get(item.id) ?? null)
+    );
+  }
+
   return (
     <EventDetailClient
       event={event as Event}
@@ -74,7 +109,7 @@ export default async function EventDetailPage({
       viewerUserId={user?.id ?? null}
       announcements={(announcementsRes.data as Announcement[]) ?? []}
       results={results}
-      recruitments={(recruitmentsRes.data as Recruitment[]) ?? []}
+      recruitments={recruitments}
     />
   );
 }

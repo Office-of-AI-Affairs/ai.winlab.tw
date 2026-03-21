@@ -102,10 +102,12 @@ export function RecruitmentDetail({
               已截止
             </span>
           )}
-          <span className="inline-flex items-center gap-1.5">
-            <Briefcase className="w-4 h-4" />
-            {positionCount > 0 ? `${positionCount} 個職缺` : "暫無職缺"}
-          </span>
+          {canViewPrivateDetails && (
+            <span className="inline-flex items-center gap-1.5">
+              <Briefcase className="w-4 h-4" />
+              {positionCount > 0 ? `${positionCount} 個職缺` : "暫無職缺"}
+            </span>
+          )}
         </div>
       </div>
 

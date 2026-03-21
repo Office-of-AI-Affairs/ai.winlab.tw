@@ -1,7 +1,7 @@
 import { ProfilePageClient } from "./client";
-import { getVisibleProfileForViewer } from "@/lib/profile-visibility";
+import { composeProfile } from "@/lib/profile-records";
 import { createClient } from "@/lib/supabase/server";
-import type { ExternalResult, Profile, Result } from "@/lib/supabase/types";
+import type { ExternalResult, Profile, PublicProfile, Result } from "@/lib/supabase/types";
 import { redirect } from "next/navigation";
 
 export default async function ProfilePage({
@@ -16,12 +16,19 @@ export default async function ProfilePage({
   const isOwner = user?.id === id;
   const canViewPrivateProfile = Boolean(user);
 
-  const [profileRes, resultsRes, externalResultsRes] = await Promise.all([
+  const [publicProfileRes, privateProfileRes, resultsRes, externalResultsRes] = await Promise.all([
     supabase
-      .from("profiles")
-      .select("id, display_name, avatar_url, bio, phone, linkedin, facebook, github, website, resume, social_links")
+      .from("public_profiles")
+      .select("id, created_at, updated_at, display_name")
       .eq("id", id)
       .single(),
+    canViewPrivateProfile
+      ? supabase
+          .from("profiles")
+          .select("id, created_at, updated_at, display_name, avatar_url, role, bio, phone, linkedin, facebook, github, website, resume, social_links")
+          .eq("id", id)
+          .single()
+      : Promise.resolve({ data: null, error: null }),
     supabase
       .from("results")
       .select("*")
@@ -35,7 +42,7 @@ export default async function ProfilePage({
       .order("created_at", { ascending: false }),
   ]);
 
-  if (profileRes.error || !profileRes.data) redirect("/");
+  if (publicProfileRes.error || !publicProfileRes.data) redirect("/");
 
   const rawResults = (resultsRes.data as Result[]) || [];
   const eventIds = [...new Set(rawResults.map((r) => r.event_id).filter(Boolean))] as string[];
@@ -47,9 +54,9 @@ export default async function ProfilePage({
 
   const results = isOwner ? rawResults : rawResults.filter((r) => r.status === "published");
   const externalResults = (externalResultsRes.data as ExternalResult[]) || [];
-  const visibleProfile = getVisibleProfileForViewer(
-    profileRes.data as Profile,
-    canViewPrivateProfile
+  const visibleProfile = composeProfile(
+    publicProfileRes.data as PublicProfile,
+    privateProfileRes.data as Partial<Profile> | null
   );
 
   return (

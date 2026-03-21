@@ -8,19 +8,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Recruitment } from "@/lib/supabase/types";
+import type { RecruitmentSummary } from "@/lib/supabase/types";
 import { isExternalImage } from "@/lib/utils";
 import { Pencil } from "lucide-react";
 import Image from "next/image";
 
 type RecruitmentCardProps = {
-  item: Recruitment;
+  item: RecruitmentSummary;
   href: string;
   onEdit?: () => void;
 };
 
 export function RecruitmentCard({ item, href, onEdit }: RecruitmentCardProps) {
-  const positionCount = item.positions?.reduce((sum, p) => sum + p.count, 0) ?? 0;
   const isExpired = item.end_date ? new Date(item.end_date) < new Date() : false;
 
   return (
@@ -45,9 +44,6 @@ export function RecruitmentCard({ item, href, onEdit }: RecruitmentCardProps) {
             <p className="text-sm text-muted-foreground line-clamp-2">
               {item.company_description}
             </p>
-          )}
-          {positionCount > 0 && (
-            <p className="text-sm text-muted-foreground">{positionCount} 個職缺</p>
           )}
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>

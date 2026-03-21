@@ -71,6 +71,13 @@ export type Profile = {
   social_links: string[] | null;
 };
 
+export type PublicProfile = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  display_name: string | null;
+};
+
 export type Team = {
   id: string;
   created_at: string;
@@ -180,6 +187,29 @@ export type Recruitment = {
   contact: ContactInfo | null;
   required_documents: string | null;
   event_id: string | null;
+};
+
+export type RecruitmentSummary = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  title: string;
+  link: string;
+  image: string | null;
+  company_description: string | null;
+  start_date: string;
+  end_date: string | null;
+  event_id: string | null;
+};
+
+export type RecruitmentPrivateDetails = {
+  competition_id: string;
+  created_at: string;
+  updated_at: string;
+  positions: RecruitmentPosition[] | null;
+  application_method: ApplicationMethod | null;
+  contact: ContactInfo | null;
+  required_documents: string | null;
 };
 
 export type Tag = {

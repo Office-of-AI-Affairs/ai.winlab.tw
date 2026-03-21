@@ -1,6 +1,11 @@
 import { RecruitmentDetail } from "@/components/recruitment-detail";
+import { composeRecruitment } from "@/lib/recruitment-records";
 import { createClient } from "@/lib/supabase/server";
-import type { Recruitment } from "@/lib/supabase/types";
+import type {
+  Recruitment,
+  RecruitmentPrivateDetails,
+  RecruitmentSummary,
+} from "@/lib/supabase/types";
 import { redirect } from "next/navigation";
 
 export default async function RecruitmentDetailPage({
@@ -14,13 +19,28 @@ export default async function RecruitmentDetailPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: recruitment, error } = await supabase
+  const { data: summary, error } = await supabase
     .from("competitions")
-    .select("*")
+    .select("id, created_at, updated_at, title, link, image, company_description, start_date, end_date, event_id")
     .eq("id", id)
     .single();
 
-  if (error || !recruitment) redirect("/recruitment");
+  if (error || !summary) redirect("/recruitment");
+
+  let details: RecruitmentPrivateDetails | null = null;
+  if (user) {
+    const { data } = await supabase
+      .from("competition_private_details")
+      .select("competition_id, created_at, updated_at, positions, application_method, contact, required_documents")
+      .eq("competition_id", id)
+      .maybeSingle();
+    details = (data as RecruitmentPrivateDetails | null) ?? null;
+  }
+
+  const recruitment: Recruitment = composeRecruitment(
+    summary as RecruitmentSummary,
+    details
+  );
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">

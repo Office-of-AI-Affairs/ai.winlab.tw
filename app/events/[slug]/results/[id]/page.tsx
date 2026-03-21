@@ -70,7 +70,7 @@ export default async function EventResultDetailPage({
     const { data: team } = await supabase.from("teams").select("name").eq("id", result.team_id).single();
     if (team) publisherInfo = { name: team.name, href: `/team/${result.team_id}` };
   } else if (result.author_id) {
-    const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", result.author_id).single();
+    const { data: profile } = await supabase.from("public_profiles").select("display_name").eq("id", result.author_id).single();
     if (profile) publisherInfo = { name: profile.display_name || "未知使用者", href: `/profile/${result.author_id}` };
   }
 
