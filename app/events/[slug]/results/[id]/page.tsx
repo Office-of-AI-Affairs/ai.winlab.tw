@@ -9,15 +9,24 @@ import { notFound, redirect } from "next/navigation";
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string; id: string }>;
 }): Promise<Metadata> {
-  const { id } = await params;
+  const { slug, id } = await params;
   const supabase = await createClient();
   const { data } = await supabase.from("results").select("title, summary").eq("id", id).single();
   const title = data?.title ?? "成果";
+  const description = data?.summary ?? `${title}｜國立陽明交通大學人工智慧專責辦公室成果展示`;
   return {
     title: `${title}｜人工智慧專責辦公室`,
-    description: data?.summary ?? undefined,
+    description,
+    alternates: {
+      canonical: `/events/${slug}/results/${id}`,
+    },
+    openGraph: {
+      title: `${title}｜人工智慧專責辦公室`,
+      description,
+      url: `/events/${slug}/results/${id}`,
+    },
   };
 }
 

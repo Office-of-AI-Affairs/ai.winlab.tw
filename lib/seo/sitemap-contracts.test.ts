@@ -45,7 +45,10 @@ describe("metadata contracts", () => {
   test("public detail pages describe the entity in metadata", () => {
     assert.ok(profileLayout.includes("description:"))
     assert.ok(eventLayout.includes("description:"))
-    assert.ok(eventResultPage.includes("description:"))
+    assert.ok(
+      eventResultPage.includes("description:") ||
+        eventResultPage.includes("const description =")
+    )
   })
 
   test("event result pages no longer link publisher metadata to removed team pages", () => {

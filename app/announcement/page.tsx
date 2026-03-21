@@ -6,6 +6,14 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "公告｜人工智慧專責辦公室",
   description: "查看國立陽明交通大學人工智慧專責辦公室的最新公告、招生資訊與系統公告。",
+  alternates: {
+    canonical: "/announcement",
+  },
+  openGraph: {
+    title: "公告｜人工智慧專責辦公室",
+    description: "查看國立陽明交通大學人工智慧專責辦公室的最新公告、招生資訊與系統公告。",
+    url: "/announcement",
+  },
 };
 
 export default async function AnnouncementPage() {

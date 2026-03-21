@@ -10,6 +10,15 @@ export const metadata: Metadata = {
   title: "國立陽明交通大學 人工智慧專責辦公室",
   description:
     "國立陽明交通大學人工智慧專責辦公室網站，提供辦公室介紹、組織成員、公告、活動專區、成果展示與徵才資訊。",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "國立陽明交通大學 人工智慧專責辦公室",
+    description:
+      "國立陽明交通大學人工智慧專責辦公室網站，提供辦公室介紹、組織成員、公告、活動專區、成果展示與徵才資訊。",
+    url: "/",
+  },
 };
 
 export default async function Home() {

@@ -7,6 +7,20 @@ import type {
   RecruitmentPrivateDetails,
   RecruitmentSummary,
 } from "@/lib/supabase/types";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "徵才資訊｜人工智慧專責辦公室",
+  description: "查看國立陽明交通大學人工智慧專責辦公室的徵才、實習與合作招募資訊。",
+  alternates: {
+    canonical: "/recruitment",
+  },
+  openGraph: {
+    title: "徵才資訊｜人工智慧專責辦公室",
+    description: "查看國立陽明交通大學人工智慧專責辦公室的徵才、實習與合作招募資訊。",
+    url: "/recruitment",
+  },
+};
 
 export default async function RecruitmentPage() {
   const supabase = await createClient();

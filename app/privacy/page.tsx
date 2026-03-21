@@ -5,6 +5,15 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "隱私權政策 — 國立陽明交通大學 人工智慧專責辦公室",
+  description: "國立陽明交通大學人工智慧專責辦公室網站的隱私權政策與資料使用說明。",
+  alternates: {
+    canonical: "/privacy",
+  },
+  openGraph: {
+    title: "隱私權政策｜人工智慧專責辦公室",
+    description: "國立陽明交通大學人工智慧專責辦公室網站的隱私權政策與資料使用說明。",
+    url: "/privacy",
+  },
 };
 
 export default async function PrivacyPage() {

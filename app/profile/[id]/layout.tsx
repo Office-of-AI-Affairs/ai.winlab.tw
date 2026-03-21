@@ -18,6 +18,14 @@ export async function generateMetadata({
   return {
     title: `${name}｜人工智慧專責辦公室`,
     description: `${name} 的公開個人頁面，收錄成果展示、外部作品與相關連結。`,
+    alternates: {
+      canonical: `/profile/${id}`,
+    },
+    openGraph: {
+      title: `${name}｜人工智慧專責辦公室`,
+      description: `${name} 的公開個人頁面，收錄成果展示、外部作品與相關連結。`,
+      url: `/profile/${id}`,
+    },
   };
 }
 

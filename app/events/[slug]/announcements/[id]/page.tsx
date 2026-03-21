@@ -9,13 +9,27 @@ import { notFound } from "next/navigation";
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string; id: string }>;
 }): Promise<Metadata> {
-  const { id } = await params;
+  const { slug, id } = await params;
   const supabase = await createClient();
-  const { data } = await supabase.from("announcements").select("title").eq("id", id).single();
+  const { data } = await supabase.from("announcements").select("title, category").eq("id", id).single();
   const title = data?.title ?? "公告";
-  return { title: `${title}｜人工智慧專責辦公室` };
+  const description = data?.category
+    ? `${data.category}公告：${title}`
+    : `${title}｜活動公告`;
+  return {
+    title: `${title}｜人工智慧專責辦公室`,
+    description,
+    alternates: {
+      canonical: `/events/${slug}/announcements/${id}`,
+    },
+    openGraph: {
+      title: `${title}｜人工智慧專責辦公室`,
+      description,
+      url: `/events/${slug}/announcements/${id}`,
+    },
+  };
 }
 
 export default async function EventAnnouncementDetailPage({

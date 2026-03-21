@@ -12,6 +12,14 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "活動專區｜人工智慧專責辦公室",
   description: "瀏覽國立陽明交通大學人工智慧專責辦公室的活動專區、成果展示與相關內容。",
+  alternates: {
+    canonical: "/events",
+  },
+  openGraph: {
+    title: "活動專區｜人工智慧專責辦公室",
+    description: "瀏覽國立陽明交通大學人工智慧專責辦公室的活動專區、成果展示與相關內容。",
+    url: "/events",
+  },
 };
 
 export default async function EventsPage() {

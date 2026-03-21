@@ -22,8 +22,18 @@ const notoSansMono = Noto_Sans_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://ai.winlab.tw"),
   title: "國立陽明交通大學 人工智慧專責辦公室",
-  description: "Office of AI Affairs",
+  description: "國立陽明交通大學人工智慧專責辦公室網站，提供辦公室介紹、組織成員、公告、活動、成果與徵才資訊。",
+  openGraph: {
+    type: "website",
+    siteName: "國立陽明交通大學 人工智慧專責辦公室",
+    locale: "zh_TW",
+    title: "國立陽明交通大學 人工智慧專責辦公室",
+    description:
+      "國立陽明交通大學人工智慧專責辦公室網站，提供辦公室介紹、組織成員、公告、活動、成果與徵才資訊。",
+    url: "https://ai.winlab.tw",
+  },
   verification: {
     google: "vjj3Fw7BmozLkeGrZTCo6PYVVqBhPQG6tTvbQel7fwM",
   },

@@ -8,6 +8,14 @@ const CATEGORIES: OrganizationMemberCategory[] = ["core", "legal_entity", "indus
 export const metadata: Metadata = {
   title: "組織成員｜人工智慧專責辦公室",
   description: "查看國立陽明交通大學人工智慧專責辦公室的組織成員、合作法人與產業夥伴。",
+  alternates: {
+    canonical: "/organization",
+  },
+  openGraph: {
+    title: "組織成員｜人工智慧專責辦公室",
+    description: "查看國立陽明交通大學人工智慧專責辦公室的組織成員、合作法人與產業夥伴。",
+    url: "/organization",
+  },
 };
 
 export default async function OrganizationPage() {

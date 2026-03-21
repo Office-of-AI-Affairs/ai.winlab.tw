@@ -18,6 +18,14 @@ export async function generateMetadata({
   return {
     title: `${name}｜人工智慧專責辦公室`,
     description: data?.description ?? `${name} — 國立陽明交通大學人工智慧專責辦公室`,
+    alternates: {
+      canonical: `/events/${slug}`,
+    },
+    openGraph: {
+      title: `${name}｜人工智慧專責辦公室`,
+      description: data?.description ?? `${name} — 國立陽明交通大學人工智慧專責辦公室`,
+      url: `/events/${slug}`,
+    },
   };
 }
 

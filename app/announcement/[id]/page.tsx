@@ -13,9 +13,23 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const supabase = await createClient();
-  const { data } = await supabase.from("announcements").select("title").eq("id", id).single();
+  const { data } = await supabase.from("announcements").select("title, category").eq("id", id).single();
   const title = data?.title ?? "公告";
-  return { title: `${title}｜人工智慧專責辦公室` };
+  const description = data?.category
+    ? `${data.category}公告：${title}`
+    : `${title}｜國立陽明交通大學人工智慧專責辦公室公告`;
+  return {
+    title: `${title}｜人工智慧專責辦公室`,
+    description,
+    alternates: {
+      canonical: `/announcement/${id}`,
+    },
+    openGraph: {
+      title: `${title}｜人工智慧專責辦公室`,
+      description,
+      url: `/announcement/${id}`,
+    },
+  };
 }
 
 export default async function AnnouncementDetailPage({
