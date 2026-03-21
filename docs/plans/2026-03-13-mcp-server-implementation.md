@@ -15,7 +15,7 @@
 ## Important Notes
 
 - This is a **NEW repo** — all files are created from scratch
-- The new repo will be initialized at a sibling directory (e.g., `/Users/loki/mcp-ai`)
+- The new repo will be initialized at a sibling directory (e.g., `/Users/loki/mcp.ai.winlab.tw`)
 - Supabase types are copied from the main site (`/Users/loki/ai/lib/supabase/types.ts`)
 - MCP SDK v2 uses `@modelcontextprotocol/server` for McpServer and `@modelcontextprotocol/node` for Node transport
 - Zod v4 is required (`import * as z from 'zod/v4'`)
@@ -38,8 +38,8 @@
 **Step 1: Initialize project directory**
 
 ```bash
-mkdir -p /Users/loki/mcp-ai
-cd /Users/loki/mcp-ai
+mkdir -p /Users/loki/mcp.ai.winlab.tw
+cd /Users/loki/mcp.ai.winlab.tw
 git init
 ```
 
@@ -173,7 +173,7 @@ export default function Home() {
 **Step 8: Install dependencies and verify**
 
 ```bash
-cd /Users/loki/mcp-ai
+cd /Users/loki/mcp.ai.winlab.tw
 bun install
 bun dev
 # Should start on http://localhost:3000 with the landing page
@@ -199,8 +199,8 @@ git commit -m "feat: initialize Next.js project for MCP server"
 **Step 1: Copy types from main site**
 
 ```bash
-mkdir -p /Users/loki/mcp-ai/lib/supabase
-cp /Users/loki/ai/lib/supabase/types.ts /Users/loki/mcp-ai/lib/supabase/types.ts
+mkdir -p /Users/loki/mcp.ai.winlab.tw/lib/supabase
+cp /Users/loki/ai/lib/supabase/types.ts /Users/loki/mcp.ai.winlab.tw/lib/supabase/types.ts
 ```
 
 **Step 2: Create browser client** (`lib/supabase/client.ts`)
@@ -484,7 +484,7 @@ export async function DELETE() {
 **Step 4: Verify dev server starts**
 
 ```bash
-cd /Users/loki/mcp-ai
+cd /Users/loki/mcp.ai.winlab.tw
 bun dev
 # Should compile without errors
 ```
@@ -1091,7 +1091,7 @@ function convertInlineNode(node: MdastNode, marks: TiptapMark[]): TiptapNode[] {
 **Step 2: Quick smoke test**
 
 ```bash
-cd /Users/loki/mcp-ai
+cd /Users/loki/mcp.ai.winlab.tw
 # Create a quick test script
 cat > /tmp/test-md.ts << 'EOF'
 import { markdownToTiptap } from "./lib/markdown-to-tiptap";
@@ -2413,7 +2413,7 @@ export function createMcpServer(supabase: SupabaseClient, userId: string) {
 **Step 2: Verify build**
 
 ```bash
-cd /Users/loki/mcp-ai
+cd /Users/loki/mcp.ai.winlab.tw
 bun build
 # Should complete without errors
 ```
@@ -2437,7 +2437,7 @@ git commit -m "feat: wire all 28 MCP tools into server"
 Copy from main site and adjust:
 
 ```bash
-cd /Users/loki/mcp-ai
+cd /Users/loki/mcp.ai.winlab.tw
 # Copy values from the main site's .env.local
 # NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY should be the same
 # KV_REST_API_URL and KV_REST_API_TOKEN need to be set up in Vercel dashboard
@@ -2448,7 +2448,7 @@ For local testing without Vercel KV, you can use a mock or skip OAuth and test t
 **Step 2: Start dev server**
 
 ```bash
-cd /Users/loki/mcp-ai
+cd /Users/loki/mcp.ai.winlab.tw
 bun dev
 ```
 
@@ -2521,7 +2521,7 @@ git commit -m "chore: finalize project setup and verify all tools"
 **Step 2: Deploy to Vercel**
 
 ```bash
-cd /Users/loki/mcp-ai
+cd /Users/loki/mcp.ai.winlab.tw
 # Link to Vercel (first time)
 bunx vercel link
 # Set environment variables in Vercel dashboard:

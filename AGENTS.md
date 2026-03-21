@@ -207,6 +207,7 @@ Defined in `app/globals.css`:
 - When agent instructions need updates, edit this file instead of `CLAUDE.md`.
 - Keep `AGENTS.md` and `rules/*.md` in sync when repository guidance changes.
 - The remote branch should carry the latest committed versions of both `AGENTS.md` and `rules/*.md`.
+- The sibling MCP repo lives at `~/mcp.ai.winlab.tw` and powers the `mcp.ai.winlab.tw` tool surface. After changing app-facing schemas, content models, RLS, or admin workflows here, always check whether that repo's MCP tools and shared Supabase types need matching updates.
 
 ## Delivery workflow
 
