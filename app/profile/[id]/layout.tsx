@@ -17,6 +17,7 @@ export async function generateMetadata({
   const name = data?.display_name ?? "個人頁面";
   return {
     title: `${name}｜人工智慧專責辦公室`,
+    description: `${name} 的公開個人頁面，收錄成果展示、外部作品與相關連結。`,
   };
 }
 

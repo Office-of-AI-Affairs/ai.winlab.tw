@@ -14,7 +14,10 @@ export async function generateMetadata({
   const supabase = await createClient();
   const { data } = await supabase.from("teams").select("name").eq("id", id).single();
   const name = data?.name ?? "隊伍";
-  return { title: `${name}｜人工智慧專責辦公室` };
+  return {
+    title: `${name}｜人工智慧專責辦公室`,
+    description: `${name} 的公開隊伍頁面，展示隊伍成果與相關活動內容。`,
+  };
 }
 
 export default async function TeamPage({

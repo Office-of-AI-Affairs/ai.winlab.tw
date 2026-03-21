@@ -7,6 +7,12 @@ import { getViewer } from "@/lib/supabase/get-viewer";
 import type { Event } from "@/lib/supabase/types";
 import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "活動專區｜人工智慧專責辦公室",
+  description: "瀏覽國立陽明交通大學人工智慧專責辦公室的活動專區、成果展示與相關內容。",
+};
 
 export default async function EventsPage() {
   const { supabase, user, isAdmin } = await getViewer();
