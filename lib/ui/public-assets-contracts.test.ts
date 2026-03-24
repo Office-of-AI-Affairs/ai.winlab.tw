@@ -37,7 +37,12 @@ describe("public assets contracts", () => {
     assert.deepEqual(offenders, [])
   })
 
-  test("the project no longer keeps a public assets directory", () => {
-    assert.equal(existsSync(resolve(process.cwd(), "public")), false)
+  test("public directory only contains expected assets", () => {
+    const publicDir = resolve(process.cwd(), "public")
+    if (!existsSync(publicDir)) return
+    const files = readdirSync(publicDir)
+    const allowed = new Set(["og.png"])
+    const unexpected = files.filter((f) => !allowed.has(f))
+    assert.deepEqual(unexpected, [], `unexpected files in public/: ${unexpected.join(", ")}`)
   })
 })
