@@ -43,21 +43,26 @@ export function RecruitmentInterestButton({
     const supabase = createClient();
     let error: unknown = null;
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setInterested(interested);
+      setCount(count);
+      setIsPending(false);
+      return;
+    }
+
     if (nextInterested) {
       const result = await supabase
         .from("recruitment_interests")
-        .insert({ competition_id: competitionId });
+        .insert({ competition_id: competitionId, user_id: user.id });
       error = result.error;
     } else {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const result = await supabase
-          .from("recruitment_interests")
-          .delete()
-          .eq("competition_id", competitionId)
-          .eq("user_id", user.id);
-        error = result.error;
-      }
+      const result = await supabase
+        .from("recruitment_interests")
+        .delete()
+        .eq("competition_id", competitionId)
+        .eq("user_id", user.id);
+      error = result.error;
     }
 
     if (error) {
