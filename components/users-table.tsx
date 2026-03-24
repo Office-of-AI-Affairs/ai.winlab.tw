@@ -1,6 +1,6 @@
 "use client"
 
-import { Download, Upload } from "lucide-react"
+import { Download, Pencil, Upload } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -35,6 +35,7 @@ function UsersTable({
   importResult,
   onExport,
   onImportClick,
+  onEditUser,
 }: {
   users: UserRow[]
   roleLabel: Record<string, string>
@@ -42,6 +43,7 @@ function UsersTable({
   importResult: ImportResult | null
   onExport: () => void
   onImportClick: () => void
+  onEditUser?: (user: UserRow) => void
 }) {
   return (
     <>
@@ -99,6 +101,7 @@ function UsersTable({
               <TableHead className="px-4 py-3 text-left font-semibold">電子信箱</TableHead>
               <TableHead className="px-4 py-3 text-left font-semibold">角色</TableHead>
               <TableHead className="px-4 py-3 text-left font-semibold">加入時間</TableHead>
+              <TableHead className="px-4 py-3" />
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y">
@@ -121,6 +124,18 @@ function UsersTable({
                 </TableCell>
                 <TableCell className="px-4 py-3 text-muted-foreground">
                   {formatDate(user.created_at, "long")}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-right">
+                  {onEditUser && (
+                    <button
+                      type="button"
+                      aria-label="編輯使用者"
+                      onClick={() => onEditUser(user)}
+                      className="rounded p-1 hover:bg-muted transition-colors duration-200"
+                    >
+                      <Pencil className="size-4 text-muted-foreground" />
+                    </button>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
