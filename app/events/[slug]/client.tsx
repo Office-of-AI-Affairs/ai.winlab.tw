@@ -27,6 +27,8 @@ export function EventDetailClient({
   event,
   slug,
   isAdmin,
+  isEventVendor,
+  userId,
   viewerUserId,
   announcements,
   results,
@@ -35,6 +37,8 @@ export function EventDetailClient({
   event: Event;
   slug: string;
   isAdmin: boolean;
+  isEventVendor: boolean;
+  userId: string | null;
   viewerUserId: string | null;
   announcements: Announcement[];
   results: ResultWithMeta[];
@@ -213,7 +217,7 @@ export function EventDetailClient({
 
       {tab === "recruitment" && (
         <div className="flex flex-col gap-6">
-          {isAdmin && (
+          {(isAdmin || isEventVendor) && (
             <div className="flex justify-end">
               <Button variant="secondary" onClick={openCreateSheet}>
                 <Plus className="w-4 h-4" />
@@ -230,7 +234,7 @@ export function EventDetailClient({
                   key={item.id}
                   item={item}
                   href={`/events/${slug}/recruitment/${item.id}`}
-                  onEdit={isAdmin ? () => openEditSheet(item) : undefined}
+                  onEdit={(isAdmin || (isEventVendor && item.created_by === userId)) ? () => openEditSheet(item) : undefined}
                 />
               ))}
             </div>
