@@ -21,5 +21,6 @@ export async function getViewer() {
     user,
     role,
     isAdmin: role === "admin",
+    isVendor: role === "vendor",
   }
 }

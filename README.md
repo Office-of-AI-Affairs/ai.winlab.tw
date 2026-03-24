@@ -53,6 +53,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=
 | `/events/[slug]`                    | Event detail page (announcements / results / recruitment tabs via `?tab=`) |
 | `/events/[slug]/announcements/[id]` | Event announcement detail                                                  |
 | `/events/[slug]/results/[id]`       | Event result detail                                                        |
+| `/events/[slug]/recruitment/[id]`   | Recruitment detail (interest UI for logged-in users)                       |
 
 ### Content Management (Login Required)
 
@@ -63,7 +64,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=
 | `/events/[slug]/edit`                    | Edit event metadata      |
 | `/events/[slug]/announcements/[id]/edit` | Edit event announcement  |
 | `/events/[slug]/results/[id]/edit`       | Edit event result        |
-| `/events/[slug]/recruitment/[id]/edit`   | Edit event recruitment (admin only) |
+| `/events/[slug]/recruitment/[id]/edit`   | Edit event recruitment (admin/vendor) |
 
 ### Account Pages (Login Required)
 
@@ -88,8 +89,10 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=
 
 - **Announcement**: Global (`event_id IS NULL`) or event-scoped (`event_id IS NOT NULL`). Event-scoped announcements are excluded from the global `/announcement` page.
 - **Result**: `type: personal | team`, optionally linked to an event via `event_id`. All results live under `/events/[slug]/results/[id]`; there is no global result listing page.
-- **Recruitment** (DB table: `competitions`): Job postings are always event-scoped (`event_id IS NOT NULL`). Accessed at `/events/[slug]/recruitment/[id]` (admin only). There is no global recruitment page.
+- **Recruitment** (DB table: `competitions`): Job postings are always event-scoped (`event_id IS NOT NULL`). Managed by admin or assigned vendors. There is no global recruitment page.
 - **Event**: Container with `slug`, `pinned`, and `sort_order`. Pinned events appear directly in the header navigation.
+- **EventVendor** (DB table: `event_vendors`): Links vendor-role users to events they can manage recruitment for.
+- **RecruitmentInterest** (DB table: `recruitment_interests`): Tracks user interest in recruitment listings.
 
 ## Supabase Storage Setup (One-time)
 

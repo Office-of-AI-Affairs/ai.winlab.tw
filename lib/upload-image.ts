@@ -53,3 +53,36 @@ export const uploadResultImage = (file: File) => uploadImage(file, "results/");
 export const uploadEventImage = (file: File) => uploadImage(file, "events/");
 export const uploadOrganizationImage = (file: File) => uploadImage(file, "organization/");
 export const uploadExternalResultImage = (file: File) => uploadImage(file, "external-results/");
+
+const PDF_MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+
+export async function uploadResumePdf(
+  file: File,
+): Promise<{ url: string } | { error: string }> {
+  if (file.type !== "application/pdf") {
+    return { error: "僅支援 PDF 格式" };
+  }
+  if (file.size > PDF_MAX_SIZE_BYTES) {
+    return { error: "檔案大小不可超過 10MB" };
+  }
+
+  const supabase = createClient();
+  const path = `resumes/${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
+
+  const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
+    cacheControl: "3600",
+    upsert: false,
+    contentType: "application/pdf",
+  });
+
+  if (error) {
+    console.error("Resume upload error:", error);
+    return { error: error.message };
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(BUCKET).getPublicUrl(path);
+
+  return { url: publicUrl };
+}

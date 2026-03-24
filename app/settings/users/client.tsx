@@ -3,8 +3,10 @@
 import { useRef, useState } from "react";
 
 import { AppLink } from "@/components/app-link";
+import { UserEditDialog } from "@/components/user-edit-dialog";
 import { PageShell } from "@/components/page-shell";
-import { UsersTable, type UserRow } from "@/components/users-table";
+import { UsersTable } from "@/components/users-table";
+import type { UserRow } from "@/components/users-table";
 import { createClient } from "@/lib/supabase/client";
 import { buildUsersCsv, parseUsersCsv } from "@/lib/users-csv";
 import { ArrowLeft } from "lucide-react";
@@ -13,6 +15,7 @@ import { toast } from "sonner";
 const roleLabel: Record<string, string> = {
   admin: "管理員",
   user: "一般用戶",
+  vendor: "廠商",
 };
 
 function exportUsersCSV(users: UserRow[]) {
@@ -34,6 +37,7 @@ export default function SettingsUsersPageClient({
   const supabase = createClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [users, setUsers] = useState<UserRow[]>(initialUsers);
+  const [editingUser, setEditingUser] = useState<UserRow | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<{
     created: number;
@@ -101,6 +105,14 @@ export default function SettingsUsersPageClient({
         importResult={importResult}
         onExport={() => exportUsersCSV(users)}
         onImportClick={() => fileInputRef.current?.click()}
+        onEditUser={setEditingUser}
+      />
+
+      <UserEditDialog
+        user={editingUser}
+        open={!!editingUser}
+        onOpenChange={() => setEditingUser(null)}
+        onSaved={refreshUsers}
       />
     </PageShell>
   );

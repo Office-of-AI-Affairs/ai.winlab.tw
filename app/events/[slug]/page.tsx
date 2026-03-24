@@ -2,6 +2,7 @@ import { EventDetailClient } from "./client";
 import { JsonLd } from "@/components/json-ld";
 import { getViewer } from "@/lib/supabase/get-viewer";
 import { composeRecruitment } from "@/lib/recruitment-records";
+import { isEventVendor } from "@/lib/supabase/check-event-vendor";
 import type {
   Announcement,
   Event,
@@ -50,7 +51,7 @@ export default async function EventDetailPage({
     resultsQuery,
     supabase
       .from("competitions")
-      .select("id, created_at, updated_at, title, link, image, company_description, start_date, end_date, event_id")
+      .select("id, created_at, updated_at, title, link, image, company_description, start_date, end_date, event_id, created_by")
       .eq("event_id", event.id)
       .order("start_date", { ascending: false }),
   ]);
@@ -102,6 +103,10 @@ export default async function EventDetailPage({
     );
   }
 
+  const vendorForEvent = user && !isAdmin
+    ? await isEventVendor(supabase, user.id, event.id)
+    : false;
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Event",
@@ -123,6 +128,8 @@ export default async function EventDetailPage({
         event={event as Event}
         slug={slug}
         isAdmin={isAdmin}
+        isEventVendor={vendorForEvent}
+        userId={user?.id ?? null}
         viewerUserId={user?.id ?? null}
         announcements={(announcementsRes.data as Announcement[]) ?? []}
         results={results}

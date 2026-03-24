@@ -1,6 +1,9 @@
 import { RecruitmentDetail } from "@/components/recruitment-detail";
+import { RecruitmentInterestButton } from "@/components/recruitment-interest-button";
+import { RecruitmentInterestList } from "@/components/recruitment-interest-list";
 import { JsonLd } from "@/components/json-ld";
 import { composeRecruitment } from "@/lib/recruitment-records";
+import { isEventVendor } from "@/lib/supabase/check-event-vendor";
 import { createClient } from "@/lib/supabase/server";
 import type {
   Recruitment,
@@ -53,11 +56,13 @@ export default async function EventRecruitmentDetailPage({
 
   const { data: summary, error } = await supabase
     .from("competitions")
-    .select("id, created_at, updated_at, title, link, image, company_description, start_date, end_date, event_id")
+    .select("id, created_at, updated_at, title, link, image, company_description, start_date, end_date, event_id, created_by")
     .eq("id", id)
     .single();
 
   if (error || !summary) redirect(`/events/${slug}?tab=recruitment`);
+
+  const eventId = summary.event_id as string;
 
   let details: RecruitmentPrivateDetails | null = null;
   if (user) {
@@ -73,6 +78,73 @@ export default async function EventRecruitmentDetailPage({
     summary as RecruitmentSummary,
     details
   );
+
+  // Determine viewer role
+  let isAdmin = false;
+  let isVendor = false;
+  let hasResume = false;
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role, resume")
+      .eq("id", user.id)
+      .single();
+
+    if (profile) {
+      isAdmin = profile.role === "admin";
+      hasResume = Boolean(profile.resume);
+      if (!isAdmin && profile.role === "vendor") {
+        isVendor = await isEventVendor(supabase, user.id, eventId);
+      }
+    }
+  }
+
+  const canViewApplicants = isAdmin || isVendor;
+
+  // Fetch interest count
+  const { data: countData } = await supabase.rpc("get_interest_count", {
+    p_competition_id: id,
+  });
+  const interestCount = (countData as number | null) ?? 0;
+
+  // Check if current user is already interested
+  let userIsInterested = false;
+  if (user && !canViewApplicants) {
+    const { data: interestRow } = await supabase
+      .from("recruitment_interests")
+      .select("id")
+      .eq("competition_id", id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    userIsInterested = Boolean(interestRow);
+  }
+
+  // Fetch applicant list for vendor/admin
+  type ApplicantRow = {
+    id: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    bio: string | null;
+    resume: string | null;
+  };
+  let applicants: ApplicantRow[] = [];
+  if (canViewApplicants) {
+    const { data: interestRows } = await supabase
+      .from("recruitment_interests")
+      .select("user_id")
+      .eq("competition_id", id);
+
+    if (interestRows && interestRows.length > 0) {
+      const userIds = interestRows.map((r) => r.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, bio, resume")
+        .in("id", userIds);
+      applicants = (profiles as ApplicantRow[]) ?? [];
+    }
+  }
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "JobPosting",
@@ -98,6 +170,22 @@ export default async function EventRecruitmentDetailPage({
         backLabel="返回活動"
         canViewPrivateDetails={Boolean(user)}
       />
+
+      {user && !canViewApplicants && (
+        <RecruitmentInterestButton
+          competitionId={id}
+          initialInterested={userIsInterested}
+          initialCount={interestCount}
+          hasResume={hasResume}
+        />
+      )}
+
+      {canViewApplicants && (
+        <RecruitmentInterestList
+          applicants={applicants}
+          count={interestCount}
+        />
+      )}
     </div>
   );
 }

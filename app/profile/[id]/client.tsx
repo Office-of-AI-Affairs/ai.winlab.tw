@@ -20,11 +20,13 @@ import { SubButton } from "@/components/ui/sub-button";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import type { ExternalResult, Profile, Result } from "@/lib/supabase/types";
-import { uploadExternalResultImage } from "@/lib/upload-image";
+import { VendorEventsSection } from "@/components/vendor-events-section";
+import { uploadExternalResultImage, uploadResumePdf } from "@/lib/upload-image";
 import { hasCustomImage, isExternalImage } from "@/lib/utils";
 import {
   ArrowLeftIcon,
   EyeOff,
+  FileUp,
   ImagePlus,
   Loader2,
   Pencil,
@@ -40,7 +42,6 @@ function mergeAllLinks(profile: Profile): string[] {
     profile.facebook,
     profile.github,
     profile.website,
-    profile.resume,
   ].filter(Boolean) as string[];
   const extra = (profile.social_links as string[] | null) ?? [];
   const seen = new Set<string>();
@@ -80,7 +81,7 @@ export function ProfilePageClient({
   eventSlugMap: Record<string, string>;
   initialExternalResults: ExternalResult[];
 }) {
-  const { user, refreshProfile } = useAuth();
+  const { user, isVendor, refreshProfile } = useAuth();
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [profile, setProfile] = useState<Profile>(initialProfile);
@@ -98,6 +99,22 @@ export function ProfilePageClient({
   const [exEditingId, setExEditingId] = useState<string | null>(null);
   const [exForm, setExForm] = useState({ title: "", description: "", link: "", image: "" });
   const exFileInputRef = useRef<HTMLInputElement>(null);
+  const resumeFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingResume, setUploadingResume] = useState(false);
+
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingResume(true);
+    e.target.value = "";
+    const result = await uploadResumePdf(file);
+    if ("error" in result) {
+      setUploadingResume(false);
+      return;
+    }
+    await saveField("resume", result.url);
+    setUploadingResume(false);
+  };
 
   const openNewDialog = () => {
     setExEditingId(null);
@@ -154,7 +171,6 @@ export function ProfilePageClient({
       facebook: null,
       github: null,
       website: null,
-      resume: null,
     }).eq("id", user.id);
     setLinks(filtered);
     setSavingField(null);
@@ -382,6 +398,69 @@ export function ProfilePageClient({
                   )}
                 </div>
 
+                {/* Resume */}
+                {isEditMode ? (
+                  <div className="grid gap-1.5">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      履歷
+                      {(savingField === "resume" || uploadingResume) && (
+                        <Loader2 className="size-3 animate-spin inline ml-1 text-muted-foreground" />
+                      )}
+                    </span>
+                    {profile.resume ? (
+                      <div className="grid gap-1.5">
+                        <AppLink
+                          href={`/profile/${profile.id}/resume`}
+                          className="text-sm text-foreground underline break-all"
+                        >
+                          /profile/{profile.id}/resume
+                        </AppLink>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-fit"
+                          onClick={() => saveField("resume", null)}
+                          disabled={savingField === "resume"}
+                        >
+                          <Trash2 className="size-4" />
+                          移除履歷
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">尚未上傳履歷</p>
+                    )}
+                    <input
+                      ref={resumeFileInputRef}
+                      type="file"
+                      accept="application/pdf"
+                      className="hidden"
+                      onChange={handleResumeUpload}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={uploadingResume}
+                      onClick={() => resumeFileInputRef.current?.click()}
+                      className="w-fit"
+                    >
+                      {uploadingResume ? <Loader2 className="size-4 animate-spin" /> : <FileUp className="size-4" />}
+                      {uploadingResume ? "上傳中…" : "上傳 PDF 履歷"}
+                    </Button>
+                  </div>
+                ) : canViewPrivateProfile && profile.resume ? (
+                  <div className="grid gap-1.5">
+                    <span className="text-xs font-medium text-muted-foreground">履歷</span>
+                    <AppLink
+                      href={`/profile/${profile.id}/resume`}
+                      className="text-sm text-foreground underline"
+                    >
+                      查看履歷
+                    </AppLink>
+                  </div>
+                ) : null}
+
                 {/* Links */}
                 {isEditMode ? (
                   <div className="grid gap-2">
@@ -444,6 +523,7 @@ export function ProfilePageClient({
             {/* RIGHT: results */}
             <div className="col-span-1 lg:col-span-2 grid gap-4 content-start">
 
+              {isOwner && isVendor && <VendorEventsSection />}
 
               {results.length === 0 && externalResults.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-12 text-center">尚無成果紀錄</p>

@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 
 import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/components/auth-provider";
 import { normalizeApplicationMethod } from "@/lib/recruitment-application-method";
 import { uploadRecruitmentImage } from "@/lib/upload-image";
 import { isExternalImage } from "@/lib/utils";
@@ -126,6 +127,7 @@ export function RecruitmentDialog({
   eventId,
 }: RecruitmentDialogProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<FormData>(getDefaults);
   const [saving, setSaving] = useState(false);
@@ -328,7 +330,7 @@ export function RecruitmentDialog({
     } else {
       const { data, error: publicError } = await supabase
         .from("competitions")
-        .insert({ ...publicPayload, event_id: eventId })
+        .insert({ ...publicPayload, event_id: eventId, created_by: user?.id })
         .select("id")
         .single();
       error = publicError;

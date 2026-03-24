@@ -45,6 +45,8 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=
 - Unauthenticated users can only see records with `status: published`.
 - Authenticated non-admin users can see their own drafts and all published content.
 - Admin users have full read/write access when `profile.role === "admin"`.
+- Vendor users (`profile.role === "vendor"`) can create/edit/delete recruitment entries only under events they are assigned to (`event_vendors`) and only for listings they created (`created_by = auth.uid()`).
+- `isEventVendor()` in `lib/supabase/check-event-vendor.ts` checks vendor-event assignment server-side.
 - In Server Components, query the `profiles` table directly when you need admin state.
 
 ## Data model
@@ -53,7 +55,9 @@ Core entities defined in `lib/supabase/types.ts`:
 
 - `Announcement`: announcement content, Tiptap JSON, `status: draft | published`, optional `event_id`
 - `Result`: event or competition result, `type: personal | team`, `pinned`, optional `event_id`
-- `Recruitment`: stored in DB table `competitions`, includes `positions`, `application_method`, and `contact` JSON fields
+- `Recruitment`: stored in DB table `competitions`, includes `positions`, `application_method`, and `contact` JSON fields; `created_by` tracks the author
+- `EventVendor`: junction table (`event_vendors`) linking vendor users to events they can manage
+- `RecruitmentInterest`: tracks user interest in recruitment listings (`recruitment_interests`); one per user per competition
 - `Event`: `slug`, `status: draft | published`, `pinned`, `sort_order`
 - `Introduction`: single office-introduction record with Tiptap JSON content
 - `OrganizationMember`: `category: core | legal_entity | industry`
@@ -97,7 +101,7 @@ Conventions:
 - `/events/[slug]/edit`: admin event metadata editing
 - `/events/[slug]/announcements/[id]` and `/edit`
 - `/events/[slug]/results/[id]` and `/edit`
-- `/events/[slug]/recruitment/[id]/page.tsx`: admin only
+- `/events/[slug]/recruitment/[id]/page.tsx`: public view with role-based interest UI; vendor/admin can see applicant list
 
 ### Content management
 
@@ -111,7 +115,7 @@ Conventions:
 
 - `/account`: profile, teams, invitations
 - `/account/teams`, `/account/teams/[id]`
-- `/profile/[id]`: public author page
+- `/profile/[id]`: public author page; vendor users see a "My Events" section showing assigned events
 
 ### Admin-only pages
 

@@ -70,6 +70,7 @@ const recruitmentFixture: Recruitment = {
   },
   required_documents: "履歷、成績單",
   event_id: null,
+  created_by: null,
 }
 
 const teamResultFixture: Result = {

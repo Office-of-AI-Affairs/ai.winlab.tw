@@ -18,6 +18,7 @@ const summaryFixture: RecruitmentSummary = {
   start_date: "2026-04-01",
   end_date: "2026-05-01",
   event_id: null,
+  created_by: null,
 }
 
 const detailsFixture: RecruitmentPrivateDetails = {
