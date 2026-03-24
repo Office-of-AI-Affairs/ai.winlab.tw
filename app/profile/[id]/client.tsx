@@ -20,6 +20,7 @@ import { SubButton } from "@/components/ui/sub-button";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import type { ExternalResult, Profile, Result } from "@/lib/supabase/types";
+import { VendorEventsSection } from "@/components/vendor-events-section";
 import { uploadExternalResultImage } from "@/lib/upload-image";
 import { hasCustomImage, isExternalImage } from "@/lib/utils";
 import {
@@ -80,7 +81,7 @@ export function ProfilePageClient({
   eventSlugMap: Record<string, string>;
   initialExternalResults: ExternalResult[];
 }) {
-  const { user, refreshProfile } = useAuth();
+  const { user, isVendor, refreshProfile } = useAuth();
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [profile, setProfile] = useState<Profile>(initialProfile);
@@ -444,6 +445,7 @@ export function ProfilePageClient({
             {/* RIGHT: results */}
             <div className="col-span-1 lg:col-span-2 grid gap-4 content-start">
 
+              {isOwner && isVendor && <VendorEventsSection />}
 
               {results.length === 0 && externalResults.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-12 text-center">尚無成果紀錄</p>
