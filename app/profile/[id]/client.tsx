@@ -21,11 +21,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import type { ExternalResult, Profile, Result } from "@/lib/supabase/types";
 import { VendorEventsSection } from "@/components/vendor-events-section";
-import { uploadExternalResultImage } from "@/lib/upload-image";
+import { uploadExternalResultImage, uploadResumePdf } from "@/lib/upload-image";
 import { hasCustomImage, isExternalImage } from "@/lib/utils";
 import {
   ArrowLeftIcon,
   EyeOff,
+  FileUp,
   ImagePlus,
   Loader2,
   Pencil,
@@ -41,7 +42,6 @@ function mergeAllLinks(profile: Profile): string[] {
     profile.facebook,
     profile.github,
     profile.website,
-    profile.resume,
   ].filter(Boolean) as string[];
   const extra = (profile.social_links as string[] | null) ?? [];
   const seen = new Set<string>();
@@ -99,6 +99,22 @@ export function ProfilePageClient({
   const [exEditingId, setExEditingId] = useState<string | null>(null);
   const [exForm, setExForm] = useState({ title: "", description: "", link: "", image: "" });
   const exFileInputRef = useRef<HTMLInputElement>(null);
+  const resumeFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingResume, setUploadingResume] = useState(false);
+
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingResume(true);
+    e.target.value = "";
+    const result = await uploadResumePdf(file);
+    if ("error" in result) {
+      setUploadingResume(false);
+      return;
+    }
+    await saveField("resume", result.url);
+    setUploadingResume(false);
+  };
 
   const openNewDialog = () => {
     setExEditingId(null);
@@ -155,7 +171,6 @@ export function ProfilePageClient({
       facebook: null,
       github: null,
       website: null,
-      resume: null,
     }).eq("id", user.id);
     setLinks(filtered);
     setSavingField(null);
@@ -382,6 +397,66 @@ export function ProfilePageClient({
                     </p>
                   )}
                 </div>
+
+                {/* Resume */}
+                {isEditMode ? (
+                  <div className="grid gap-1.5">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      履歷
+                      {(savingField === "resume" || uploadingResume) && (
+                        <Loader2 className="size-3 animate-spin inline ml-1 text-muted-foreground" />
+                      )}
+                    </span>
+                    {profile.resume ? (
+                      <div className="flex items-center gap-2">
+                        <AppLink
+                          href={profile.resume}
+                          className="text-sm text-foreground underline truncate flex-1 min-w-0"
+                        >
+                          {displayLinkLabel(profile.resume)}
+                        </AppLink>
+                        <button
+                          type="button"
+                          aria-label="移除履歷"
+                          onClick={() => saveField("resume", null)}
+                          className="text-muted-foreground hover:text-destructive transition-colors duration-200"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">尚未上傳履歷</p>
+                    )}
+                    <input
+                      ref={resumeFileInputRef}
+                      type="file"
+                      accept="application/pdf"
+                      className="hidden"
+                      onChange={handleResumeUpload}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={uploadingResume}
+                      onClick={() => resumeFileInputRef.current?.click()}
+                      className="w-fit"
+                    >
+                      {uploadingResume ? <Loader2 className="size-4 animate-spin" /> : <FileUp className="size-4" />}
+                      {uploadingResume ? "上傳中…" : "上傳 PDF 履歷"}
+                    </Button>
+                  </div>
+                ) : canViewPrivateProfile && profile.resume ? (
+                  <div className="grid gap-1.5">
+                    <span className="text-xs font-medium text-muted-foreground">履歷</span>
+                    <AppLink
+                      href={profile.resume}
+                      className="text-sm text-foreground underline"
+                    >
+                      查看履歷
+                    </AppLink>
+                  </div>
+                ) : null}
 
                 {/* Links */}
                 {isEditMode ? (
