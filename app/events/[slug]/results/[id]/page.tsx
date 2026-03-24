@@ -13,9 +13,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug, id } = await params;
   const supabase = await createClient();
-  const { data } = await supabase.from("results").select("title, summary").eq("id", id).single();
+  const { data } = await supabase.from("results").select("title, summary, header_image").eq("id", id).single();
   const title = data?.title ?? "成果";
   const description = data?.summary ?? `${title}｜國立陽明交通大學人工智慧專責辦公室成果展示`;
+  const ogImages = data?.header_image
+    ? [{ url: data.header_image, width: 1200, height: 630, alt: title }]
+    : [];
   return {
     title: `${title}｜人工智慧專責辦公室`,
     description,
@@ -26,6 +29,7 @@ export async function generateMetadata({
       title: `${title}｜人工智慧專責辦公室`,
       description,
       url: `/events/${slug}/results/${id}`,
+      images: ogImages,
     },
   };
 }

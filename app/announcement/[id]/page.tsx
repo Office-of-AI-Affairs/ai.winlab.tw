@@ -29,6 +29,7 @@ export async function generateMetadata({
       title: `${title}｜人工智慧專責辦公室`,
       description,
       url: `/announcement/${id}`,
+      images: [{ url: "/og.png", width: 1200, height: 630, alt: title }],
     },
   };
 }

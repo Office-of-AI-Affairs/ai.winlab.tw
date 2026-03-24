@@ -13,11 +13,17 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug, id } = await params;
   const supabase = await createClient();
-  const { data } = await supabase.from("announcements").select("title, category").eq("id", id).single();
-  const title = data?.title ?? "公告";
-  const description = data?.category
-    ? `${data.category}公告：${title}`
+  const [announcementRes, eventRes] = await Promise.all([
+    supabase.from("announcements").select("title, category").eq("id", id).single(),
+    supabase.from("events").select("cover_image").eq("slug", slug).single(),
+  ]);
+  const title = announcementRes.data?.title ?? "公告";
+  const description = announcementRes.data?.category
+    ? `${announcementRes.data.category}公告：${title}`
     : `${title}｜活動公告`;
+  const ogImages = eventRes.data?.cover_image
+    ? [{ url: eventRes.data.cover_image, width: 1200, height: 630, alt: title }]
+    : [];
   return {
     title: `${title}｜人工智慧專責辦公室`,
     description,
@@ -28,6 +34,7 @@ export async function generateMetadata({
       title: `${title}｜人工智慧專責辦公室`,
       description,
       url: `/events/${slug}/announcements/${id}`,
+      images: ogImages,
     },
   };
 }

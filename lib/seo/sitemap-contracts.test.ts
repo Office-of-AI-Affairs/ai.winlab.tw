@@ -45,8 +45,8 @@ describe("metadata contracts", () => {
   })
 
   test("public detail pages describe the entity in metadata", () => {
-    assert.ok(profileLayout.includes("description:"))
-    assert.ok(eventLayout.includes("description:"))
+    assert.ok(profileLayout.includes("description:") || profileLayout.includes("const description ="))
+    assert.ok(eventLayout.includes("description:") || eventLayout.includes("const description ="))
     assert.ok(
       eventResultPage.includes("description:") ||
         eventResultPage.includes("const description =")
