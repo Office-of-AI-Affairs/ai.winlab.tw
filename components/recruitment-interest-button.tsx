@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { Heart } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 type RecruitmentInterestButtonProps = {
   competitionId: string;
@@ -24,6 +25,12 @@ export function RecruitmentInterestButton({
 
   async function handleToggle() {
     if (isPending) return;
+
+    if (!hasResume) {
+      toast.error("請先到個人頁面上傳履歷");
+      return;
+    }
+
     setIsPending(true);
 
     const nextInterested = !interested;
@@ -57,6 +64,7 @@ export function RecruitmentInterestButton({
       // Revert on error
       setInterested(interested);
       setCount(count);
+      toast.error("操作失敗，請稍後再試");
     }
 
     setIsPending(false);
@@ -68,7 +76,7 @@ export function RecruitmentInterestButton({
         variant={interested ? "default" : "outline"}
         aria-pressed={interested}
         onClick={handleToggle}
-        disabled={isPending || !hasResume}
+        disabled={isPending}
         className="gap-2"
       >
         <Heart className={interested ? "fill-current" : ""} />
@@ -79,7 +87,7 @@ export function RecruitmentInterestButton({
       </Button>
       {!hasResume && (
         <p className="text-sm text-muted-foreground">
-          請先到個人頁面上傳履歷
+          請先到個人頁面上傳履歷，以便廠商查看
         </p>
       )}
     </div>
