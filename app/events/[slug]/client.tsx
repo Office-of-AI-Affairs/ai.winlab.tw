@@ -29,7 +29,6 @@ export function EventDetailClient({
   isAdmin,
   isEventVendor,
   userId,
-  viewerUserId,
   announcements,
   results,
   recruitments,
@@ -39,7 +38,6 @@ export function EventDetailClient({
   isAdmin: boolean;
   isEventVendor: boolean;
   userId: string | null;
-  viewerUserId: string | null;
   announcements: Announcement[];
   results: ResultWithMeta[];
   recruitments: Recruitment[];
@@ -49,25 +47,25 @@ export function EventDetailClient({
   const [isCreating, setIsCreating] = useState(false);
 
   const handleCreateAnnouncement = async () => {
-    if (!viewerUserId) return;
+    if (!userId) return;
     setIsCreating(true);
     const supabase = createClient();
     const { data, error } = await supabase.from("announcements").insert({
       title: "新公告", category: "一般", content: {}, status: "draft",
-      author_id: viewerUserId, event_id: event.id,
+      author_id: userId, event_id: event.id,
     }).select().single();
     if (error) { setIsCreating(false); return; }
     router.push(`/events/${slug}/announcements/${data.id}/edit`);
   };
 
   const handleCreateResult = async () => {
-    if (!viewerUserId) return;
+    if (!userId) return;
     setIsCreating(true);
     const supabase = createClient();
     const { data, error } = await supabase.from("results").insert({
       title: "新成果", date: new Date().toISOString().slice(0, 10),
       header_image: null, summary: "", content: {},
-      status: "draft", author_id: viewerUserId, type: "personal", team_id: null,
+      status: "draft", author_id: userId, type: "personal", team_id: null,
       event_id: event.id,
     }).select().single();
     if (error) { setIsCreating(false); return; }
@@ -185,7 +183,7 @@ export function EventDetailClient({
 
       {tab === "results" && (
         <div className="flex flex-col gap-6">
-          {viewerUserId && (
+          {userId && (
             <div className="flex justify-end">
               <Button variant="secondary" onClick={handleCreateResult} disabled={isCreating}>
                 {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
@@ -198,7 +196,7 @@ export function EventDetailClient({
           ) : (
             <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
               {results.map((item) => {
-                const isOwner = viewerUserId === item.author_id;
+                const isOwner = userId === item.author_id;
                 const showStatus = isAdmin || isOwner;
                 return (
                   <ResultCard

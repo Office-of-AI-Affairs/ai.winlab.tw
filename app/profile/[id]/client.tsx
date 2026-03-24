@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 
 function mergeAllLinks(profile: Profile): string[] {
   const structured = [
@@ -109,6 +110,7 @@ export function ProfilePageClient({
     e.target.value = "";
     const result = await uploadResumePdf(file);
     if ("error" in result) {
+      toast.error(result.error);
       setUploadingResume(false);
       return;
     }

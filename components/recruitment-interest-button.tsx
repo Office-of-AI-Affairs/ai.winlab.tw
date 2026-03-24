@@ -45,9 +45,10 @@ export function RecruitmentInterestButton({
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      setInterested(interested);
-      setCount(count);
+      setInterested((prev) => !prev);
+      setCount((prev) => nextInterested ? prev - 1 : prev + 1);
       setIsPending(false);
+      toast.error("請先登入");
       return;
     }
 
@@ -66,9 +67,9 @@ export function RecruitmentInterestButton({
     }
 
     if (error) {
-      // Revert on error
-      setInterested(interested);
-      setCount(count);
+      // Revert on error using functional updaters to avoid stale closure
+      setInterested((prev) => !prev);
+      setCount((prev) => nextInterested ? prev - 1 : prev + 1);
       toast.error("操作失敗，請稍後再試");
     }
 

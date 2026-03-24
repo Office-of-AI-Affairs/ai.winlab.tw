@@ -31,7 +31,8 @@ export function EventVendorPicker({
       .from("events")
       .select("id, name, status")
       .order("name")
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.error("Failed to fetch events:", error);
         setEvents((data as EventOption[]) ?? []);
         setLoading(false);
       });

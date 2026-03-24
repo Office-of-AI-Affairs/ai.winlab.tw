@@ -328,9 +328,14 @@ export function RecruitmentDialog({
         }
       }
     } else {
+      if (!user) {
+        toast.error("請先登入");
+        setSaving(false);
+        return;
+      }
       const { data, error: publicError } = await supabase
         .from("competitions")
-        .insert({ ...publicPayload, event_id: eventId, created_by: user?.id })
+        .insert({ ...publicPayload, event_id: eventId, created_by: user.id })
         .select("id")
         .single();
       error = publicError;

@@ -33,7 +33,8 @@ export function VendorEventsSection() {
       .from("event_vendors")
       .select("event_id, events(id, name, slug, cover_image, status)")
       .eq("user_id", user.id)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.error("Failed to fetch vendor events:", error);
         setEvents((data as unknown as VendorEvent[]) ?? []);
       });
   }, [user]);

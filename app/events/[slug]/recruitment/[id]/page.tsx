@@ -62,15 +62,17 @@ export default async function EventRecruitmentDetailPage({
 
   if (error || !summary) redirect(`/events/${slug}?tab=recruitment`);
 
-  const eventId = summary.event_id as string;
+  if (!summary.event_id) redirect(`/events/${slug}?tab=recruitment`);
+  const eventId = summary.event_id;
 
   let details: RecruitmentPrivateDetails | null = null;
   if (user) {
-    const { data } = await supabase
+    const { data, error: detailsError } = await supabase
       .from("competition_private_details")
       .select("competition_id, created_at, updated_at, positions, application_method, contact, required_documents")
       .eq("competition_id", id)
       .maybeSingle();
+    if (detailsError) console.error("Failed to fetch competition_private_details:", detailsError);
     details = (data as RecruitmentPrivateDetails | null) ?? null;
   }
 
@@ -85,11 +87,12 @@ export default async function EventRecruitmentDetailPage({
   let hasResume = false;
 
   if (user) {
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role, resume")
       .eq("id", user.id)
       .single();
+    if (profileError) console.error("Failed to fetch viewer profile:", profileError);
 
     if (profile) {
       isAdmin = profile.role === "admin";
@@ -103,20 +106,22 @@ export default async function EventRecruitmentDetailPage({
   const canViewApplicants = isAdmin || isVendor;
 
   // Fetch interest count
-  const { data: countData } = await supabase.rpc("get_interest_count", {
+  const { data: countData, error: countError } = await supabase.rpc("get_interest_count", {
     p_competition_id: id,
   });
+  if (countError) console.error("Failed to fetch interest count:", countError);
   const interestCount = (countData as number | null) ?? 0;
 
   // Check if current user is already interested
   let userIsInterested = false;
   if (user && !canViewApplicants) {
-    const { data: interestRow } = await supabase
+    const { data: interestRow, error: interestError } = await supabase
       .from("recruitment_interests")
       .select("id")
       .eq("competition_id", id)
       .eq("user_id", user.id)
       .maybeSingle();
+    if (interestError) console.error("Failed to check user interest:", interestError);
     userIsInterested = Boolean(interestRow);
   }
 
@@ -130,17 +135,19 @@ export default async function EventRecruitmentDetailPage({
   };
   let applicants: ApplicantRow[] = [];
   if (canViewApplicants) {
-    const { data: interestRows } = await supabase
+    const { data: interestRows, error: interestListError } = await supabase
       .from("recruitment_interests")
       .select("user_id")
       .eq("competition_id", id);
+    if (interestListError) console.error("Failed to fetch interest list:", interestListError);
 
     if (interestRows && interestRows.length > 0) {
       const userIds = interestRows.map((r) => r.user_id);
-      const { data: profiles } = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("id, display_name, avatar_url, bio, resume")
         .in("id", userIds);
+      if (profilesError) console.error("Failed to fetch applicant profiles:", profilesError);
       applicants = (profiles as ApplicantRow[]) ?? [];
     }
   }

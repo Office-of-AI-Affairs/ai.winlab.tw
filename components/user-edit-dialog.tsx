@@ -73,6 +73,7 @@ function UserEditForm({
   const [role, setRole] = useState(user.role);
   const [eventIds, setEventIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [vendorEventsLoaded, setVendorEventsLoaded] = useState(user.role !== "vendor");
 
   // Fetch existing vendor event assignments
   useEffect(() => {
@@ -80,11 +81,17 @@ function UserEditForm({
 
     async function load() {
       const supabase = createClient();
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("event_vendors")
         .select("event_id")
         .eq("user_id", user.id);
+      if (error) {
+        console.error("Failed to load vendor events:", error);
+        toast.error("無法載入廠商活動資料");
+        return;
+      }
       setEventIds((data ?? []).map((r: { event_id: string }) => r.event_id));
+      setVendorEventsLoaded(true);
     }
 
     void load();
@@ -101,6 +108,12 @@ function UserEditForm({
 
     if (profileError) {
       toast.error(profileError.message);
+      setSaving(false);
+      return;
+    }
+
+    if (role === "vendor" && !vendorEventsLoaded && user.role === "vendor") {
+      toast.error("活動資料尚未載入，無法儲存");
       setSaving(false);
       return;
     }

@@ -85,7 +85,7 @@ export function RecruitmentInterestList({
                   )}
                   {applicant.resume && (
                     <AppLink
-                      href={applicant.resume}
+                      href={`/profile/${applicant.id}/resume`}
                       className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:underline"
                     >
                       <FileText className="size-3.5" />
