@@ -7,15 +7,32 @@ export async function GET(
 ) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data } = await supabase
+
+  const { data: profile } = await supabase
     .from("profiles")
-    .select("resume")
+    .select("resume, display_name")
     .eq("id", id)
     .single();
 
-  if (!data?.resume) {
+  if (!profile?.resume) {
     redirect(`/profile/${id}`);
   }
 
-  redirect(data.resume);
+  const res = await fetch(profile.resume);
+
+  if (!res.ok) {
+    redirect(`/profile/${id}`);
+  }
+
+  const filename = profile.display_name
+    ? `${profile.display_name}-resume.pdf`
+    : "resume.pdf";
+
+  return new Response(res.body, {
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `inline; filename="${encodeURIComponent(filename)}"`,
+      "Cache-Control": "public, max-age=3600",
+    },
+  });
 }
