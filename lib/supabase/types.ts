@@ -60,7 +60,7 @@ export type Profile = {
   updated_at: string;
   display_name: string | null;
   avatar_url: string | null;
-  role: "admin" | "user";
+  role: "admin" | "user" | "vendor";
   phone: string | null;
   bio: string | null;
   linkedin: string | null;
@@ -187,6 +187,7 @@ export type Recruitment = {
   contact: ContactInfo | null;
   required_documents: string | null;
   event_id: string | null;
+  created_by: string | null;
 };
 
 export type RecruitmentSummary = {
@@ -200,6 +201,14 @@ export type RecruitmentSummary = {
   start_date: string;
   end_date: string | null;
   event_id: string | null;
+  created_by: string | null;
+};
+
+export type RecruitmentInterest = {
+  id: string;
+  competition_id: string;
+  user_id: string;
+  created_at: string;
 };
 
 export type RecruitmentPrivateDetails = {
