@@ -8,15 +8,17 @@ import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+type EventInfo = {
+  id: string;
+  name: string;
+  slug: string;
+  cover_image: string | null;
+  status: string;
+};
+
 type VendorEvent = {
   event_id: string;
-  events: {
-    id: string;
-    name: string;
-    slug: string;
-    cover_image: string | null;
-    status: string;
-  } | null;
+  events: EventInfo | null;
 };
 
 export function VendorEventsSection() {
@@ -32,7 +34,7 @@ export function VendorEventsSection() {
       .select("event_id, events(id, name, slug, cover_image, status)")
       .eq("user_id", user.id)
       .then(({ data }) => {
-        setEvents((data as VendorEvent[]) ?? []);
+        setEvents((data as unknown as VendorEvent[]) ?? []);
       });
   }, [user]);
 

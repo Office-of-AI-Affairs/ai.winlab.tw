@@ -132,16 +132,16 @@ export default async function EventRecruitmentDetailPage({
   if (canViewApplicants) {
     const { data: interestRows } = await supabase
       .from("recruitment_interests")
-      .select("user_id, profiles(id, display_name, avatar_url, bio, resume)")
+      .select("user_id")
       .eq("competition_id", id);
 
-    if (interestRows) {
-      applicants = interestRows
-        .map((row) => {
-          const p = row.profiles as ApplicantRow | null;
-          return p ?? null;
-        })
-        .filter((p): p is ApplicantRow => p !== null);
+    if (interestRows && interestRows.length > 0) {
+      const userIds = interestRows.map((r) => r.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, bio, resume")
+        .in("id", userIds);
+      applicants = (profiles as ApplicantRow[]) ?? [];
     }
   }
 
