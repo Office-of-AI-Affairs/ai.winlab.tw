@@ -110,3 +110,7 @@ Image path prefixes by content type:
 - Recruitment images: `recruitment/`
 - Organization member photos: `organization/`
 - Event cover images: `events/`
+
+## License
+
+[MIT](LICENSE.md) — AI for all.
