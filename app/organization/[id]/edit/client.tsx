@@ -16,8 +16,8 @@ import { toast } from "sonner";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import { ArrowLeft, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 
 const CATEGORIES: { value: OrganizationMemberCategory; label: string }[] = [
   { value: "core", label: "核心成員" },
@@ -25,69 +25,37 @@ const CATEGORIES: { value: OrganizationMemberCategory; label: string }[] = [
   { value: "industry", label: "產業" },
 ];
 
-export default function OrganizationMemberEditPage() {
+export function OrganizationMemberEditClient({
+  id,
+  initialMember,
+}: {
+  id: string;
+  initialMember: OrganizationMember;
+}) {
   const router = useRouter();
-  const params = useParams();
-  const id = params.id as string;
   const supabase = createClient();
 
-  const [member, setMember] = useState<OrganizationMember | null>(null);
-  const [savedMember, setSavedMember] = useState<OrganizationMember | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [member, setMember] = useState<OrganizationMember>(initialMember);
+  const [savedMember, setSavedMember] = useState<OrganizationMember>(initialMember);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hasChanges =
-    member && savedMember
-      ? member.name !== savedMember.name ||
-        (member.summary ?? "") !== (savedMember.summary ?? "") ||
-        (member.image ?? "") !== (savedMember.image ?? "") ||
-        (member.link ?? "") !== (savedMember.link ?? "") ||
-        member.category !== savedMember.category ||
-        member.sort_order !== savedMember.sort_order ||
-        (member.school ?? "") !== (savedMember.school ?? "") ||
-        (member.research_areas ?? "") !== (savedMember.research_areas ?? "") ||
-        (member.email ?? "") !== (savedMember.email ?? "") ||
-        (member.website ?? "") !== (savedMember.website ?? "") ||
-        (member.member_role ?? "") !== (savedMember.member_role ?? "")
-      : false;
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadMember() {
-      const { data, error } = await supabase
-        .from("organization_members")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error) {
-        console.error("Error fetching organization member:", error);
-        toast.error("讀取成員資料失敗，已返回列表");
-        router.push("/organization");
-        return;
-      }
-
-      if (cancelled) return;
-
-      setMember(data as OrganizationMember);
-      setSavedMember(data as OrganizationMember);
-      setIsLoading(false);
-    }
-
-    void loadMember();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [id, router, supabase]);
+    member.name !== savedMember.name ||
+    (member.summary ?? "") !== (savedMember.summary ?? "") ||
+    (member.image ?? "") !== (savedMember.image ?? "") ||
+    (member.link ?? "") !== (savedMember.link ?? "") ||
+    member.category !== savedMember.category ||
+    member.sort_order !== savedMember.sort_order ||
+    (member.school ?? "") !== (savedMember.school ?? "") ||
+    (member.research_areas ?? "") !== (savedMember.research_areas ?? "") ||
+    (member.email ?? "") !== (savedMember.email ?? "") ||
+    (member.website ?? "") !== (savedMember.website ?? "") ||
+    (member.member_role ?? "") !== (savedMember.member_role ?? "");
 
   const handleSave = async () => {
-    if (!member) return;
-
     setIsSaving(true);
     const { error } = await supabase
       .from("organization_members")
@@ -119,7 +87,7 @@ export default function OrganizationMemberEditPage() {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !member) return;
+    if (!file) return;
 
     setIsUploadingImage(true);
     const result = await uploadOrganizationImage(file);
@@ -151,14 +119,6 @@ export default function OrganizationMemberEditPage() {
 
     router.push("/organization");
   };
-
-  if (isLoading || !member) {
-    return (
-      <PageShell tone="centeredState" className="py-0">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      </PageShell>
-    );
-  }
 
   return (
     <PageShell tone="admin">
