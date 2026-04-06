@@ -18,10 +18,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubButton } from "@/components/ui/sub-button";
 import { Textarea } from "@/components/ui/textarea";
-import { createClient } from "@/lib/supabase/client";
+import { useProfileEditor, mergeAllLinks } from "@/hooks/use-profile-editor";
 import type { ExternalResult, Profile, Result } from "@/lib/supabase/types";
 import { VendorEventsSection } from "@/components/vendor-events-section";
-import { uploadExternalResultImage, uploadResumePdf } from "@/lib/upload-image";
 import { hasCustomImage, isExternalImage } from "@/lib/utils";
 import {
   ArrowLeftIcon,
@@ -35,23 +34,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
-import { toast } from "sonner";
-
-function mergeAllLinks(profile: Profile): string[] {
-  const structured = [
-    profile.linkedin,
-    profile.facebook,
-    profile.github,
-    profile.website,
-  ].filter(Boolean) as string[];
-  const extra = (profile.social_links as string[] | null) ?? [];
-  const seen = new Set<string>();
-  return [...structured, ...extra].filter((url) => {
-    if (seen.has(url)) return false;
-    seen.add(url);
-    return true;
-  });
-}
 
 function safeHref(url: string): string | null {
   const trimmed = url.trim();
@@ -85,143 +67,23 @@ export function ProfilePageClient({
   const { user, isVendor, refreshProfile } = useAuth();
 
   const [isEditMode, setIsEditMode] = useState(false);
-  const [profile, setProfile] = useState<Profile>(initialProfile);
-  const [savingField, setSavingField] = useState<string | null>(null);
-
-  const [displayName, setDisplayName] = useState(initialProfile.display_name ?? "");
-  const [bio, setBio] = useState(initialProfile.bio ?? "");
-  const [links, setLinks] = useState<string[]>(() => mergeAllLinks(initialProfile));
-
-  // External results
-  const [externalResults, setExternalResults] = useState<ExternalResult[]>(initialExternalResults);
-  const [exDialogOpen, setExDialogOpen] = useState(false);
-  const [exSaving, setExSaving] = useState(false);
-  const [exUploadingImage, setExUploadingImage] = useState(false);
-  const [exEditingId, setExEditingId] = useState<string | null>(null);
-  const [exForm, setExForm] = useState({ title: "", description: "", link: "", image: "" });
   const exFileInputRef = useRef<HTMLInputElement>(null);
   const resumeFileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadingResume, setUploadingResume] = useState(false);
 
-  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    setUploadingResume(true);
-    e.target.value = "";
-    const result = await uploadResumePdf(file);
-    if ("error" in result) {
-      toast.error(result.error);
-      setUploadingResume(false);
-      return;
-    }
-    await saveField("resume", result.url);
-    setUploadingResume(false);
-  };
-
-  const openNewDialog = () => {
-    setExEditingId(null);
-    setExForm({ title: "", description: "", link: "", image: "" });
-    setExDialogOpen(true);
-  };
-
-  const openEditDialog = (ext: ExternalResult) => {
-    setExEditingId(ext.id);
-    setExForm({
-      title: ext.title,
-      description: ext.description ?? "",
-      link: ext.link ?? "",
-      image: ext.image ?? "",
-    });
-    setExDialogOpen(true);
-  };
-
-  const handleExImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setExUploadingImage(true);
-    const result = await uploadExternalResultImage(file);
-    e.target.value = "";
-    if ("url" in result) setExForm((f) => ({ ...f, image: result.url }));
-    setExUploadingImage(false);
-  };
-
-  const saveField = async (field: string, value: string | null) => {
-    if (!user) return;
-    setSavingField(field);
-    const supabase = createClient();
-    await supabase.from("profiles").update({ [field]: value || null }).eq("id", user.id);
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, display_name, avatar_url, bio, phone, linkedin, facebook, github, website, resume, social_links")
-      .eq("id", user.id)
-      .single();
-    if (data) {
-      setProfile(data as Profile);
-      await refreshProfile();
-    }
-    setSavingField(null);
-  };
-
-  const saveLinks = async (next: string[]) => {
-    if (!user) return;
-    setSavingField("links");
-    const supabase = createClient();
-    const filtered = next.filter((l) => l.trim() !== "");
-    await supabase.from("profiles").update({
-      social_links: filtered,
-      linkedin: null,
-      facebook: null,
-      github: null,
-      website: null,
-    }).eq("id", user.id);
-    setLinks(filtered);
-    setSavingField(null);
-  };
-
-  const addLink = () => setLinks((prev) => [...prev, ""]);
-  const updateLink = (idx: number, val: string) =>
-    setLinks((prev) => prev.map((l, i) => (i === idx ? val : l)));
-  const removeLink = (idx: number) => {
-    const next = links.filter((_, i) => i !== idx);
-    setLinks(next);
-    saveLinks(next);
-  };
-
-  const submitExternalResult = async () => {
-    if (!user || !exForm.title.trim()) return;
-    setExSaving(true);
-    const supabase = createClient();
-    const payload = {
-      title: exForm.title.trim(),
-      description: exForm.description.trim() || null,
-      link: exForm.link.trim() || null,
-      image: exForm.image.trim() || null,
-    };
-    if (exEditingId) {
-      const { data } = await supabase
-        .from("external_results")
-        .update(payload)
-        .eq("id", exEditingId)
-        .select()
-        .single();
-      if (data) setExternalResults((prev) => prev.map((r) => r.id === exEditingId ? data as ExternalResult : r));
-    } else {
-      const { data } = await supabase
-        .from("external_results")
-        .insert({ user_id: user.id, ...payload })
-        .select()
-        .single();
-      if (data) setExternalResults((prev) => [data as ExternalResult, ...prev]);
-    }
-    setExSaving(false);
-    setExDialogOpen(false);
-  };
-
-  const deleteExternalResult = async (id: string) => {
-    const supabase = createClient();
-    await supabase.from("external_results").delete().eq("id", id);
-    setExternalResults((prev) => prev.filter((r) => r.id !== id));
-  };
+  const {
+    profile, savingField,
+    displayName, setDisplayName, bio, setBio,
+    links, addLink, updateLink, removeLink, saveField, saveLinks,
+    externalResults, exDialogOpen, setExDialogOpen, exSaving, exUploadingImage,
+    exEditingId, exForm, setExForm,
+    uploadingResume, handleResumeUpload, handleExImageUpload,
+    openNewDialog, openEditDialog, submitExternalResult, deleteExternalResult,
+  } = useProfileEditor({
+    userId: user?.id ?? null,
+    initialProfile,
+    initialExternalResults,
+    refreshProfile,
+  });
 
   function resultHref(result: Result): string {
     const slug = result.event_id ? eventSlugMap[result.event_id] : null;

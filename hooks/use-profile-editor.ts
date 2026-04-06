@@ -6,7 +6,7 @@ import { uploadExternalResultImage, uploadResumePdf } from "@/lib/upload-image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-function mergeAllLinks(profile: Profile): string[] {
+export function mergeAllLinks(profile: Profile): string[] {
   const structured = [
     profile.linkedin,
     profile.facebook,
