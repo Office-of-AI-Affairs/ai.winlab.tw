@@ -5,13 +5,10 @@ import { TiptapEditor } from "@/components/tiptap-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
+import { useContentEditor } from "@/hooks/use-content-editor";
 import type { Introduction } from "@/lib/supabase/types";
-import { useAutoSave } from "@/hooks/use-auto-save";
 import { ArrowLeft, Check, Loader2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
 
 interface Props {
   initialIntroduction: Introduction;
@@ -19,36 +16,22 @@ interface Props {
 
 export function IntroductionEditClient({ initialIntroduction }: Props) {
   const router = useRouter();
-  const supabase = createClient();
 
-  const [introduction, setIntroduction] = useState<Introduction>(initialIntroduction);
-  const [savedIntroduction, setSavedIntroduction] = useState<Introduction>(initialIntroduction);
-  const [isSaving, setIsSaving] = useState(false);
-
-  const hasChanges =
-    introduction.title !== savedIntroduction.title ||
-    JSON.stringify(introduction.content) !== JSON.stringify(savedIntroduction.content);
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    const { error } = await supabase
-      .from("introduction")
-      .update({
-        title: introduction.title,
-        content: introduction.content,
-      })
-      .eq("id", introduction.id);
-
-    if (error) {
-      console.error("Error saving introduction:", error);
-      toast.error("儲存簡介失敗，請稍後再試");
-    } else {
-      setSavedIntroduction({ ...introduction });
-    }
-    setIsSaving(false);
-  };
-
-  const { guardNavigation } = useAutoSave({ hasChanges, onSave: handleSave });
+  const {
+    data: introduction,
+    setData: setIntroduction,
+    hasChanges,
+    isSaving,
+    save,
+    guardNavigation,
+  } = useContentEditor({
+    table: "introduction",
+    id: initialIntroduction.id,
+    initialData: initialIntroduction,
+    fields: ["title", "content"],
+    redirectTo: "/introduction",
+    publishable: false,
+  });
 
   return (
     <PageShell tone="editor">
@@ -61,7 +44,7 @@ export function IntroductionEditClient({ initialIntroduction }: Props) {
           <div className="flex gap-2">
             <Button
               variant={hasChanges ? "outline" : "ghost"}
-              onClick={handleSave}
+              onClick={save}
               disabled={isSaving || !hasChanges}
             >
             {isSaving ? (
