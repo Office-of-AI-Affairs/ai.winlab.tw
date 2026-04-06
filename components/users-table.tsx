@@ -215,9 +215,9 @@ function UsersTableSkeleton({ rows = 6 }: { rows?: number }) {
         </Table>
       </div>
 
-      <p className="mt-4 text-right text-xs text-muted-foreground">
+      <div className="mt-4 text-right text-xs text-muted-foreground">
         <Skeleton className="ml-auto h-4 w-20" />
-      </p>
+      </div>
 
       <div className="mt-8 rounded-xl border bg-muted/20 px-4 py-3">
         <Skeleton className="mb-3 h-4 w-24" />
