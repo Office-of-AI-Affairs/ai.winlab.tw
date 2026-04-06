@@ -13,7 +13,7 @@ import type {
 } from "@/lib/supabase/types";
 import { uploadOrganizationImage } from "@/lib/upload-image";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
-import { ArrowLeft, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -54,7 +54,7 @@ export function OrganizationMemberEditClient({
 
   return (
     <PageShell tone="admin">
-      <div className="flex items-center justify-between gap-4">
+      <div className="sticky top-16 z-20 bg-background/80 backdrop-blur-sm py-4 -mx-4 px-4 flex items-center justify-between gap-4">
         <Button
           variant="ghost"
           size="sm"
@@ -63,6 +63,32 @@ export function OrganizationMemberEditClient({
           <ArrowLeft className="w-4 h-4" />
           返回
         </Button>
+
+        <div className="flex gap-2">
+          <Button
+            variant={hasChanges ? "outline" : "ghost"}
+            onClick={save}
+            disabled={isSaving || !hasChanges}
+          >
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : hasChanges ? (
+              <Save className="w-4 h-4" />
+            ) : (
+              <Check className="w-4 h-4 text-green-600" />
+            )}
+            {hasChanges ? "儲存" : "已儲存"}
+          </Button>
+
+          <Button variant="destructive" onClick={remove} disabled={isDeleting}>
+            {isDeleting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+            刪除
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-6">
@@ -216,28 +242,6 @@ export function OrganizationMemberEditClient({
           />
         </div>
 
-        <div className="flex flex-wrap gap-4">
-          <Button onClick={save} disabled={!hasChanges || isSaving}>
-            {isSaving ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            儲存
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={remove}
-            disabled={isDeleting}
-          >
-            {isDeleting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Trash2 className="w-4 h-4" />
-            )}
-            刪除
-          </Button>
-        </div>
       </div>
     </PageShell>
   );

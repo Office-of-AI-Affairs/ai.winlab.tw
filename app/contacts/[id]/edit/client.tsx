@@ -32,7 +32,7 @@ export function ContactEditClient({ id, initialContact }: Props) {
 
   return (
     <PageShell tone="admin">
-      <div className="flex items-center justify-between gap-4">
+      <div className="sticky top-16 z-20 bg-background/80 backdrop-blur-sm py-4 -mx-4 px-4 flex items-center justify-between gap-4">
         <Button variant="ghost" size="sm" onClick={() => guardNavigation(() => router.push("/contacts"))}>
           <ArrowLeft className="w-4 h-4" />
           返回
