@@ -18,6 +18,8 @@ const TABS: { value: OrganizationMemberCategory; label: string }[] = [
   { value: "industry", label: "產業" },
 ];
 
+const tabParser = parseAsStringLiteral(["core", "legal_entity", "industry"] as const).withDefault("core");
+
 export function OrganizationPageClient({
   membersByCategory,
   isAdmin,
@@ -25,7 +27,6 @@ export function OrganizationPageClient({
   membersByCategory: Record<OrganizationMemberCategory, OrganizationMember[]>;
   isAdmin: boolean;
 }) {
-  const tabParser = parseAsStringLiteral(["core", "legal_entity", "industry"] as const).withDefault("core");
   const [tab, setTab] = useQueryState("tab", tabParser);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<OrganizationMember | null>(null);
