@@ -4,12 +4,11 @@ import { TiptapEditor } from "@/components/tiptap-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
 import type { Result } from "@/lib/supabase/types";
 import { uploadResultImage } from "@/lib/upload-image";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
-import { useAutoSave } from "@/hooks/use-auto-save";
-import { toast } from "sonner";
+import { useContentEditor } from "@/hooks/use-content-editor";
+import { useImageUpload } from "@/hooks/use-image-upload";
 import {
   ArrowLeft,
   Check,
@@ -21,7 +20,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
 
 type Props = {
   id: string;
@@ -35,75 +33,25 @@ export default function EventResultEditPage({
   initialResult,
 }: Props) {
   const router = useRouter();
-  const supabase = createClient();
 
-  const [result, setResult] = useState<Result | null>(initialResult);
-  const [savedResult, setSavedResult] = useState<Result | null>(initialResult);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isPublishing, setIsPublishing] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const {
+    data: result, setData: setResult, hasChanges,
+    isSaving, isPublishing, isDeleting,
+    save, publish, remove, guardNavigation,
+  } = useContentEditor({
+    table: "results",
+    id,
+    initialData: initialResult,
+    fields: ["title", "summary", "header_image", "content"],
+    redirectTo: `/events/${slug}?tab=results`,
+  });
 
-  const hasChanges =
-    result && savedResult
-      ? result.title !== savedResult.title ||
-        result.summary !== savedResult.summary ||
-        (result.header_image ?? "") !== (savedResult.header_image ?? "") ||
-        JSON.stringify(result.content) !== JSON.stringify(savedResult.content)
-      : false;
+  const { isUploading: isUploadingImage, fileInputRef, triggerFileInput, handleFileChange } = useImageUpload(uploadResultImage);
 
-  const handleSave = async () => {
-    if (!result) return;
-    setIsSaving(true);
-    const { error } = await supabase.from("results").update({
-      title: result.title, summary: result.summary,
-      header_image: result.header_image ?? null, content: result.content,
-    }).eq("id", id);
-    if (!error) setSavedResult({ ...result });
-    setIsSaving(false);
+  const onImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = await handleFileChange(e);
+    if (url) setResult((prev) => ({ ...prev, header_image: url }));
   };
-
-  const { guardNavigation } = useAutoSave({ hasChanges, onSave: handleSave });
-
-  const handlePublish = async () => {
-    if (!result) return;
-    setIsPublishing(true);
-    const newStatus: "draft" | "published" = result.status === "published" ? "draft" : "published";
-    const { error } = await supabase.from("results").update({
-      title: result.title, summary: result.summary,
-      header_image: result.header_image ?? null, content: result.content, status: newStatus,
-    }).eq("id", id);
-    if (error) {
-      toast.error(`發布失敗：${error.message}`);
-    } else {
-      const updated: Result = { ...result, status: newStatus };
-      setResult(updated); setSavedResult(updated);
-      toast.success(newStatus === "published" ? "已發布" : "已取消發布");
-    }
-    setIsPublishing(false);
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !result) return;
-    setIsUploadingImage(true);
-    const uploadResult = await uploadResultImage(file);
-    e.target.value = "";
-    if ("error" in uploadResult) { toast.error(uploadResult.error); }
-    else { setResult({ ...result, header_image: uploadResult.url }); }
-    setIsUploadingImage(false);
-  };
-
-  const handleDelete = async () => {
-    if (!confirm("確定要刪除這則成果嗎？")) return;
-    setIsDeleting(true);
-    const { error } = await supabase.from("results").delete().eq("id", id);
-    if (error) { setIsDeleting(false); return; }
-    router.push(`/events/${slug}?tab=results`);
-  };
-
-  if (!result) return null;
 
   return (
     <div className="container max-w-6xl mx-auto p-4 flex flex-col mt-8 pb-16">
@@ -114,15 +62,15 @@ export default function EventResultEditPage({
             返回活動
           </Button>
           <div className="flex gap-2">
-            <Button variant={hasChanges ? "outline" : "ghost"} onClick={handleSave} disabled={isSaving || !hasChanges}>
+            <Button variant={hasChanges ? "outline" : "ghost"} onClick={save} disabled={isSaving || !hasChanges}>
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : hasChanges ? <Save className="w-4 h-4" /> : <Check className="w-4 h-4 text-green-600" />}
               {hasChanges ? "儲存" : "已儲存"}
             </Button>
-            <Button variant={result.status === "published" ? "secondary" : "default"} onClick={handlePublish} disabled={isPublishing}>
+            <Button variant={result.status === "published" ? "secondary" : "default"} onClick={publish} disabled={isPublishing}>
               {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               {result.status === "published" ? "取消發布" : "發布"}
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+            <Button variant="destructive" onClick={remove} disabled={isDeleting}>
               {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               刪除
             </Button>
@@ -139,8 +87,8 @@ export default function EventResultEditPage({
                 unoptimized={isExternalImage(result.header_image)} />
             </div>
             <div className="flex flex-col gap-2">
-              <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleImageUpload} />
-              <Button type="button" variant="outline" size="sm" disabled={isUploadingImage} onClick={() => fileInputRef.current?.click()}>
+              <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={onImageChange} />
+              <Button type="button" variant="outline" size="sm" disabled={isUploadingImage} onClick={triggerFileInput}>
                 {isUploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
                 {isUploadingImage ? "上傳中…" : "上傳圖片"}
               </Button>
@@ -151,17 +99,17 @@ export default function EventResultEditPage({
 
         <div className="flex flex-col gap-1">
           <Label htmlFor="title" className="text-sm mx-2">標題</Label>
-          <Input id="title" value={result.title} onChange={(e) => setResult({ ...result, title: e.target.value })} placeholder="請輸入成果標題" />
+          <Input id="title" value={result.title} onChange={(e) => setResult((prev) => ({ ...prev, title: e.target.value }))} placeholder="請輸入成果標題" />
         </div>
 
         <div className="flex flex-col gap-1">
           <Label htmlFor="summary" className="text-sm mx-2">摘要（卡片用，選填）</Label>
-          <Input id="summary" value={result.summary} onChange={(e) => setResult({ ...result, summary: e.target.value })} placeholder="簡短描述，顯示於列表卡片" />
+          <Input id="summary" value={result.summary} onChange={(e) => setResult((prev) => ({ ...prev, summary: e.target.value }))} placeholder="簡短描述，顯示於列表卡片" />
         </div>
 
       </div>
 
-      <TiptapEditor content={result.content} onChange={(content) => setResult({ ...result, content })} />
+      <TiptapEditor content={result.content} onChange={(content) => setResult((prev) => ({ ...prev, content }))} />
     </div>
   );
 }
