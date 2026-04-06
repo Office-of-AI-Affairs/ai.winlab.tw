@@ -12,66 +12,33 @@ import { toast } from "sonner";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import { ArrowLeft, Check, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 
-export default function CarouselEditPage() {
+interface Props {
+  id: string;
+  initialSlide: CarouselSlide;
+}
+
+export function CarouselEditClient({ id, initialSlide }: Props) {
   const router = useRouter();
-  const params = useParams();
-  const id = params.id as string;
   const supabase = createClient();
 
-  const [slide, setSlide] = useState<CarouselSlide | null>(null);
-  const [savedSlide, setSavedSlide] = useState<CarouselSlide | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [slide, setSlide] = useState<CarouselSlide>(initialSlide);
+  const [savedSlide, setSavedSlide] = useState<CarouselSlide>(initialSlide);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hasChanges =
-    slide && savedSlide
-      ? slide.title !== savedSlide.title ||
-        (slide.description ?? "") !== (savedSlide.description ?? "") ||
-        (slide.link ?? "") !== (savedSlide.link ?? "") ||
-        (slide.image ?? "") !== (savedSlide.image ?? "") ||
-        slide.sort_order !== savedSlide.sort_order
-      : false;
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadSlide() {
-      const { data, error } = await supabase
-        .from("carousel_slides")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error) {
-        console.error("Error fetching carousel slide:", error);
-        toast.error("讀取橫幅失敗，已返回列表");
-        router.push("/carousel");
-        return;
-      }
-
-      if (cancelled) return;
-
-      setSlide(data as CarouselSlide);
-      setSavedSlide(data as CarouselSlide);
-      setIsLoading(false);
-    }
-
-    void loadSlide();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [id, router, supabase]);
+    slide.title !== savedSlide.title ||
+    (slide.description ?? "") !== (savedSlide.description ?? "") ||
+    (slide.link ?? "") !== (savedSlide.link ?? "") ||
+    (slide.image ?? "") !== (savedSlide.image ?? "") ||
+    slide.sort_order !== savedSlide.sort_order;
 
   const handleSave = async () => {
-    if (!slide) return;
-
     setIsSaving(true);
     const { error } = await supabase
       .from("carousel_slides")
@@ -97,7 +64,7 @@ export default function CarouselEditPage() {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !slide) return;
+    if (!file) return;
 
     setIsUploadingImage(true);
     const result = await uploadCarouselImage(file);
@@ -126,16 +93,6 @@ export default function CarouselEditPage() {
 
     router.push("/carousel");
   };
-
-  if (isLoading) {
-    return (
-      <PageShell tone="centeredState">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      </PageShell>
-    );
-  }
-
-  if (!slide) return null;
 
   return (
     <PageShell tone="editor">
