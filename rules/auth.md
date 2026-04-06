@@ -15,8 +15,9 @@
 - 登入非 admin → 可看自己的草稿 + 所有 published
 - admin → 完整讀寫權限（`profile.role === 'admin'`）
 - vendor → 可在被指派的活動下建立/編輯/刪除招募（`event_vendors` + `created_by = auth.uid()`）
+- `isEventVendor()` in `lib/supabase/check-event-vendor.ts` 負責 server-side 檢查 vendor-event 指派
 
-Server Component 中需自行查 `profiles` 表取得 `isAdmin`（參考 `app/events/[slug]/page.tsx`）。
+Server Component 中需自行查 `profiles` 表取得 `isAdmin`。
 
 ## 根 Layout 特殊行為
 
