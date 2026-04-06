@@ -70,7 +70,7 @@ export function OrganizationPageClient({
         )}
 
         {members.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">此分類目前沒有成員</div>
+          <div className="text-center py-12 text-muted-foreground">尚無成員</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {members.map((member) => {

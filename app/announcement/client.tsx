@@ -47,7 +47,7 @@ export function AnnouncementPageClient({
       </div>
 
       {announcements.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">目前沒有公告</div>
+        <div className="text-center py-12 text-muted-foreground">尚無公告</div>
       ) : (
         <AnnouncementTable
           announcements={announcements}

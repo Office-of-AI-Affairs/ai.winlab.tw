@@ -3,13 +3,7 @@
 import { AppLink } from "@/components/app-link";
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { useCrudList } from "@/hooks/use-crud-list";
 import type { CarouselSlide } from "@/lib/supabase/types";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
@@ -55,18 +49,7 @@ export function CarouselPageClient({
       </div>
 
       {slides.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>尚無橫幅</CardTitle>
-            <CardDescription>新增橫幅後將顯示於首頁輪播</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => create({ title: "", sort_order: slides.length })} disabled={isCreating}>
-              {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              新增第一則橫幅
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="text-center py-12 text-muted-foreground">尚無橫幅</div>
       ) : (
         <div className="flex flex-col gap-4">
           {slides.map((slide, index) => (

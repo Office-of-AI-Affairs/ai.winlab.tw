@@ -115,7 +115,7 @@ export function EventDetailClient({
             </div>
           )}
           {announcements.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">目前沒有公告</div>
+            <div className="text-center py-12 text-muted-foreground">尚無公告</div>
           ) : (
             <div className="rounded-xl border border-border overflow-hidden">
               <table className="w-full">
@@ -167,7 +167,7 @@ export function EventDetailClient({
             </div>
           )}
           {results.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">目前沒有成果</div>
+            <div className="text-center py-12 text-muted-foreground">尚無成果</div>
           ) : (
             <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
               {results.map((item) => {
@@ -201,7 +201,7 @@ export function EventDetailClient({
             </div>
           )}
           {recruitments.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">目前沒有徵才資訊</div>
+            <div className="text-center py-12 text-muted-foreground">尚無徵才資訊</div>
           ) : (
             <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
               {recruitments.map((item) => (

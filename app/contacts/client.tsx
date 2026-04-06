@@ -3,7 +3,7 @@
 import { AppLink } from "@/components/app-link";
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { useCrudList } from "@/hooks/use-crud-list";
 import type { Contact } from "@/lib/supabase/types";
 import { ArrowLeft, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
@@ -47,18 +47,7 @@ export function ContactsAdminPageClient({
       </div>
 
       {contacts.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>尚無聯絡人</CardTitle>
-            <CardDescription>新增後會顯示在首頁「聯絡我們」區塊</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => create({ name: "新聯絡人", sort_order: contacts.length })} disabled={isCreating}>
-              {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              新增第一位聯絡人
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="text-center py-12 text-muted-foreground">尚無聯絡人</div>
       ) : (
         <div className="flex flex-col gap-4">
           {contacts.map((c, index) => (
