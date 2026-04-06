@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth-provider";
 import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 type EventInfo = {
   id: string;
@@ -33,7 +34,7 @@ export function VendorEventsSection() {
         .from("event_vendors")
         .select("event_id, events(id, name, slug, cover_image, status)")
         .eq("user_id", user!.id);
-      if (error) console.error("Failed to fetch vendor events:", error);
+      if (error) { console.error("Failed to fetch vendor events:", error); toast.error("載入活動失敗"); }
       setEvents((data as unknown as VendorEvent[]) ?? []);
     }
     fetchVendorEvents();

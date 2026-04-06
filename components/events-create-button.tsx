@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Loader2, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export function EventsCreateButton({ userId }: { userId: string }) {
   const router = useRouter();
@@ -28,7 +29,7 @@ export function EventsCreateButton({ userId }: { userId: string }) {
       })
       .select()
       .single();
-    if (error) { setIsCreating(false); return; }
+    if (error) { toast.error("建立失敗"); setIsCreating(false); return; }
     router.push(`/events/${data.slug}/edit`);
   };
 

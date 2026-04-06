@@ -2,6 +2,7 @@
 
 import { uploadAnnouncementImage } from "@/lib/upload-image";
 import { editableRichTextDocumentClassName } from "@/lib/ui/rich-text";
+import { toast } from "sonner";
 import { TiptapDesktopBubbleMenu } from "./tiptap-desktop-bubble-menu";
 import { TiptapDesktopFloatingMenu } from "./tiptap-desktop-floating-menu";
 import { TiptapMobileToolbar } from "./tiptap-mobile-toolbar";
@@ -41,7 +42,7 @@ export function TiptapEditor({
         .filter((r): r is { url: string } => "url" in r)
         .map((r) => r.url);
       results.forEach((r) => {
-        if ("error" in r) console.error(r.error);
+        if ("error" in r) { console.error(r.error); toast.error("圖片上傳失敗"); }
       });
       if (urls.length === 0) return;
       const content =
@@ -62,6 +63,7 @@ export function TiptapEditor({
         const result = await uploadAnnouncementImage(file);
         if ("error" in result) {
           console.error(result.error);
+          toast.error("圖片上傳失敗");
           continue;
         }
         editor.chain().focus().setImage({ src: result.url }).run();

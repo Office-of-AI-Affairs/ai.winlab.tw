@@ -70,10 +70,11 @@ export function useProfileEditor({
       if (!userId) return;
       setSavingField(field);
       const sb = supabaseRef.current;
-      await sb
+      const { error: updateError } = await sb
         .from("profiles")
         .update({ [field]: value || null })
         .eq("id", userId);
+      if (updateError) { toast.error("儲存失敗"); setSavingField(null); return; }
       const { data } = await sb
         .from("profiles")
         .select(
@@ -95,7 +96,7 @@ export function useProfileEditor({
       if (!userId) return;
       setSavingField("links");
       const filtered = next.filter((l) => l.trim() !== "");
-      await supabaseRef.current
+      const { error } = await supabaseRef.current
         .from("profiles")
         .update({
           social_links: filtered,
@@ -105,6 +106,7 @@ export function useProfileEditor({
           website: null,
         })
         .eq("id", userId);
+      if (error) { toast.error("儲存失敗"); setSavingField(null); return; }
       setLinks(filtered);
       setSavingField(null);
     },
@@ -187,12 +189,13 @@ export function useProfileEditor({
       image: exForm.image.trim() || null,
     };
     if (exEditingId) {
-      const { data } = await sb
+      const { data, error } = await sb
         .from("external_results")
         .update(payload)
         .eq("id", exEditingId)
         .select()
         .single();
+      if (error) { toast.error("儲存失敗"); setExSaving(false); return; }
       if (data)
         setExternalResults((prev) =>
           prev.map((r) =>
@@ -200,11 +203,12 @@ export function useProfileEditor({
           ),
         );
     } else {
-      const { data } = await sb
+      const { data, error } = await sb
         .from("external_results")
         .insert({ user_id: userId, ...payload })
         .select()
         .single();
+      if (error) { toast.error("儲存失敗"); setExSaving(false); return; }
       if (data)
         setExternalResults((prev) => [data as ExternalResult, ...prev]);
     }
@@ -213,7 +217,8 @@ export function useProfileEditor({
   }, [exEditingId, exForm, userId]);
 
   const deleteExternalResult = useCallback(async (id: string) => {
-    await supabaseRef.current.from("external_results").delete().eq("id", id);
+    const { error } = await supabaseRef.current.from("external_results").delete().eq("id", id);
+    if (error) { toast.error("刪除失敗"); return; }
     setExternalResults((prev) => prev.filter((r) => r.id !== id));
   }, []);
 

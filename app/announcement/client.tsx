@@ -8,6 +8,7 @@ import type { Announcement } from "@/lib/supabase/types";
 import { Loader2, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export function AnnouncementPageClient({
   announcements,
@@ -30,7 +31,7 @@ export function AnnouncementPageClient({
       .insert({ title: "新公告", category: "一般", content: {}, status: "draft", author_id: userId, event_id: null })
       .select()
       .single();
-    if (error) { setIsCreating(false); return; }
+    if (error) { toast.error("建立失敗"); setIsCreating(false); return; }
     router.push(`/announcement/${data.id}/edit`);
   };
 

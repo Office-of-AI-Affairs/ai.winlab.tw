@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase/client";
@@ -32,7 +33,7 @@ export function EventVendorPicker({
         .from("events")
         .select("id, name, status")
         .order("name");
-      if (error) console.error("Failed to fetch events:", error);
+      if (error) { console.error("Failed to fetch events:", error); toast.error("載入活動失敗"); }
       setEvents((data as EventOption[]) ?? []);
       setLoading(false);
     }
