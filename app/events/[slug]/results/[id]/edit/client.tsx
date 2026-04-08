@@ -1,10 +1,11 @@
 "use client";
 
+import { CoauthorEditor } from "@/components/coauthor-editor";
 import { TiptapEditor } from "@/components/tiptap-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { Result } from "@/lib/supabase/types";
+import type { PublicProfile, Result } from "@/lib/supabase/types";
 import { uploadResultImage } from "@/lib/upload-image";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { useContentEditor } from "@/hooks/use-content-editor";
@@ -25,12 +26,14 @@ type Props = {
   id: string;
   slug: string;
   initialResult: Result;
+  initialCoauthors: PublicProfile[];
 };
 
 export default function EventResultEditPage({
   id,
   slug,
   initialResult,
+  initialCoauthors,
 }: Props) {
   const router = useRouter();
 
@@ -106,6 +109,12 @@ export default function EventResultEditPage({
           <Label htmlFor="summary" className="text-sm mx-2">摘要（卡片用，選填）</Label>
           <Input id="summary" value={result.summary} onChange={(e) => setResult((prev) => ({ ...prev, summary: e.target.value }))} placeholder="簡短描述，顯示於列表卡片" />
         </div>
+
+        <CoauthorEditor
+          resultId={id}
+          authorId={initialResult.author_id}
+          initialCoauthors={initialCoauthors}
+        />
 
       </div>
 

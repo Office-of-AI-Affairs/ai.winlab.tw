@@ -6,12 +6,15 @@ import Link from "next/link";
 
 export type PublisherInfo = { name: string; href: string | null } | null;
 
+export type CoauthorInfo = { id: string; name: string };
+
 type Props = {
   result: Result;
   publisherInfo: PublisherInfo;
+  coauthors?: CoauthorInfo[];
 };
 
-export function ResultDetail({ result, publisherInfo }: Props) {
+export function ResultDetail({ result, publisherInfo, coauthors = [] }: Props) {
   const contentHtml = renderRichTextHtml(result.content) ?? "<p>（無內容）</p>";
 
   return (
@@ -39,9 +42,18 @@ export function ResultDetail({ result, publisherInfo }: Props) {
                   {publisherInfo.name}
                 </span>
               )}
-              <span className="opacity-30">·</span>
             </>
           ) : null}
+          {coauthors.map((ca) => (
+            <Link
+              key={ca.id}
+              href={`/profile/${ca.id}`}
+              className="hover:text-foreground transition-colors underline underline-offset-4"
+            >
+              {ca.name}
+            </Link>
+          ))}
+          <span className="opacity-30">·</span>
           <span>{formatDate(result.updated_at)}</span>
         </div>
       </div>

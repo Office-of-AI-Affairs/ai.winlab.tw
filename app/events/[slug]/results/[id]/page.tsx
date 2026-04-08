@@ -1,5 +1,5 @@
 import { JsonLd } from "@/components/json-ld";
-import { ResultDetail, type PublisherInfo } from "@/components/result-detail";
+import { ResultDetail, type PublisherInfo, type CoauthorInfo } from "@/components/result-detail";
 import { createClient } from "@/lib/supabase/server";
 import type { Result } from "@/lib/supabase/types";
 import { ArrowLeft, Pencil } from "lucide-react";
@@ -88,13 +88,37 @@ export default async function EventResultDetailPage({
     if (profile) publisherInfo = { name: profile.display_name || "未知使用者", href: `/profile/${result.author_id}` };
   }
 
+  // Fetch co-authors
+  const coauthors: CoauthorInfo[] = [];
+  const { data: coauthorRows } = await supabase
+    .from("result_coauthors")
+    .select("user_id")
+    .eq("result_id", result.id);
+  if (coauthorRows?.length) {
+    const userIds = coauthorRows.map((r) => r.user_id);
+    const { data: profiles } = await supabase
+      .from("public_profiles")
+      .select("id, display_name")
+      .in("id", userIds);
+    for (const p of profiles ?? []) {
+      coauthors.push({ id: p.id, name: p.display_name || "未知使用者" });
+    }
+  }
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "CreativeWork",
     name: result.title,
     datePublished: result.date,
     url: `https://ai.winlab.tw/events/${slug}/results/${id}`,
-    ...(publisherInfo ? { author: { "@type": "Person", name: publisherInfo.name } } : {}),
+    ...(publisherInfo || coauthors.length
+      ? {
+          author: [
+            ...(publisherInfo ? [{ "@type": "Person", name: publisherInfo.name }] : []),
+            ...coauthors.map((ca) => ({ "@type": "Person", name: ca.name })),
+          ],
+        }
+      : {}),
     publisher: {
       "@type": "Organization",
       name: "國立陽明交通大學 人工智慧專責辦公室",
@@ -124,7 +148,7 @@ export default async function EventResultDetailPage({
         )}
       </div>
 
-      <ResultDetail result={result} publisherInfo={publisherInfo} />
+      <ResultDetail result={result} publisherInfo={publisherInfo} coauthors={coauthors} />
     </div>
   );
 }

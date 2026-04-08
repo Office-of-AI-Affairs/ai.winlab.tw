@@ -75,10 +75,30 @@ export default async function EventDetailPage({
   const teamMap = Object.fromEntries(
     ((teamsRes.data || []) as { id: string; name: string }[]).map((t) => [t.id, t.name])
   );
+  // Fetch co-authors for all results
+  const resultIds = rawResults.map((r) => r.id);
+  const { data: allCoauthorRows } = resultIds.length
+    ? await supabase.from("result_coauthors").select("result_id, user_id").in("result_id", resultIds)
+    : { data: [] };
+  const coauthorUserIds = [...new Set((allCoauthorRows ?? []).map((r) => r.user_id))];
+  if (coauthorUserIds.length) {
+    const { data: coProfiles } = await supabase.from("public_profiles").select("id, display_name").in("id", coauthorUserIds);
+    for (const p of coProfiles ?? []) {
+      if (!profileMap[p.id]) profileMap[p.id] = (p as { id: string; display_name: string | null }).display_name;
+    }
+  }
+  const coauthorsByResult = new Map<string, { id: string; name: string }[]>();
+  for (const row of allCoauthorRows ?? []) {
+    const list = coauthorsByResult.get(row.result_id) ?? [];
+    list.push({ id: row.user_id, name: profileMap[row.user_id] ?? "未知使用者" });
+    coauthorsByResult.set(row.result_id, list);
+  }
+
   const results: ResultWithMeta[] = rawResults.map((r) => ({
     ...r,
     author_name: r.author_id ? profileMap[r.author_id] : null,
     team_name: r.team_id ? teamMap[r.team_id] : null,
+    coauthors: coauthorsByResult.get(r.id) ?? [],
   }));
 
   const recruitmentSummaries = (recruitmentsRes.data as RecruitmentSummary[]) ?? [];
