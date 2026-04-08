@@ -16,7 +16,7 @@ export default async function ProfilePage({
   const isOwner = user?.id === id;
   const canViewPrivateProfile = Boolean(user);
 
-  const [publicProfileRes, privateProfileRes, resultsRes, externalResultsRes] = await Promise.all([
+  const [publicProfileRes, privateProfileRes, resultsRes, externalResultsRes, coauthoredRes] = await Promise.all([
     supabase
       .from("public_profiles")
       .select("id, created_at, updated_at, display_name")
@@ -40,11 +40,32 @@ export default async function ProfilePage({
       .select("*")
       .eq("user_id", id)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("result_coauthors")
+      .select("result_id")
+      .eq("user_id", id),
   ]);
 
   if (publicProfileRes.error || !publicProfileRes.data) redirect("/");
 
-  const rawResults = (resultsRes.data as Result[]) || [];
+  // Merge authored + co-authored results (deduplicated)
+  const authoredResults = (resultsRes.data as Result[]) || [];
+  const coauthorResultIds = (coauthoredRes.data ?? []).map((r) => r.result_id);
+  let coauthoredResults: Result[] = [];
+  if (coauthorResultIds.length) {
+    const { data: coResults } = await supabase
+      .from("results")
+      .select("*")
+      .in("id", coauthorResultIds)
+      .order("date", { ascending: false });
+    coauthoredResults = (coResults as Result[]) ?? [];
+  }
+
+  const authoredIds = new Set(authoredResults.map((r) => r.id));
+  const rawResults = [
+    ...authoredResults,
+    ...coauthoredResults.filter((r) => !authoredIds.has(r.id)),
+  ];
   const eventIds = [...new Set(rawResults.map((r) => r.event_id).filter(Boolean))] as string[];
   const eventSlugMap: Record<string, string> = {};
   if (eventIds.length) {

@@ -16,9 +16,12 @@ import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { Pin, User, Users } from "lucide-react";
 import Image from "next/image";
 
+export type CoauthorMeta = { id: string; name: string };
+
 export type ResultWithMeta = Result & {
   author_name?: string | null;
   team_name?: string | null;
+  coauthors?: CoauthorMeta[];
 };
 
 export function ResultCard({
@@ -36,7 +39,7 @@ export function ResultCard({
   showStatus?: boolean;
   onPinToggle?: (id: string, pinned: boolean) => void;
 }) {
-  const publisherName =
+  const primaryName =
     item.type === "team" ? item.team_name || "未知隊伍" : item.author_name || "匿名";
 
   return (
@@ -104,11 +107,21 @@ export function ResultCard({
                 className="truncate underline underline-offset-4"
                 onClick={(e) => e.stopPropagation()}
               >
-                {publisherName}
+                {primaryName}
               </AppLink>
             ) : (
-              <span className="truncate">{publisherName}</span>
+              <span className="truncate">{primaryName}</span>
             )}
+            {(item.coauthors ?? []).map((ca) => (
+              <AppLink
+                key={ca.id}
+                href={`/profile/${ca.id}`}
+                className="truncate underline underline-offset-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {ca.name}
+              </AppLink>
+            ))}
           </div>
           <span className="shrink-0">{formatDate(item.updated_at)}</span>
         </div>

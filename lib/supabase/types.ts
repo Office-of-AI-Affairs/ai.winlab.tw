@@ -220,6 +220,12 @@ export type ResultTag = {
   tag_id: string;
 };
 
+export type ResultCoauthor = {
+  result_id: string;
+  user_id: string;
+  created_at: string;
+};
+
 export type ResultType = "personal" | "team";
 
 export type Result = {
