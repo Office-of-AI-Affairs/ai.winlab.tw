@@ -17,6 +17,7 @@ import {
   User,
   Wallet,
 } from "lucide-react";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import Image from "next/image";
 
 type RecruitmentDetailProps = {
@@ -63,49 +64,52 @@ export function RecruitmentDetail({
         {backLabel}
       </AppLink>
 
-      {recruitment.image && (
-        <div className="w-full rounded-lg overflow-hidden mb-8 bg-muted">
-          <Image
-            src={recruitment.image}
-            alt={recruitment.title}
-            width={1600}
-            height={900}
-            className="h-auto w-full object-contain"
-            unoptimized={isExternalImage(recruitment.image)}
-          />
-        </div>
-      )}
+      <div className="grid lg:grid-cols-2 gap-8 mb-8 items-center">
+        {recruitment.image && (
+          <div className="w-full rounded-lg overflow-hidden bg-muted">
+            <AspectRatio ratio={16 / 9}>
+              <Image
+                src={recruitment.image}
+                alt={recruitment.title}
+                fill
+                className="object-cover"
+                unoptimized={isExternalImage(recruitment.image)}
+              />
+            </AspectRatio>
+          </div>
+        )}
 
-      <div className="max-w-6xl mb-8">
-        <h1 className="text-4xl font-extrabold tracking-tight text-balance mb-4">
-          {recruitment.title}
-        </h1>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground sm:text-base">
-          {applicationLinks.map((link) => (
-            <AppLink
-              key={`${link.label}-${link.url}`}
-              href={link.url}
-              className="inline-flex max-w-full items-center gap-1.5 whitespace-normal break-words hover:underline"
-            >
-                <ExternalLink className="w-4 h-4" />
-                {link.label}
-            </AppLink>
-          ))}
-          <span className="inline-flex items-center gap-1.5">
-            <Calendar className="w-4 h-4" />
-            {recruitment.start_date} ~ {recruitment.end_date ?? "截止日未定"}
-          </span>
-          {isExpired && (
-            <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
-              已截止
-            </span>
-          )}
-          {canViewPrivateDetails && (
+        <div className={recruitment.image ? "" : "lg:col-span-2"}>
+          <h1 className="text-4xl font-extrabold tracking-tight text-balance mb-4">
+            {recruitment.title}
+          </h1>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground sm:text-base">
+            {applicationLinks.map((link) => (
+              <AppLink
+                key={`${link.label}-${link.url}`}
+                href={link.url}
+                className="inline-flex max-w-full items-center gap-1.5 whitespace-normal break-words hover:underline"
+              >
+                  <ExternalLink className="w-4 h-4" />
+                  {link.label}
+              </AppLink>
+            ))}
             <span className="inline-flex items-center gap-1.5">
-              <Briefcase className="w-4 h-4" />
-              {positionCount > 0 ? `${positionCount} 個職缺` : "暫無職缺"}
+              <Calendar className="w-4 h-4" />
+              {recruitment.start_date} ~ {recruitment.end_date ?? "截止日未定"}
             </span>
-          )}
+            {isExpired && (
+              <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                已截止
+              </span>
+            )}
+            {canViewPrivateDetails && (
+              <span className="inline-flex items-center gap-1.5">
+                <Briefcase className="w-4 h-4" />
+                {positionCount > 0 ? `${positionCount} 個職缺` : "暫無職缺"}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

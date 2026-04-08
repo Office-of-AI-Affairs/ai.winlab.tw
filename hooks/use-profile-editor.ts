@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import type { ExternalResult, Profile } from "@/lib/supabase/types";
 import { uploadExternalResultImage, uploadResumePdf } from "@/lib/upload-image";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -35,6 +36,7 @@ export function useProfileEditor({
   initialExternalResults,
   refreshProfile,
 }: Options) {
+  const router = useRouter();
   const supabaseRef = useRef(createClient());
   const refreshProfileRef = useRef(refreshProfile);
   useEffect(() => {
@@ -64,6 +66,7 @@ export function useProfileEditor({
     image: "",
   });
   const [uploadingResume, setUploadingResume] = useState(false);
+  const [creatingEventResultId, setCreatingEventResultId] = useState<string | null>(null);
 
   const saveField = useCallback(
     async (field: string, value: string | null) => {
@@ -222,6 +225,33 @@ export function useProfileEditor({
     setExternalResults((prev) => prev.filter((r) => r.id !== id));
   }, []);
 
+  const createEventResult = useCallback(async (eventId: string, slug: string) => {
+    if (!userId) return;
+    setCreatingEventResultId(eventId);
+    const { data, error } = await supabaseRef.current
+      .from("results")
+      .insert({
+        title: "新成果",
+        date: new Date().toISOString().slice(0, 10),
+        header_image: null,
+        summary: "",
+        content: {},
+        status: "draft",
+        author_id: userId,
+        type: "personal",
+        team_id: null,
+        event_id: eventId,
+      })
+      .select()
+      .single();
+    if (error) {
+      toast.error("建立成果失敗");
+      setCreatingEventResultId(null);
+      return;
+    }
+    router.push(`/events/${slug}/results/${data.id}/edit`);
+  }, [userId, router]);
+
   return {
     profile,
     savingField,
@@ -250,5 +280,7 @@ export function useProfileEditor({
     openEditDialog,
     submitExternalResult,
     deleteExternalResult,
+    creatingEventResultId,
+    createEventResult,
   };
 }

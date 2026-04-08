@@ -24,7 +24,9 @@ import { VendorEventsSection } from "@/components/vendor-events-section";
 import { hasCustomImage, isExternalImage } from "@/lib/utils";
 import {
   ArrowLeftIcon,
+  CalendarDays,
   EyeOff,
+  ExternalLink,
   FileUp,
   ImagePlus,
   Loader2,
@@ -33,7 +35,11 @@ import {
   Trash2,
 } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+
+type ProfileItem =
+  | { kind: "result"; data: Result }
+  | { kind: "external"; data: ExternalResult };
 
 function safeHref(url: string): string | null {
   const trimmed = url.trim();
@@ -55,6 +61,8 @@ export function ProfilePageClient({
   isOwner,
   canViewPrivateProfile,
   eventSlugMap,
+  eventNameMap,
+  participatedEvents,
   initialExternalResults,
 }: {
   initialProfile: Profile;
@@ -62,11 +70,15 @@ export function ProfilePageClient({
   isOwner: boolean;
   canViewPrivateProfile: boolean;
   eventSlugMap: Record<string, string>;
+  eventNameMap: Record<string, string>;
+  participatedEvents: { id: string; name: string; slug: string }[];
   initialExternalResults: ExternalResult[];
 }) {
   const { user, isVendor, refreshProfile } = useAuth();
 
   const [isEditMode, setIsEditMode] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [addDialogTab, setAddDialogTab] = useState<"event" | "external">("event");
   const exFileInputRef = useRef<HTMLInputElement>(null);
   const resumeFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -77,7 +89,8 @@ export function ProfilePageClient({
     externalResults, exDialogOpen, setExDialogOpen, exSaving, exUploadingImage,
     exEditingId, exForm, setExForm,
     uploadingResume, handleResumeUpload, handleExImageUpload,
-    openNewDialog, openEditDialog, submitExternalResult, deleteExternalResult,
+    openEditDialog, submitExternalResult, deleteExternalResult,
+    creatingEventResultId, createEventResult,
   } = useProfileEditor({
     userId: user?.id ?? null,
     initialProfile,
@@ -92,6 +105,16 @@ export function ProfilePageClient({
       ? `/events/${slug}/results/${result.id}/edit`
       : `/events/${slug}/results/${result.id}`;
   }
+
+  const mergedItems = useMemo<ProfileItem[]>(() => {
+    const items: ProfileItem[] = [
+      ...results.map((r) => ({ kind: "result" as const, data: r })),
+      ...externalResults.map((e) => ({ kind: "external" as const, data: e })),
+    ];
+    return items.sort(
+      (a, b) => new Date(b.data.created_at).getTime() - new Date(a.data.created_at).getTime()
+    );
+  }, [results, externalResults]);
 
   const displayNameValue = profile.display_name || "未知使用者";
   const viewLinks = mergeAllLinks(profile).map((url) => ({
@@ -109,16 +132,136 @@ export function ProfilePageClient({
               <ArrowLeftIcon className="size-4" /> 返回首頁
             </SubButton>
             {isOwner && (
-              <SubButton onClick={openNewDialog}>
-                <Plus className="size-4" /> 新增外部成果
+              <SubButton onClick={() => { setAddDialogTab("event"); setExForm({ title: "", description: "", link: "", image: "" }); setAddDialogOpen(true); }}>
+                <Plus className="size-4" /> 新增成果
               </SubButton>
             )}
           </Block>
 
+          <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+            <DialogContent className="max-h-[80vh] flex flex-col overflow-hidden">
+              <DialogHeader>
+                <DialogTitle>新增成果</DialogTitle>
+              </DialogHeader>
+              <div className="flex gap-2 border-b border-border pb-2 shrink-0">
+                <Button
+                  variant={addDialogTab === "event" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setAddDialogTab("event")}
+                >
+                  <CalendarDays className="size-4" />
+                  活動成果
+                </Button>
+                <Button
+                  variant={addDialogTab === "external" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setAddDialogTab("external")}
+                >
+                  <ExternalLink className="size-4" />
+                  外部成果
+                </Button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                {addDialogTab === "event" && (
+                  participatedEvents.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-6">尚未加入任何活動</p>
+                  ) : (
+                    <div className="grid gap-2">
+                      {participatedEvents.map((event) => (
+                        <Button
+                          key={event.id}
+                          variant="outline"
+                          className="justify-start"
+                          disabled={creatingEventResultId !== null}
+                          onClick={() => {
+                            setAddDialogOpen(false);
+                            createEventResult(event.id, event.slug);
+                          }}
+                        >
+                          {creatingEventResultId === event.id ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <CalendarDays className="size-4" />
+                          )}
+                          {event.name}
+                        </Button>
+                      ))}
+                    </div>
+                  )
+                )}
+                {addDialogTab === "external" && (
+                  <div className="grid gap-4">
+                    <div className="grid gap-2">
+                      <Label>標題 *</Label>
+                      <Input
+                        value={exForm.title}
+                        onChange={(e) => setExForm((f) => ({ ...f, title: e.target.value }))}
+                        placeholder="成果名稱"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>描述</Label>
+                      <Textarea
+                        value={exForm.description}
+                        onChange={(e) => setExForm((f) => ({ ...f, description: e.target.value }))}
+                        placeholder="簡短說明…"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>連結</Label>
+                      <Input
+                        value={exForm.link}
+                        onChange={(e) => setExForm((f) => ({ ...f, link: e.target.value }))}
+                        placeholder="https://..."
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>封面圖片</Label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+                          {exForm.image && (
+                            <Image src={exForm.image} alt="preview" fill className="object-cover" unoptimized />
+                          )}
+                        </div>
+                        <div className="flex flex-col justify-center gap-2">
+                          <input
+                            ref={exFileInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/gif,image/webp"
+                            className="hidden"
+                            onChange={handleExImageUpload}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={exUploadingImage}
+                            onClick={() => exFileInputRef.current?.click()}
+                          >
+                            {exUploadingImage ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
+                            {exUploadingImage ? "上傳中…" : "上傳圖片"}
+                          </Button>
+                          <p className="text-xs text-muted-foreground">JPEG、PNG、GIF、WebP，最大 5MB</p>
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      className="ml-auto"
+                      onClick={async () => { await submitExternalResult(); setAddDialogOpen(false); }}
+                      disabled={exSaving || !exForm.title.trim()}
+                    >
+                      {exSaving && <Loader2 className="size-4 animate-spin" />}
+                      新增
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Dialog open={exDialogOpen} onOpenChange={setExDialogOpen}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{exEditingId ? "編輯外部成果" : "新增外部成果"}</DialogTitle>
+                <DialogTitle>編輯外部成果</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4">
                 <div className="grid gap-2">
@@ -189,7 +332,7 @@ export function ProfilePageClient({
                     disabled={exSaving || !exForm.title.trim()}
                   >
                     {exSaving && <Loader2 className="size-4 animate-spin" />}
-                    {exEditingId ? "儲存" : "新增"}
+                    儲存
                   </Button>
                 </div>
               </div>
@@ -385,111 +528,117 @@ export function ProfilePageClient({
 
               {isOwner && isVendor && <VendorEventsSection />}
 
-              {results.length === 0 && externalResults.length === 0 ? (
+              {mergedItems.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-12 text-center">尚無成果紀錄</p>
               ) : (
-                results.map((result) => (
-                  <AppLink key={result.id} href={resultHref(result)} className="block">
+                mergedItems.map((item) => {
+                  if (item.kind === "result") {
+                    const result = item.data;
+                    const eventName = result.event_id ? eventNameMap[result.event_id] : null;
+                    return (
+                      <AppLink key={result.id} href={resultHref(result)} className="block">
+                        <Block className="overflow-hidden flex flex-col lg:grid lg:grid-cols-2 gap-4">
+                          <div className="-mx-6 -mt-6 lg:hidden">
+                            <AspectRatio ratio={16 / 9}>
+                              {hasCustomImage(result.header_image) ? (
+                                <Image
+                                  src={result.header_image!}
+                                  alt={result.title}
+                                  fill
+                                  className="object-cover"
+                                  unoptimized={isExternalImage(result.header_image)}
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-primary" />
+                              )}
+                            </AspectRatio>
+                          </div>
+                          <div className="grid gap-2 lg:content-center">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="text-lg font-bold break-keep">
+                                {result.title || "(無標題)"}
+                              </h3>
+                              {eventName && (
+                                <Badge variant="default">{eventName}</Badge>
+                              )}
+                              {isOwner && result.status === "draft" && (
+                                <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-200">草稿</Badge>
+                              )}
+                            </div>
+                            {result.summary && (
+                              <p className="text-sm text-muted-foreground line-clamp-3">
+                                {result.summary}
+                              </p>
+                            )}
+                          </div>
+                          <div className="hidden lg:block -my-6 -mr-6">
+                            <AspectRatio ratio={16 / 9}>
+                              {hasCustomImage(result.header_image) ? (
+                                <Image
+                                  src={result.header_image!}
+                                  alt={result.title}
+                                  fill
+                                  className="object-cover"
+                                  unoptimized={isExternalImage(result.header_image)}
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-primary" />
+                              )}
+                            </AspectRatio>
+                          </div>
+                        </Block>
+                      </AppLink>
+                    );
+                  }
+
+                  const ext = item.data;
+                  const card = (
                     <Block className="overflow-hidden flex flex-col lg:grid lg:grid-cols-2 gap-4">
                       <div className="-mx-6 -mt-6 lg:hidden">
                         <AspectRatio ratio={16 / 9}>
-                          {hasCustomImage(result.header_image) ? (
-                            <Image
-                              src={result.header_image!}
-                              alt={result.title}
-                              fill
-                              className="object-cover"
-                              unoptimized={isExternalImage(result.header_image)}
-                            />
+                          {ext.image ? (
+                            <Image src={ext.image} alt={ext.title} fill className="object-cover" unoptimized />
                           ) : (
                             <div className="w-full h-full bg-primary" />
                           )}
                         </AspectRatio>
                       </div>
                       <div className="grid gap-2 lg:content-center">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-bold break-keep">
-                            {result.title || "(無標題)"}
-                          </h3>
-                          {isOwner && result.status === "draft" && (
-                            <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-200">草稿</Badge>
-                          )}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-lg font-bold break-keep">{ext.title}</h3>
+                          <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">外部</Badge>
                         </div>
-                        {result.summary && (
-                          <p className="text-sm text-muted-foreground line-clamp-3">
-                            {result.summary}
-                          </p>
+                        {ext.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-3">{ext.description}</p>
                         )}
                       </div>
                       <div className="hidden lg:block -my-6 -mr-6">
                         <AspectRatio ratio={16 / 9}>
-                          {hasCustomImage(result.header_image) ? (
-                            <Image
-                              src={result.header_image!}
-                              alt={result.title}
-                              fill
-                              className="object-cover"
-                              unoptimized={isExternalImage(result.header_image)}
-                            />
+                          {ext.image ? (
+                            <Image src={ext.image} alt={ext.title} fill className="object-cover" unoptimized />
                           ) : (
                             <div className="w-full h-full bg-primary" />
                           )}
                         </AspectRatio>
                       </div>
                     </Block>
-                  </AppLink>
-                ))
-              )}
-
-              {externalResults.map((ext) => {
-                const card = (
-                  <Block className="overflow-hidden flex flex-col lg:grid lg:grid-cols-2 gap-4">
-                    <div className="-mx-6 -mt-6 lg:hidden">
-                      <AspectRatio ratio={16 / 9}>
-                        {ext.image ? (
-                          <Image src={ext.image} alt={ext.title} fill className="object-cover" unoptimized />
-                        ) : (
-                          <div className="w-full h-full bg-primary" />
-                        )}
-                      </AspectRatio>
-                    </div>
-                    <div className="grid gap-2 lg:content-center">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-bold break-keep">{ext.title}</h3>
-                        {isOwner && (
-                          <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">外部</Badge>
-                        )}
-                      </div>
-                      {ext.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-3">{ext.description}</p>
-                      )}
-                    </div>
-                    <div className="hidden lg:block -my-6 -mr-6">
-                      <AspectRatio ratio={16 / 9}>
-                        {ext.image ? (
-                          <Image src={ext.image} alt={ext.title} fill className="object-cover" unoptimized />
-                        ) : (
-                          <div className="w-full h-full bg-primary" />
-                        )}
-                      </AspectRatio>
-                    </div>
-                  </Block>
-                );
-
-                if (isOwner) {
-                  return (
-                    <button key={ext.id} type="button" className="interactive-scale text-left w-full" onClick={() => openEditDialog(ext)}>
-                      {card}
-                    </button>
                   );
-                }
 
-                return ext.link ? (
-                  <AppLink key={ext.id} href={ext.link} className="block">{card}</AppLink>
-                ) : (
-                  <div key={ext.id}>{card}</div>
-                );
-              })}
+                  if (isOwner) {
+                    return (
+                      <button key={ext.id} type="button" className="interactive-scale text-left w-full" onClick={() => openEditDialog(ext)}>
+                        {card}
+                      </button>
+                    );
+                  }
+
+                  return ext.link ? (
+                    <AppLink key={ext.id} href={ext.link} className="block">{card}</AppLink>
+                  ) : (
+                    <div key={ext.id}>{card}</div>
+                  );
+                })
+              )}
 
             </div>
           </div>

@@ -16,7 +16,7 @@ export default async function ProfilePage({
   const isOwner = user?.id === id;
   const canViewPrivateProfile = Boolean(user);
 
-  const [publicProfileRes, privateProfileRes, resultsRes, externalResultsRes, coauthoredRes] = await Promise.all([
+  const [publicProfileRes, privateProfileRes, resultsRes, externalResultsRes, coauthoredRes, participantsRes] = await Promise.all([
     supabase
       .from("public_profiles")
       .select("id, created_at, updated_at, display_name")
@@ -44,11 +44,16 @@ export default async function ProfilePage({
       .from("result_coauthors")
       .select("result_id")
       .eq("user_id", id),
+    isOwner
+      ? supabase
+          .from("event_participants")
+          .select("event_id")
+          .eq("user_id", id)
+      : Promise.resolve({ data: null, error: null }),
   ]);
 
   if (publicProfileRes.error || !publicProfileRes.data) redirect("/");
 
-  // Merge authored + co-authored results (deduplicated)
   const authoredResults = (resultsRes.data as Result[]) || [];
   const coauthorResultIds = (coauthoredRes.data ?? []).map((r) => r.result_id);
   let coauthoredResults: Result[] = [];
@@ -67,10 +72,28 @@ export default async function ProfilePage({
     ...coauthoredResults.filter((r) => !authoredIds.has(r.id)),
   ];
   const eventIds = [...new Set(rawResults.map((r) => r.event_id).filter(Boolean))] as string[];
+
+  const participantEventIds = (participantsRes.data ?? []).map((p: { event_id: string }) => p.event_id);
+  const allEventIds = [...new Set([...eventIds, ...participantEventIds])];
+
   const eventSlugMap: Record<string, string> = {};
-  if (eventIds.length) {
-    const { data: events } = await supabase.from("events").select("id, slug").in("id", eventIds);
-    for (const e of events ?? []) eventSlugMap[e.id] = e.slug;
+  const eventNameMap: Record<string, string> = {};
+  let participatedEvents: { id: string; name: string; slug: string }[] = [];
+
+  if (allEventIds.length) {
+    const { data: events } = await supabase
+      .from("events")
+      .select("id, name, slug")
+      .in("id", allEventIds);
+    for (const e of events ?? []) {
+      eventSlugMap[e.id] = e.slug;
+      eventNameMap[e.id] = e.name;
+    }
+    if (isOwner) {
+      participatedEvents = (events ?? [])
+        .filter((e) => participantEventIds.includes(e.id))
+        .map((e) => ({ id: e.id, name: e.name, slug: e.slug }));
+    }
   }
 
   const results = isOwner ? rawResults : rawResults.filter((r) => r.status === "published");
@@ -87,6 +110,8 @@ export default async function ProfilePage({
       isOwner={isOwner}
       canViewPrivateProfile={canViewPrivateProfile}
       eventSlugMap={eventSlugMap}
+      eventNameMap={eventNameMap}
+      participatedEvents={participatedEvents}
       initialExternalResults={externalResults}
     />
   );

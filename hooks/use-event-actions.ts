@@ -30,29 +30,6 @@ export function useEventActions(eventId: string, slug: string, userId: string | 
     router.push(`/events/${slug}/announcements/${data.id}/edit`);
   }, [eventId, router, slug, userId]);
 
-  const createResult = useCallback(async () => {
-    if (!userId) return;
-    setIsCreating(true);
-    const { data, error } = await supabaseRef.current
-      .from("results")
-      .insert({
-        title: "新成果",
-        date: new Date().toISOString().slice(0, 10),
-        header_image: null,
-        summary: "",
-        content: {},
-        status: "draft",
-        author_id: userId,
-        type: "personal",
-        team_id: null,
-        event_id: eventId,
-      })
-      .select()
-      .single();
-    if (error) { setIsCreating(false); toast.error("操作失敗"); return; }
-    router.push(`/events/${slug}/results/${data.id}/edit`);
-  }, [eventId, router, slug, userId]);
-
   const togglePin = useCallback(
     async (table: "results" | "competitions", id: string, pinned: boolean) => {
       const { error } = await supabaseRef.current.from(table).update({ pinned }).eq("id", id);
@@ -62,5 +39,5 @@ export function useEventActions(eventId: string, slug: string, userId: string | 
     [router],
   );
 
-  return { isCreating, createAnnouncement, createResult, togglePin };
+  return { isCreating, createAnnouncement, togglePin };
 }

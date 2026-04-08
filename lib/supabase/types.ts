@@ -244,3 +244,9 @@ export type Result = {
   pinned: boolean;
   event_id: string | null;
 };
+
+export type EventParticipant = {
+  event_id: string;
+  user_id: string;
+  created_at: string;
+};

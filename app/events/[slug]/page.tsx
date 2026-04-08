@@ -46,7 +46,7 @@ export default async function EventDetailPage({
   if (!user) resultsQuery.eq("status", "published");
   else if (!isAdmin) resultsQuery.or(`status.eq.published,and(status.eq.draft,author_id.eq.${user.id})`);
 
-  const [announcementsRes, resultsRes, recruitmentsRes] = await Promise.all([
+  const [announcementsRes, resultsRes, recruitmentsRes, participantsRes] = await Promise.all([
     announcementsQuery,
     resultsQuery,
     supabase
@@ -55,7 +55,19 @@ export default async function EventDetailPage({
       .eq("event_id", event.id)
       .order("pinned", { ascending: false })
       .order("start_date", { ascending: false }),
+    supabase
+      .from("event_participants")
+      .select("user_id")
+      .eq("event_id", event.id),
   ]);
+
+  // Resolve participant display names
+  const participantUserIds = (participantsRes.data ?? []).map((p: { user_id: string }) => p.user_id);
+  const { data: participantProfiles } = participantUserIds.length
+    ? await supabase.from("public_profiles").select("id, display_name").in("id", participantUserIds)
+    : { data: [] };
+  const members = (participantProfiles as { id: string; display_name: string | null }[] ?? [])
+    .sort((a, b) => (a.display_name ?? "").localeCompare(b.display_name ?? ""));
 
   // Resolve author/team names for results
   const rawResults = (resultsRes.data as Result[]) || [];
@@ -154,6 +166,7 @@ export default async function EventDetailPage({
         announcements={(announcementsRes.data as Announcement[]) ?? []}
         results={results}
         recruitments={recruitments}
+        members={members}
       />
     </>
   );

@@ -1,9 +1,12 @@
 "use client";
 
+import { AppLink } from "@/components/app-link";
+import { MemberEditor } from "@/components/member-editor";
 import { RecruitmentCard } from "@/components/recruitment-card";
 import { RecruitmentDialog } from "@/components/recruitment-dialog";
 import { ResultCard, type ResultWithMeta } from "@/components/result-card";
 import { PageShell } from "@/components/page-shell";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useEventActions } from "@/hooks/use-event-actions";
@@ -12,17 +15,19 @@ import type { Announcement, Event, Recruitment } from "@/lib/supabase/types";
 import { ArrowLeft, Loader2, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-type Tab = "announcements" | "results" | "recruitment";
+type Tab = "announcements" | "results" | "recruitment" | "members";
 
-const TABS: { value: Tab; label: string }[] = [
+const BASE_TABS: { value: Tab; label: string }[] = [
   { value: "announcements", label: "公告" },
   { value: "results", label: "成果" },
   { value: "recruitment", label: "徵才" },
 ];
 
-const tabParser = parseAsStringLiteral(["announcements", "results", "recruitment"] as const).withDefault("results");
+const MEMBERS_TAB: { value: Tab; label: string } = { value: "members", label: "成員" };
+
+const tabParser = parseAsStringLiteral(["announcements", "results", "recruitment", "members"] as const).withDefault("results");
 
 export function EventDetailClient({
   event,
@@ -33,6 +38,7 @@ export function EventDetailClient({
   announcements,
   results,
   recruitments,
+  members,
 }: {
   event: Event;
   slug: string;
@@ -42,15 +48,22 @@ export function EventDetailClient({
   announcements: Announcement[];
   results: ResultWithMeta[];
   recruitments: Recruitment[];
+  members: { id: string; display_name: string | null }[];
 }) {
   const [tab, setTab] = useQueryState("tab", tabParser);
-  const { isCreating, createAnnouncement, createResult, togglePin } = useEventActions(event.id, slug, userId);
+  const { isCreating, createAnnouncement, togglePin } = useEventActions(event.id, slug, userId);
 
+  const [currentMembers, setCurrentMembers] = useState(members);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingRecruitment, setEditingRecruitment] = useState<Recruitment | null>(null);
 
   const openCreateSheet = () => { setEditingRecruitment(null); setSheetOpen(true); };
   const openEditSheet = (r: Recruitment) => { setEditingRecruitment(r); setSheetOpen(true); };
+
+  const visibleTabs = useMemo(
+    () => userId ? [...BASE_TABS, MEMBERS_TAB] : BASE_TABS,
+    [userId],
+  );
 
   return (
     <PageShell>
@@ -89,7 +102,7 @@ export function EventDetailClient({
       </div>
 
       <div className="flex gap-2 border-b border-border pb-2">
-        {TABS.map(({ value, label }) => (
+        {visibleTabs.map(({ value, label }) => (
           <Button
             key={value}
             variant={tab === value ? "default" : "ghost"}
@@ -155,14 +168,6 @@ export function EventDetailClient({
 
       {tab === "results" && (
         <div className="flex flex-col gap-6">
-          {userId && (
-            <div className="flex justify-end">
-              <Button variant="secondary" onClick={createResult} disabled={isCreating}>
-                {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                新增個人成果
-              </Button>
-            </div>
-          )}
           {results.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">尚無成果</div>
           ) : (
@@ -214,6 +219,37 @@ export function EventDetailClient({
             </div>
           )}
           <RecruitmentDialog open={sheetOpen} onOpenChange={setSheetOpen} recruitment={editingRecruitment} eventId={event.id} />
+        </div>
+      )}
+
+      {tab === "members" && userId && (
+        <div className="flex flex-col gap-6">
+          {isAdmin ? (
+            <MemberEditor eventId={event.id} members={currentMembers} onMembersChange={setCurrentMembers} />
+          ) : (
+            currentMembers.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">尚無成員</div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {currentMembers.map((member) => (
+                  <AppLink
+                    key={member.id}
+                    href={`/profile/${member.id}`}
+                    className="flex items-center gap-3 rounded-lg px-4 py-3 hover:bg-muted transition-colors"
+                  >
+                    <Avatar size="sm">
+                      <AvatarFallback>
+                        {(member.display_name ?? "?")[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium">
+                      {member.display_name ?? "未知使用者"}
+                    </span>
+                  </AppLink>
+                ))}
+              </div>
+            )
+          )}
         </div>
       )}
     </PageShell>
