@@ -115,14 +115,14 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
               {item.label}
             </AppLink>
           ))}
+          <AppLink href="/events" className={`nav-bracket inline-block ${isActive("/events") ? "nav-bracket-active" : ""}`}>
+            活動
+          </AppLink>
           {pinnedEvents.map((event) => (
             <AppLink key={event.slug} href={`/events/${event.slug}`} className={`nav-bracket inline-block ${isActive(`/events/${event.slug}`) ? "nav-bracket-active" : ""}`}>
               {event.name}
             </AppLink>
           ))}
-          <AppLink href="/events" className={`nav-bracket inline-block ${isActive("/events") ? "nav-bracket-active" : ""}`}>
-            活動
-          </AppLink>
           {isAdmin && (
             <AppLink href="/settings" className={`nav-bracket inline-block ${isActive("/settings") ? "nav-bracket-active" : ""}`}>
               設定
@@ -162,6 +162,13 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
                 {item.label}
               </AppLink>
             ))}
+            <AppLink
+              href="/events"
+              className={`rounded-lg px-3 py-2 hover:bg-black/10 ${isActive("/events") ? "bg-black/15" : ""}`}
+              onClick={() => setOpen(false)}
+            >
+              活動
+            </AppLink>
             {pinnedEvents.map((event) => (
               <AppLink
                 key={event.slug}
@@ -172,13 +179,6 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
                 {event.name}
               </AppLink>
             ))}
-            <AppLink
-              href="/events"
-              className={`rounded-lg px-3 py-2 hover:bg-black/10 ${isActive("/events") ? "bg-black/15" : ""}`}
-              onClick={() => setOpen(false)}
-            >
-              活動
-            </AppLink>
             {isAdmin && (
               <AppLink
                 href="/settings"
