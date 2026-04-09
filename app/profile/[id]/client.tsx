@@ -129,7 +129,7 @@ export function ProfilePageClient({
 
           <Block variant="ghost" className="flex items-center justify-between">
             <SubButton href="/">
-              <ArrowLeftIcon className="size-4" /> 返回首頁
+              <ArrowLeftIcon className="size-4" /> 返回
             </SubButton>
             {isOwner && (
               <SubButton onClick={() => { setAddDialogTab("event"); setExForm({ title: "", description: "", link: "", image: "" }); setAddDialogOpen(true); }}>
@@ -341,8 +341,8 @@ export function ProfilePageClient({
 
           <div className="w-full grid lg:grid-cols-3 gap-4">
 
-            <div className="col-span-1">
-              <Block className="relative w-full">
+            <div className="col-span-1 min-w-0">
+              <Block className="relative w-full overflow-hidden">
                 {isOwner && (
                   <div className="absolute top-6 right-6 z-10">
                     <SubButton onClick={() => setIsEditMode((v) => !v)}>
@@ -394,7 +394,7 @@ export function ProfilePageClient({
                       )}
                     </div>
                   ) : profile.bio ? (
-                    <p className="text-sm whitespace-pre-wrap">{profile.bio}</p>
+                    <p className="text-sm whitespace-pre-wrap break-words">{profile.bio}</p>
                   ) : null}
 
                   {!canViewPrivateProfile && (

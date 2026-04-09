@@ -25,7 +25,7 @@ const BASE_TABS: { value: Tab; label: string }[] = [
   { value: "recruitment", label: "徵才" },
 ];
 
-const MEMBERS_TAB: { value: Tab; label: string } = { value: "members", label: "成員" };
+const MEMBERS_TAB: { value: Tab; label: string } = { value: "members", label: "學員名單" };
 
 const tabParser = parseAsStringLiteral(["announcements", "results", "recruitment", "members"] as const).withDefault("results");
 

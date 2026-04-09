@@ -42,7 +42,7 @@ export default async function EventDetailPage({
     .select("*")
     .eq("event_id", event.id)
     .order("pinned", { ascending: false })
-    .order("date", { ascending: false });
+    .order("created_at", { ascending: true });
   if (!user) resultsQuery.eq("status", "published");
   else if (!isAdmin) resultsQuery.or(`status.eq.published,and(status.eq.draft,author_id.eq.${user.id})`);
 
@@ -54,7 +54,7 @@ export default async function EventDetailPage({
       .select("id, created_at, updated_at, title, link, image, company_description, start_date, end_date, event_id, created_by, pinned")
       .eq("event_id", event.id)
       .order("pinned", { ascending: false })
-      .order("start_date", { ascending: false }),
+      .order("created_at", { ascending: true }),
     supabase
       .from("event_participants")
       .select("user_id")
