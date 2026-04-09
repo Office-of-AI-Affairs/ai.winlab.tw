@@ -1,6 +1,6 @@
 import { ProfilePageClient } from "./client";
 import { composeProfile } from "@/lib/profile-records";
-import { createClient } from "@/lib/supabase/server";
+import { getViewer } from "@/lib/supabase/get-viewer";
 import type { ExternalResult, Profile, PublicProfile, Result } from "@/lib/supabase/types";
 import { redirect } from "next/navigation";
 
@@ -10,8 +10,7 @@ export default async function ProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { supabase, user, isAdmin } = await getViewer();
 
   const isOwner = user?.id === id;
   const canViewPrivateProfile = Boolean(user);
@@ -89,10 +88,24 @@ export default async function ProfilePage({
       eventSlugMap[e.id] = e.slug;
       eventNameMap[e.id] = e.name;
     }
-    if (isOwner) {
-      participatedEvents = (events ?? [])
-        .filter((e) => participantEventIds.includes(e.id))
-        .map((e) => ({ id: e.id, name: e.name, slug: e.slug }));
+  }
+
+  if (isOwner) {
+    if (isAdmin) {
+      const { data: allEvents } = await supabase
+        .from("events")
+        .select("id, name, slug")
+        .eq("status", "published")
+        .order("sort_order", { ascending: true });
+      participatedEvents = (allEvents ?? []).map((e) => ({ id: e.id, name: e.name, slug: e.slug }));
+      for (const e of allEvents ?? []) {
+        eventSlugMap[e.id] = e.slug;
+        eventNameMap[e.id] = e.name;
+      }
+    } else {
+      participatedEvents = Object.entries(eventNameMap)
+        .filter(([id]) => participantEventIds.includes(id))
+        .map(([id, name]) => ({ id, name, slug: eventSlugMap[id] }));
     }
   }
 
