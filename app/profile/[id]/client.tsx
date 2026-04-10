@@ -35,6 +35,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 
 type ProfileItem =
@@ -74,6 +75,7 @@ export function ProfilePageClient({
   participatedEvents: { id: string; name: string; slug: string }[];
   initialExternalResults: ExternalResult[];
 }) {
+  const router = useRouter();
   const { user, isVendor, refreshProfile } = useAuth();
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -128,7 +130,7 @@ export function ProfilePageClient({
         <div className="grid p-4 gap-4">
 
           <Block variant="ghost" className="flex items-center justify-between">
-            <SubButton href="/">
+            <SubButton onClick={() => router.back()}>
               <ArrowLeftIcon className="size-4" /> 返回
             </SubButton>
             {isOwner && (

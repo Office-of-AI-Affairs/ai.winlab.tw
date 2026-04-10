@@ -68,11 +68,11 @@ export function EventDetailClient({
   return (
     <PageShell>
       <Link
-        href="/events"
+        href="/"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        活動專區
+        回首頁
       </Link>
 
       <div className="flex flex-col gap-4">
