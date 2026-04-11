@@ -12,12 +12,6 @@ import { buildUsersCsv, parseUsersCsv } from "@/lib/users-csv";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
-const roleLabel: Record<string, string> = {
-  admin: "管理員",
-  user: "一般用戶",
-  vendor: "廠商",
-};
-
 function exportUsersCSV(users: UserRow[]) {
   const { csv, filename } = buildUsersCsv(users);
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
@@ -48,6 +42,50 @@ export default function SettingsUsersPageClient({
   async function refreshUsers() {
     const { data } = await supabase.rpc("get_all_users");
     setUsers((data as UserRow[]) ?? []);
+  }
+
+  async function handleAddTag(userId: string, tag: string) {
+    const user = users.find((u) => u.id === userId);
+    if (!user) return;
+    const newTags = [...(user.tags ?? []), tag];
+
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, tags: newTags } : u))
+    );
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ tags: newTags })
+      .eq("id", userId);
+
+    if (error) {
+      toast.error("標籤新增失敗");
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, tags: user.tags } : u))
+      );
+    }
+  }
+
+  async function handleRemoveTag(userId: string, tag: string) {
+    const user = users.find((u) => u.id === userId);
+    if (!user) return;
+    const newTags = (user.tags ?? []).filter((t) => t !== tag);
+
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, tags: newTags } : u))
+    );
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ tags: newTags })
+      .eq("id", userId);
+
+    if (error) {
+      toast.error("標籤移除失敗");
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, tags: user.tags } : u))
+      );
+    }
   }
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,12 +138,13 @@ export default function SettingsUsersPageClient({
 
       <UsersTable
         users={users}
-        roleLabel={roleLabel}
         isImporting={isImporting}
         importResult={importResult}
         onExport={() => exportUsersCSV(users)}
         onImportClick={() => fileInputRef.current?.click()}
         onEditUser={setEditingUser}
+        onAddTag={handleAddTag}
+        onRemoveTag={handleRemoveTag}
       />
 
       <UserEditDialog
