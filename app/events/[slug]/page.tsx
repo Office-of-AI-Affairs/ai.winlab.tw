@@ -75,8 +75,11 @@ export default async function EventDetailPage({
       .map((p) => p.id),
   );
   const members = (participantProfiles as { id: string; display_name: string | null }[] ?? [])
-    .sort((a, b) => (a.display_name ?? "").localeCompare(b.display_name ?? ""))
-    .map((m) => ({ ...m, hasProfileData: hasProfileDataSet.has(m.id) }));
+    .map((m) => ({ ...m, hasProfileData: hasProfileDataSet.has(m.id) }))
+    .sort((a, b) => {
+      if (a.hasProfileData !== b.hasProfileData) return a.hasProfileData ? -1 : 1;
+      return (a.display_name ?? "").localeCompare(b.display_name ?? "");
+    });
 
   // Resolve author/team names for results
   const rawResults = (resultsRes.data as Result[]) || [];
