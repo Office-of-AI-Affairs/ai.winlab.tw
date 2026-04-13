@@ -2,6 +2,7 @@
 
 import { AppLink } from "@/components/app-link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,7 +17,7 @@ import { Check, Loader2, Plus, Search, X } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-type Member = { id: string; display_name: string | null };
+type Member = { id: string; display_name: string | null; hasProfileData: boolean };
 
 type Props = {
   eventId: string;
@@ -60,7 +61,7 @@ export function MemberEditor({ eventId, members, onMembersChange }: Props) {
     if (error) {
       toast.error("無法新增成員");
     } else {
-      onMembersChange([...members, { id: profile.id, display_name: profile.display_name }]);
+      onMembersChange([...members, { id: profile.id, display_name: profile.display_name, hasProfileData: false }]);
       toast.success(`已新增 ${profile.display_name || "使用者"}`);
     }
     setAdding(null);
@@ -165,10 +166,14 @@ export function MemberEditor({ eventId, members, onMembersChange }: Props) {
               </Avatar>
               <AppLink
                 href={`/profile/${member.id}`}
-                className="text-sm font-medium flex-1 hover:underline"
+                className="text-sm font-medium hover:underline"
               >
                 {member.display_name ?? "未知使用者"}
               </AppLink>
+              {!member.hasProfileData && (
+                <Badge variant="secondary">尚無資料</Badge>
+              )}
+              <div className="flex-1" />
               <button
                 type="button"
                 onClick={() => removeMember(member.id)}

@@ -48,7 +48,7 @@ export function EventDetailClient({
   announcements: Announcement[];
   results: ResultWithMeta[];
   recruitments: Recruitment[];
-  members: { id: string; display_name: string | null }[];
+  members: { id: string; display_name: string | null; hasProfileData: boolean }[];
 }) {
   const [tab, setTab] = useQueryState("tab", tabParser);
   const { isCreating, createAnnouncement, togglePin } = useEventActions(event.id, slug, userId);
@@ -245,6 +245,9 @@ export function EventDetailClient({
                     <span className="text-sm font-medium">
                       {member.display_name ?? "未知使用者"}
                     </span>
+                    {!member.hasProfileData && (
+                      <Badge variant="secondary">尚無資料</Badge>
+                    )}
                   </AppLink>
                 ))}
               </div>

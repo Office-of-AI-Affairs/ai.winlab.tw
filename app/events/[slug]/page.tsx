@@ -61,13 +61,22 @@ export default async function EventDetailPage({
       .eq("event_id", event.id),
   ]);
 
-  // Resolve participant display names
+  // Resolve participant display names + check profile completeness
   const participantUserIds = (participantsRes.data ?? []).map((p: { user_id: string }) => p.user_id);
-  const { data: participantProfiles } = participantUserIds.length
-    ? await supabase.from("public_profiles").select("id, display_name").in("id", participantUserIds)
-    : { data: [] };
+  const [{ data: participantProfiles }, { data: memberProfileData }] = participantUserIds.length
+    ? await Promise.all([
+        supabase.from("public_profiles").select("id, display_name").in("id", participantUserIds),
+        supabase.from("profiles").select("id, bio, phone, linkedin, facebook, github, website, resume, social_links").in("id", participantUserIds),
+      ])
+    : [{ data: [] }, { data: [] }];
+  const hasProfileDataSet = new Set(
+    ((memberProfileData as { id: string; bio: string | null; phone: string | null; linkedin: string | null; facebook: string | null; github: string | null; website: string | null; resume: string | null; social_links: string[] | null }[]) ?? [])
+      .filter((p) => p.bio || p.phone || p.linkedin || p.facebook || p.github || p.website || p.resume || (p.social_links && p.social_links.length > 0))
+      .map((p) => p.id),
+  );
   const members = (participantProfiles as { id: string; display_name: string | null }[] ?? [])
-    .sort((a, b) => (a.display_name ?? "").localeCompare(b.display_name ?? ""));
+    .sort((a, b) => (a.display_name ?? "").localeCompare(b.display_name ?? ""))
+    .map((m) => ({ ...m, hasProfileData: hasProfileDataSet.has(m.id) }));
 
   // Resolve author/team names for results
   const rawResults = (resultsRes.data as Result[]) || [];
