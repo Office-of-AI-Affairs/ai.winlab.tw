@@ -56,14 +56,13 @@ BEGIN
   -- Insert identity
   INSERT INTO auth.identities (
     id, user_id, identity_data, provider, provider_id,
-    email, last_sign_in_at, created_at, updated_at
+    last_sign_in_at, created_at, updated_at
   ) VALUES (
     gen_random_uuid(),
     new_id,
     jsonb_build_object('sub', new_id::text, 'email', clean_email, 'email_verified', true, 'phone_verified', false),
     'email',
     new_id::text,
-    clean_email,
     now(), now(), now()
   );
 
