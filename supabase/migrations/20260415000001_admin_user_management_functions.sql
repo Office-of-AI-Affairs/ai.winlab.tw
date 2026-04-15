@@ -35,7 +35,7 @@ BEGIN
   -- Insert auth user
   INSERT INTO auth.users (
     instance_id, id, aud, role, email, encrypted_password,
-    email_confirmed_at, confirmed_at,
+    email_confirmed_at,
     raw_app_meta_data, raw_user_meta_data,
     created_at, updated_at,
     is_sso_user, is_anonymous
@@ -46,7 +46,7 @@ BEGIN
     'authenticated',
     clean_email,
     crypt(random_pass, gen_salt('bf')),
-    now(), now(),
+    now(),
     '{"provider":"email","providers":["email"]}'::jsonb,
     jsonb_build_object('display_name', trim(p_name)),
     now(), now(),
