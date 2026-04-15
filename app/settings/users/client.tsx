@@ -18,7 +18,6 @@ import { UserEditDialog } from "@/components/user-edit-dialog";
 import { PageShell } from "@/components/page-shell";
 import { UsersTable } from "@/components/users-table";
 import type { UserRow } from "@/components/users-table";
-import { deleteUser } from "@/lib/admin-actions";
 import { createClient } from "@/lib/supabase/client";
 import { buildUsersCsv, parseUsersCsv } from "@/lib/users-csv";
 import { ArrowLeft } from "lucide-react";
@@ -108,16 +107,18 @@ export default function SettingsUsersPageClient({
     setIsDeleting(true);
 
     try {
-      const result = await deleteUser(deletingUser.id);
+      const { error } = await supabase.rpc("admin_delete_user", {
+        p_user_id: deletingUser.id,
+      });
 
-      if (!result.success) {
-        toast.error(result.error ?? "刪除失敗");
+      if (error) {
+        toast.error(error.message);
       } else {
         toast.success(`已刪除 ${deletingUser.display_name || deletingUser.email}`);
         await refreshUsers();
       }
     } catch {
-      toast.error("刪除失敗，請確認伺服器設定");
+      toast.error("刪除失敗");
     } finally {
       setIsDeleting(false);
       setDeletingUser(null);

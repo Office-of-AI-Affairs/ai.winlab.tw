@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createUser } from "@/lib/admin-actions";
+import { createClient } from "@/lib/supabase/client";
 
 type UserCreateDialogProps = {
   open: boolean;
@@ -53,19 +53,28 @@ export function UserCreateDialog({
     }
 
     setSaving(true);
-    const result = await createUser(name.trim(), email.trim(), role);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.rpc("admin_create_user", {
+        p_email: email.trim(),
+        p_name: name.trim() || null,
+        p_role: role,
+      });
 
-    if (!result.success) {
-      toast.error(result.error ?? "建立失敗");
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      toast.success("使用者已建立，需透過「忘記密碼」設定密碼");
+      reset();
+      onCreated();
+      onOpenChange(false);
+    } catch {
+      toast.error("建立失敗");
+    } finally {
       setSaving(false);
-      return;
     }
-
-    toast.success("使用者已建立，需透過「忘記密碼」設定密碼");
-    setSaving(false);
-    reset();
-    onCreated();
-    onOpenChange(false);
   }
 
   return (
