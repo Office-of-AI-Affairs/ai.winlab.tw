@@ -107,17 +107,21 @@ export default function SettingsUsersPageClient({
     if (!deletingUser) return;
     setIsDeleting(true);
 
-    const result = await deleteUser(deletingUser.id);
+    try {
+      const result = await deleteUser(deletingUser.id);
 
-    if (!result.success) {
-      toast.error(result.error ?? "刪除失敗");
-    } else {
-      toast.success(`已刪除 ${deletingUser.display_name || deletingUser.email}`);
-      await refreshUsers();
+      if (!result.success) {
+        toast.error(result.error ?? "刪除失敗");
+      } else {
+        toast.success(`已刪除 ${deletingUser.display_name || deletingUser.email}`);
+        await refreshUsers();
+      }
+    } catch {
+      toast.error("刪除失敗，請確認伺服器設定");
+    } finally {
+      setIsDeleting(false);
+      setDeletingUser(null);
     }
-
-    setIsDeleting(false);
-    setDeletingUser(null);
   }
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -205,7 +209,10 @@ export default function SettingsUsersPageClient({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>取消</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDelete}
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
