@@ -417,7 +417,7 @@ export function ProfilePageClient({
                     {profile.resume ? (
                       <div className="grid gap-1.5">
                         <AppLink
-                          href={`/profile/${profile.id}/resume`}
+                          href={`/profile/${profile.id}/resume?v=${profile.resume.split("/").pop() ?? ""}`}
                           className="text-sm text-foreground underline break-all"
                         >
                           /profile/{profile.id}/resume
@@ -460,7 +460,7 @@ export function ProfilePageClient({
                   <div className="grid gap-1.5">
                     <span className="text-xs font-medium text-muted-foreground">履歷</span>
                     <AppLink
-                      href={`/profile/${profile.id}/resume`}
+                      href={`/profile/${profile.id}/resume?v=${profile.resume.split("/").pop() ?? ""}`}
                       className="text-sm text-foreground underline"
                     >
                       查看履歷
