@@ -2,11 +2,23 @@
 
 import { useRef, useState } from "react";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AppLink } from "@/components/app-link";
+import { UserCreateDialog } from "@/components/user-create-dialog";
 import { UserEditDialog } from "@/components/user-edit-dialog";
 import { PageShell } from "@/components/page-shell";
 import { UsersTable } from "@/components/users-table";
 import type { UserRow } from "@/components/users-table";
+import { deleteUser } from "@/lib/admin-actions";
 import { createClient } from "@/lib/supabase/client";
 import { buildUsersCsv, parseUsersCsv } from "@/lib/users-csv";
 import { ArrowLeft } from "lucide-react";
@@ -31,7 +43,10 @@ export default function SettingsUsersPageClient({
   const supabase = createClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [users, setUsers] = useState<UserRow[]>(initialUsers);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingUser, setEditingUser] = useState<UserRow | null>(null);
+  const [deletingUser, setDeletingUser] = useState<UserRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<{
     created: number;
@@ -88,6 +103,23 @@ export default function SettingsUsersPageClient({
     }
   }
 
+  async function handleDelete() {
+    if (!deletingUser) return;
+    setIsDeleting(true);
+
+    const result = await deleteUser(deletingUser.id);
+
+    if (!result.success) {
+      toast.error(result.error ?? "刪除失敗");
+    } else {
+      toast.success(`已刪除 ${deletingUser.display_name || deletingUser.email}`);
+      await refreshUsers();
+    }
+
+    setIsDeleting(false);
+    setDeletingUser(null);
+  }
+
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -142,9 +174,17 @@ export default function SettingsUsersPageClient({
         importResult={importResult}
         onExport={() => exportUsersCSV(users)}
         onImportClick={() => fileInputRef.current?.click()}
+        onCreateUser={() => setShowCreateDialog(true)}
         onEditUser={setEditingUser}
+        onDeleteUser={setDeletingUser}
         onAddTag={handleAddTag}
         onRemoveTag={handleRemoveTag}
+      />
+
+      <UserCreateDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onCreated={refreshUsers}
       />
 
       <UserEditDialog
@@ -153,6 +193,27 @@ export default function SettingsUsersPageClient({
         onOpenChange={() => setEditingUser(null)}
         onSaved={refreshUsers}
       />
+
+      <AlertDialog open={!!deletingUser} onOpenChange={() => setDeletingUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>確認刪除使用者</AlertDialogTitle>
+            <AlertDialogDescription>
+              確定要刪除 {deletingUser?.display_name || deletingUser?.email}？此操作無法還原。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "刪除中…" : "刪除"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageShell>
   );
 }

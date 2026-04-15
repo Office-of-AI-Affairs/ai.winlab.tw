@@ -51,7 +51,7 @@ export async function POST(request: Request) {
 
     const password = generateStrongPassword();
     const { data, error } = await adminClient.auth.admin.createUser({
-      email: email.trim(),
+      email: email.trim().toLowerCase(),
       password,
       email_confirm: true,
       user_metadata: { display_name: name?.trim() || null },

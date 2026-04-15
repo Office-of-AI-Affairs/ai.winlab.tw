@@ -11,8 +11,18 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ArrowUpDown, Download, Pencil, Plus, Upload, X } from "lucide-react"
+import { ArrowUpDown, Download, Pencil, Plus, Trash2, Upload, UserPlus, X } from "lucide-react"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -161,11 +171,13 @@ function TagCell({
 function createColumns({
   allTags,
   onEditUser,
+  onDeleteUser,
   onAddTag,
   onRemoveTag,
 }: {
   allTags: string[]
   onEditUser?: (user: UserRow) => void
+  onDeleteUser?: (user: UserRow) => void
   onAddTag: (userId: string, tag: string) => void
   onRemoveTag: (userId: string, tag: string) => void
 }): ColumnDef<UserRow>[] {
@@ -238,18 +250,31 @@ function createColumns({
     },
     {
       id: "actions",
-      cell: ({ row }) =>
-        onEditUser && (
-          <button
-            type="button"
-            aria-label="編輯使用者"
-            onClick={() => onEditUser(row.original)}
-            className="rounded p-1 hover:bg-muted transition-colors duration-200"
-          >
-            <Pencil className="size-4 text-muted-foreground" />
-          </button>
-        ),
-      size: 48,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-1">
+          {onEditUser && (
+            <button
+              type="button"
+              aria-label="編輯使用者"
+              onClick={() => onEditUser(row.original)}
+              className="rounded p-1 hover:bg-muted transition-colors duration-200"
+            >
+              <Pencil className="size-4 text-muted-foreground" />
+            </button>
+          )}
+          {onDeleteUser && (
+            <button
+              type="button"
+              aria-label="刪除使用者"
+              onClick={() => onDeleteUser(row.original)}
+              className="rounded p-1 hover:bg-destructive/10 transition-colors duration-200"
+            >
+              <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
+            </button>
+          )}
+        </div>
+      ),
+      size: 80,
     },
   ]
 }
@@ -260,7 +285,9 @@ function UsersTable({
   importResult,
   onExport,
   onImportClick,
+  onCreateUser,
   onEditUser,
+  onDeleteUser,
   onAddTag,
   onRemoveTag,
 }: {
@@ -269,7 +296,9 @@ function UsersTable({
   importResult: ImportResult | null
   onExport: () => void
   onImportClick: () => void
+  onCreateUser?: () => void
   onEditUser?: (user: UserRow) => void
+  onDeleteUser?: (user: UserRow) => void
   onAddTag: (userId: string, tag: string) => void
   onRemoveTag: (userId: string, tag: string) => void
 }) {
@@ -286,8 +315,8 @@ function UsersTable({
   }, [users])
 
   const columns = useMemo(
-    () => createColumns({ allTags, onEditUser, onAddTag, onRemoveTag }),
-    [allTags, onEditUser, onAddTag, onRemoveTag]
+    () => createColumns({ allTags, onEditUser, onDeleteUser, onAddTag, onRemoveTag }),
+    [allTags, onEditUser, onDeleteUser, onAddTag, onRemoveTag]
   )
 
   const table = useReactTable({
@@ -335,6 +364,12 @@ function UsersTable({
             <Upload data-icon="inline-start" />
             {isImporting ? "匯入中…" : "匯入 CSV"}
           </Button>
+          {onCreateUser && (
+            <Button size="sm" onClick={onCreateUser}>
+              <UserPlus data-icon="inline-start" />
+              新增使用者
+            </Button>
+          )}
         </div>
       </div>
 
