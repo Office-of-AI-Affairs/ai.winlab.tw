@@ -8,11 +8,9 @@ type PageShellProps = React.ComponentProps<"div"> & {
   asChild?: boolean
   tone?:
     | "content"
-    | "contentLoose"
     | "dashboard"
     | "admin"
     | "editor"
-    | "centeredState"
     | "auth"
     | "profile"
 }

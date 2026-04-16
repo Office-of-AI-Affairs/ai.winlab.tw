@@ -410,7 +410,7 @@ function UsersTable({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="h-12 bg-muted/40">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="px-4 py-3 text-left">
+                  <TableHead key={header.id} className="py-3 text-left">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -424,7 +424,7 @@ function UsersTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} className="hover:bg-muted/30">
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-4 py-3">
+                    <TableCell key={cell.id} className="py-3">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -483,21 +483,21 @@ function UsersTableSkeleton({ rows = 6 }: { rows?: number }) {
         <Table>
           <TableHeader>
             <TableRow className="h-12 bg-muted/40">
-              <TableHead className="px-4 py-3"><Skeleton className="h-4 w-10" /></TableHead>
-              <TableHead className="px-4 py-3"><Skeleton className="h-4 w-20" /></TableHead>
-              <TableHead className="px-4 py-3"><Skeleton className="h-4 w-10" /></TableHead>
-              <TableHead className="px-4 py-3"><Skeleton className="h-4 w-12" /></TableHead>
-              <TableHead className="px-4 py-3"><Skeleton className="h-4 w-16" /></TableHead>
+              <TableHead className="py-3"><Skeleton className="h-4 w-10" /></TableHead>
+              <TableHead className="py-3"><Skeleton className="h-4 w-20" /></TableHead>
+              <TableHead className="py-3"><Skeleton className="h-4 w-10" /></TableHead>
+              <TableHead className="py-3"><Skeleton className="h-4 w-12" /></TableHead>
+              <TableHead className="py-3"><Skeleton className="h-4 w-16" /></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y">
             {Array.from({ length: rows }).map((_, index) => (
               <TableRow key={index}>
-                <TableCell className="px-4 py-3"><Skeleton className="h-4 w-20" /></TableCell>
-                <TableCell className="px-4 py-3"><Skeleton className="h-4 w-48 max-w-full" /></TableCell>
-                <TableCell className="px-4 py-3"><Skeleton className="h-5 w-14 rounded-full" /></TableCell>
-                <TableCell className="px-4 py-3"><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
-                <TableCell className="px-4 py-3"><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell className="py-3"><Skeleton className="h-4 w-20" /></TableCell>
+                <TableCell className="py-3"><Skeleton className="h-4 w-48 max-w-full" /></TableCell>
+                <TableCell className="py-3"><Skeleton className="h-5 w-14 rounded-full" /></TableCell>
+                <TableCell className="py-3"><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                <TableCell className="py-3"><Skeleton className="h-4 w-24" /></TableCell>
               </TableRow>
             ))}
           </TableBody>

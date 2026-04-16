@@ -28,11 +28,9 @@ export const pageShellVariants = cva("w-full", {
   variants: {
     tone: {
       content: "max-w-6xl mx-auto px-4 py-12 flex flex-col gap-8",
-      contentLoose: "max-w-6xl mx-auto px-4 py-12 flex flex-col gap-10",
       dashboard: "max-w-6xl mx-auto p-4 flex flex-col gap-4",
       admin: "max-w-6xl mx-auto px-4 py-8 flex flex-col gap-8",
       editor: "max-w-6xl mx-auto px-4 flex flex-col mt-8 pb-16",
-      centeredState: "max-w-6xl mx-auto px-4 py-12 flex justify-center items-center min-h-[50vh]",
       auth: "min-h-[calc(100vh-10rem)] flex items-center justify-center px-4 py-12 md:py-16",
       profile: "max-w-6xl w-full",
     },

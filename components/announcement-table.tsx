@@ -28,13 +28,13 @@ export function AnnouncementTable({
       <Table>
         <TableHeader>
           <TableRow className="bg-muted h-12">
-            <TableHead className="px-4 py-3 text-base font-bold">
+            <TableHead className="py-3 text-base font-bold">
               公告日期
             </TableHead>
-            <TableHead className="px-4 py-3 text-base font-bold">類別</TableHead>
-            <TableHead className="px-4 py-3 text-base font-bold whitespace-normal">標題</TableHead>
+            <TableHead className="py-3 text-base font-bold">類別</TableHead>
+            <TableHead className="py-3 text-base font-bold whitespace-normal">標題</TableHead>
             {showStatus && (
-              <TableHead className="px-4 py-3 text-base font-bold">狀態</TableHead>
+              <TableHead className="py-3 text-base font-bold">狀態</TableHead>
             )}
           </TableRow>
         </TableHeader>
@@ -100,17 +100,17 @@ export function AnnouncementTableSkeleton({
       <Table>
         <TableHeader>
           <TableRow className="bg-muted h-12">
-            <TableHead className="px-4 py-3 text-base font-bold">
+            <TableHead className="py-3 text-base font-bold">
               <Skeleton className="h-4 w-16" />
             </TableHead>
-            <TableHead className="px-4 py-3 text-base font-bold">
+            <TableHead className="py-3 text-base font-bold">
               <Skeleton className="h-4 w-12" />
             </TableHead>
-            <TableHead className="px-4 py-3 text-base font-bold whitespace-normal">
+            <TableHead className="py-3 text-base font-bold whitespace-normal">
               <Skeleton className="h-4 w-20" />
             </TableHead>
             {showStatus && (
-              <TableHead className="px-4 py-3 text-base font-bold">
+              <TableHead className="py-3 text-base font-bold">
                 <Skeleton className="h-4 w-12" />
               </TableHead>
             )}
@@ -119,17 +119,17 @@ export function AnnouncementTableSkeleton({
         <TableBody>
           {Array.from({ length: rows }).map((_, index) => (
             <TableRow key={index} className="h-12">
-              <TableCell className="px-4 py-3 text-base">
+              <TableCell className="py-3 text-base">
                 <Skeleton className="h-4 w-20" />
               </TableCell>
-              <TableCell className="px-4 py-3 text-base">
+              <TableCell className="py-3 text-base">
                 <Skeleton className="h-4 w-16" />
               </TableCell>
-              <TableCell className="px-4 py-3 text-base whitespace-normal">
+              <TableCell className="py-3 text-base whitespace-normal">
                 <Skeleton className="h-4 w-full" />
               </TableCell>
               {showStatus && (
-                <TableCell className="px-4 py-3 text-base">
+                <TableCell className="py-3 text-base">
                   <Skeleton className="h-4 w-12" />
                 </TableCell>
               )}

@@ -30,7 +30,7 @@ export async function HomeIntroduction() {
             {truncatedText}
           </p>
         )}
-        <Button asChild variant="secondary" size="lg" className="px-12 text-lg mt-2">
+        <Button asChild variant="secondary" className="px-12 text-lg mt-2">
           <Link href="/introduction">
             探索更多
           </Link>

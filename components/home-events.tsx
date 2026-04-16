@@ -29,7 +29,7 @@ export async function HomeEvents() {
         </div>
       )}
       <div className="flex justify-center">
-        <Button asChild variant="secondary" size="lg" className="px-12 text-lg">
+        <Button asChild variant="secondary" className="px-12 text-lg">
           <Link href="/events">
             探索更多
           </Link>
