@@ -73,5 +73,21 @@ export function useCrudList<T extends { id: string }>({
     [table],
   );
 
-  return { items, isLoading, isCreating, deletingId, create, remove };
+  const reorder = useCallback(
+    async (reorderedItems: T[]) => {
+      const prev = items;
+      setItems(reorderedItems);
+      const updates = reorderedItems.map((item, index) =>
+        supabaseRef.current.from(table).update({ sort_order: index }).eq("id", item.id),
+      );
+      const results = await Promise.all(updates);
+      if (results.some((r) => r.error)) {
+        toast.error("排序更新失敗");
+        setItems(prev);
+      }
+    },
+    [table, items],
+  );
+
+  return { items, setItems, isLoading, isCreating, deletingId, create, remove, reorder };
 }
