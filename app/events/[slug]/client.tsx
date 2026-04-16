@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { useEventActions } from "@/hooks/use-event-actions";
 import { formatDate } from "@/lib/date";
 import type { Announcement, Event, Recruitment } from "@/lib/supabase/types";
-import { ArrowLeft, Loader2, Pencil, Plus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Loader2, Pencil, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useMemo, useState } from "react";
@@ -56,6 +57,7 @@ export function EventDetailClient({
   const [currentMembers, setCurrentMembers] = useState(members);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingRecruitment, setEditingRecruitment] = useState<Recruitment | null>(null);
+  const [memberSearch, setMemberSearch] = useState("");
 
   const openCreateSheet = () => { setEditingRecruitment(null); setSheetOpen(true); };
   const openEditSheet = (r: Recruitment) => { setEditingRecruitment(r); setSheetOpen(true); };
@@ -230,27 +232,40 @@ export function EventDetailClient({
             currentMembers.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">尚無成員</div>
             ) : (
-              <div className="flex flex-col gap-3">
-                {currentMembers.map((member) => (
-                  <AppLink
-                    key={member.id}
-                    href={`/profile/${member.id}`}
-                    className="flex items-center gap-3 rounded-lg px-4 py-3 hover:bg-muted transition-colors"
-                  >
-                    <Avatar size="sm">
-                      <AvatarFallback>
-                        {(member.display_name ?? "?")[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm font-medium">
-                      {member.display_name ?? "未知使用者"}
-                    </span>
-                    {!member.hasProfileData && (
-                      <Badge variant="secondary">尚無資料</Badge>
-                    )}
-                  </AppLink>
-                ))}
-              </div>
+              <>
+                <div className="relative max-w-xs">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="搜尋學員⋯"
+                    value={memberSearch}
+                    onChange={(e) => setMemberSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <div className="flex flex-col gap-3">
+                  {currentMembers
+                    .filter((m) => !memberSearch || (m.display_name ?? "").toLowerCase().includes(memberSearch.toLowerCase()))
+                    .map((member) => (
+                    <AppLink
+                      key={member.id}
+                      href={`/profile/${member.id}`}
+                      className="flex items-center gap-3 rounded-lg px-4 py-3 hover:bg-muted transition-colors"
+                    >
+                      <Avatar size="sm">
+                        <AvatarFallback>
+                          {(member.display_name ?? "?")[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium">
+                        {member.display_name ?? "未知使用者"}
+                      </span>
+                      {!member.hasProfileData && (
+                        <Badge variant="secondary">尚無資料</Badge>
+                      )}
+                    </AppLink>
+                  ))}
+                </div>
+              </>
             )
           )}
         </div>

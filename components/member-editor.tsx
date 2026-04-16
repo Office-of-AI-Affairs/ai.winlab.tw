@@ -83,9 +83,24 @@ export function MemberEditor({ eventId, members, onMembersChange }: Props) {
     setRemoving(null);
   }
 
+  const [listFilter, setListFilter] = useState("");
+
+  const filteredMembers = listFilter.trim()
+    ? members.filter((m) => (m.display_name ?? "").toLowerCase().includes(listFilter.trim().toLowerCase()))
+    : members;
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="搜尋學員⋯"
+            value={listFilter}
+            onChange={(e) => setListFilter(e.target.value)}
+            className="pl-9"
+          />
+        </div>
         <Button variant="secondary" onClick={() => { setQuery(""); setDialogOpen(true); if (allUsers.length === 0) fetchAllUsers(); }}>
           <Plus className="w-4 h-4" />
           新增成員
@@ -150,11 +165,13 @@ export function MemberEditor({ eventId, members, onMembersChange }: Props) {
         </DialogContent>
       </Dialog>
 
-      {members.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">尚無成員</div>
+      {filteredMembers.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          {listFilter.trim() ? "找不到符合的學員" : "尚無成員"}
+        </div>
       ) : (
         <div className="flex flex-col gap-1">
-          {members.map((member) => (
+          {filteredMembers.map((member) => (
             <div
               key={member.id}
               className="flex items-center gap-3 rounded-lg px-4 py-3 hover:bg-muted transition-colors"
