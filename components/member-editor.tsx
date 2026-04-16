@@ -1,7 +1,7 @@
 "use client";
 
 import { AppLink } from "@/components/app-link";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,7 @@ import { Check, Loader2, Plus, Search, X } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-type Member = { id: string; display_name: string | null; hasProfileData: boolean };
+type Member = { id: string; display_name: string | null; avatar_url: string | null; hasProfileData: boolean };
 
 type Props = {
   eventId: string;
@@ -41,7 +41,7 @@ export function MemberEditor({ eventId, members, onMembersChange }: Props) {
     setLoadingUsers(true);
     const { data } = await supabaseRef.current
       .from("public_profiles")
-      .select("id, created_at, updated_at, display_name")
+      .select("id, created_at, updated_at, display_name, avatar_url")
       .order("display_name");
     setAllUsers((data as PublicProfile[]) ?? []);
     setLoadingUsers(false);
@@ -61,7 +61,7 @@ export function MemberEditor({ eventId, members, onMembersChange }: Props) {
     if (error) {
       toast.error("無法新增成員");
     } else {
-      onMembersChange([...members, { id: profile.id, display_name: profile.display_name, hasProfileData: false }]);
+      onMembersChange([...members, { id: profile.id, display_name: profile.display_name, avatar_url: profile.avatar_url, hasProfileData: false }]);
       toast.success(`已新增 ${profile.display_name || "使用者"}`);
     }
     setAdding(null);
@@ -144,6 +144,7 @@ export function MemberEditor({ eventId, members, onMembersChange }: Props) {
                       className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-left disabled:opacity-60"
                     >
                       <Avatar size="sm">
+                        {user.avatar_url && <AvatarImage src={user.avatar_url} alt={user.display_name ?? ""} />}
                         <AvatarFallback>
                           {(user.display_name || "?").slice(0, 1)}
                         </AvatarFallback>
@@ -177,6 +178,7 @@ export function MemberEditor({ eventId, members, onMembersChange }: Props) {
               className="flex items-center gap-3 rounded-lg px-4 py-3 hover:bg-muted transition-colors"
             >
               <Avatar size="sm">
+                {member.avatar_url && <AvatarImage src={member.avatar_url} alt={member.display_name ?? ""} />}
                 <AvatarFallback>
                   {(member.display_name ?? "?")[0]}
                 </AvatarFallback>

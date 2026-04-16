@@ -65,7 +65,6 @@ export function ProfilePageClient({
   eventNameMap,
   participatedEvents,
   initialExternalResults,
-  gravatarUrl,
 }: {
   initialProfile: Profile;
   results: Result[];
@@ -75,7 +74,6 @@ export function ProfilePageClient({
   eventNameMap: Record<string, string>;
   participatedEvents: { id: string; name: string; slug: string }[];
   initialExternalResults: ExternalResult[];
-  gravatarUrl: string | null;
 }) {
   const router = useRouter();
   const { user, isVendor, refreshProfile } = useAuth();
@@ -359,9 +357,7 @@ export function ProfilePageClient({
                 {canViewPrivateProfile && (
                   <div className="flex flex-col items-center gap-2">
                     <Avatar size="3xl">
-                      {(profile.avatar_url || gravatarUrl) && (
-                        <AvatarImage src={profile.avatar_url || gravatarUrl!} alt={displayNameValue} />
-                      )}
+                      {profile.avatar_url && <AvatarImage src={profile.avatar_url} alt={displayNameValue} />}
                       <AvatarFallback>{displayNameValue.slice(0, 1)}</AvatarFallback>
                     </Avatar>
                     {isEditMode && (

@@ -1,7 +1,6 @@
 import { ProfilePageClient } from "./client";
 import { composeProfile } from "@/lib/profile-records";
 import { getViewer } from "@/lib/supabase/get-viewer";
-import { getGravatarUrl } from "@/lib/gravatar";
 import type { ExternalResult, Profile, PublicProfile, Result } from "@/lib/supabase/types";
 import { redirect } from "next/navigation";
 
@@ -19,7 +18,7 @@ export default async function ProfilePage({
   const [publicProfileRes, privateProfileRes, resultsRes, externalResultsRes, coauthoredRes, participantsRes] = await Promise.all([
     supabase
       .from("public_profiles")
-      .select("id, created_at, updated_at, display_name")
+      .select("id, created_at, updated_at, display_name, avatar_url")
       .eq("id", id)
       .single(),
     canViewPrivateProfile
@@ -117,8 +116,6 @@ export default async function ProfilePage({
     privateProfileRes.data as Partial<Profile> | null
   );
 
-  const gravatarUrl = isOwner && user?.email ? getGravatarUrl(user.email) : null;
-
   return (
     <ProfilePageClient
       initialProfile={visibleProfile}
@@ -129,7 +126,6 @@ export default async function ProfilePage({
       eventNameMap={eventNameMap}
       participatedEvents={participatedEvents}
       initialExternalResults={externalResults}
-      gravatarUrl={gravatarUrl}
     />
   );
 }

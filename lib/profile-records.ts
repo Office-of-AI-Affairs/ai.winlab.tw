@@ -9,7 +9,7 @@ export function composeProfile(
     created_at: privateProfile?.created_at ?? publicProfile.created_at,
     updated_at: privateProfile?.updated_at ?? publicProfile.updated_at,
     display_name: privateProfile?.display_name ?? publicProfile.display_name,
-    avatar_url: privateProfile?.avatar_url ?? null,
+    avatar_url: privateProfile?.avatar_url ?? publicProfile.avatar_url ?? null,
     role: privateProfile?.role ?? "user",
     phone: privateProfile?.phone ?? null,
     bio: privateProfile?.bio ?? null,

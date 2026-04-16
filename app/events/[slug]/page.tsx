@@ -65,7 +65,7 @@ export default async function EventDetailPage({
   const participantUserIds = (participantsRes.data ?? []).map((p: { user_id: string }) => p.user_id);
   const [{ data: participantProfiles }, { data: memberProfileData }] = participantUserIds.length
     ? await Promise.all([
-        supabase.from("public_profiles").select("id, display_name").in("id", participantUserIds),
+        supabase.from("public_profiles").select("id, display_name, avatar_url").in("id", participantUserIds),
         supabase.from("profiles").select("id, bio, phone, linkedin, facebook, github, website, resume, social_links").in("id", participantUserIds),
       ])
     : [{ data: [] }, { data: [] }];
@@ -74,7 +74,7 @@ export default async function EventDetailPage({
       .filter((p) => p.bio || p.phone || p.linkedin || p.facebook || p.github || p.website || p.resume || (p.social_links && p.social_links.length > 0))
       .map((p) => p.id),
   );
-  const members = (participantProfiles as { id: string; display_name: string | null }[] ?? [])
+  const members = (participantProfiles as { id: string; display_name: string | null; avatar_url: string | null }[] ?? [])
     .map((m) => ({ ...m, hasProfileData: hasProfileDataSet.has(m.id) }))
     .sort((a, b) => {
       if (a.hasProfileData !== b.hasProfileData) return a.hasProfileData ? -1 : 1;

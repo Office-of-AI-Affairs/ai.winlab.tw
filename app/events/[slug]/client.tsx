@@ -6,7 +6,7 @@ import { RecruitmentCard } from "@/components/recruitment-card";
 import { RecruitmentDialog } from "@/components/recruitment-dialog";
 import { ResultCard, type ResultWithMeta } from "@/components/result-card";
 import { PageShell } from "@/components/page-shell";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useEventActions } from "@/hooks/use-event-actions";
@@ -49,7 +49,7 @@ export function EventDetailClient({
   announcements: Announcement[];
   results: ResultWithMeta[];
   recruitments: Recruitment[];
-  members: { id: string; display_name: string | null; hasProfileData: boolean }[];
+  members: { id: string; display_name: string | null; avatar_url: string | null; hasProfileData: boolean }[];
 }) {
   const [tab, setTab] = useQueryState("tab", tabParser);
   const { isCreating, createAnnouncement, togglePin } = useEventActions(event.id, slug, userId);
@@ -252,6 +252,7 @@ export function EventDetailClient({
                       className="flex items-center gap-3 rounded-lg px-4 py-3 hover:bg-muted transition-colors"
                     >
                       <Avatar size="sm">
+                        {member.avatar_url && <AvatarImage src={member.avatar_url} alt={member.display_name ?? ""} />}
                         <AvatarFallback>
                           {(member.display_name ?? "?")[0]}
                         </AvatarFallback>
