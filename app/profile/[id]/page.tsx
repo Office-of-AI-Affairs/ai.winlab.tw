@@ -117,7 +117,7 @@ export default async function ProfilePage({
     privateProfileRes.data as Partial<Profile> | null
   );
 
-  const gravatarUrl = user?.email ? getGravatarUrl(user.email) : null;
+  const gravatarUrl = isOwner && user?.email ? getGravatarUrl(user.email) : null;
 
   return (
     <ProfilePageClient
