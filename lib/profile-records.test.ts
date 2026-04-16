@@ -9,6 +9,7 @@ const publicProfileFixture: PublicProfile = {
   created_at: "2026-03-21T00:00:00.000Z",
   updated_at: "2026-03-21T00:00:00.000Z",
   display_name: "王小明",
+  avatar_url: null,
 }
 
 const privateProfileFixture: Profile = {
@@ -45,5 +46,13 @@ describe("profile records", () => {
     const profile = composeProfile(publicProfileFixture, privateProfileFixture)
 
     assert.deepEqual(profile, privateProfileFixture)
+  })
+
+  test("falls back to public avatar_url (gravatar) when private avatar_url is null", () => {
+    const publicWithGravatar = { ...publicProfileFixture, avatar_url: "https://gravatar.com/avatar/abc" }
+    const privateNoAvatar = { ...privateProfileFixture, avatar_url: null }
+    const profile = composeProfile(publicWithGravatar, privateNoAvatar)
+
+    assert.equal(profile.avatar_url, "https://gravatar.com/avatar/abc")
   })
 })
