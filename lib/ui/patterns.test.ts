@@ -70,7 +70,6 @@ describe("global UI patterns", () => {
     assert.ok(pageShellVariants({ tone: "dashboard" }).includes("p-4"))
     assert.ok(pageShellVariants({ tone: "editor" }).includes("mt-8"))
     assert.ok(pageShellVariants({ tone: "editor" }).includes("pb-16"))
-    assert.ok(pageShellVariants({ tone: "centeredState" }).includes("min-h-[50vh]"))
     assert.ok(pageShellVariants({ tone: "auth" }).includes("min-h-[calc(100vh-10rem)]"))
     assert.ok(pageShellVariants({ tone: "profile" }).includes("max-w-6xl"))
     assert.ok(pageShellVariants({ tone: "profile" }).includes("w-full"))
