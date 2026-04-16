@@ -101,27 +101,31 @@ export function ResultCard({
             ) : (
               <User className="w-3.5 h-3.5 shrink-0" />
             )}
-            {publisherHref ? (
-              <AppLink
-                href={publisherHref}
-                className="truncate underline underline-offset-4"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {primaryName}
-              </AppLink>
-            ) : (
-              <span className="truncate">{primaryName}</span>
-            )}
-            {(item.coauthors ?? []).map((ca) => (
-              <AppLink
-                key={ca.id}
-                href={`/profile/${ca.id}`}
-                className="truncate underline underline-offset-4"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {ca.name}
-              </AppLink>
-            ))}
+            <span className="flex flex-wrap items-center gap-x-1">
+              {publisherHref ? (
+                <AppLink
+                  href={publisherHref}
+                  className="underline underline-offset-4"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {primaryName}
+                </AppLink>
+              ) : (
+                <span>{primaryName}</span>
+              )}
+              {(item.coauthors ?? []).map((ca) => (
+                <span key={ca.id}>
+                  、
+                  <AppLink
+                    href={`/profile/${ca.id}`}
+                    className="underline underline-offset-4"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {ca.name}
+                  </AppLink>
+                </span>
+              ))}
+            </span>
           </div>
           <span className="shrink-0">{formatDate(item.updated_at)}</span>
         </div>
