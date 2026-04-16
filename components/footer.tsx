@@ -12,6 +12,12 @@ export function Footer() {
       >
         Privacy
       </Link>
+      <Link
+        href="/design"
+        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        Design
+      </Link>
     </footer>
   );
 }
