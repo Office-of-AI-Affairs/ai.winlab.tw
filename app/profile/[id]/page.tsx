@@ -1,6 +1,7 @@
 import { ProfilePageClient } from "./client";
 import { composeProfile } from "@/lib/profile-records";
 import { getViewer } from "@/lib/supabase/get-viewer";
+import { getGravatarUrl } from "@/lib/gravatar";
 import type { ExternalResult, Profile, PublicProfile, Result } from "@/lib/supabase/types";
 import { redirect } from "next/navigation";
 
@@ -116,6 +117,8 @@ export default async function ProfilePage({
     privateProfileRes.data as Partial<Profile> | null
   );
 
+  const gravatarUrl = user?.email ? getGravatarUrl(user.email) : null;
+
   return (
     <ProfilePageClient
       initialProfile={visibleProfile}
@@ -126,6 +129,7 @@ export default async function ProfilePage({
       eventNameMap={eventNameMap}
       participatedEvents={participatedEvents}
       initialExternalResults={externalResults}
+      gravatarUrl={gravatarUrl}
     />
   );
 }

@@ -65,6 +65,7 @@ export function ProfilePageClient({
   eventNameMap,
   participatedEvents,
   initialExternalResults,
+  gravatarUrl,
 }: {
   initialProfile: Profile;
   results: Result[];
@@ -74,6 +75,7 @@ export function ProfilePageClient({
   eventNameMap: Record<string, string>;
   participatedEvents: { id: string; name: string; slug: string }[];
   initialExternalResults: ExternalResult[];
+  gravatarUrl: string | null;
 }) {
   const router = useRouter();
   const { user, isVendor, refreshProfile } = useAuth();
@@ -355,10 +357,22 @@ export function ProfilePageClient({
                 )}
 
                 {canViewPrivateProfile && (
-                  <Avatar size="3xl">
-                    {profile.avatar_url && <AvatarImage src={profile.avatar_url} alt={displayNameValue} />}
-                    <AvatarFallback>{displayNameValue.slice(0, 1)}</AvatarFallback>
-                  </Avatar>
+                  <div className="flex flex-col items-center gap-2">
+                    <Avatar size="3xl">
+                      {(profile.avatar_url || gravatarUrl) && (
+                        <AvatarImage src={profile.avatar_url || gravatarUrl!} alt={displayNameValue} />
+                      )}
+                      <AvatarFallback>{displayNameValue.slice(0, 1)}</AvatarFallback>
+                    </Avatar>
+                    {isEditMode && (
+                      <AppLink
+                        href="https://gravatar.com/profile"
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        前往 Gravatar 設定頭像
+                      </AppLink>
+                    )}
+                  </div>
                 )}
 
                 <div className="grid gap-2">
