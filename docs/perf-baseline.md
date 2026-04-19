@@ -1,9 +1,9 @@
 # Perf baseline — 2026-04-19
 
-Snapshot after the Sprint 1–9 refactor (resumes-private-bucket, SSG/ISR
+Snapshot after the Sprint 1–11 refactor (resumes-private-bucket, SSG/ISR
 rollout, WebP compression pass, orphan cleanup, strict DB types, E2E
-suite, error boundaries). Re-run after any meaningful perf-touching
-change to compare.
+suite, error boundaries, LCP/CLS micro-tuning). Re-run after any
+meaningful perf-touching change to compare.
 
 Methodology:
 
@@ -16,13 +16,27 @@ Methodology:
 
 ## Lighthouse (prod)
 
-| Page | Perf | A11y | BP | SEO | FCP | LCP | TBT | CLS |
-|------|-----:|-----:|---:|----:|-----|-----|-----|-----|
-| `/` | 85 | 96 | 100 | 100 | 0.9 s | 4.4 s | 10 ms | 0 |
-| `/introduction` | 87 | 100 | 100 | 100 | 0.9 s | 3.0 s | 20 ms | 0.17 |
-| `/announcement` | 97 | 100 | 100 | 100 | 0.9 s | 2.6 s | 10 ms | 0 |
-| `/events` | 81 | 96 | 100 | 100 | 1.1 s | 4.6 s | 20 ms | 0 |
-| `/events/ai-rising-star` | 78 | 96 | 100 | 100 | 1.4 s | 6.0 s | 40 ms | 0 |
+First column is the initial snapshot, second is after the
+carousel-priority / EventCard-priority / AVIF / OrgChart min-height
+commit landed (`e084583`).
+
+| Page | Perf | LCP | CLS | Notes |
+|------|-----:|-----|-----|------|
+| `/` | 85 → 84 | 4.4 → **3.8 s** | 0 → 0 | Carousel `priority` paid out (-600 ms LCP) |
+| `/introduction` | 87 → 87 | 3.0 → 3.0 s | 0.17 → 0.17 | OrgChart min-h didn't move CLS — source is elsewhere (see below) |
+| `/announcement` | 97 → 97 | 2.6 → 2.6 s | 0 → 0 | Already excellent; nothing to tune |
+| `/events` | 81 → 81 | 4.6 → 4.5 s | 0 → 0 | First-card `priority` didn't move LCP meaningfully |
+| `/events/ai-rising-star` | 78 → 78 | 6.0 → 6.0 s | 0 → 0 | 13 result cards still competing; needs deeper work |
+
+Full first-pass scores on all four categories, for reference:
+
+| Page | Perf | A11y | BP | SEO | FCP | TBT |
+|------|-----:|-----:|---:|----:|-----|-----|
+| `/` | 85 | 96 | 100 | 100 | 0.9 s | 10 ms |
+| `/introduction` | 87 | 100 | 100 | 100 | 0.9 s | 20 ms |
+| `/announcement` | 97 | 100 | 100 | 100 | 0.9 s | 10 ms |
+| `/events` | 81 | 96 | 100 | 100 | 1.1 s | 20 ms |
+| `/events/ai-rising-star` | 78 | 96 | 100 | 100 | 1.4 s | 40 ms |
 
 ### Reading the numbers
 
@@ -66,26 +80,29 @@ attribution under Turbopack needs a follow-up dig; the per-chunk
 breakdown above is enough signal to know nothing's pathologically out
 of place.
 
-## Known next-steps for LCP
+## What we tried + what it bought
 
-The biggest Perf delta we'd gain is cutting LCP on the hero pages
-(homepage, `/events`, `/events/[slug]`):
+Commit `e084583`:
 
-1. **`priority` on hero images** — Next/Image lazy-loads by default.
-   `HomeCarousel`'s first slide and `EventCard`'s cover should render
-   with `priority` so the browser requests them immediately.
-2. **Serve AVIF alongside WebP** — Next/Image will do this automatically
-   once `images.formats: ["image/avif", "image/webp"]` is set in
-   `next.config.ts`; currently the config relies on defaults.
-3. **Preload the first carousel slide** — a `<link rel="preload">` in
-   the head for the known first-slide URL would make the LCP image
-   cacheable before the carousel JS decides to paint.
-4. **Reserve the OrgChart height** — add a fixed aspect-ratio box so
-   CLS on `/introduction` drops from 0.17 to 0.
-
-None of these change behaviour for admins or DB state, so they're safe
-incremental follow-ups. Re-run Lighthouse afterwards and update this
-table.
+1. ✅ `priority` + `<Image>` on the first carousel slide — homepage LCP
+   moved 4.4 → 3.8 s (-600 ms). Real.
+2. ⚠️ `priority` on the first `EventCard` in `HomeEvents` + the events
+   list — no measurable change. The LCP element on those pages likely
+   isn't the cover image; the result grid on `/events/ai-rising-star`
+   probably has 13 images racing to render and the "largest" one
+   loses. A deeper fix would mean `loading="eager"` on the first visible
+   row and `sizes` tuned for the grid, but diminishing returns from here.
+3. ⚠️ `images.formats = [avif, webp]` — barely moves the needle. The
+   compression pass earlier today already cut storage 24.6 → 2.6 MB as
+   WebP; re-encoding to AVIF on top only buys a few hundred bytes per
+   image.
+4. ⚠️ OrgChart `min-h-[360px/420px]` — CLS on `/introduction` stayed
+   at 0.17. The shift isn't coming from OrgChart (its SVG is absolute-
+   positioned and doesn't affect flow). Suspects next session:
+   `nuqs` tab-parser hydration swapping the default tab after the first
+   paint, or the org-member grid laying out after Gravatar fallbacks
+   settle on dimensions. Needs Lighthouse's `layout-shift-elements`
+   detail to pin down.
 
 ## Re-running
 
