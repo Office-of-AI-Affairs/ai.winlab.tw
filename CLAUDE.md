@@ -14,10 +14,23 @@
 
 ## Architecture
 
-- `AuthProvider` wraps the app → `useAuth()`: `user`, `profile`, `isAdmin`, `isLoading`, `signIn`, `signOut`
+- Root layout is **cookieless** — `AuthProvider` hydrates `useAuth()`
+  from the browser Supabase client on mount (see `docs/isr-pattern.md`)
+- `useAuth()`: `user`, `profile`, `isAdmin`, `isLoading`, `signIn`, `signOut`
 - `NuqsAdapter` in root layout for URL search param state
-- Root layout loads pinned events for `<Header pinnedEvents={...} />`
+- Root layout fetches pinned events through the cached `getPinnedEvents()`
+  helper (no cookies) so every downstream page can still ISR
 - Sibling MCP repo: `~/mcp.ai.winlab.tw`，變更 schema / RLS / admin workflow 後需同步
+
+## ISR / SSG pattern
+
+Public-facing pages (`/`, `/introduction`, `/announcement`, `/events`,
+`/privacy`, plus detail pages) render statically via a four-piece
+pattern: `page.tsx` (server, cookieless) + `data.ts`
+(`unstable_cache` + `createPublicClient`) + `actions.ts` (Server
+Actions that `updateTag`) + `client.tsx` (admin UI + draft merge via
+`useAuth`). See `docs/isr-pattern.md` for the full playbook, tag
+inventory, and how to add a new page.
 
 ## Auth
 
@@ -25,13 +38,16 @@
 |------|----------|
 | Client Component | `@/lib/supabase/client` |
 | Server Component / Route Handler | `@/lib/supabase/server` |
+| Cookieless public read (ISR data.ts) | `@/lib/supabase/public` |
 
 - 未登入 → 只看 `status: published`
 - 登入非 admin → 自己的草稿 + 所有 published
 - admin → 完整讀寫（`profile.role === 'admin'`）
 - vendor → 被指派活動下的招募 CRUD（`event_vendors` + `created_by = auth.uid()`）
-- `isEventVendor()` in `lib/supabase/check-event-vendor.ts`
-- Server Component 查 `profiles` 表取 `isAdmin`
+- `isEventVendor()` in `lib/supabase/check-event-vendor.ts` — client-callable
+- Admin / role checks happen on the client via `useAuth()` for pages on
+  the ISR pattern; legacy server pages (`/settings/*`) still use
+  `getViewer()`
 
 ## Data model (`lib/supabase/types.ts`)
 
@@ -43,7 +59,10 @@
 - **Event** — `slug`，`status`，`pinned`，`sort_order`
 - **Introduction** — 單筆，Tiptap JSON
 - **OrganizationMember** — `category: core|legal_entity|industry`
-- **Profile** — `role: admin|user|vendor`，profile fields、social links、resume
+- **Profile** — `role: admin|user|vendor`，profile fields、social links、**resume（object path, not URL）**
+- **PublicProfile** — authenticated-reachable view of profiles plus
+  `has_profile_data` boolean kept in sync by a trigger (used by the
+  cookieless `/events/[slug]` fetcher)
 - **ExternalResult**、**Tag / ResultTag**、**Team**、**CarouselSlide**、**Contact**
 
 Conventions:
@@ -54,8 +73,15 @@ Conventions:
 ## Database & storage
 
 - Migrations: `supabase/migrations/`，依序在 SQL Editor 執行，所有表 RLS
-- Storage bucket: `announcement-images`（public），policies 於 Dashboard 設定
-- 路徑：root（announcement）、`recruitment/`、`results/`、`organization/`、`events/`
+- Buckets — see `docs/storage-buckets.md` for the full layout, RLS, and
+  maintenance scripts:
+  - `announcement-images` (public) — visitor-facing images, WebP-first
+  - `resumes` (private) — per-user folders, session-gated download via
+    `app/profile/[id]/resume/route.ts`
+- Maintenance scripts in `scripts/` (gitignored, force-added):
+  - `recompress-images.ts` — direct-column URLs
+  - `recompress-tiptap-images.ts` — jsonb Tiptap embeds
+  - `cleanup-orphans.ts` — DB-unreferenced storage objects
 
 ## Pages
 
@@ -74,10 +100,11 @@ Conventions:
 Hooks own state + logic，components 只負責 UI render。
 
 - `useAutoSave` — debounce save + navigation guard
-- `useContentEditor` — generic editor CRUD（state, save, publish, delete）with built-in useAutoSave
+- `useContentEditor` — generic editor CRUD；accepts `onAfterSave`,
+  `onAfterPublish`, `onAfterRemove` callbacks for cache invalidation
 - `useImageUpload` — single image upload with file ref + loading state
-- `useCrudList` — admin list with fetch, create, delete（支援 `initialItems` skip mount fetch）
-- `useDialogForm` — dialog-driven create/update/delete with form state
+- `useCrudList` — admin list CRUD + reorder；accepts `onAfterMutation`
+- `useDialogForm` — dialog-driven CRUD；accepts `onAfterSave`, `onAfterRemove`
 - `useProfileEditor` — profile field save, links, external results CRUD
 - `useEventActions` — event detail: create content, toggle pins
 
@@ -86,6 +113,8 @@ Conventions:
 - Callback props（`uploadFn`, `onBeforeSave` 等）用 `useRef` 穩定（同 `useAutoSave` 的 `onSaveRef` 模式）
 - All CRUD operations must show `toast.error` on failure
 - Edit pages 接收 server-passed `initialData`（page.tsx fetch → client props），不做 client-side fetch
+- Wire mutations to cache tags via the `onAfter*` callbacks; see
+  `docs/isr-pattern.md` for the tag inventory
 
 ## Editor
 
