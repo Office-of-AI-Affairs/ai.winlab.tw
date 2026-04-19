@@ -16,6 +16,8 @@ type Options<T extends Record<string, unknown>> = {
   statusField?: keyof T & string;
   onBeforeSave?: () => Promise<boolean>;
   onAfterSave?: () => void;
+  onAfterPublish?: () => void | Promise<void>;
+  onAfterRemove?: () => void | Promise<void>;
 };
 
 export function useContentEditor<T extends Record<string, unknown>>({
@@ -28,6 +30,8 @@ export function useContentEditor<T extends Record<string, unknown>>({
   statusField = "status" as keyof T & string,
   onBeforeSave,
   onAfterSave,
+  onAfterPublish,
+  onAfterRemove,
 }: Options<T>) {
   const router = useRouter();
   const supabaseRef = useRef(createClient());
@@ -40,8 +44,12 @@ export function useContentEditor<T extends Record<string, unknown>>({
 
   const onBeforeSaveRef = useRef(onBeforeSave);
   const onAfterSaveRef = useRef(onAfterSave);
+  const onAfterPublishRef = useRef(onAfterPublish);
+  const onAfterRemoveRef = useRef(onAfterRemove);
   useEffect(() => { onBeforeSaveRef.current = onBeforeSave; }, [onBeforeSave]);
   useEffect(() => { onAfterSaveRef.current = onAfterSave; }, [onAfterSave]);
+  useEffect(() => { onAfterPublishRef.current = onAfterPublish; }, [onAfterPublish]);
+  useEffect(() => { onAfterRemoveRef.current = onAfterRemove; }, [onAfterRemove]);
 
   const hasChanges = fields.some((f) => {
     const a = data[f];
@@ -63,7 +71,7 @@ export function useContentEditor<T extends Record<string, unknown>>({
       toast.error("儲存失敗");
     } else {
       setSavedData({ ...data });
-      onAfterSaveRef.current?.();
+      await onAfterSaveRef.current?.();
     }
     setIsSaving(false);
   }, [data, fields, id, table]);
@@ -87,6 +95,7 @@ export function useContentEditor<T extends Record<string, unknown>>({
       setData(updated);
       setSavedData(updated);
       toast.success(newStatus === "published" ? "已發布" : "已取消發布");
+      await onAfterPublishRef.current?.();
     }
     setIsPublishing(false);
   }, [data, fields, id, publishable, statusField, table]);
@@ -100,6 +109,7 @@ export function useContentEditor<T extends Record<string, unknown>>({
       setIsDeleting(false);
       return;
     }
+    await onAfterRemoveRef.current?.();
     router.push(redirectTo);
   }, [id, redirectTo, router, table]);
 
