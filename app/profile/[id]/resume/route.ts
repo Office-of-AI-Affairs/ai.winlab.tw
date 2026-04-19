@@ -8,7 +8,6 @@ export async function GET(
   const { id } = await params;
   const supabase = await createClient();
 
-  // Auth check: only authenticated users can view resumes
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -30,24 +29,14 @@ export async function GET(
     redirect(`/profile/${id}`);
   }
 
-  // SSRF protection: only allow fetching from our Supabase storage origin
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (supabaseUrl) {
-    try {
-      const resumeUrl = new URL(profile.resume);
-      const storageOrigin = new URL(supabaseUrl).origin;
-      if (resumeUrl.origin !== storageOrigin) {
-        redirect(`/profile/${id}`);
-      }
-    } catch {
-      redirect(`/profile/${id}`);
-    }
-  }
+  const path = profile.resume;
 
-  const res = await fetch(profile.resume);
+  const { data: blob, error: downloadError } = await supabase.storage
+    .from("resumes")
+    .download(path);
 
-  if (!res.ok) {
-    console.error(`Resume route: upstream fetch failed with status ${res.status} for profile ${id}`);
+  if (downloadError || !blob) {
+    console.error(`Resume route: download failed for profile ${id}:`, downloadError);
     redirect(`/profile/${id}`);
   }
 
@@ -55,7 +44,7 @@ export async function GET(
     ? `${profile.display_name}-resume.pdf`
     : "resume.pdf";
 
-  return new Response(res.body, {
+  return new Response(blob, {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `inline; filename="${encodeURIComponent(filename)}"`,

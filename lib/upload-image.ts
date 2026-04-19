@@ -55,21 +55,26 @@ export const uploadOrganizationImage = (file: File) => uploadImage(file, "organi
 export const uploadExternalResultImage = (file: File) => uploadImage(file, "external-results/");
 
 const PDF_MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+const RESUME_BUCKET = "resumes";
 
 export async function uploadResumePdf(
   file: File,
-): Promise<{ url: string } | { error: string }> {
+  userId: string,
+): Promise<{ path: string } | { error: string }> {
   if (file.type !== "application/pdf") {
     return { error: "僅支援 PDF 格式" };
   }
   if (file.size > PDF_MAX_SIZE_BYTES) {
     return { error: "檔案大小不可超過 10MB" };
   }
+  if (!userId) {
+    return { error: "尚未登入，無法上傳履歷" };
+  }
 
   const supabase = createClient();
-  const path = `resumes/${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
+  const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
 
-  const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
+  const { error } = await supabase.storage.from(RESUME_BUCKET).upload(path, file, {
     cacheControl: "3600",
     upsert: false,
     contentType: "application/pdf",
@@ -80,9 +85,5 @@ export async function uploadResumePdf(
     return { error: error.message };
   }
 
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from(BUCKET).getPublicUrl(path);
-
-  return { url: publicUrl };
+  return { path };
 }

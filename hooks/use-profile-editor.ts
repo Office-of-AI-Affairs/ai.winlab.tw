@@ -139,13 +139,13 @@ export function useProfileEditor({
       if (!file || !userId) return;
       setUploadingResume(true);
       e.target.value = "";
-      const result = await uploadResumePdf(file);
+      const result = await uploadResumePdf(file, userId);
       if ("error" in result) {
         toast.error(result.error);
         setUploadingResume(false);
         return;
       }
-      await saveField("resume", result.url);
+      await saveField("resume", result.path);
       setUploadingResume(false);
     },
     [saveField, userId],
