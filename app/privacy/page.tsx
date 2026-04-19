@@ -1,8 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { formatDate } from "@/lib/date";
 import { JsonLd } from "@/components/json-ld";
 import { renderRichTextHtml, richTextDocumentClassName } from "@/lib/ui/rich-text";
 import type { Metadata } from "next";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "隱私權政策｜人工智慧專責辦公室",
@@ -18,7 +20,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PrivacyPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data } = await supabase
     .from("privacy_policy")

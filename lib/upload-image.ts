@@ -1,10 +1,19 @@
 import { createClient } from "@/lib/supabase/client";
+import imageCompression from "browser-image-compression";
 
 const BUCKET = "announcement-images";
 
 const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB input
+const GIF_MIME = "image/gif";
 
-const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+const COMPRESSION_OPTIONS = {
+  maxSizeMB: 0.5,
+  maxWidthOrHeight: 1920,
+  useWebWorker: true,
+  fileType: "image/webp" as const,
+  initialQuality: 0.8,
+};
 
 function isImageFile(file: File): boolean {
   return IMAGE_MIME_TYPES.includes(file.type);
@@ -12,6 +21,18 @@ function isImageFile(file: File): boolean {
 
 function isWithinSizeLimit(file: File): boolean {
   return file.size <= MAX_SIZE_BYTES;
+}
+
+async function compressIfNeeded(file: File): Promise<File> {
+  // GIF 動畫壓縮會丟幀，跳過
+  if (file.type === GIF_MIME) return file;
+  try {
+    const compressed = await imageCompression(file, COMPRESSION_OPTIONS);
+    return compressed.size < file.size ? compressed : file;
+  } catch (err) {
+    console.warn("Image compression failed, using original:", err);
+    return file;
+  }
 }
 
 export async function uploadImage(
@@ -22,16 +43,21 @@ export async function uploadImage(
     return { error: "不支援的圖片格式，請使用 JPEG、PNG、GIF 或 WebP" };
   }
   if (!isWithinSizeLimit(file)) {
-    return { error: "圖片大小不可超過 5MB" };
+    return { error: "圖片大小不可超過 10MB" };
   }
 
+  const processed = await compressIfNeeded(file);
   const supabase = createClient();
-  const ext = file.name.split(".").pop() || "jpg";
+  const ext =
+    processed.type === "image/webp"
+      ? "webp"
+      : file.name.split(".").pop() || "jpg";
   const path = `${prefix}${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-  const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
-    cacheControl: "3600",
+  const { error } = await supabase.storage.from(BUCKET).upload(path, processed, {
+    cacheControl: "31536000",
     upsert: false,
+    contentType: processed.type,
   });
 
   if (error) {
