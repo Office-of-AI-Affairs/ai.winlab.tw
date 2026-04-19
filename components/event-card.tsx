@@ -10,10 +10,13 @@ import Image from "next/image";
 export function EventCard({
   item,
   compact,
+  priority,
 }: {
   item: Event;
   compact?: boolean;
+  priority?: boolean;
 }) {
+  const sizes = "(max-width: 1024px) 100vw, 576px";
   return (
     <Block className="overflow-hidden flex flex-col lg:grid lg:grid-cols-2 gap-4">
       <div className="-mx-6 -mt-6 lg:hidden">
@@ -22,6 +25,9 @@ export function EventCard({
             src={resolveImageSrc(item.cover_image)}
             alt={item.name}
             fill
+            sizes={sizes}
+            priority={priority}
+            loading={priority ? "eager" : "lazy"}
             className="object-cover"
             unoptimized={isExternalImage(item.cover_image)}
           />
@@ -41,6 +47,9 @@ export function EventCard({
             src={resolveImageSrc(item.cover_image)}
             alt={item.name}
             fill
+            sizes={sizes}
+            priority={priority}
+            loading={priority ? "eager" : "lazy"}
             className="object-cover"
             unoptimized={isExternalImage(item.cover_image)}
           />

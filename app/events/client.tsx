@@ -66,9 +66,9 @@ export function EventsPageClient({
             <div className="text-center py-12 text-muted-foreground">目前沒有活動</div>
           ) : (
             <div className="grid gap-4">
-              {events.map((item) => (
+              {events.map((item, index) => (
                 <Link href={`/events/${item.slug}`} key={item.id} className="h-full">
-                  <EventCard item={item} compact />
+                  <EventCard item={item} compact priority={index === 0} />
                 </Link>
               ))}
             </div>

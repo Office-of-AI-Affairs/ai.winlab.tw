@@ -11,9 +11,10 @@ import {
 import { AppLink } from "@/components/app-link";
 import { useAuth } from "@/components/auth-provider";
 import type { CarouselSlide } from "@/lib/supabase/types";
-import { resolveImageSrc } from "@/lib/utils";
+import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import Autoplay from "embla-carousel-autoplay";
 import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import * as React from "react";
 
@@ -74,12 +75,22 @@ export function CarouselClient({
         opts={{ loop: true }}
       >
         <CarouselContent className="ml-0">
-          {slides.map((slide) => {
+          {slides.map((slide, index) => {
+            // First slide is the LCP candidate on the homepage, so it
+            // renders with priority + eager loading to beat the carousel JS.
+            const isLead = index === 0;
+            const imageSrc = resolveImageSrc(slide.image);
             const slideContent = (
               <>
-                <div
-                  className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-muted"
-                  style={{ backgroundImage: `url(${resolveImageSrc(slide.image)})` }}
+                <Image
+                  src={imageSrc}
+                  alt={slide.title}
+                  fill
+                  priority={isLead}
+                  loading={isLead ? "eager" : "lazy"}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 80vw, 1152px"
+                  unoptimized={isExternalImage(slide.image) && !imageSrc.includes("/announcement-images/")}
+                  className="object-cover"
                 />
                 <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-black/60 to-transparent" />
                 <div className="absolute inset-0 flex flex-col items-center justify-end text-white px-4 md:px-8 pb-12 md:pb-16 pointer-events-none">

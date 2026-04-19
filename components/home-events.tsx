@@ -13,9 +13,9 @@ export async function HomeEvents() {
         <div className="text-center py-8 text-muted-foreground">目前沒有活動</div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {events.map((item) => (
+          {events.map((item, index) => (
             <Link href={`/events/${item.slug}`} key={item.id} className="h-full">
-              <EventCard item={item} />
+              <EventCard item={item} priority={index === 0} />
             </Link>
           ))}
         </div>

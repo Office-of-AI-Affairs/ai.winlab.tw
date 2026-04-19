@@ -178,7 +178,9 @@ export function OrgChart({ activeTab = "core" }: { activeTab?: ActiveTab }) {
       {/* ── Desktop (md+): SVG org chart with horizontal scroll fallback ── */}
       <div className="hidden md:block overflow-x-auto px-6 pb-8">
         <div className="min-w-[780px]">
-          <div ref={containerRef} className="relative">
+          {/* Reserve vertical space so the lines drawing after mount
+              don't push surrounding content around (CLS). */}
+          <div ref={containerRef} className="relative min-h-[360px]">
             <svg
               className="absolute inset-0 pointer-events-none"
               style={{ overflow: "visible" }}
@@ -248,7 +250,7 @@ export function OrgChart({ activeTab = "core" }: { activeTab?: ActiveTab }) {
       </div>
 
       {/* ── Mobile (<md): simple stacked layout, no SVG ── */}
-      <div className="md:hidden px-4 pb-6 flex flex-col gap-3">
+      <div className="md:hidden px-4 pb-6 flex flex-col gap-3 min-h-[420px]">
         {/* Row 1: 主任 */}
         <div className="flex justify-center">
           <OrgNode title="主任" person="曾建超教授" sub="資訊學院" className="w-48" highlighted={activeTab === "core"} />
