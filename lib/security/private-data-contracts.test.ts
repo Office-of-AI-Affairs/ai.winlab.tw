@@ -20,6 +20,7 @@ const publicTeamsMigration = readFileSync(
 const profilePage = readFileSync(resolve(process.cwd(), "app/profile/[id]/page.tsx"), "utf8")
 const profileLayout = readFileSync(resolve(process.cwd(), "app/profile/[id]/layout.tsx"), "utf8")
 const eventPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/page.tsx"), "utf8")
+const eventData = readFileSync(resolve(process.cwd(), "app/events/[slug]/data.ts"), "utf8")
 const eventResultPage = readFileSync(
   resolve(process.cwd(), "app/events/[slug]/results/[id]/page.tsx"),
   "utf8"
@@ -56,11 +57,13 @@ describe("private data contracts", () => {
   test("public profile reads no longer query private profile rows", () => {
     assert.ok(profilePage.includes('.from("public_profiles")'))
     assert.ok(profileLayout.includes('.from("public_profiles")'))
-    assert.ok(eventPage.includes('.from("public_profiles")'))
+    // The /events/[slug] page moved its data fetches into data.ts for ISR.
+    // Contract still holds: public reads must hit public_profiles/teams.
+    assert.ok(eventData.includes('.from("public_profiles")'))
     assert.ok(eventResultPage.includes('.from("public_profiles")'))
-    assert.ok(eventPage.includes('.from("public_teams")'))
+    assert.ok(eventData.includes('.from("public_teams")'))
     assert.ok(eventResultPage.includes('.from("public_teams")'))
-    assert.ok(!eventPage.includes('.from("teams")'))
+    assert.ok(!eventData.includes('.from("teams")'))
     assert.ok(!eventResultPage.includes('.from("teams")'))
   })
 

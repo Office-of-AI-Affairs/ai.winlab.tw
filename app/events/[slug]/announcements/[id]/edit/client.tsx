@@ -5,6 +5,7 @@ import { TiptapEditor } from "@/components/tiptap-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { revalidateAllEventCaches } from "@/app/events/actions";
 import type { Announcement } from "@/lib/supabase/types";
 import { useContentEditor } from "@/hooks/use-content-editor";
 import { ArrowLeft, Check, Loader2, Save, Send, Trash2 } from "lucide-react";
@@ -29,6 +30,9 @@ export function EventAnnouncementEditClient({ id, slug, initialAnnouncement }: P
     initialData: initialAnnouncement,
     fields: ["title", "category", "date", "content"],
     redirectTo: `/events/${slug}?tab=announcements`,
+    onAfterSave: revalidateAllEventCaches,
+    onAfterPublish: revalidateAllEventCaches,
+    onAfterRemove: revalidateAllEventCaches,
   });
 
   return (

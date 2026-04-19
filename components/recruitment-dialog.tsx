@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { revalidateAllEventCaches } from "@/app/events/actions";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth-provider";
 import { normalizeApplicationMethod } from "@/lib/recruitment-application-method";
@@ -346,6 +347,7 @@ export function RecruitmentDialog({
     } else {
       toast.success(recruitment ? "已更新" : "已建立");
       onOpenChange(false);
+      await revalidateAllEventCaches();
       router.refresh();
     }
   }
@@ -364,6 +366,7 @@ export function RecruitmentDialog({
     } else {
       toast.success("已刪除");
       onOpenChange(false);
+      await revalidateAllEventCaches();
       router.refresh();
     }
   }

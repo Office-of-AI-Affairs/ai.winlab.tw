@@ -70,7 +70,7 @@ describe("server admin page contracts", () => {
     // (see "statically cached public pages" test below). Anything still
     // branching on role server-side must keep using getViewer().
     assert.ok(existsSync(resolve(process.cwd(), "lib/supabase/get-viewer.ts")))
-    for (const content of [eventDetailPage, settingsPage]) {
+    for (const content of [settingsPage]) {
       assert.ok(content.includes('from "@/lib/supabase/get-viewer"'))
       assert.ok(content.includes("getViewer(") || content.includes("await getViewer("))
       assert.ok(!content.includes('.from("profiles").select("role")'))

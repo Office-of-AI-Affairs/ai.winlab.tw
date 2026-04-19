@@ -1,6 +1,7 @@
 "use client";
 
 import { AppLink } from "@/components/app-link";
+import { useAuth } from "@/components/auth-provider";
 import { MemberEditor } from "@/components/member-editor";
 import { RecruitmentCard } from "@/components/recruitment-card";
 import { RecruitmentDialog } from "@/components/recruitment-dialog";
@@ -11,12 +12,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useEventActions } from "@/hooks/use-event-actions";
 import { formatDate } from "@/lib/date";
-import type { Announcement, Event, Recruitment } from "@/lib/supabase/types";
+import { createClient } from "@/lib/supabase/client";
+import { isEventVendor } from "@/lib/supabase/check-event-vendor";
+import { composeRecruitment } from "@/lib/recruitment-records";
+import type {
+  Announcement,
+  Event,
+  Recruitment,
+  RecruitmentPrivateDetails,
+  Result,
+} from "@/lib/supabase/types";
+import type { EventMember } from "./data";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Loader2, Pencil, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Tab = "announcements" | "results" | "recruitment" | "members";
 
@@ -30,34 +41,171 @@ const MEMBERS_TAB: { value: Tab; label: string } = { value: "members", label: "�
 
 const tabParser = parseAsStringLiteral(["announcements", "results", "recruitment", "members"] as const).withDefault("results");
 
+function sortAnnouncements(list: Announcement[]): Announcement[] {
+  return [...list].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+}
+
+function sortResults<T extends { pinned: boolean; created_at: string }>(list: T[]): T[] {
+  return [...list].sort((a, b) => {
+    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+    return a.created_at < b.created_at ? -1 : 1;
+  });
+}
+
 export function EventDetailClient({
   event,
   slug,
-  isAdmin,
-  isEventVendor,
-  userId,
-  announcements,
-  results,
-  recruitments,
-  members,
+  publishedAnnouncements,
+  publishedResults,
+  publishedRecruitments,
+  initialMembers,
 }: {
   event: Event;
   slug: string;
-  isAdmin: boolean;
-  isEventVendor: boolean;
-  userId: string | null;
-  announcements: Announcement[];
-  results: ResultWithMeta[];
-  recruitments: Recruitment[];
-  members: { id: string; display_name: string | null; avatar_url: string | null; hasProfileData: boolean }[];
+  publishedAnnouncements: Announcement[];
+  publishedResults: ResultWithMeta[];
+  publishedRecruitments: Recruitment[];
+  initialMembers: EventMember[];
 }) {
+  const { user, isAdmin } = useAuth();
+  const userId = user?.id ?? null;
+  const supabaseRef = useRef(createClient());
   const [tab, setTab] = useQueryState("tab", tabParser);
   const { isCreating, createAnnouncement, togglePin } = useEventActions(event.id, slug, userId);
 
-  const [currentMembers, setCurrentMembers] = useState(members);
+  const [currentMembers, setCurrentMembers] = useState(initialMembers);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingRecruitment, setEditingRecruitment] = useState<Recruitment | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
+
+  const [draftAnnouncements, setDraftAnnouncements] = useState<Announcement[]>([]);
+  const [draftResults, setDraftResults] = useState<ResultWithMeta[]>([]);
+  const [privateDetails, setPrivateDetails] = useState<Map<string, RecruitmentPrivateDetails> | null>(null);
+  const [isVendor, setIsVendor] = useState(false);
+
+  // Admin / owner drafts for announcements. RLS filters: admin sees all,
+  // author sees their own.
+  useEffect(() => {
+    if (!userId) { setDraftAnnouncements([]); return; }
+    let cancelled = false;
+    (async () => {
+      const query = supabaseRef.current
+        .from("announcements")
+        .select("*")
+        .eq("event_id", event.id)
+        .eq("status", "draft");
+      if (!isAdmin) query.eq("author_id", userId);
+      const { data } = await query.order("date", { ascending: false });
+      if (!cancelled) setDraftAnnouncements((data as Announcement[] | null) ?? []);
+    })();
+    return () => { cancelled = true; };
+  }, [event.id, isAdmin, userId]);
+
+  // Admin / owner drafts for results.
+  useEffect(() => {
+    if (!userId) { setDraftResults([]); return; }
+    let cancelled = false;
+    (async () => {
+      const query = supabaseRef.current
+        .from("results")
+        .select("*")
+        .eq("event_id", event.id)
+        .eq("status", "draft");
+      if (!isAdmin) query.eq("author_id", userId);
+      const { data: rawDrafts } = await query;
+      const drafts = (rawDrafts as Result[] | null) ?? [];
+      if (drafts.length === 0) { if (!cancelled) setDraftResults([]); return; }
+
+      const authorIds = [...new Set(drafts.map((r) => r.author_id).filter(Boolean))] as string[];
+      const teamIds = [...new Set(drafts.map((r) => r.team_id).filter(Boolean))] as string[];
+      const [{ data: authors }, { data: teams }, { data: coauthorRows }] = await Promise.all([
+        authorIds.length
+          ? supabaseRef.current.from("public_profiles").select("id, display_name").in("id", authorIds)
+          : Promise.resolve({ data: [] as { id: string; display_name: string | null }[] }),
+        teamIds.length
+          ? supabaseRef.current.from("public_teams").select("id, name").in("id", teamIds)
+          : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+        supabaseRef.current
+          .from("result_coauthors")
+          .select("result_id, user_id")
+          .in("result_id", drafts.map((r) => r.id)),
+      ]);
+      const profileMap = Object.fromEntries(
+        ((authors as { id: string; display_name: string | null }[] | null) ?? []).map((p) => [p.id, p.display_name]),
+      );
+      const teamMap = Object.fromEntries(
+        ((teams as { id: string; name: string }[] | null) ?? []).map((t) => [t.id, t.name]),
+      );
+      const coauthorsByResult = new Map<string, { id: string; name: string }[]>();
+      const coauthorUserIds = [...new Set(((coauthorRows as { user_id: string }[] | null) ?? []).map((r) => r.user_id))];
+      if (coauthorUserIds.length) {
+        const { data: coProfiles } = await supabaseRef.current
+          .from("public_profiles")
+          .select("id, display_name")
+          .in("id", coauthorUserIds);
+        for (const p of ((coProfiles as { id: string; display_name: string | null }[] | null) ?? [])) {
+          if (!profileMap[p.id]) profileMap[p.id] = p.display_name;
+        }
+      }
+      for (const row of (coauthorRows as { result_id: string; user_id: string }[] | null) ?? []) {
+        const list = coauthorsByResult.get(row.result_id) ?? [];
+        list.push({ id: row.user_id, name: profileMap[row.user_id] ?? "未知使用者" });
+        coauthorsByResult.set(row.result_id, list);
+      }
+      const composed: ResultWithMeta[] = drafts.map((r) => ({
+        ...r,
+        author_name: r.author_id ? profileMap[r.author_id] ?? null : null,
+        team_name: r.team_id ? teamMap[r.team_id] ?? null : null,
+        coauthors: coauthorsByResult.get(r.id) ?? [],
+      }));
+      if (!cancelled) setDraftResults(composed);
+    })();
+    return () => { cancelled = true; };
+  }, [event.id, isAdmin, userId]);
+
+  // Recruitment private details (admins only).
+  useEffect(() => {
+    if (!isAdmin || publishedRecruitments.length === 0) { setPrivateDetails(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabaseRef.current
+        .from("competition_private_details")
+        .select("competition_id, created_at, updated_at, positions, application_method, contact, required_documents")
+        .in("competition_id", publishedRecruitments.map((r) => r.id));
+      if (cancelled) return;
+      const map = new Map<string, RecruitmentPrivateDetails>();
+      for (const row of ((data as RecruitmentPrivateDetails[] | null) ?? [])) {
+        map.set(row.competition_id, row);
+      }
+      setPrivateDetails(map);
+    })();
+    return () => { cancelled = true; };
+  }, [isAdmin, publishedRecruitments]);
+
+  useEffect(() => {
+    if (!userId || isAdmin) { setIsVendor(false); return; }
+    let cancelled = false;
+    (async () => {
+      const vendor = await isEventVendor(supabaseRef.current, userId, event.id);
+      if (!cancelled) setIsVendor(vendor);
+    })();
+    return () => { cancelled = true; };
+  }, [event.id, isAdmin, userId]);
+
+  const announcements = useMemo(
+    () => (draftAnnouncements.length > 0 ? sortAnnouncements([...draftAnnouncements, ...publishedAnnouncements]) : publishedAnnouncements),
+    [draftAnnouncements, publishedAnnouncements],
+  );
+  const results = useMemo(
+    () => (draftResults.length > 0 ? sortResults([...draftResults, ...publishedResults]) : publishedResults),
+    [draftResults, publishedResults],
+  );
+  const recruitments = useMemo(() => {
+    if (!privateDetails || privateDetails.size === 0) return publishedRecruitments;
+    return publishedRecruitments.map((item) =>
+      composeRecruitment(item, privateDetails.get(item.id) ?? null),
+    );
+  }, [publishedRecruitments, privateDetails]);
 
   const openCreateSheet = () => { setEditingRecruitment(null); setSheetOpen(true); };
   const openEditSheet = (r: Recruitment) => { setEditingRecruitment(r); setSheetOpen(true); };
@@ -78,7 +226,6 @@ export function EventDetailClient({
       </Link>
 
       <div className="flex flex-col gap-4">
-
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3">
@@ -196,7 +343,7 @@ export function EventDetailClient({
 
       {tab === "recruitment" && (
         <div className="flex flex-col gap-6">
-          {(isAdmin || isEventVendor) && (
+          {(isAdmin || isVendor) && (
             <div className="flex justify-end">
               <Button variant="secondary" onClick={openCreateSheet}>
                 <Plus className="w-4 h-4" />
@@ -215,7 +362,7 @@ export function EventDetailClient({
                   href={`/events/${slug}/recruitment/${item.id}`}
                   isAdmin={isAdmin}
                   onPinToggle={isAdmin ? (id, pinned) => togglePin("competitions", id, pinned) : undefined}
-                  onEdit={(isAdmin || (isEventVendor && item.created_by === userId)) ? () => openEditSheet(item) : undefined}
+                  onEdit={(isAdmin || (isVendor && item.created_by === userId)) ? () => openEditSheet(item) : undefined}
                 />
               ))}
             </div>

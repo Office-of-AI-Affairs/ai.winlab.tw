@@ -1,5 +1,20 @@
-import { createClient } from "@/lib/supabase/server";
+import { unstable_cache } from "next/cache";
+import { createPublicClient } from "@/lib/supabase/public";
 import type { Metadata } from "next";
+
+const getEventMeta = unstable_cache(
+  async (slug: string) => {
+    const supabase = createPublicClient();
+    const { data } = await supabase
+      .from("events")
+      .select("name, description, cover_image")
+      .eq("slug", slug)
+      .maybeSingle();
+    return data as { name: string; description: string | null; cover_image: string | null } | null;
+  },
+  ["event-meta"],
+  { tags: ["events-published"], revalidate: 3600 },
+);
 
 export async function generateMetadata({
   params,
@@ -7,12 +22,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("events")
-    .select("name, description, cover_image")
-    .eq("slug", slug)
-    .single();
+  const data = await getEventMeta(slug);
 
   const name = data?.name ?? "活動";
   const description = data?.description ?? `${name} — 國立陽明交通大學人工智慧專責辦公室`;

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import type { PublicProfile, Result } from "@/lib/supabase/types";
 import { uploadResultImage } from "@/lib/upload-image";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
+import { revalidateAllEventCaches } from "@/app/events/actions";
 import { useContentEditor } from "@/hooks/use-content-editor";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import {
@@ -47,6 +48,9 @@ export default function EventResultEditPage({
     initialData: initialResult,
     fields: ["title", "summary", "header_image", "content"],
     redirectTo: `/events/${slug}?tab=results`,
+    onAfterSave: revalidateAllEventCaches,
+    onAfterPublish: revalidateAllEventCaches,
+    onAfterRemove: revalidateAllEventCaches,
   });
 
   const { isUploading: isUploadingImage, fileInputRef, triggerFileInput, handleFileChange } = useImageUpload(uploadResultImage);

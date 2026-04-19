@@ -125,13 +125,13 @@ describe("global UI patterns", () => {
   })
 
   test("lightweight auth-aware client components do not depend on useAuth when server props can provide the same state", () => {
-    // Components excluded below now live under statically rendered pages, so
-    // they must hydrate admin state via useAuth on the client instead of via
-    // props: introductionEditButton (/introduction), eventsCreateButton
-    // (/events), carouselClient + contactsEditButton (/).
-    for (const content of [
-      eventDetailClient,
-    ]) {
+    // Every lightweight client component that used to receive isAdmin / userId
+    // as a prop now hydrates admin state via useAuth because the page it lives
+    // in is statically rendered. Kept empty to preserve the intent: new client
+    // components under dynamic pages should continue to receive auth via props
+    // (we'll re-introduce entries here as those surfaces appear).
+    const authAwareButShouldUseProps: string[] = []
+    for (const content of authAwareButShouldUseProps) {
       assert.ok(!content.includes('from "@/components/auth-provider"'))
       assert.ok(!content.includes("useAuth("))
     }

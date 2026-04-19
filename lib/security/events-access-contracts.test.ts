@@ -7,6 +7,8 @@ const eventsPage = readFileSync(resolve(process.cwd(), "app/events/page.tsx"), "
 const eventsData = readFileSync(resolve(process.cwd(), "app/events/data.ts"), "utf8")
 const eventsClient = readFileSync(resolve(process.cwd(), "app/events/client.tsx"), "utf8")
 const eventDetailPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/page.tsx"), "utf8")
+const eventDetailData = readFileSync(resolve(process.cwd(), "app/events/[slug]/data.ts"), "utf8")
+const eventDetailClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/client.tsx"), "utf8")
 
 describe("events access contracts", () => {
   test("events index restricts drafts to admins", () => {
@@ -23,8 +25,14 @@ describe("events access contracts", () => {
   })
 
   test("event detail restricts event draft visibility to admins", () => {
-    assert.ok(eventDetailPage.includes("if (!isAdmin) eventQuery.eq"))
-    assert.ok(eventDetailPage.includes('eventQuery.eq("status", "published")'))
-    assert.ok(!eventDetailPage.includes("if (!user) eventQuery.eq"))
+    // Same pattern as /events: the cached fetcher hard-filters to published
+    // events, so draft slugs render the not-found client for everyone. Admins
+    // get a "go to editor" button there; authenticated users merge their own
+    // draft announcements/results client-side under useAuth + RLS.
+    assert.ok(eventDetailData.includes('.eq("status", "published")'))
+    assert.ok(eventDetailPage.includes("getEventPageData"))
+    assert.ok(!eventDetailPage.includes("getViewer"))
+    assert.ok(eventDetailClient.includes('useAuth()'))
+    assert.ok(eventDetailClient.includes('.eq("status", "draft")'))
   })
 })
