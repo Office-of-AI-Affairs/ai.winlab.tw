@@ -57,7 +57,9 @@ export default async function EventAnnouncementDetailPage({
 
   if (error || !announcement) notFound();
 
-  const contentHtml = renderRichTextHtml(announcement.content) ?? "<p>（無內容）</p>";
+  const contentHtml =
+    renderRichTextHtml(announcement.content as Record<string, unknown> | null) ??
+    "<p>（無內容）</p>";
 
   const structuredData = {
     "@context": "https://schema.org",

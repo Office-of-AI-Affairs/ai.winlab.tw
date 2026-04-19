@@ -2,12 +2,19 @@
 
 import { useAutoSave } from "@/hooks/use-auto-save";
 import { createClient } from "@/lib/supabase/client";
+import type { Database } from "@/lib/supabase/database.types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-type Options<T extends Record<string, unknown>> = {
-  table: string;
+// Generic hook over any table — the caller types the table name via N, but
+// the internal query chain is loosely typed on purpose because Supabase's
+// conditional types don't resolve safely under a still-generic N.
+type TableName = keyof Database["public"]["Tables"];
+
+type Options<T extends Record<string, unknown>, N extends TableName> = {
+  table: N;
   id: string;
   initialData: T;
   fields: (keyof T & string)[];
@@ -20,7 +27,7 @@ type Options<T extends Record<string, unknown>> = {
   onAfterRemove?: () => void | Promise<void>;
 };
 
-export function useContentEditor<T extends Record<string, unknown>>({
+export function useContentEditor<T extends Record<string, unknown>, N extends TableName = TableName>({
   table,
   id,
   initialData,
@@ -32,9 +39,9 @@ export function useContentEditor<T extends Record<string, unknown>>({
   onAfterSave,
   onAfterPublish,
   onAfterRemove,
-}: Options<T>) {
+}: Options<T, N>) {
   const router = useRouter();
-  const supabaseRef = useRef(createClient());
+  const supabaseRef = useRef(createClient() as unknown as SupabaseClient);
 
   const [data, setData] = useState<T>(initialData);
   const [savedData, setSavedData] = useState<T>(initialData);

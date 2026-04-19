@@ -24,11 +24,13 @@ import {
 } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
 
+export type ProfileRole = "admin" | "user" | "vendor";
+
 export type UserRow = {
   id: string;
   email: string;
   display_name: string | null;
-  role: string;
+  role: ProfileRole;
   created_at: string;
 };
 
@@ -70,7 +72,7 @@ function UserEditForm({
   onSaved: () => void;
   onClose: () => void;
 }) {
-  const [role, setRole] = useState(user.role);
+  const [role, setRole] = useState<ProfileRole>(user.role);
   const [eventIds, setEventIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [vendorEventsLoaded, setVendorEventsLoaded] = useState(user.role !== "vendor");
@@ -187,7 +189,7 @@ function UserEditForm({
           <Label htmlFor="role-select" className="text-sm font-medium">
             角色
           </Label>
-          <Select value={role} onValueChange={setRole}>
+          <Select value={role} onValueChange={(v) => setRole(v as ProfileRole)}>
             <SelectTrigger id="role-select" className="w-full">
               <SelectValue />
             </SelectTrigger>

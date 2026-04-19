@@ -45,7 +45,7 @@ export default function PrivacyEditPage({
     if (!hasChanges) return;
     setIsSaving(true);
     const { error } = await supabase.from("privacy_policy").insert({
-      content,
+      content: content as never,
       version: latestVersion + 1,
       note: note.trim() || null,
       created_by: initialUserId,

@@ -29,7 +29,9 @@ export default async function PrivacyPage() {
     .limit(1)
     .maybeSingle();
 
-  const contentHtml = renderRichTextHtml(data?.content);
+  const contentHtml = renderRichTextHtml(
+    data?.content as Record<string, unknown> | null | undefined,
+  );
 
   const updatedAt = data?.created_at
     ? formatDate(data.created_at, "long")

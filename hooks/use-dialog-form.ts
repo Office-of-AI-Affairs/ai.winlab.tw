@@ -1,12 +1,17 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import type { Database } from "@/lib/supabase/database.types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-type Options<T extends Record<string, unknown>> = {
-  table: string;
+// See use-content-editor.ts for why the internal client is cast loose.
+type TableName = keyof Database["public"]["Tables"];
+
+type Options<T extends Record<string, unknown>, N extends TableName> = {
+  table: N;
   editingId: string | null;
   getDefaults: () => T;
   buildPayload: (form: T) => Record<string, unknown>;
@@ -16,7 +21,7 @@ type Options<T extends Record<string, unknown>> = {
   onAfterRemove?: () => void | Promise<void>;
 };
 
-export function useDialogForm<T extends Record<string, unknown>>({
+export function useDialogForm<T extends Record<string, unknown>, N extends TableName = TableName>({
   table,
   editingId,
   getDefaults,
@@ -25,9 +30,9 @@ export function useDialogForm<T extends Record<string, unknown>>({
   onClose,
   onAfterSave,
   onAfterRemove,
-}: Options<T>) {
+}: Options<T, N>) {
   const router = useRouter();
-  const supabaseRef = useRef(createClient());
+  const supabaseRef = useRef(createClient() as unknown as SupabaseClient);
   const getDefaultsRef = useRef(getDefaults);
   const buildPayloadRef = useRef(buildPayload);
   const validateRef = useRef(validate);

@@ -1,11 +1,16 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import type { Database } from "@/lib/supabase/database.types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-type Options<T> = {
-  table: string;
+// See use-content-editor.ts for why the internal client is cast loose.
+type TableName = keyof Database["public"]["Tables"];
+
+type Options<T, N extends TableName> = {
+  table: N;
   orderBy: string;
   ascending?: boolean;
   initialItems?: T[];
@@ -13,15 +18,15 @@ type Options<T> = {
   onAfterMutation?: () => void | Promise<void>;
 };
 
-export function useCrudList<T extends { id: string }>({
+export function useCrudList<T extends { id: string }, N extends TableName = TableName>({
   table,
   orderBy,
   ascending = true,
   initialItems,
   onCreated,
   onAfterMutation,
-}: Options<T>) {
-  const supabaseRef = useRef(createClient());
+}: Options<T, N>) {
+  const supabaseRef = useRef(createClient() as unknown as SupabaseClient);
   const onCreatedRef = useRef(onCreated);
   const onAfterMutationRef = useRef(onAfterMutation);
   useEffect(() => { onCreatedRef.current = onCreated; }, [onCreated]);
@@ -36,7 +41,7 @@ export function useCrudList<T extends { id: string }>({
     if (initialItems) return;
     async function fetch() {
       const { data } = await supabaseRef.current.from(table).select("*").order(orderBy, { ascending });
-      setItems((data as T[]) ?? []);
+      setItems((data as T[] | null) ?? []);
       setIsLoading(false);
     }
     fetch();
@@ -84,7 +89,10 @@ export function useCrudList<T extends { id: string }>({
       const prev = items;
       setItems(reorderedItems);
       const updates = reorderedItems.map((item, index) =>
-        supabaseRef.current.from(table).update({ sort_order: index }).eq("id", item.id),
+        supabaseRef.current
+          .from(table)
+          .update({ sort_order: index })
+          .eq("id", item.id),
       );
       const results = await Promise.all(updates);
       if (results.some((r) => r.error)) {

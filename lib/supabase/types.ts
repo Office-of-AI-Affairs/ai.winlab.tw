@@ -1,133 +1,58 @@
-export type ExternalResult = {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-  title: string;
-  description: string | null;
-  link: string | null;
-  image: string | null;
-};
+// Domain aliases. Raw row shapes come from ./database.types.ts (generated
+// from the live schema); anything that needs the jsonb columns refined —
+// recruitment positions, Tiptap content, etc. — lives here as a
+// hand-written overlay so jsonb → structured shape is a deliberate cast.
 
-export type CarouselSlide = {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  title: string;
-  description: string | null;
-  link: string | null;
-  image: string | null;
-  sort_order: number;
-};
+import type { Tables } from "./database.types";
 
-export type Event = {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  cover_image: string | null;
-  pinned: boolean;
-  sort_order: number;
-  status: "draft" | "published";
-};
-
-export type Announcement = {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  date: string;
-  category: string;
-  title: string;
-  content: Record<string, unknown>;
-  status: "draft" | "published";
-  author_id: string | null;
-  event_id: string | null;
-};
-
-export type Introduction = {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  title: string;
+// === Raw row types (1-to-1 with DB) ===
+export type ExternalResult = Tables<"external_results">;
+export type CarouselSlide = Tables<"carousel_slides">;
+export type Event = Tables<"events">;
+export type Introduction = Omit<Tables<"introduction">, "content"> & {
   content: Record<string, unknown>;
 };
+export type Announcement = Omit<Tables<"announcements">, "content"> & {
+  content: Record<string, unknown>;
+};
+export type Profile = Pick<
+  Tables<"profiles">,
+  | "id"
+  | "created_at"
+  | "updated_at"
+  | "display_name"
+  | "avatar_url"
+  | "role"
+  | "phone"
+  | "bio"
+  | "linkedin"
+  | "facebook"
+  | "github"
+  | "website"
+  | "resume"
+  | "social_links"
+>;
+export type PublicProfile = Tables<"public_profiles">;
+export type Team = Omit<Tables<"teams">, never>;
+export type Contact = Tables<"contacts">;
+export type EventParticipant = Tables<"event_participants">;
 
-export type Profile = {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  role: "admin" | "user" | "vendor";
-  phone: string | null;
-  bio: string | null;
-  linkedin: string | null;
-  facebook: string | null;
-  github: string | null;
-  website: string | null;
-  resume: string | null;
-  social_links: string[] | null;
+export type OrganizationMemberCategory = "core" | "legal_entity" | "industry";
+export type OrganizationMember = Tables<"organization_members">;
+
+export type ResultType = "personal" | "team";
+export type Result = Omit<Tables<"results">, "content" | "summary"> & {
+  content: Record<string, unknown>;
+  summary: string;
 };
 
-export type PublicProfile = {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  has_profile_data: boolean;
-};
+export type Tag = Tables<"tags">;
+export type ResultTag = Tables<"result_tags">;
+export type ResultCoauthor = Tables<"result_coauthors">;
 
-export type Team = {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  name: string;
-  description: string | null;
-  leader_id: string;
-};
+// === Recruitment — structured view on top of competitions + private details ===
 
-
-export type OrganizationMemberCategory =
-  | "core"
-  | "legal_entity"
-  | "industry";
-
-export type OrganizationMember = {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  category: OrganizationMemberCategory;
-  name: string;
-  summary: string | null;
-  image: string | null;
-  link: string | null;
-  sort_order: number;
-  school: string | null;
-  research_areas: string | null;
-  email: string | null;
-  website: string | null;
-  member_role: string | null;
-};
-
-export type Contact = {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  name: string;
-  position: string | null;
-  phone: string | null;
-  email: string | null;
-  sort_order: number;
-};
-
-export type RecruitmentPositionType =
-  | "full_time"
-  | "internship"
-  | "part_time"
-  | "remote";
+export type RecruitmentPositionType = "full_time" | "internship" | "part_time" | "remote";
 
 export type RecruitmentPosition = {
   name: string;
@@ -140,16 +65,13 @@ export type RecruitmentPosition = {
   nice_to_have: string | null;
 };
 
+export type ApplicationMethodLink = { label: string; url: string };
+
 export type ApplicationMethod = {
   email?: string;
   url?: string;
   links?: ApplicationMethodLink[];
   other?: string;
-};
-
-export type ApplicationMethodLink = {
-  label: string;
-  url: string;
 };
 
 export type ContactInfo = {
@@ -158,45 +80,28 @@ export type ContactInfo = {
   phone?: string;
 };
 
-export type Recruitment = {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  title: string;
-  link: string;
-  image: string | null;
-  company_description: string | null;
-  start_date: string;
-  end_date: string | null;
-  positions: RecruitmentPosition[] | null;
-  application_method: ApplicationMethod | null;
-  contact: ContactInfo | null;
-  required_documents: string | null;
-  event_id: string | null;
-  created_by: string | null;
-  pinned: boolean;
-};
+type CompetitionsRow = Tables<"competitions">;
 
 export type RecruitmentSummary = {
   id: string;
   created_at: string;
   updated_at: string;
-  title: string;
-  link: string;
-  image: string | null;
-  company_description: string | null;
+  title: CompetitionsRow["title"];
+  link: CompetitionsRow["link"];
+  image: CompetitionsRow["image"];
+  company_description: CompetitionsRow["company_description"];
   start_date: string;
-  end_date: string | null;
-  event_id: string | null;
-  created_by: string | null;
-  pinned: boolean;
+  end_date: CompetitionsRow["end_date"];
+  event_id: CompetitionsRow["event_id"];
+  created_by: CompetitionsRow["created_by"];
+  pinned: CompetitionsRow["pinned"];
 };
 
-export type RecruitmentInterest = {
-  id: string;
-  competition_id: string;
-  user_id: string;
-  created_at: string;
+export type Recruitment = RecruitmentSummary & {
+  positions: RecruitmentPosition[] | null;
+  application_method: ApplicationMethod | null;
+  contact: ContactInfo | null;
+  required_documents: string | null;
 };
 
 export type RecruitmentPrivateDetails = {
@@ -209,46 +114,4 @@ export type RecruitmentPrivateDetails = {
   required_documents: string | null;
 };
 
-export type Tag = {
-  id: string;
-  name: string;
-  parent_id: string | null;
-  sort_order: number;
-  created_at: string;
-};
-
-export type ResultTag = {
-  result_id: string;
-  tag_id: string;
-};
-
-export type ResultCoauthor = {
-  result_id: string;
-  user_id: string;
-  created_at: string;
-};
-
-export type ResultType = "personal" | "team";
-
-export type Result = {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  title: string;
-  date: string;
-  header_image: string | null;
-  summary: string;
-  content: Record<string, unknown>;
-  status: "draft" | "published";
-  author_id: string | null;
-  type: ResultType;
-  team_id: string | null;
-  pinned: boolean;
-  event_id: string | null;
-};
-
-export type EventParticipant = {
-  event_id: string;
-  user_id: string;
-  created_at: string;
-};
+export type RecruitmentInterest = Tables<"recruitment_interests">;

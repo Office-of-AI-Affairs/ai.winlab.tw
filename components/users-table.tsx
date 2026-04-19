@@ -46,7 +46,7 @@ export type UserRow = {
   id: string
   email: string
   display_name: string | null
-  role: string
+  role: "admin" | "user" | "vendor"
   created_at: string
   tags: string[]
 }
