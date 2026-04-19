@@ -77,6 +77,7 @@ export type PublicProfile = {
   updated_at: string;
   display_name: string | null;
   avatar_url: string | null;
+  has_profile_data: boolean;
 };
 
 export type Team = {

@@ -67,50 +67,30 @@ export const getEventPageData = unstable_cache(
     const participantUserIds = (participantsRes.data ?? []).map(
       (row: { user_id: string }) => row.user_id,
     );
-    const [{ data: participantPublic }, { data: participantPrivate }] = participantUserIds.length
-      ? await Promise.all([
-          supabase
-            .from("public_profiles")
-            .select("id, display_name, avatar_url")
-            .in("id", participantUserIds),
-          supabase
-            .from("profiles")
-            .select("id, bio, phone, linkedin, facebook, github, website, resume, social_links")
-            .in("id", participantUserIds),
-        ])
-      : [{ data: [] }, { data: [] }];
+    // has_profile_data is denormalised onto public_profiles by a trigger, so
+    // this one public read replaces the authenticated profiles query the
+    // original page did — critical for the SSG fetcher.
+    const { data: participantPublic } = participantUserIds.length
+      ? await supabase
+          .from("public_profiles")
+          .select("id, display_name, avatar_url, has_profile_data")
+          .in("id", participantUserIds)
+      : { data: [] };
 
-    const hasDataSet = new Set(
-      (
-        (participantPrivate as {
-          id: string;
-          bio: string | null;
-          phone: string | null;
-          linkedin: string | null;
-          facebook: string | null;
-          github: string | null;
-          website: string | null;
-          resume: string | null;
-          social_links: string[] | null;
-        }[]) ?? []
-      )
-        .filter(
-          (p) =>
-            p.bio ||
-            p.phone ||
-            p.linkedin ||
-            p.facebook ||
-            p.github ||
-            p.website ||
-            p.resume ||
-            (p.social_links && p.social_links.length > 0),
-        )
-        .map((p) => p.id),
-    );
     const members: EventMember[] = (
-      (participantPublic as { id: string; display_name: string | null; avatar_url: string | null }[]) ?? []
+      (participantPublic as {
+        id: string;
+        display_name: string | null;
+        avatar_url: string | null;
+        has_profile_data: boolean;
+      }[]) ?? []
     )
-      .map((m) => ({ ...m, hasProfileData: hasDataSet.has(m.id) }))
+      .map((m) => ({
+        id: m.id,
+        display_name: m.display_name,
+        avatar_url: m.avatar_url,
+        hasProfileData: m.has_profile_data,
+      }))
       .sort((a, b) => {
         if (a.hasProfileData !== b.hasProfileData) return a.hasProfileData ? -1 : 1;
         return (a.display_name ?? "").localeCompare(b.display_name ?? "");
