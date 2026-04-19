@@ -7,3 +7,14 @@ import { updateTag } from "next/cache";
 export async function revalidatePinnedEvents() {
   updateTag("pinned-events");
 }
+
+export async function revalidateEvents() {
+  updateTag("events-published");
+}
+
+// Convenience: admin edits of an event can affect both the Header pin list
+// and the /events list, so drop both caches in one call.
+export async function revalidateAllEventCaches() {
+  updateTag("pinned-events");
+  updateTag("events-published");
+}

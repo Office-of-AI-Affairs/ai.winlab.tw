@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { revalidatePinnedEvents } from "@/app/events/actions";
+import { revalidateAllEventCaches } from "@/app/events/actions";
 import { useContentEditor } from "@/hooks/use-content-editor";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { createClient } from "@/lib/supabase/client";
@@ -69,10 +69,10 @@ export function EventEditClient({
         router.replace(`/events/${event.slug}/edit`);
       }
       savedSlug.current = event.slug;
-      await revalidatePinnedEvents();
+      await revalidateAllEventCaches();
     },
-    onAfterPublish: () => revalidatePinnedEvents(),
-    onAfterRemove: () => revalidatePinnedEvents(),
+    onAfterPublish: () => revalidateAllEventCaches(),
+    onAfterRemove: () => revalidateAllEventCaches(),
   });
 
   const { isUploading: isUploadingImage, fileInputRef, triggerFileInput, handleFileChange } = useImageUpload(uploadEventImage);

@@ -1,13 +1,6 @@
-import { EventCard } from "@/components/event-card";
-import { EventsCreateButton } from "@/components/events-create-button";
 import { JsonLd } from "@/components/json-ld";
-import { PageShell } from "@/components/page-shell";
-import { Block } from "@/components/ui/block";
-import { SubButton } from "@/components/ui/sub-button";
-import { getViewer } from "@/lib/supabase/get-viewer";
-import type { Event } from "@/lib/supabase/types";
-import { ArrowLeftIcon } from "lucide-react";
-import Link from "next/link";
+import { EventsPageClient } from "./client";
+import { getPublishedEvents } from "./data";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -24,21 +17,13 @@ export const metadata: Metadata = {
 };
 
 export default async function EventsPage() {
-  const { supabase, user, isAdmin } = await getViewer();
+  const publishedEvents = await getPublishedEvents();
 
-  const query = supabase
-    .from("events")
-    .select("*")
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: false });
-  if (!isAdmin) query.eq("status", "published");
-  const { data: events } = await query;
-  const eventList = (events as Event[]) ?? [];
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: "人工智慧專責辦公室活動列表",
-    itemListElement: eventList.map((item, index) => ({
+    itemListElement: publishedEvents.map((item, index) => ({
       "@type": "ListItem",
       position: index + 1,
       url: `https://ai.winlab.tw/events/${item.slug}`,
@@ -47,44 +32,9 @@ export default async function EventsPage() {
   };
 
   return (
-    <PageShell tone="dashboard">
+    <>
       <JsonLd data={structuredData} />
-
-      <Block variant="ghost" className="flex items-center justify-between">
-        <SubButton href="/">
-          <ArrowLeftIcon className="size-4" /> 返回首頁
-        </SubButton>
-        {isAdmin && user && <EventsCreateButton userId={user.id} />}
-      </Block>
-
-      <div className="w-full grid lg:grid-cols-3 gap-4">
-
-        <div className="col-span-1">
-
-          <Block className="flex flex-col gap-4">
-            <h1 className="text-2xl text-foreground font-bold">活動專區</h1>
-            <p className="text-muted-foreground">當前共有 {eventList.length} 場活動</p>
-          </Block>
-
-        </div>
-
-        <div className="col-span-1 lg:col-span-2">
-
-          {eventList.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">目前沒有活動</div>
-          ) : (
-            <div className="grid gap-4">
-              {eventList.map((item) => (
-                <Link href={`/events/${item.slug}`} key={item.id} className="h-full">
-                  <EventCard item={item} compact />
-                </Link>
-              ))}
-            </div>
-          )}
-
-        </div>
-
-      </div>
-    </PageShell>
+      <EventsPageClient publishedEvents={publishedEvents} />
+    </>
   );
 }

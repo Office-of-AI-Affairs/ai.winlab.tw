@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, Plus } from "lucide-react";
@@ -7,11 +8,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export function EventsCreateButton({ userId }: { userId: string }) {
+export function EventsCreateButton() {
   const router = useRouter();
+  const { user } = useAuth();
   const [isCreating, setIsCreating] = useState(false);
 
   const handleCreate = async () => {
+    if (!user?.id) return;
     setIsCreating(true);
     const supabase = createClient();
     const tempSlug = `event-${Date.now()}`;
@@ -25,7 +28,7 @@ export function EventsCreateButton({ userId }: { userId: string }) {
         status: "draft",
         pinned: false,
         sort_order: 0,
-        author_id: userId,
+        author_id: user.id,
       })
       .select()
       .single();

@@ -67,7 +67,7 @@ describe("server admin page contracts", () => {
     // (see "statically cached public pages" test below). Anything still
     // branching on role server-side must keep using getViewer().
     assert.ok(existsSync(resolve(process.cwd(), "lib/supabase/get-viewer.ts")))
-    for (const content of [eventsPage, eventDetailPage, settingsPage]) {
+    for (const content of [eventDetailPage, settingsPage]) {
       assert.ok(content.includes('from "@/lib/supabase/get-viewer"'))
       assert.ok(content.includes("getViewer(") || content.includes("await getViewer("))
       assert.ok(!content.includes('.from("profiles").select("role")'))
@@ -82,6 +82,7 @@ describe("server admin page contracts", () => {
     const cases = [
       { page: organizationPage, route: "introduction", tags: ["introduction", "organization-members"] },
       { page: announcementPage, route: "announcement", tags: ["announcements-published"] },
+      { page: eventsPage, route: "events", tags: ["events-published"] },
     ]
     for (const { page, route, tags } of cases) {
       assert.ok(!page.includes('from "@/lib/supabase/get-viewer"'))
