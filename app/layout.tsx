@@ -4,8 +4,7 @@ import { AuthProvider } from "@/components/auth-provider";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Toaster } from "@/components/ui/sonner";
-import type { Profile } from "@/lib/supabase/types";
-import { createClient } from "@/lib/supabase/server";
+import { getPinnedEvents } from "@/lib/supabase/get-pinned-events";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import { Instrument_Serif, Noto_Sans, Noto_Sans_Mono } from "next/font/google";
@@ -62,34 +61,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let initialProfile: Profile | null = null;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-    initialProfile = (profile as Profile | null) ?? null;
-  }
-
-  const { data: pinnedEvents } = await supabase
-    .from("events")
-    .select("name, slug")
-    .eq("pinned", true)
-    .eq("status", "published")
-    .order("sort_order", { ascending: true });
+  // No cookie reads here — layout stays cookieless so downstream pages
+  // can SSG/ISR. Auth hydrates client-side inside <AuthProvider>.
+  const pinnedEvents = await getPinnedEvents();
 
   return (
     <html lang="zh-TW" suppressHydrationWarning>
       <body className={`${notoSans.variable} ${notoSansMono.variable} ${instrumentSerif.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <NuqsAdapter>
-            <AuthProvider initialUser={user ?? null} initialProfile={initialProfile}>
+            <AuthProvider>
               <div className="relative flex flex-col min-h-dvh">
                 <AppLink
                   href="#main-content"
@@ -98,7 +79,7 @@ export default async function RootLayout({
                 >
                   跳至主要內容
                 </AppLink>
-                <Header pinnedEvents={pinnedEvents ?? []} />
+                <Header pinnedEvents={pinnedEvents} />
                 <main id="main-content" className="flex-1">
                   {children}
                 </main>
