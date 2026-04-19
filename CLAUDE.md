@@ -12,6 +12,23 @@
 - `bunx shadcn add <name>`
 - `.env.local`: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`
 
+### Verification
+
+- `bun run check` — lint + test + typecheck (matches CI `verify` job)
+- `bun run e2e` — Playwright smoke suite on prod (`.pw.ts` files under
+  `e2e/`; also runs as CI `e2e` job post-deploy)
+- `bun run analyze` — bundle analyzer (`ANALYZE=true next build`)
+- Lighthouse baseline + methodology: `docs/perf-baseline.md`
+
+### Schema regen
+
+- `bun run gen:types` — regenerates `lib/supabase/database.types.ts`
+  from the live project. Requires `SUPABASE_ACCESS_TOKEN` in
+  `.env.local` (grab from <https://supabase.com/dashboard/account/tokens>)
+- After regen, copy the file to `~/mcp.ai.winlab.tw/lib/supabase/` —
+  both repos share the same Supabase project
+  (`hwezfbhjcetpezfuvelf`) so types must stay byte-identical.
+
 ## Architecture
 
 - Root layout is **cookieless** — `AuthProvider` hydrates `useAuth()`
