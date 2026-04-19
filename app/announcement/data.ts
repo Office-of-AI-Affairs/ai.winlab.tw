@@ -36,3 +36,31 @@ export const getLatestAnnouncements = unstable_cache(
   ["announcements-latest"],
   { tags: ["announcements-published"], revalidate: 3600 },
 );
+
+// Single published announcement by id — used by the detail page + its
+// generateMetadata. Drafts return null here on purpose; admins reach drafts
+// through /announcement/[id]/edit.
+export const getPublishedAnnouncement = unstable_cache(
+  async (id: string): Promise<Announcement | null> => {
+    const supabase = createPublicClient();
+    const { data } = await supabase
+      .from("announcements")
+      .select("*")
+      .eq("id", id)
+      .eq("status", "published")
+      .maybeSingle();
+    return (data as Announcement | null) ?? null;
+  },
+  ["announcement-by-id"],
+  { tags: ["announcements-published"], revalidate: 3600 },
+);
+
+export async function getPublishedAnnouncementIds(): Promise<string[]> {
+  const supabase = createPublicClient();
+  const { data } = await supabase
+    .from("announcements")
+    .select("id")
+    .eq("status", "published")
+    .is("event_id", null);
+  return (data ?? []).map((row: { id: string }) => row.id);
+}

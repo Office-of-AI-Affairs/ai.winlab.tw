@@ -1,11 +1,16 @@
 import { AnnouncementDetail } from "@/components/announcement-detail";
 import { JsonLd } from "@/components/json-ld";
-import { createClient } from "@/lib/supabase/server";
+import { getPublishedAnnouncement, getPublishedAnnouncementIds } from "@/app/announcement/data";
 import { renderRichTextHtml } from "@/lib/ui/rich-text";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
+export async function generateStaticParams() {
+  const ids = await getPublishedAnnouncementIds();
+  return ids.map((id) => ({ id }));
+}
 
 export async function generateMetadata({
   params,
@@ -13,11 +18,10 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data } = await supabase.from("announcements").select("title, category").eq("id", id).single();
-  const title = data?.title ?? "公告";
-  const description = data?.category
-    ? `${data.category}公告：${title}`
+  const announcement = await getPublishedAnnouncement(id);
+  const title = announcement?.title ?? "公告";
+  const description = announcement?.category
+    ? `${announcement.category}公告：${title}`
     : `${title}｜國立陽明交通大學人工智慧專責辦公室公告`;
   return {
     title: `${title}｜人工智慧專責辦公室`,
@@ -40,16 +44,9 @@ export default async function AnnouncementDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const announcement = await getPublishedAnnouncement(id);
 
-  const { data: announcement, error } = await supabase
-    .from("announcements")
-    .select("*")
-    .eq("id", id)
-    .eq("status", "published")
-    .single();
-
-  if (error || !announcement) notFound();
+  if (!announcement) notFound();
 
   const contentHtml = renderRichTextHtml(announcement.content) ?? "<p>（無內容）</p>";
   const structuredData = {
