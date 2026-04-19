@@ -1,5 +1,6 @@
 "use client";
 
+import { revalidateAnnouncements } from "@/app/announcement/actions";
 import { PageShell } from "@/components/page-shell";
 import { TiptapEditor } from "@/components/tiptap-editor";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,9 @@ export function AnnouncementEditClient({
     initialData: initialAnnouncement,
     fields: ["title", "category", "date", "content"],
     redirectTo: "/announcement",
+    onAfterSave: revalidateAnnouncements,
+    onAfterPublish: revalidateAnnouncements,
+    onAfterRemove: revalidateAnnouncements,
   });
 
   return (

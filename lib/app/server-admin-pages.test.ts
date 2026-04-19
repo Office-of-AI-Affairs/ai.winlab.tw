@@ -63,33 +63,39 @@ describe("server admin page contracts", () => {
   })
 
   test("shared viewer helper exists and is used by server pages that branch on role", () => {
-    // organizationPage (/introduction) is intentionally excluded — it went
-    // static via cookieless cached fetchers. Admin state hydrates client-side
-    // inside IntroductionEditButton / OrganizationPageClient.
+    // Pages excluded from this list have moved to cookieless cached fetchers
+    // (see "statically cached public pages" test below). Anything still
+    // branching on role server-side must keep using getViewer().
     assert.ok(existsSync(resolve(process.cwd(), "lib/supabase/get-viewer.ts")))
-    for (const content of [announcementPage, eventsPage, eventDetailPage, settingsPage]) {
+    for (const content of [eventsPage, eventDetailPage, settingsPage]) {
       assert.ok(content.includes('from "@/lib/supabase/get-viewer"'))
       assert.ok(content.includes("getViewer(") || content.includes("await getViewer("))
       assert.ok(!content.includes('.from("profiles").select("role")'))
     }
   })
 
-  test("/introduction renders statically through cached cookieless fetchers", () => {
-    // Contract: layout must stay cookieless, so any page that doesn't need the
-    // viewer should fetch via unstable_cache-wrapped public reads instead of
-    // getViewer(). /introduction is the first page to follow this pattern.
-    assert.ok(!organizationPage.includes('from "@/lib/supabase/get-viewer"'))
-    assert.ok(!organizationPage.includes("getViewer("))
-    assert.ok(organizationPage.includes('from "./data"'))
-    assert.ok(organizationPage.includes("getIntroduction()"))
-    assert.ok(organizationPage.includes("getOrganizationMembers()"))
+  test("statically cached public pages fetch via cookieless cached helpers", () => {
+    // Contract: pages that can safely render the same HTML for every visitor
+    // fetch from app/<route>/data.ts helpers wrapped in unstable_cache,
+    // using createPublicClient — never getViewer(). Admin-only UI hydrates
+    // client-side inside the matching client component.
+    const cases = [
+      { page: organizationPage, route: "introduction", tags: ["introduction", "organization-members"] },
+      { page: announcementPage, route: "announcement", tags: ["announcements-published"] },
+    ]
+    for (const { page, route, tags } of cases) {
+      assert.ok(!page.includes('from "@/lib/supabase/get-viewer"'))
+      assert.ok(!page.includes("getViewer("))
+      assert.ok(page.includes('from "./data"'))
 
-    const introData = readFileSync(resolve(process.cwd(), "app/introduction/data.ts"), "utf8")
-    assert.ok(introData.includes('from "next/cache"'))
-    assert.ok(introData.includes("unstable_cache"))
-    assert.ok(introData.includes('tags: ["introduction"]'))
-    assert.ok(introData.includes('tags: ["organization-members"]'))
-    assert.ok(introData.includes('from "@/lib/supabase/public"'))
+      const data = readFileSync(resolve(process.cwd(), `app/${route}/data.ts`), "utf8")
+      assert.ok(data.includes('from "next/cache"'))
+      assert.ok(data.includes("unstable_cache"))
+      assert.ok(data.includes('from "@/lib/supabase/public"'))
+      for (const tag of tags) {
+        assert.ok(data.includes(`tags: ["${tag}"]`), `${route}/data.ts must declare tag ${tag}`)
+      }
+    }
   })
 
   test("announcement and event edit routes are server-gated wrappers around client editors", () => {
