@@ -9,6 +9,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { AppLink } from "@/components/app-link";
+import { useAuth } from "@/components/auth-provider";
 import type { CarouselSlide } from "@/lib/supabase/types";
 import { resolveImageSrc } from "@/lib/utils";
 import Autoplay from "embla-carousel-autoplay";
@@ -18,11 +19,10 @@ import * as React from "react";
 
 export function CarouselClient({
   slides,
-  isAdmin,
 }: {
   slides: CarouselSlide[];
-  isAdmin: boolean;
 }) {
+  const { isAdmin } = useAuth();
   const plugin = React.useRef(
     Autoplay({ delay: 5000, stopOnInteraction: true })
   );

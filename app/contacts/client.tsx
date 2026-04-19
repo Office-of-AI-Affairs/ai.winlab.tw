@@ -4,6 +4,7 @@ import { AppLink } from "@/components/app-link";
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { revalidateContacts } from "@/app/contacts/actions";
 import { useCrudList } from "@/hooks/use-crud-list";
 import type { Contact } from "@/lib/supabase/types";
 import { ArrowLeft, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
@@ -21,6 +22,7 @@ export function ContactsAdminPageClient({
     orderBy: "sort_order",
     initialItems: initialContacts,
     onCreated: (item) => router.push(`/contacts/${item.id}/edit`),
+    onAfterMutation: revalidateContacts,
   });
 
   return (

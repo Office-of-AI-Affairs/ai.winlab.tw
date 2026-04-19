@@ -1,3 +1,4 @@
+import { getOrganizationMembers } from "@/app/introduction/data";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -5,27 +6,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { createClient } from "@/lib/supabase/server";
-import type { OrganizationMember } from "@/lib/supabase/types";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 
 export async function HomeOrganization() {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("organization_members")
-    .select("*")
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: false })
-    .limit(6);
-
-  if (error) {
-    console.error("Error fetching organization members:", error);
-    return null;
-  }
-
-  const members = (data as OrganizationMember[]) ?? [];
+  const all = await getOrganizationMembers();
+  const members = all.slice(0, 6);
   if (members.length === 0) {
     return null;
   }
@@ -35,7 +22,7 @@ export async function HomeOrganization() {
       <div className="max-w-6xl mx-auto flex flex-col gap-8">
         <h2 className="text-2xl font-bold border-l-4 border-primary pl-3">組織人員</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {members.slice(0, 6).map((member) => (
+          {members.map((member) => (
             <Link key={member.id} href="/introduction">
               <Card className="py-0 h-full flex flex-col overflow-hidden transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
                 <div className="relative w-full aspect-square shrink-0 overflow-hidden">

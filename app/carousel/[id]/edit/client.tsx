@@ -1,5 +1,6 @@
 "use client";
 
+import { revalidateCarousel } from "@/app/carousel/actions";
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,8 @@ export function CarouselEditClient({ id, initialSlide }: Props) {
     fields: ["title", "description", "link", "image", "sort_order"],
     redirectTo: "/carousel",
     publishable: false,
+    onAfterSave: revalidateCarousel,
+    onAfterRemove: revalidateCarousel,
   });
 
   const { isUploading: isUploadingImage, fileInputRef, triggerFileInput, handleFileChange } = useImageUpload(uploadCarouselImage);

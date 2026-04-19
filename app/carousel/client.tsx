@@ -4,6 +4,7 @@ import { AppLink } from "@/components/app-link";
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { revalidateCarousel } from "@/app/carousel/actions";
 import { useCrudList } from "@/hooks/use-crud-list";
 import type { CarouselSlide } from "@/lib/supabase/types";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
@@ -118,6 +119,7 @@ export function CarouselPageClient({
       orderBy: "sort_order",
       initialItems: initialSlides,
       onCreated: (item) => router.push(`/carousel/${item.id}/edit`),
+      onAfterMutation: revalidateCarousel,
     });
 
   const sensors = useSensors(

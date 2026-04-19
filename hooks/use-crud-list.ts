@@ -10,6 +10,7 @@ type Options<T> = {
   ascending?: boolean;
   initialItems?: T[];
   onCreated?: (item: T) => void;
+  onAfterMutation?: () => void | Promise<void>;
 };
 
 export function useCrudList<T extends { id: string }>({
@@ -18,10 +19,13 @@ export function useCrudList<T extends { id: string }>({
   ascending = true,
   initialItems,
   onCreated,
+  onAfterMutation,
 }: Options<T>) {
   const supabaseRef = useRef(createClient());
   const onCreatedRef = useRef(onCreated);
+  const onAfterMutationRef = useRef(onAfterMutation);
   useEffect(() => { onCreatedRef.current = onCreated; }, [onCreated]);
+  useEffect(() => { onAfterMutationRef.current = onAfterMutation; }, [onAfterMutation]);
 
   const [items, setItems] = useState<T[]>(initialItems ?? []);
   const [isLoading, setIsLoading] = useState(!initialItems);
@@ -53,6 +57,7 @@ export function useCrudList<T extends { id: string }>({
       }
       const item = data as T;
       onCreatedRef.current?.(item);
+      await onAfterMutationRef.current?.();
       return item;
     },
     [table],
@@ -69,6 +74,7 @@ export function useCrudList<T extends { id: string }>({
         return;
       }
       setItems((prev) => prev.filter((item) => item.id !== id));
+      await onAfterMutationRef.current?.();
     },
     [table],
   );
@@ -84,7 +90,9 @@ export function useCrudList<T extends { id: string }>({
       if (results.some((r) => r.error)) {
         toast.error("排序更新失敗");
         setItems(prev);
+        return;
       }
+      await onAfterMutationRef.current?.();
     },
     [table, items],
   );

@@ -4,7 +4,6 @@ import { HomeContacts } from "@/components/home-contacts";
 import { HomeEvents } from "@/components/home-events";
 import { HomeIntroduction } from "@/components/home-introduction";
 import { JsonLd } from "@/components/json-ld";
-import { getViewer } from "@/lib/supabase/get-viewer";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -23,7 +22,6 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const { isAdmin } = await getViewer();
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -36,11 +34,11 @@ export default async function Home() {
   return (
     <main className="flex flex-col">
       <JsonLd data={structuredData} />
-      <HomeCarousel isAdmin={isAdmin} />
+      <HomeCarousel />
       <HomeIntroduction />
       <HomeAnnouncement />
       <HomeEvents />
-      <HomeContacts isAdmin={isAdmin} />
+      <HomeContacts />
     </main>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { revalidateContacts } from "@/app/contacts/actions";
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,8 @@ export function ContactEditClient({ id, initialContact }: Props) {
     fields: ["name", "position", "phone", "email", "sort_order"],
     redirectTo: "/contacts",
     publishable: false,
+    onAfterSave: revalidateContacts,
+    onAfterRemove: revalidateContacts,
   });
 
   return (

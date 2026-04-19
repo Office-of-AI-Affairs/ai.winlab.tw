@@ -1,7 +1,11 @@
+"use client";
+
+import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export function ContactsEditButton({ isAdmin }: { isAdmin: boolean }) {
+export function ContactsEditButton() {
+  const { isAdmin } = useAuth();
   if (!isAdmin) return null;
   return (
     <Button variant="secondary" size="sm" asChild className="h-8 px-3">

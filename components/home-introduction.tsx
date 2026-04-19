@@ -1,15 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+import { getIntroduction } from "@/app/introduction/data";
 import { generateText } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export async function HomeIntroduction() {
-  const supabase = await createClient();
-  const { data: introduction } = await supabase
-    .from("introduction")
-    .select("*")
-    .single();
+  const introduction = await getIntroduction();
 
   const contentText =
     introduction?.content && Object.keys(introduction.content).length > 0

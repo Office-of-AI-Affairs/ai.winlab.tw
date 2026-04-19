@@ -49,12 +49,15 @@ describe("server admin page contracts", () => {
     assert.ok(existsSync(resolve(process.cwd(), "app/settings/users/client.tsx")))
   })
 
-  test("home organization section is server-renderable instead of client-fetched", () => {
+  test("home organization section is server-renderable through the cached fetcher", () => {
+    // Home sections still render on the server (no "use client" / useEffect),
+    // but the cookie-bound createClient has been swapped for the cached
+    // getOrganizationMembers helper so the whole homepage can stay static.
     assert.ok(!homeOrganization.includes('"use client"'))
-    assert.ok(homeOrganization.includes('from "@/lib/supabase/server"'))
+    assert.ok(!homeOrganization.includes('from "@/lib/supabase/server"'))
     assert.ok(!homeOrganization.includes('from "@/lib/supabase/client"'))
     assert.ok(!homeOrganization.includes("useEffect("))
-    assert.ok(homeOrganization.includes("await createClient()"))
+    assert.ok(homeOrganization.includes("getOrganizationMembers()"))
   })
 
   test("global recruitment route is removed in favor of event-scoped recruitment", () => {
@@ -158,14 +161,18 @@ describe("server admin page contracts", () => {
     assert.ok(authProvider.includes("initialProfile?: Profile | null"))
   })
 
-  test("homepage reads viewer state once and passes admin state down to sections", () => {
-    assert.ok(homePage.includes('from "@/lib/supabase/get-viewer"'))
-    assert.ok(homePage.includes("await getViewer()"))
-    assert.ok(homePage.includes("isAdmin={isAdmin}"))
+  test("homepage is statically renderable with no server-side auth dependency", () => {
+    // Flipped from the old "read viewer once, drill isAdmin down" pattern.
+    // Homepage must stay cookieless so it lands as ○ Static in the build;
+    // admin-only UI hydrates client-side inside CarouselClient and
+    // ContactsEditButton via useAuth.
+    assert.ok(!homePage.includes('from "@/lib/supabase/get-viewer"'))
+    assert.ok(!homePage.includes("getViewer("))
+    assert.ok(!homePage.includes("isAdmin={"))
     assert.ok(!homeCarousel.includes('from "@/lib/supabase/get-viewer"'))
     assert.ok(!homeContacts.includes('from "@/lib/supabase/get-viewer"'))
-    assert.ok(!homeCarousel.includes("getViewer("))
-    assert.ok(!homeContacts.includes("getViewer("))
+    assert.ok(!homeCarousel.includes('from "@/lib/supabase/server"'))
+    assert.ok(!homeContacts.includes('from "@/lib/supabase/server"'))
   })
 
   test("server-wrapped admin editors do not keep depending on useAuth in the client layer", () => {
