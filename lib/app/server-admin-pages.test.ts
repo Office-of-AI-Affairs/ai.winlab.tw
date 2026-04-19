@@ -63,12 +63,33 @@ describe("server admin page contracts", () => {
   })
 
   test("shared viewer helper exists and is used by server pages that branch on role", () => {
+    // organizationPage (/introduction) is intentionally excluded — it went
+    // static via cookieless cached fetchers. Admin state hydrates client-side
+    // inside IntroductionEditButton / OrganizationPageClient.
     assert.ok(existsSync(resolve(process.cwd(), "lib/supabase/get-viewer.ts")))
-    for (const content of [announcementPage, eventsPage, eventDetailPage, organizationPage, settingsPage]) {
+    for (const content of [announcementPage, eventsPage, eventDetailPage, settingsPage]) {
       assert.ok(content.includes('from "@/lib/supabase/get-viewer"'))
       assert.ok(content.includes("getViewer(") || content.includes("await getViewer("))
       assert.ok(!content.includes('.from("profiles").select("role")'))
     }
+  })
+
+  test("/introduction renders statically through cached cookieless fetchers", () => {
+    // Contract: layout must stay cookieless, so any page that doesn't need the
+    // viewer should fetch via unstable_cache-wrapped public reads instead of
+    // getViewer(). /introduction is the first page to follow this pattern.
+    assert.ok(!organizationPage.includes('from "@/lib/supabase/get-viewer"'))
+    assert.ok(!organizationPage.includes("getViewer("))
+    assert.ok(organizationPage.includes('from "./data"'))
+    assert.ok(organizationPage.includes("getIntroduction()"))
+    assert.ok(organizationPage.includes("getOrganizationMembers()"))
+
+    const introData = readFileSync(resolve(process.cwd(), "app/introduction/data.ts"), "utf8")
+    assert.ok(introData.includes('from "next/cache"'))
+    assert.ok(introData.includes("unstable_cache"))
+    assert.ok(introData.includes('tags: ["introduction"]'))
+    assert.ok(introData.includes('tags: ["organization-members"]'))
+    assert.ok(introData.includes('from "@/lib/supabase/public"'))
   })
 
   test("announcement and event edit routes are server-gated wrappers around client editors", () => {

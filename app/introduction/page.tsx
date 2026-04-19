@@ -1,9 +1,9 @@
 import { OrganizationPageClient } from "./client";
+import { getIntroduction, getOrganizationMembers } from "./data";
 import { IntroductionDetail } from "@/components/introduction-detail";
 import { IntroductionEditButton } from "@/components/introduction-edit-button";
 import { JsonLd } from "@/components/json-ld";
 import { PageShell } from "@/components/page-shell";
-import { getViewer } from "@/lib/supabase/get-viewer";
 import { renderRichTextHtml } from "@/lib/ui/rich-text";
 import type { OrganizationMember, OrganizationMemberCategory } from "@/lib/supabase/types";
 import type { Metadata } from "next";
@@ -24,20 +24,13 @@ export const metadata: Metadata = {
 };
 
 export default async function OrganizationPage() {
-  const { supabase, isAdmin } = await getViewer();
-
-  const [{ data: introduction }, { data: allMembers }] = await Promise.all([
-    supabase.from("introduction").select("*").single(),
-    supabase
-      .from("organization_members")
-      .select("*")
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false }),
+  const [introduction, members] = await Promise.all([
+    getIntroduction(),
+    getOrganizationMembers(),
   ]);
 
   const contentHtml = renderRichTextHtml(introduction?.content) ?? "";
 
-  const members = (allMembers as OrganizationMember[]) ?? [];
   const membersByCategory = Object.fromEntries(
     CATEGORIES.map((cat) => [cat, members.filter((m) => m.category === cat)])
   ) as Record<OrganizationMemberCategory, OrganizationMember[]>;
@@ -57,10 +50,10 @@ export default async function OrganizationPage() {
         <IntroductionDetail
           title={introduction?.title || "國立陽明交通大學 人工智慧專責辦公室"}
           contentHtml={contentHtml}
-          actions={isAdmin ? <IntroductionEditButton isAdmin={isAdmin} /> : undefined}
+          actions={<IntroductionEditButton />}
         />
       </PageShell>
-      <OrganizationPageClient membersByCategory={membersByCategory} isAdmin={isAdmin} />
+      <OrganizationPageClient membersByCategory={membersByCategory} />
     </>
   );
 }

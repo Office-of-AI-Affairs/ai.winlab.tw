@@ -1,5 +1,6 @@
 "use client";
 
+import { revalidateOrganizationMembers } from "@/app/introduction/actions";
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,8 @@ export function OrganizationMemberEditClient({
     fields: ["name", "summary", "image", "link", "category", "sort_order", "school", "research_areas", "email", "website", "member_role"],
     redirectTo: "/introduction",
     publishable: false,
+    onAfterSave: revalidateOrganizationMembers,
+    onAfterRemove: revalidateOrganizationMembers,
   });
 
   const { isUploading: isUploadingImage, fileInputRef, triggerFileInput, handleFileChange } = useImageUpload(uploadOrganizationImage);

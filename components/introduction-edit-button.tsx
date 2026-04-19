@@ -1,8 +1,12 @@
+"use client";
+
+import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import Link from "next/link";
 
-export function IntroductionEditButton({ isAdmin }: { isAdmin: boolean }) {
+export function IntroductionEditButton() {
+  const { isAdmin } = useAuth();
   if (!isAdmin) return null;
 
   return (

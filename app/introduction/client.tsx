@@ -1,6 +1,7 @@
 "use client";
 
 import { AppLink } from "@/components/app-link";
+import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { OrganizationMemberDialog } from "@/components/organization-member-dialog";
@@ -22,11 +23,10 @@ const tabParser = parseAsStringLiteral(["core", "legal_entity", "industry"] as c
 
 export function OrganizationPageClient({
   membersByCategory,
-  isAdmin,
 }: {
   membersByCategory: Record<OrganizationMemberCategory, OrganizationMember[]>;
-  isAdmin: boolean;
 }) {
+  const { isAdmin } = useAuth();
   const [tab, setTab] = useQueryState("tab", tabParser);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<OrganizationMember | null>(null);

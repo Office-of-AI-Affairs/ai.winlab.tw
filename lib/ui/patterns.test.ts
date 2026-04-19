@@ -125,9 +125,11 @@ describe("global UI patterns", () => {
   })
 
   test("lightweight auth-aware client components do not depend on useAuth when server props can provide the same state", () => {
+    // introductionEditButton is intentionally excluded — /introduction is now
+    // statically rendered (no getViewer in the server component), so the edit
+    // button *must* hydrate its admin state via useAuth on the client.
     for (const content of [
       carouselClient,
-      introductionEditButton,
       contactsEditButton,
       eventsCreateButton,
       eventDetailClient,

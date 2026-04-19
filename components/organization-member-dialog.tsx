@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Image from "next/image";
 import { ImagePlus, Loader2, Trash2 } from "lucide-react";
 
+import { revalidateOrganizationMembers } from "@/app/introduction/actions";
 import { useDialogForm } from "@/hooks/use-dialog-form";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { uploadOrganizationImage } from "@/lib/upload-image";
@@ -118,6 +119,8 @@ export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCa
     },
     validate: (form) => form.name.trim() ? null : "請輸入名稱",
     onClose: () => onOpenChange(false),
+    onAfterSave: revalidateOrganizationMembers,
+    onAfterRemove: revalidateOrganizationMembers,
   });
 
   const { isUploading: uploading, fileInputRef, triggerFileInput, handleFileChange } = useImageUpload(uploadOrganizationImage);

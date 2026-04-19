@@ -1,5 +1,6 @@
 "use client";
 
+import { revalidateIntroduction } from "@/app/introduction/actions";
 import { PageShell } from "@/components/page-shell";
 import { TiptapEditor } from "@/components/tiptap-editor";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ export function IntroductionEditClient({ initialIntroduction }: Props) {
     fields: ["title", "content"],
     redirectTo: "/introduction",
     publishable: false,
+    onAfterSave: revalidateIntroduction,
   });
 
   return (

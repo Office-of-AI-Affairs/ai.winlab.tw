@@ -12,6 +12,8 @@ type Options<T extends Record<string, unknown>> = {
   buildPayload: (form: T) => Record<string, unknown>;
   validate?: (form: T) => string | null;
   onClose: () => void;
+  onAfterSave?: () => void | Promise<void>;
+  onAfterRemove?: () => void | Promise<void>;
 };
 
 export function useDialogForm<T extends Record<string, unknown>>({
@@ -21,6 +23,8 @@ export function useDialogForm<T extends Record<string, unknown>>({
   buildPayload,
   validate,
   onClose,
+  onAfterSave,
+  onAfterRemove,
 }: Options<T>) {
   const router = useRouter();
   const supabaseRef = useRef(createClient());
@@ -28,11 +32,15 @@ export function useDialogForm<T extends Record<string, unknown>>({
   const buildPayloadRef = useRef(buildPayload);
   const validateRef = useRef(validate);
   const onCloseRef = useRef(onClose);
+  const onAfterSaveRef = useRef(onAfterSave);
+  const onAfterRemoveRef = useRef(onAfterRemove);
 
   useEffect(() => { getDefaultsRef.current = getDefaults; }, [getDefaults]);
   useEffect(() => { buildPayloadRef.current = buildPayload; }, [buildPayload]);
   useEffect(() => { validateRef.current = validate; }, [validate]);
   useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+  useEffect(() => { onAfterSaveRef.current = onAfterSave; }, [onAfterSave]);
+  useEffect(() => { onAfterRemoveRef.current = onAfterRemove; }, [onAfterRemove]);
 
   const [formData, setFormData] = useState<T>(getDefaults);
   const [isSaving, setIsSaving] = useState(false);
@@ -67,6 +75,7 @@ export function useDialogForm<T extends Record<string, unknown>>({
     } else {
       toast.success(editingId ? "已更新" : "已建立");
       onCloseRef.current();
+      await onAfterSaveRef.current?.();
       router.refresh();
     }
   }, [editingId, formData, router, table]);
@@ -81,6 +90,7 @@ export function useDialogForm<T extends Record<string, unknown>>({
     } else {
       toast.success("已刪除");
       onCloseRef.current();
+      await onAfterRemoveRef.current?.();
       router.refresh();
     }
   }, [editingId, router, table]);
