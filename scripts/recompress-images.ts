@@ -91,14 +91,17 @@ async function loadTargets(): Promise<Target[]> {
   const all: Target[] = [];
   for (const { table, column } of TARGETS) {
     if (onlyTable && onlyTable !== table) continue;
+    // Supabase's inferred types can't follow a template-literal column list,
+    // so cast through unknown and validate the shape at runtime.
     const { data, error } = await sb.from(table).select(`id, ${column}`);
     if (error) throw new Error(`select ${table}.${column}: ${error.message}`);
-    for (const row of data ?? []) {
-      const url = (row as Record<string, unknown>)[column];
+    const rows = (data as unknown as { id: string; [k: string]: unknown }[] | null) ?? [];
+    for (const row of rows) {
+      const url = row[column];
       if (typeof url !== "string" || !url) continue;
       if (!url.includes("/announcement-images/")) continue;
       if (url.endsWith(".webp")) continue;
-      all.push({ table, column, id: (row as { id: string }).id, url });
+      all.push({ table, column, id: row.id, url });
     }
   }
   return all;
