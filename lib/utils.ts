@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { toCdnUrl } from "@/lib/cdn"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -13,7 +14,7 @@ export function resolveImageSrc(src: string | null | undefined): string {
     return IMAGE_PLACEHOLDER_DATA_URL
   }
 
-  return src
+  return toCdnUrl(src) ?? src
 }
 
 export function hasCustomImage(src: string | null | undefined): boolean {

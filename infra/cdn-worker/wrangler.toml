@@ -1,0 +1,20 @@
+name = "winlab-cdn"
+main = "src/index.ts"
+compatibility_date = "2026-04-19"
+workers_dev = false
+
+# Bind the route once the DNS + route is configured on Cloudflare:
+#   zone: winlab.tw
+#   route: cdn.winlab.tw/*
+# Uncomment after first deploy:
+# routes = [
+#   { pattern = "cdn.winlab.tw/*", custom_domain = true }
+# ]
+
+[vars]
+SUPABASE_PROJECT_REF = "hwezfbhjcetpezfuvelf"
+ALLOWED_BUCKETS = "announcement-images"
+ALLOWED_REFERER_HOSTS = "winlab.tw,ai.winlab.tw,mcp.ai.winlab.tw,localhost,127.0.0.1"
+
+[observability]
+enabled = true
