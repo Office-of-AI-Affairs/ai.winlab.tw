@@ -102,4 +102,14 @@ test.describe("public smoke", () => {
     expect(page.url()).not.toContain("/resume");
     expect(response?.status()).toBeLessThan(400);
   });
+
+  test("/does-not-exist renders the custom 404", async ({ page }) => {
+    const response = await page.goto("/does-not-exist", {
+      waitUntil: "domcontentloaded",
+    });
+    expect(response?.status()).toBe(404);
+    await expect(page.getByRole("heading", { name: "找不到這個頁面" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /返回首頁/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /瀏覽活動/ })).toBeVisible();
+  });
 });
