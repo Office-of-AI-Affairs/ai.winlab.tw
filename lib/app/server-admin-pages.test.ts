@@ -114,14 +114,20 @@ describe("server admin page contracts", () => {
     assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/client.tsx")))
   })
 
-  test("root auth provider is server-seeded instead of booting from an empty client state", () => {
+  test("root layout stays cookieless so downstream pages can SSG/ISR", () => {
+    // Layout must not read cookies / auth — otherwise every page gets poisoned
+    // into dynamic rendering. AuthProvider hydrates from the browser Supabase
+    // client instead.
     assert.ok(rootLayout.includes("<AuthProvider"))
-    assert.ok(rootLayout.includes("initialUser={"))
-    assert.ok(rootLayout.includes("initialProfile={"))
+    assert.ok(!rootLayout.includes('from "@/lib/supabase/server"'))
+    assert.ok(!rootLayout.includes("auth.getUser()"))
+    assert.ok(!rootLayout.includes("initialUser={"))
+    assert.ok(!rootLayout.includes("initialProfile={"))
+
+    // AuthProvider still supports seeded props (optional) for anywhere that
+    // wants to hand-off a pre-fetched user — layout just doesn't use them.
     assert.ok(authProvider.includes("initialUser?: User | null"))
     assert.ok(authProvider.includes("initialProfile?: Profile | null"))
-    assert.ok(authProvider.includes("useState<User | null>(initialUser ?? null)"))
-    assert.ok(authProvider.includes("useState<Profile | null>(initialProfile ?? null)"))
   })
 
   test("homepage reads viewer state once and passes admin state down to sections", () => {
