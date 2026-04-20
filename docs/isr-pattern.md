@@ -213,11 +213,19 @@ get a fast path to their draft.
 | `/events`           | `○`          | `events-published`, `pinned-events`     |
 | `/privacy`          | `○`          | (no tags — trivial content)             |
 | `/announcement/[id]`| `●`          | `announcements-published`               |
-| `/events/[slug]`    | `●`          | `events-published`                      |
+| `/events/[slug]`    | `ƒ`          | (none — see note below)                 |
 
 Non-public (admin editor, `/account`, `/profile/[id]`, `/settings/*`)
 routes intentionally stay `ƒ` because they're user-specific and the
 cache-share model doesn't apply.
+
+`/events/[slug]` is the one public exception that runs `ƒ Dynamic`. The
+recruitment data on this page is mutated by the sibling MCP server
+(`~/mcp.ai.winlab.tw`), which writes Supabase directly and bypasses the
+Server Action `updateTag()` flow that keeps every other ISR page fresh.
+Rather than introduce a `/api/revalidate` webhook that breaks the
+"no API routes" convention, this page reads on every request. Traffic
+is low enough that the extra Supabase egress is acceptable.
 
 ## Contract tests
 

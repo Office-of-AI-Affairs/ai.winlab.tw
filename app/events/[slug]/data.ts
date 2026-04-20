@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { composeRecruitment } from "@/lib/recruitment-records";
 import type { ResultWithMeta } from "@/components/result-card";
@@ -25,11 +24,15 @@ export type EventPagePayload = {
   members: EventMember[];
 };
 
-// Everything the public /events/[slug] render needs, in one cached payload.
-// Draft-only data (admin announcements, admin-only recruitment private
-// details) is merged in from the client side — see EventDetailClient.
-export const getEventPageData = unstable_cache(
-  async (slug: string): Promise<EventPagePayload | null> => {
+// Everything the public /events/[slug] render needs.
+// Intentionally NOT wrapped in unstable_cache: the MCP server writes directly
+// to Supabase (bypassing Server Actions / updateTag), so this page reads fresh
+// on every request to stay in sync. Draft-only data (admin announcements,
+// admin-only recruitment private details) is merged in from the client side —
+// see EventDetailClient.
+export async function getEventPageData(
+  slug: string,
+): Promise<EventPagePayload | null> {
     const supabase = createPublicClient();
 
     const { data: event } = await supabase
@@ -155,16 +158,4 @@ export const getEventPageData = unstable_cache(
       recruitments,
       members,
     };
-  },
-  ["event-page-data"],
-  { tags: ["events-published"], revalidate: 3600 },
-);
-
-export async function getPublishedEventSlugs(): Promise<string[]> {
-  const supabase = createPublicClient();
-  const { data } = await supabase
-    .from("events")
-    .select("slug")
-    .eq("status", "published");
-  return (data ?? []).map((row: { slug: string }) => row.slug);
 }

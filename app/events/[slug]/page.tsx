@@ -1,12 +1,12 @@
 import { EventDetailClient } from "./client";
 import { EventDetailNotFoundClient } from "./not-found-client";
-import { getEventPageData, getPublishedEventSlugs } from "./data";
+import { getEventPageData } from "./data";
 import { JsonLd } from "@/components/json-ld";
 
-export async function generateStaticParams() {
-  const slugs = await getPublishedEventSlugs();
-  return slugs.map((slug) => ({ slug }));
-}
+// MCP server writes directly to Supabase, bypassing Next.js Server Actions and
+// updateTag(). Force dynamic rendering so admin edits made through MCP show up
+// on the next visit instead of waiting for the 1h ISR fallback.
+export const dynamic = "force-dynamic";
 
 export default async function EventDetailPage({
   params,
