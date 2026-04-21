@@ -174,9 +174,24 @@ export default function ForgotPasswordPage() {
 
           {step === "code" && (
             <form onSubmit={handleCodeSubmit} className="flex flex-col gap-5">
-              <p className="text-sm text-muted-foreground">
-                驗證碼已寄至 <span className="font-medium text-foreground">{email}</span>
-              </p>
+              {/*
+                Real email input (readonly) instead of a paragraph — gives Safari /
+                iCloud Keychain an `autocomplete="username"` hint so it can bind
+                the new password to the right account. Without this, "Update
+                saved password?" saves an orphan entry that won't match on login.
+              */}
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="email">電子信箱</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={email}
+                  readOnly
+                  autoComplete="username"
+                  className="bg-muted/50"
+                />
+              </div>
               <div className="flex flex-col gap-2 items-center">
                 <Label htmlFor="code" className="self-start">驗證碼</Label>
                 <InputOTP
