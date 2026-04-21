@@ -4,22 +4,44 @@ import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
 import Link from "next/link";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 
 type Step = "email" | "code" | "success";
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}$/;
+const RESEND_COOLDOWN_SECONDS = 60;
+
+function friendlyAuthError(err: { status?: number; code?: string; message?: string } | null | undefined): string {
+  if (!err) return "發送失敗，請稍後再試。";
+  // Supabase throttles same-email sends; surface cooldown hint instead of a generic error.
+  if (err.status === 429 || err.code === "over_email_send_rate_limit" || /rate limit/i.test(err.message ?? "")) {
+    return "寄送太頻繁，請稍後再試。";
+  }
+  return "發送失敗，請稍後再試。";
+}
 
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resent, setResent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => {
+      setCooldown((c) => (c > 0 ? c - 1 : 0));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
 
   async function sendCode(targetEmail: string) {
     const supabase = createClient();
@@ -40,24 +62,27 @@ export default function ForgotPasswordPage() {
 
     const err = await sendCode(value);
     if (err) {
-      setError("發送失敗，請稍後再試。");
+      setError(friendlyAuthError(err));
     } else {
       setEmail(value);
+      setCode("");
       setStep("code");
+      setCooldown(RESEND_COOLDOWN_SECONDS);
     }
     setIsLoading(false);
   }
 
   async function handleResend() {
-    if (!email) return;
+    if (!email || cooldown > 0 || isLoading) return;
     setError(null);
     setResent(false);
     setIsLoading(true);
     const err = await sendCode(email);
     if (err) {
-      setError("重寄失敗，請稍後再試。");
+      setError(friendlyAuthError(err));
     } else {
       setResent(true);
+      setCooldown(RESEND_COOLDOWN_SECONDS);
     }
     setIsLoading(false);
   }
@@ -66,8 +91,12 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError(null);
 
+    if (code.length !== 6) {
+      setError("請輸入 6 位數驗證碼。");
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
-    const token = (formData.get("code") as string).trim();
     const password = formData.get("password") as string;
     const confirm = formData.get("confirm") as string;
 
@@ -85,7 +114,7 @@ export default function ForgotPasswordPage() {
 
     const { error: verifyError } = await supabase.auth.verifyOtp({
       email,
-      token,
+      token: code,
       type: "recovery",
     });
     if (verifyError) {
@@ -143,25 +172,29 @@ export default function ForgotPasswordPage() {
 
           {step === "code" && (
             <form onSubmit={handleCodeSubmit} className="flex flex-col gap-5">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm text-muted-foreground">
-                  驗證碼已寄至 <span className="font-medium text-foreground">{email}</span>
-                </p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="code">驗證碼</Label>
-                <Input
+              <p className="text-sm text-muted-foreground">
+                驗證碼已寄至 <span className="font-medium text-foreground">{email}</span>
+              </p>
+              <div className="flex flex-col gap-2 items-center">
+                <Label htmlFor="code" className="self-start">驗證碼</Label>
+                <InputOTP
                   id="code"
-                  name="code"
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  pattern="[0-9]{6}"
                   maxLength={6}
-                  placeholder="6 位數字"
-                  required
-                  className="tracking-widest text-center font-mono"
-                />
+                  value={code}
+                  onChange={(v) => setCode(v)}
+                  pattern={REGEXP_ONLY_DIGITS}
+                  autoComplete="one-time-code"
+                  containerClassName="justify-center"
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} className="h-12 w-12 text-lg" />
+                    <InputOTPSlot index={1} className="h-12 w-12 text-lg" />
+                    <InputOTPSlot index={2} className="h-12 w-12 text-lg" />
+                    <InputOTPSlot index={3} className="h-12 w-12 text-lg" />
+                    <InputOTPSlot index={4} className="h-12 w-12 text-lg" />
+                    <InputOTPSlot index={5} className="h-12 w-12 text-lg" />
+                  </InputOTPGroup>
+                </InputOTP>
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="password">新密碼</Label>
@@ -177,7 +210,7 @@ export default function ForgotPasswordPage() {
               {resent && !error && (
                 <p role="status" className="text-sm font-medium text-muted-foreground text-center">已重新寄出驗證碼</p>
               )}
-              <Button type="submit" className="w-full mt-1" disabled={isLoading}>
+              <Button type="submit" className="w-full mt-1" disabled={isLoading || code.length !== 6}>
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "更新密碼"}
               </Button>
               <div className="flex items-center justify-between text-sm">
@@ -187,6 +220,7 @@ export default function ForgotPasswordPage() {
                     setStep("email");
                     setError(null);
                     setResent(false);
+                    setCode("");
                   }}
                   className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
                 >
@@ -196,10 +230,10 @@ export default function ForgotPasswordPage() {
                 <button
                   type="button"
                   onClick={handleResend}
-                  disabled={isLoading}
-                  className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                  disabled={isLoading || cooldown > 0}
+                  className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  沒收到？重寄驗證碼
+                  {cooldown > 0 ? `${cooldown} 秒後可重寄` : "沒收到？重寄驗證碼"}
                 </button>
               </div>
             </form>
