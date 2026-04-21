@@ -16,6 +16,8 @@ type Step = "email" | "code" | "success";
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}$/;
 const RESEND_COOLDOWN_SECONDS = 60;
+// Matches the GoTrue `GOTRUE_MAILER_OTP_LENGTH` setting for this project.
+const OTP_LENGTH = 8;
 
 function friendlyAuthError(err: { status?: number; code?: string; message?: string } | null | undefined): string {
   if (!err) return "發送失敗，請稍後再試。";
@@ -91,8 +93,8 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError(null);
 
-    if (code.length !== 6) {
-      setError("請輸入 6 位數驗證碼。");
+    if (code.length !== OTP_LENGTH) {
+      setError(`請輸入 ${OTP_LENGTH} 位數驗證碼。`);
       return;
     }
 
@@ -142,7 +144,7 @@ export default function ForgotPasswordPage() {
           <h1 className="text-3xl font-bold">忘記密碼</h1>
           <p className="text-muted-foreground mt-2">
             {step === "email" && "輸入電子信箱，我們會寄送驗證碼"}
-            {step === "code" && "輸入信中的 6 位數驗證碼與新密碼"}
+            {step === "code" && `輸入信中的 ${OTP_LENGTH} 位數驗證碼與新密碼`}
             {step === "success" && "密碼已更新"}
           </p>
         </div>
@@ -179,7 +181,7 @@ export default function ForgotPasswordPage() {
                 <Label htmlFor="code" className="self-start">驗證碼</Label>
                 <InputOTP
                   id="code"
-                  maxLength={6}
+                  maxLength={OTP_LENGTH}
                   value={code}
                   onChange={(v) => setCode(v)}
                   pattern={REGEXP_ONLY_DIGITS}
@@ -187,12 +189,9 @@ export default function ForgotPasswordPage() {
                   containerClassName="justify-center"
                 >
                   <InputOTPGroup>
-                    <InputOTPSlot index={0} className="h-12 w-12 text-lg" />
-                    <InputOTPSlot index={1} className="h-12 w-12 text-lg" />
-                    <InputOTPSlot index={2} className="h-12 w-12 text-lg" />
-                    <InputOTPSlot index={3} className="h-12 w-12 text-lg" />
-                    <InputOTPSlot index={4} className="h-12 w-12 text-lg" />
-                    <InputOTPSlot index={5} className="h-12 w-12 text-lg" />
+                    {Array.from({ length: OTP_LENGTH }, (_, i) => (
+                      <InputOTPSlot key={i} index={i} className="h-11 w-10 text-base" />
+                    ))}
                   </InputOTPGroup>
                 </InputOTP>
               </div>
@@ -210,7 +209,7 @@ export default function ForgotPasswordPage() {
               {resent && !error && (
                 <p role="status" className="text-sm font-medium text-muted-foreground text-center">已重新寄出驗證碼</p>
               )}
-              <Button type="submit" className="w-full mt-1" disabled={isLoading || code.length !== 6}>
+              <Button type="submit" className="w-full mt-1" disabled={isLoading || code.length !== OTP_LENGTH}>
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "更新密碼"}
               </Button>
               <div className="flex items-center justify-between text-sm">
