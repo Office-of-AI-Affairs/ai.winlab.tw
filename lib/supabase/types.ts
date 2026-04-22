@@ -115,3 +115,5 @@ export type RecruitmentPrivateDetails = {
 };
 
 export type RecruitmentInterest = Tables<"recruitment_interests">;
+
+export type CompetitionOwner = Tables<"competition_owners">;
