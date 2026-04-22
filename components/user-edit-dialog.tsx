@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { EventVendorPicker } from "@/components/event-vendor-picker";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -73,31 +72,7 @@ function UserEditForm({
   onClose: () => void;
 }) {
   const [role, setRole] = useState<ProfileRole>(user.role);
-  const [eventIds, setEventIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
-  const [vendorEventsLoaded, setVendorEventsLoaded] = useState(user.role !== "vendor");
-
-  // Fetch existing vendor event assignments
-  useEffect(() => {
-    if (user.role !== "vendor") return;
-
-    async function load() {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("event_vendors")
-        .select("event_id")
-        .eq("user_id", user.id);
-      if (error) {
-        console.error("Failed to load vendor events:", error);
-        toast.error("無法載入廠商活動資料");
-        return;
-      }
-      setEventIds((data ?? []).map((r: { event_id: string }) => r.event_id));
-      setVendorEventsLoaded(true);
-    }
-
-    void load();
-  }, [user.id, user.role]);
 
   async function handleSave() {
     setSaving(true);
@@ -112,50 +87,6 @@ function UserEditForm({
       toast.error(profileError.message);
       setSaving(false);
       return;
-    }
-
-    if (role === "vendor" && !vendorEventsLoaded && user.role === "vendor") {
-      toast.error("活動資料尚未載入，無法儲存");
-      setSaving(false);
-      return;
-    }
-
-    if (role === "vendor") {
-      // Sync event_vendors: delete all then re-insert
-      const { error: deleteError } = await supabase
-        .from("event_vendors")
-        .delete()
-        .eq("user_id", user.id);
-
-      if (deleteError) {
-        toast.error(deleteError.message);
-        setSaving(false);
-        return;
-      }
-
-      if (eventIds.length > 0) {
-        const { error: insertError } = await supabase
-          .from("event_vendors")
-          .insert(eventIds.map((event_id) => ({ user_id: user.id, event_id })));
-
-        if (insertError) {
-          toast.error(insertError.message);
-          setSaving(false);
-          return;
-        }
-      }
-    } else {
-      // Role changed away from vendor — clean up event_vendors
-      const { error: deleteError } = await supabase
-        .from("event_vendors")
-        .delete()
-        .eq("user_id", user.id);
-
-      if (deleteError) {
-        toast.error(deleteError.message);
-        setSaving(false);
-        return;
-      }
     }
 
     setSaving(false);
@@ -199,17 +130,12 @@ function UserEditForm({
               <SelectItem value="admin">管理員</SelectItem>
             </SelectContent>
           </Select>
+          {role === "vendor" && (
+            <p className="text-xs text-muted-foreground">
+              vendor 權限由 <strong>徵才編輯頁</strong> 的「擁有者」清單決定（不再綁活動）。
+            </p>
+          )}
         </div>
-
-        {role === "vendor" && (
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">指定活動</Label>
-            <EventVendorPicker
-              selectedEventIds={eventIds}
-              onChange={setEventIds}
-            />
-          </div>
-        )}
       </div>
 
       <DialogFooter>

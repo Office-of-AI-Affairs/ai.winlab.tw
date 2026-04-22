@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { useEventActions } from "@/hooks/use-event-actions";
 import { formatDate } from "@/lib/date";
 import { createClient } from "@/lib/supabase/client";
-import { isEventVendor } from "@/lib/supabase/check-event-vendor";
 import { composeRecruitment } from "@/lib/recruitment-records";
 import type {
   Announcement,
@@ -81,7 +80,7 @@ export function EventDetailClient({
   const [draftAnnouncements, setDraftAnnouncements] = useState<Announcement[]>([]);
   const [draftResults, setDraftResults] = useState<ResultWithMeta[]>([]);
   const [privateDetails, setPrivateDetails] = useState<Map<string, RecruitmentPrivateDetails> | null>(null);
-  const [isVendor, setIsVendor] = useState(false);
+  const [ownedRecruitmentIds, setOwnedRecruitmentIds] = useState<Set<string>>(new Set());
 
   // Admin / owner drafts for announcements. RLS filters: admin sees all,
   // author sees their own.
@@ -163,15 +162,37 @@ export function EventDetailClient({
     return () => { cancelled = true; };
   }, [event.id, isAdmin, userId]);
 
-  // Recruitment private details (admins only).
+  // Per-recruitment ownership for non-admins (powers the inline edit gate).
   useEffect(() => {
-    if (!isAdmin || publishedRecruitments.length === 0) { setPrivateDetails(null); return; }
+    if (!userId || isAdmin) { setOwnedRecruitmentIds(new Set()); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabaseRef.current
+        .from("competition_owners")
+        .select("competition_id")
+        .eq("user_id", userId);
+      if (cancelled) return;
+      setOwnedRecruitmentIds(new Set(((data as { competition_id: string }[] | null) ?? []).map((r) => r.competition_id)));
+    })();
+    return () => { cancelled = true; };
+  }, [isAdmin, userId]);
+
+  // Recruitment private details. Admin fetches everything; owners fetch only
+  // recruitments they own so the dialog pre-fills correctly when they click
+  // edit without leaking other companies' private info.
+  useEffect(() => {
+    if (publishedRecruitments.length === 0) { setPrivateDetails(null); return; }
+    if (!isAdmin && ownedRecruitmentIds.size === 0) { setPrivateDetails(null); return; }
+    const ids = isAdmin
+      ? publishedRecruitments.map((r) => r.id)
+      : publishedRecruitments.filter((r) => ownedRecruitmentIds.has(r.id)).map((r) => r.id);
+    if (ids.length === 0) { setPrivateDetails(null); return; }
     let cancelled = false;
     (async () => {
       const { data } = await supabaseRef.current
         .from("competition_private_details")
         .select("competition_id, created_at, updated_at, positions, application_method, contact, required_documents")
-        .in("competition_id", publishedRecruitments.map((r) => r.id));
+        .in("competition_id", ids);
       if (cancelled) return;
       const map = new Map<string, RecruitmentPrivateDetails>();
       for (const row of ((data as RecruitmentPrivateDetails[] | null) ?? [])) {
@@ -180,17 +201,7 @@ export function EventDetailClient({
       setPrivateDetails(map);
     })();
     return () => { cancelled = true; };
-  }, [isAdmin, publishedRecruitments]);
-
-  useEffect(() => {
-    if (!userId || isAdmin) { setIsVendor(false); return; }
-    let cancelled = false;
-    (async () => {
-      const vendor = await isEventVendor(supabaseRef.current, userId, event.id);
-      if (!cancelled) setIsVendor(vendor);
-    })();
-    return () => { cancelled = true; };
-  }, [event.id, isAdmin, userId]);
+  }, [isAdmin, publishedRecruitments, ownedRecruitmentIds]);
 
   const announcements = useMemo(
     () => (draftAnnouncements.length > 0 ? sortAnnouncements([...draftAnnouncements, ...publishedAnnouncements]) : publishedAnnouncements),
@@ -343,7 +354,7 @@ export function EventDetailClient({
 
       {tab === "recruitment" && (
         <div className="flex flex-col gap-6">
-          {(isAdmin || isVendor) && (
+          {isAdmin && (
             <div className="flex justify-end">
               <Button variant="secondary" onClick={openCreateSheet}>
                 <Plus className="w-4 h-4" />
@@ -362,7 +373,7 @@ export function EventDetailClient({
                   href={`/events/${slug}/recruitment/${item.id}`}
                   isAdmin={isAdmin}
                   onPinToggle={isAdmin ? (id, pinned) => togglePin("competitions", id, pinned) : undefined}
-                  onEdit={(isAdmin || (isVendor && item.created_by === userId)) ? () => openEditSheet(item) : undefined}
+                  onEdit={(isAdmin || ownedRecruitmentIds.has(item.id)) ? () => openEditSheet(item) : undefined}
                 />
               ))}
             </div>

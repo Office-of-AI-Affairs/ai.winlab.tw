@@ -57,7 +57,7 @@ export function UserCreateDialog({
       const supabase = createClient();
       const { error } = await supabase.rpc("admin_create_user", {
         p_email: email.trim(),
-        p_name: name.trim() || null,
+        p_name: name.trim() || undefined,
         p_role: role,
       });
 

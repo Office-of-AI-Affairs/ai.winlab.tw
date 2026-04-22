@@ -84,7 +84,7 @@ function formDataFromMember(m: OrganizationMember): FormData {
     website: m.website ?? "",
     image: m.image,
     sort_order: m.sort_order,
-    category: m.category,
+    category: m.category as OrganizationMemberCategory,
   };
 }
 

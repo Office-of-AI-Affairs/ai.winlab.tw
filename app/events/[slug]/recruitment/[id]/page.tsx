@@ -3,7 +3,7 @@ import { RecruitmentInterestButton } from "@/components/recruitment-interest-but
 import { RecruitmentInterestList } from "@/components/recruitment-interest-list";
 import { JsonLd } from "@/components/json-ld";
 import { composeRecruitment } from "@/lib/recruitment-records";
-import { isEventVendor } from "@/lib/supabase/check-event-vendor";
+import { isRecruitmentOwner } from "@/lib/supabase/check-recruitment-owner";
 import { createClient } from "@/lib/supabase/server";
 import type {
   Recruitment,
@@ -71,7 +71,6 @@ export default async function EventRecruitmentDetailPage({
   if (error || !summary) redirect(`/events/${slug}?tab=recruitment`);
 
   if (!summary.event_id) redirect(`/events/${slug}?tab=recruitment`);
-  const eventId = summary.event_id;
 
   let details: RecruitmentPrivateDetails | null = null;
   if (user) {
@@ -91,7 +90,7 @@ export default async function EventRecruitmentDetailPage({
 
   // Determine viewer role
   let isAdmin = false;
-  let isVendor = false;
+  let isOwner = false;
   let hasResume = false;
 
   if (user) {
@@ -105,13 +104,13 @@ export default async function EventRecruitmentDetailPage({
     if (profile) {
       isAdmin = profile.role === "admin";
       hasResume = Boolean(profile.resume);
-      if (!isAdmin && profile.role === "vendor") {
-        isVendor = await isEventVendor(supabase, user.id, eventId);
+      if (!isAdmin) {
+        isOwner = await isRecruitmentOwner(supabase, user.id, id);
       }
     }
   }
 
-  const canViewApplicants = isAdmin || isVendor;
+  const canViewApplicants = isAdmin || isOwner;
 
   // Fetch interest count
   const { data: countData, error: countError } = await supabase.rpc("get_interest_count", {

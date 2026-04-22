@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { revalidateAllEventCaches } from "@/app/events/actions";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth-provider";
+import { RecruitmentOwnerPicker } from "@/components/recruitment-owner-picker";
 import { normalizeApplicationMethod } from "@/lib/recruitment-application-method";
 import { uploadRecruitmentImage } from "@/lib/upload-image";
 import { isExternalImage } from "@/lib/utils";
@@ -130,7 +131,7 @@ export function RecruitmentDialog({
   eventId,
 }: RecruitmentDialogProps) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { formData, setFormData, updateField, resetForm } = useDialogForm<FormData>({
     table: "competitions",
     editingId: recruitment?.id ?? null,
@@ -807,6 +808,18 @@ export function RecruitmentDialog({
               rows={2}
             />
           </div>
+
+          {isAdmin && isEditMode && recruitment && (
+            <div className="space-y-3">
+              <div>
+                <Label>擁有者</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  擁有者可編輯此徵才資訊、查看應徵者名單。僅 admin 能管理此清單。
+                </p>
+              </div>
+              <RecruitmentOwnerPicker competitionId={recruitment.id} />
+            </div>
+          )}
         </div>
 
         <DialogFooter className="px-8 py-4 border-t flex-row gap-3">
