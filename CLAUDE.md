@@ -10,15 +10,19 @@
 
 - `bun dev` / `bun build` / `bun start` / `bun lint`
 - `bunx shadcn add <name>`
-- `.env.local`: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`
+- `.env.local`：
+  - Required：`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`
+  - Admin API：`SUPABASE_SERVICE_ROLE_KEY`（`/api/admin/import-users` 用）
+  - CDN opt-in：`NEXT_PUBLIC_CDN_BASE_URL`（見「CDN」段；未設則 `toCdnUrl` no-op）
+  - Playwright E2E：`CLAUDE_AGENT_EMAIL` / `CLAUDE_AGENT_PASSWORD` / `CLAUDE_AGENT_USER_ID`（dedicated admin account）
 
 ### Verification
 
-- `bun run check` — lint + test + typecheck (matches CI `verify` job)
-- `bun run e2e` — Playwright smoke suite on prod (`.pw.ts` files under
-  `e2e/`; also runs as CI `e2e` job post-deploy)
+- `bun run check` — test + typecheck（對應 CI `verify` job；lint 沒包含）
+- `bun run lint` — ESLint（單獨跑，非 CI-gated）
+- `bun run e2e` — Playwright smoke suite on prod（`.pw.ts` under `e2e/`，本地手動執行；CI 目前沒有 e2e job）
 - `bun run analyze` — bundle analyzer (`ANALYZE=true next build`)
-- Lighthouse baseline + methodology: `docs/perf-baseline.md`
+- Lighthouse baseline + methodology：`docs/perf-baseline.md`
 
 ### Schema regen
 
@@ -33,7 +37,7 @@
 
 - Root layout is **cookieless** — `AuthProvider` hydrates `useAuth()`
   from the browser Supabase client on mount (see `docs/isr-pattern.md`)
-- `useAuth()`: `user`, `profile`, `isAdmin`, `isLoading`, `signIn`, `signOut`
+- `useAuth()`: `user`, `profile`, `isAdmin`, `isVendor`, `isLoading`, `signIn`, `signOut`, `refreshProfile`
 - `NuqsAdapter` in root layout for URL search param state
 - Root layout fetches pinned events through the cached `getPinnedEvents()`
   helper (no cookies) so every downstream page can still ISR
@@ -62,17 +66,23 @@ inventory, and how to add a new page.
 - admin → 完整讀寫（`profile.role === 'admin'`）
 - vendor → 被指派活動下的招募 CRUD（`event_vendors` + `created_by = auth.uid()`）
 - `isEventVendor()` in `lib/supabase/check-event-vendor.ts` — client-callable
-- Admin / role checks happen on the client via `useAuth()` for pages on
-  the ISR pattern; legacy server pages (`/settings/*`) still use
-  `getViewer()`
+- Admin gate：
+  - ISR 客戶端：`useAuth().isAdmin`
+  - Server Component edit 頁：`requireAdminServer()` in
+    `lib/supabase/require-admin-server.ts` — 非 admin 自動 redirect；
+    `/carousel`、`/contacts`、`/introduction/edit`、`/privacy/edit`、
+    `/settings/users`、各 `[id]/edit` 都用它
+  - `getViewer()` 只剩 `/settings/page.tsx` 與 `/profile/[id]/page.tsx`
 
 ## Data model (`lib/supabase/types.ts`)
 
 - **Announcement** — Tiptap JSON，`status: draft|published`，`event_id`（null = 全域）
 - **Result** — `type: personal|team`，`pinned`，`event_id`
 - **Recruitment**（DB: `competitions`）— `event_id`，JSON: `positions`、`application_method`、`contact`；`created_by`
-- **EventVendor**（DB: `event_vendors`）— vendor ↔ event
+- `event_vendors` — vendor ↔ event pivot（無 export type，code 直接 `.from("event_vendors")`）
 - **RecruitmentInterest**（DB: `recruitment_interests`）
+- **EventParticipant**（DB: `event_participants`）— event-scoped 成員名單
+- **ResultCoauthor**（DB: `result_coauthors`）— result 多作者關聯
 - **Event** — `slug`，`status`，`pinned`，`sort_order`
 - **Introduction** — 單筆，Tiptap JSON
 - **OrganizationMember** — `category: core|legal_entity|industry`
@@ -100,17 +110,32 @@ Conventions:
   - `recompress-tiptap-images.ts` — jsonb Tiptap embeds
   - `cleanup-orphans.ts` — DB-unreferenced storage objects
 
+## CDN
+
+- `cdn.winlab.tw` 前擋 Supabase Storage 公開桶，由 `infra/cdn-worker/`
+  Cloudflare Worker 代理 + edge cache，省 Supabase egress
+- `toCdnUrl()` in `lib/cdn.ts` — 把 Supabase public storage URL 改寫成
+  CDN domain；未設 `NEXT_PUBLIC_CDN_BASE_URL` 就是 no-op，可先 deploy
+  程式再從 Vercel 切流量
+- Setup 步驟：`docs/cdn-setup.md`
+
 ## Pages
 
 **首頁** `/` — `HomeCarousel`, `HomeIntroduction`, `HomeAnnouncement`, `HomeEvents`, `HomeContacts`
 
 **活動** `/events` → `/events/[slug]`（公告/成果/招募 tabs）→ `[slug]/edit`、`announcements/[id]`、`results/[id]`、`recruitment/[id]`
 
-**內容** `/announcement`、`/introduction`、`/organization`、`/carousel`、`/contacts`、`/privacy`（各有 `/edit`）
+**內容** `/announcement`、`/introduction`（內含 `OrganizationMember` CRUD）、`/carousel`、`/contacts`、`/privacy`（各有 `/edit`）
 
 **帳號** `/account`、`/profile/[id]`（vendor 可見 My Events）
 
-**Admin** `/settings`、`/settings/users`
+**Auth flow** `/login`、`/forgot-password`、`/reset-password`（8 位 OTP，避開企業 link scanner）、`/auth/callback`
+
+**Admin** `/settings`、`/settings/users`、`/api/admin/import-users`（server-only，需 `SUPABASE_SERVICE_ROLE_KEY`）
+
+**Design system** `/design` — shadcn gallery + 專案 UI patterns 展示
+
+**Legacy redirects**（`next.config.ts`）— `/organization` → `/introduction`、`/recruitment*` → `/events`、`/team/:id` → `/`
 
 ## Hooks
 
@@ -162,7 +187,7 @@ Conventions:
 
 **字型** — `--font-noto-sans`（UI）、`--font-noto-sans-mono`（code）、`--font-instrument-serif`（裝飾，需 inline style）
 
-**元件** — `card.tsx` 純 div Server Component、`data-slot` 用於 CSS selectors、`next/image`（允許 `*.supabase.co`）
+**元件** — `card.tsx` 純 div Server Component、`data-slot` 用於 CSS selectors、`next/image`（允許 `*.supabase.co` 與 `cdn.winlab.tw`）
 
 ## Delivery
 
