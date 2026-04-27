@@ -18,8 +18,8 @@
 
 ### Verification
 
-- `bun run check` — test + typecheck（對應 CI `verify` job；lint 沒包含）
-- `bun run lint` — ESLint（單獨跑，非 CI-gated）
+- `bun run check` — test + typecheck（CI `verify` job 還會額外跑 `bun run lint`）
+- `bun run lint` — ESLint（CI-gated；本地可單獨跑）
 - `bun run e2e` — Playwright smoke suite on prod（`.pw.ts` under `e2e/`，本地手動執行；CI 目前沒有 e2e job）
 - `bun run analyze` — bundle analyzer (`ANALYZE=true next build`)
 - Lighthouse baseline + methodology：`docs/perf-baseline.md`
