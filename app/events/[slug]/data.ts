@@ -37,7 +37,9 @@ export async function getEventPageData(
 
     const { data: event } = await supabase
       .from("events")
-      .select("*")
+      .select(
+        "id, slug, name, description, cover_image, status, pinned, sort_order, created_at, updated_at",
+      )
       .eq("slug", slug)
       .eq("status", "published")
       .maybeSingle();
@@ -47,13 +49,17 @@ export async function getEventPageData(
     const [announcementsRes, resultsRes, recruitmentsRes, participantsRes] = await Promise.all([
       supabase
         .from("announcements")
-        .select("*")
+        .select(
+          "id, event_id, title, category, date, content, status, author_id, created_at, updated_at",
+        )
         .eq("event_id", eventRow.id)
         .eq("status", "published")
         .order("date", { ascending: false }),
       supabase
         .from("results")
-        .select("*")
+        .select(
+          "id, event_id, type, title, summary, content, header_image, date, pinned, status, author_id, team_id, created_at, updated_at",
+        )
         .eq("event_id", eventRow.id)
         .eq("status", "published")
         .order("pinned", { ascending: false })
