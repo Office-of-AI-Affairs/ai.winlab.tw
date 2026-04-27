@@ -273,32 +273,6 @@ export type Database = {
           },
         ]
       }
-      event_vendors: {
-        Row: {
-          created_at: string
-          event_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          event_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          event_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "event_vendors_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       events: {
         Row: {
           cover_image: string | null
