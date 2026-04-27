@@ -69,7 +69,6 @@ inventory, and how to add a new page.
   - **只有 admin 能管理 owner 清單**（新增/移除）
   - 同一筆 recruitment 可有多名 owner（同企業多人共管）
 - `isRecruitmentOwner()` in `lib/supabase/check-recruitment-owner.ts` — client-callable
-- `event_vendors` 表保留但**權限已廢**（舊資料不清，新模型不再讀）；vendor 實際權限只看 `competition_owners`
 - Admin gate：
   - ISR 客戶端：`useAuth().isAdmin`
   - Server Component edit 頁：`requireAdminServer()` in
@@ -84,7 +83,6 @@ inventory, and how to add a new page.
 - **Result** — `type: personal|team`，`pinned`，`event_id`
 - **Recruitment**（DB: `competitions`）— `event_id`，JSON: `positions`、`application_method`、`contact`；`created_by`（稽核用，權限判斷不看這個）
 - **CompetitionOwner**（DB: `competition_owners`）— recruitment ↔ user 多對多 pivot，權限判斷核心；新 INSERT 時 trigger `auto_add_recruitment_owner` 把 creator 自動加進去
-- `event_vendors` — **已廢**（保留表資料但 RLS 不讀；前端也不再引用）
 - **RecruitmentInterest**（DB: `recruitment_interests`）
 - **EventParticipant**（DB: `event_participants`）— event-scoped 成員名單
 - **ResultCoauthor**（DB: `result_coauthors`）— result 多作者關聯
