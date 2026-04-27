@@ -77,12 +77,15 @@ export function RecruitmentOwnerPicker({ competitionId }: Props) {
   }, [competitionId]);
 
   useEffect(() => {
-    refreshOwners();
+    let cancelled = false;
     (async () => {
+      await refreshOwners();
+      if (cancelled) return;
       const { data, error } = await supabaseRef.current.rpc("get_all_users");
       if (error) { console.error("load users failed:", error); return; }
-      setAllUsers((data as UserOption[] | null) ?? []);
+      if (!cancelled) setAllUsers((data as UserOption[] | null) ?? []);
     })();
+    return () => { cancelled = true; };
   }, [refreshOwners]);
 
   async function addOwner(userId: string) {

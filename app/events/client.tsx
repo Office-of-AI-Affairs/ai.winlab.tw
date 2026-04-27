@@ -21,8 +21,10 @@ export function EventsPageClient({
   const supabaseRef = useRef(createClient());
   const [drafts, setDrafts] = useState<Event[]>([]);
 
+  // No reset on !isAdmin — useMemo below returns published-only when
+  // isAdmin flips false, so any stale drafts in state are inert.
   useEffect(() => {
-    if (!isAdmin) { setDrafts([]); return; }
+    if (!isAdmin) return;
     let cancelled = false;
     (async () => {
       const { data } = await supabaseRef.current

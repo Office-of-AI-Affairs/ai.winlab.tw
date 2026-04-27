@@ -79,13 +79,17 @@ export function EventDetailClient({
 
   const [draftAnnouncements, setDraftAnnouncements] = useState<Announcement[]>([]);
   const [draftResults, setDraftResults] = useState<ResultWithMeta[]>([]);
-  const [privateDetails, setPrivateDetails] = useState<Map<string, RecruitmentPrivateDetails> | null>(null);
+  // privateFetch holds whatever the last fetch returned. The visibility
+  // gate (admin or current owner) is applied in the derived `privateDetails`
+  // memo below, so a stale fetch can never leak past a permission change.
+  const [privateFetch, setPrivateFetch] = useState<Map<string, RecruitmentPrivateDetails> | null>(null);
   const [ownedRecruitmentIds, setOwnedRecruitmentIds] = useState<Set<string>>(new Set());
 
   // Admin / owner drafts for announcements. RLS filters: admin sees all,
-  // author sees their own.
+  // author sees their own. No reset on !userId — useMemo guards on draft
+  // length so signed-out viewers see published-only without a state poke.
   useEffect(() => {
-    if (!userId) { setDraftAnnouncements([]); return; }
+    if (!userId) return;
     let cancelled = false;
     (async () => {
       const query = supabaseRef.current
@@ -100,9 +104,10 @@ export function EventDetailClient({
     return () => { cancelled = true; };
   }, [event.id, isAdmin, userId]);
 
-  // Admin / owner drafts for results.
+  // Admin / owner drafts for results. Same stale-state argument as the
+  // announcement draft effect above.
   useEffect(() => {
-    if (!userId) { setDraftResults([]); return; }
+    if (!userId) return;
     let cancelled = false;
     (async () => {
       const query = supabaseRef.current
@@ -163,8 +168,9 @@ export function EventDetailClient({
   }, [event.id, isAdmin, userId]);
 
   // Per-recruitment ownership for non-admins (powers the inline edit gate).
+  // Admins skip this fetch entirely; the empty initial Set covers them.
   useEffect(() => {
-    if (!userId || isAdmin) { setOwnedRecruitmentIds(new Set()); return; }
+    if (!userId || isAdmin) return;
     let cancelled = false;
     (async () => {
       const { data } = await supabaseRef.current
@@ -179,14 +185,16 @@ export function EventDetailClient({
 
   // Recruitment private details. Admin fetches everything; owners fetch only
   // recruitments they own so the dialog pre-fills correctly when they click
-  // edit without leaking other companies' private info.
+  // edit without leaking other companies' private info. Skip the fetch when
+  // there's nothing to ask for; visibility-gating happens in the derived
+  // `privateDetails` memo below regardless of the cached fetch.
   useEffect(() => {
-    if (publishedRecruitments.length === 0) { setPrivateDetails(null); return; }
-    if (!isAdmin && ownedRecruitmentIds.size === 0) { setPrivateDetails(null); return; }
+    if (publishedRecruitments.length === 0) return;
+    if (!isAdmin && ownedRecruitmentIds.size === 0) return;
     const ids = isAdmin
       ? publishedRecruitments.map((r) => r.id)
       : publishedRecruitments.filter((r) => ownedRecruitmentIds.has(r.id)).map((r) => r.id);
-    if (ids.length === 0) { setPrivateDetails(null); return; }
+    if (ids.length === 0) return;
     let cancelled = false;
     (async () => {
       const { data } = await supabaseRef.current
@@ -198,10 +206,26 @@ export function EventDetailClient({
       for (const row of ((data as RecruitmentPrivateDetails[] | null) ?? [])) {
         map.set(row.competition_id, row);
       }
-      setPrivateDetails(map);
+      setPrivateFetch(map);
     })();
     return () => { cancelled = true; };
   }, [isAdmin, publishedRecruitments, ownedRecruitmentIds]);
+
+  // Derived view of privateFetch that re-applies the permission gate every
+  // render. If a non-admin loses ownership of a recruitment, the cached
+  // fetch is filtered out here before composeRecruitment ever sees it.
+  const privateDetails = useMemo(() => {
+    if (!privateFetch || privateFetch.size === 0) return null;
+    if (publishedRecruitments.length === 0) return null;
+    if (isAdmin) return privateFetch;
+    if (ownedRecruitmentIds.size === 0) return null;
+    const filtered = new Map<string, RecruitmentPrivateDetails>();
+    for (const id of ownedRecruitmentIds) {
+      const detail = privateFetch.get(id);
+      if (detail) filtered.set(id, detail);
+    }
+    return filtered.size > 0 ? filtered : null;
+  }, [privateFetch, isAdmin, publishedRecruitments, ownedRecruitmentIds]);
 
   const announcements = useMemo(
     () => (draftAnnouncements.length > 0 ? sortAnnouncements([...draftAnnouncements, ...publishedAnnouncements]) : publishedAnnouncements),
