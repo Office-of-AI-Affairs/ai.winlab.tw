@@ -1,5 +1,6 @@
 import { AnnouncementDetail } from "@/components/announcement-detail";
 import { JsonLd } from "@/components/json-ld";
+import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb";
 import { createClient } from "@/lib/supabase/server";
 import { renderRichTextHtml } from "@/lib/ui/rich-text";
 import { ArrowLeft } from "lucide-react";
@@ -16,7 +17,7 @@ export async function generateMetadata({
   const supabase = await createClient();
   const [announcementRes, eventRes] = await Promise.all([
     supabase.from("announcements").select("title, category").eq("id", id).single(),
-    supabase.from("events").select("cover_image").eq("slug", slug).single(),
+    supabase.from("events").select("cover_image, name").eq("slug", slug).single(),
   ]);
   const title = announcementRes.data?.title ?? "公告";
   const description = announcementRes.data?.category
@@ -25,6 +26,7 @@ export async function generateMetadata({
   const ogImages = eventRes.data?.cover_image
     ? [{ url: eventRes.data.cover_image, width: 1200, height: 630, alt: title }]
     : [];
+  const twitterImages = ogImages.length ? ogImages.map((i) => i.url) : ["/og.png"];
   return {
     title: `${title}｜人工智慧專責辦公室`,
     description,
@@ -37,6 +39,12 @@ export async function generateMetadata({
       url: `/events/${slug}/announcements/${id}`,
       images: ogImages,
     },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title}｜人工智慧專責辦公室`,
+      description,
+      images: twitterImages,
+    },
   };
 }
 
@@ -48,14 +56,19 @@ export default async function EventAnnouncementDetailPage({
   const { slug, id } = await params;
   const supabase = await createClient();
 
-  const { data: announcement, error } = await supabase
-    .from("announcements")
-    .select("*")
-    .eq("id", id)
-    .eq("status", "published")
-    .single();
+  const [announcementRes, eventRes] = await Promise.all([
+    supabase
+      .from("announcements")
+      .select("*")
+      .eq("id", id)
+      .eq("status", "published")
+      .single(),
+    supabase.from("events").select("name").eq("slug", slug).single(),
+  ]);
 
-  if (error || !announcement) notFound();
+  if (announcementRes.error || !announcementRes.data) notFound();
+  const announcement = announcementRes.data;
+  const eventName = eventRes.data?.name ?? "活動";
 
   const contentHtml =
     renderRichTextHtml(announcement.content as Record<string, unknown> | null) ??
@@ -76,9 +89,17 @@ export default async function EventAnnouncementDetailPage({
     },
   };
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "首頁", path: "/" },
+    { name: "活動", path: "/events" },
+    { name: eventName, path: `/events/${slug}` },
+    { name: announcement.title, path: `/events/${slug}/announcements/${id}` },
+  ]);
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
       <JsonLd data={structuredData} />
+      <JsonLd data={breadcrumbJsonLd} />
       <Link
         href={`/events/${slug}?tab=announcements`}
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-10"

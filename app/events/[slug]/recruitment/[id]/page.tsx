@@ -2,6 +2,7 @@ import { RecruitmentDetail } from "@/components/recruitment-detail";
 import { RecruitmentInterestButton } from "@/components/recruitment-interest-button";
 import { RecruitmentInterestList } from "@/components/recruitment-interest-list";
 import { JsonLd } from "@/components/json-ld";
+import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb";
 import { composeRecruitment } from "@/lib/recruitment-records";
 import { isRecruitmentOwner } from "@/lib/supabase/check-recruitment-owner";
 import { createClient } from "@/lib/supabase/server";
@@ -35,6 +36,7 @@ export async function generateMetadata({
   const ogImages = ogImageUrl
     ? [{ url: ogImageUrl, width: 1200, height: 630, alt: title }]
     : [];
+  const twitterImages = ogImages.length ? ogImages.map((i) => i.url) : ["/og.png"];
 
   return {
     title: `${title}｜人工智慧專責辦公室`,
@@ -47,6 +49,12 @@ export async function generateMetadata({
       description,
       url: `/events/${slug}/recruitment/${id}`,
       images: ogImages,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title}｜人工智慧專責辦公室`,
+      description,
+      images: twitterImages,
     },
   };
 }
@@ -216,9 +224,23 @@ export default async function EventRecruitmentDetailPage({
     ...(employmentTypes.length ? { employmentType: employmentTypes } : {}),
   };
 
+  const { data: eventRow } = await supabase
+    .from("events")
+    .select("name")
+    .eq("slug", slug)
+    .maybeSingle();
+  const eventName = eventRow?.name ?? "活動";
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "首頁", path: "/" },
+    { name: "活動", path: "/events" },
+    { name: eventName, path: `/events/${slug}` },
+    { name: recruitment.title, path: `/events/${slug}/recruitment/${id}` },
+  ]);
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
       <JsonLd data={structuredData} />
+      <JsonLd data={breadcrumbJsonLd} />
       <RecruitmentDetail
         recruitment={recruitment as Recruitment}
         backHref={`/events/${slug}?tab=recruitment`}
