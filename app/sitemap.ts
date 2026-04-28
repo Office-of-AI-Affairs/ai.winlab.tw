@@ -1,10 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import type { MetadataRoute } from "next";
 
 const BASE_URL = "https://ai.winlab.tw";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const [announcementsRes, eventsRes, resultsRes, profilesRes, recruitmentRes] = await Promise.all([
     supabase
