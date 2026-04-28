@@ -406,7 +406,7 @@ export function ProfilePageClient({
                       )}
                     </div>
                   ) : profile.bio ? (
-                    <p className="text-sm whitespace-pre-wrap break-words">{profile.bio}</p>
+                    <p className="text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{profile.bio}</p>
                   ) : null}
 
                   {!canViewPrivateProfile && (
@@ -524,9 +524,9 @@ export function ProfilePageClient({
                     )}
                   </div>
                 ) : canViewPrivateProfile && viewLinks.length > 0 ? (
-                  <div className="grid gap-2 text-sm underline">
+                  <div className="grid gap-2 text-sm underline min-w-0">
                     {viewLinks.map(({ href, label }) => (
-                      <AppLink key={href} href={href!}>
+                      <AppLink key={href} href={href!} className="break-all">
                         {label}
                       </AppLink>
                     ))}
