@@ -9,7 +9,7 @@ const FOOTER_LINKS: { href: string; label: string }[] = [
 
 export function Footer() {
   return (
-    <footer className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 py-8 w-full">
+    <footer className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 py-8 w-full">
       <p className="text-sm text-muted-foreground">
         &copy; {new Date().getFullYear()} Office of AI Affairs.
       </p>
