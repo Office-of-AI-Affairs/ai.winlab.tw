@@ -159,6 +159,39 @@ export default async function EventRecruitmentDetailPage({
     }
   }
 
+  // Sanitized positions (name/type/location/count only) — readable by anon
+  // via SECURITY DEFINER RPC so JobPosting JSON-LD stays complete for
+  // unauthenticated crawlers.
+  const { data: publicPositionsData } = await supabase.rpc(
+    "get_public_recruitment_positions",
+    { p_competition_id: id }
+  );
+  type PublicPosition = { name: string | null; type: string | null; location: string | null; count: number | null };
+  const publicPositions: PublicPosition[] = Array.isArray(publicPositionsData)
+    ? (publicPositionsData as PublicPosition[])
+    : [];
+
+  const employmentTypeMap: Record<string, string> = {
+    full_time: "FULL_TIME",
+    part_time: "PART_TIME",
+    internship: "INTERN",
+    remote: "FULL_TIME",
+  };
+  const employmentTypes = [
+    ...new Set(
+      publicPositions
+        .map((p) => (p.type ? employmentTypeMap[p.type] : undefined))
+        .filter((v): v is string => Boolean(v))
+    ),
+  ];
+  const positionLocations = [
+    ...new Set(
+      publicPositions
+        .map((p) => p.location)
+        .filter((l): l is string => Boolean(l))
+    ),
+  ];
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "JobPosting",
@@ -168,11 +201,19 @@ export default async function EventRecruitmentDetailPage({
     datePosted: recruitment.start_date,
     validThrough: recruitment.end_date ?? undefined,
     url: `https://ai.winlab.tw/events/${slug}/recruitment/${id}`,
+    directApply: false,
     hiringOrganization: {
       "@type": "Organization",
-      name: "國立陽明交通大學 人工智慧專責辦公室",
-      url: "https://ai.winlab.tw",
+      name: recruitment.title,
+      sameAs: recruitment.link ?? undefined,
     },
+    jobLocation: positionLocations.length
+      ? positionLocations.map((loc) => ({
+          "@type": "Place",
+          address: { "@type": "PostalAddress", addressLocality: loc, addressCountry: "TW" },
+        }))
+      : { "@type": "Place", address: { "@type": "PostalAddress", addressCountry: "TW" } },
+    ...(employmentTypes.length ? { employmentType: employmentTypes } : {}),
   };
 
   return (

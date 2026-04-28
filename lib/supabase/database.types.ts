@@ -986,6 +986,10 @@ export type Database = {
         Args: { p_competition_id: string }
         Returns: number
       }
+      get_public_recruitment_positions: {
+        Args: { p_competition_id: string }
+        Returns: Json
+      }
       get_user_team_ids: { Args: { p_user_id: string }; Returns: string[] }
       gravatar_url: { Args: { email: string }; Returns: string }
       is_team_leader: {
