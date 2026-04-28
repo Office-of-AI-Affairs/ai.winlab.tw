@@ -1,8 +1,38 @@
 import { ProfilePageClient } from "./client";
 import { composeProfile } from "@/lib/profile-records";
+import { createPublicClient } from "@/lib/supabase/public";
 import { getViewer } from "@/lib/supabase/get-viewer";
 import type { ExternalResult, Profile, PublicProfile, Result } from "@/lib/supabase/types";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = createPublicClient();
+  const { data } = await supabase
+    .from("public_profiles")
+    .select("display_name")
+    .eq("id", id)
+    .maybeSingle();
+  const name = data?.display_name?.trim() || "成員";
+  const title = `${name}｜人工智慧專責辦公室`;
+  const description = `${name} 的個人頁面 — 國立陽明交通大學人工智慧專責辦公室成員與研究成果。`;
+  return {
+    title,
+    description,
+    alternates: { canonical: `/profile/${id}` },
+    openGraph: {
+      title,
+      description,
+      url: `/profile/${id}`,
+    },
+    twitter: { card: "summary_large_image" },
+  };
+}
 
 export default async function ProfilePage({
   params,
