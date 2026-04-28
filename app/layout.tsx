@@ -67,6 +67,17 @@ export default async function RootLayout({
 
   return (
     <html lang="zh-TW" suppressHydrationWarning>
+      <head>
+        {/* next/font's Google Fonts loader filters by subset, and "Noto Sans"
+            has no CJK subset — so Chinese glyphs are served directly from
+            Google Fonts to keep the unicode-range lazy-loading intact. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap"
+        />
+      </head>
       <body className={`${notoSans.variable} ${notoSansMono.variable} ${instrumentSerif.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <NuqsAdapter>
