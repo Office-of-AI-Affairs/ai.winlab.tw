@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useEventActions } from "@/hooks/use-event-actions";
 import { formatDate } from "@/lib/date";
 import { createClient } from "@/lib/supabase/client";
+import { getSurnameStrokes } from "@/lib/chinese-stroke";
 import { composeRecruitment } from "@/lib/recruitment-records";
 import type {
   Announcement,
@@ -250,11 +251,12 @@ export function EventDetailClient({
     [userId],
   );
 
-  // Splits the member roster into "has profile" (clickable, foregrounded) and
-  // "no profile yet" (greyed out, non-clickable) so visitors don't keep
-  // bouncing into empty profile pages. Search filters both groups.
-  // Names are sorted by Chinese stroke count via the `co-stroke` collation
-  // so the roster reads in the same order as a printed 名冊.
+  // Buckets the roster by surname stroke count so visitors can scan the
+  // grid the same way they'd scan a printed 名冊. Names within each bucket
+  // are still sorted by the `co-stroke` collator. Surnames not in the
+  // hardcoded map fall into a final "其他" bucket. Members without a
+  // profile are kept inline (greyed + non-clickable) so the bucket reads
+  // as a complete group, not split across two sections.
   const memberSections = useMemo(() => {
     const collator = new Intl.Collator("zh-Hant-u-co-stroke");
     const sorted = [...currentMembers].sort((a, b) =>
@@ -266,11 +268,30 @@ export function EventDetailClient({
     const matches = query
       ? sorted.filter((m) => (m.display_name ?? "").toLowerCase().includes(query))
       : sorted;
+
+    const buckets = new Map<number | null, EventMember[]>();
+    for (const m of matches) {
+      const stroke = getSurnameStrokes(m.display_name);
+      const list = buckets.get(stroke) ?? [];
+      list.push(m);
+      buckets.set(stroke, list);
+    }
+    const groups = Array.from(buckets.entries())
+      .sort(([a], [b]) => {
+        if (a === null) return 1;
+        if (b === null) return -1;
+        return a - b;
+      })
+      .map(([stroke, members]) => ({
+        key: stroke === null ? "other" : `s${stroke}`,
+        label: stroke === null ? "其他" : `${stroke} 畫`,
+        members,
+      }));
+
     return {
       total,
       withProfileTotal,
-      withProfile: matches.filter((m) => m.hasProfileData),
-      withoutProfile: matches.filter((m) => !m.hasProfileData),
+      groups,
       matchCount: matches.length,
     };
   }, [currentMembers, memberSearch]);
@@ -454,36 +475,30 @@ export function EventDetailClient({
                 </div>
               </div>
 
-              {memberSections.withProfile.length > 0 && (
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-                  {memberSections.withProfile.map((member) => (
-                    <AppLink
-                      key={member.id}
-                      href={`/profile/${member.id}`}
-                      className="flex flex-col items-center gap-2 rounded-lg p-3 hover:bg-muted transition-colors interactive-scale"
-                    >
-                      <Avatar size="2xl">
-                        {member.avatar_url && <AvatarImage src={member.avatar_url} alt={member.display_name ?? ""} />}
-                        <AvatarFallback>
-                          {(member.display_name ?? "?")[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm font-medium text-center line-clamp-1">
-                        {member.display_name ?? "未知使用者"}
-                      </span>
-                    </AppLink>
-                  ))}
-                </div>
-              )}
-
-              {memberSections.withoutProfile.length > 0 && (
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-medium text-muted-foreground">尚未建立個人檔案</h3>
-                    <Badge variant="secondary">{memberSections.withoutProfile.length}</Badge>
+              {memberSections.groups.map((group) => (
+                <div key={group.key} className="flex flex-col gap-3">
+                  <div className="flex items-baseline gap-2 border-b border-border pb-1">
+                    <h3 className="text-sm font-medium text-muted-foreground">{group.label}</h3>
+                    <span className="text-xs text-muted-foreground">{group.members.length}</span>
                   </div>
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-                    {memberSections.withoutProfile.map((member) => (
+                    {group.members.map((member) => member.hasProfileData ? (
+                      <AppLink
+                        key={member.id}
+                        href={`/profile/${member.id}`}
+                        className="flex flex-col items-center gap-2 rounded-lg p-3 hover:bg-muted transition-colors interactive-scale"
+                      >
+                        <Avatar size="2xl">
+                          {member.avatar_url && <AvatarImage src={member.avatar_url} alt={member.display_name ?? ""} />}
+                          <AvatarFallback>
+                            {(member.display_name ?? "?")[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium text-center line-clamp-1">
+                          {member.display_name ?? "未知使用者"}
+                        </span>
+                      </AppLink>
+                    ) : (
                       <div
                         key={member.id}
                         className="flex flex-col items-center gap-2 rounded-lg p-3 opacity-60"
@@ -501,7 +516,7 @@ export function EventDetailClient({
                     ))}
                   </div>
                 </div>
-              )}
+              ))}
 
               {memberSections.matchCount === 0 && (
                 <div className="text-center py-12 text-muted-foreground">沒有符合搜尋的學員</div>
