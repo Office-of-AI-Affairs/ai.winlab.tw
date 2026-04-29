@@ -253,13 +253,19 @@ export function EventDetailClient({
   // Splits the member roster into "has profile" (clickable, foregrounded) and
   // "no profile yet" (greyed out, non-clickable) so visitors don't keep
   // bouncing into empty profile pages. Search filters both groups.
+  // Names are sorted by Chinese stroke count via the `co-stroke` collation
+  // so the roster reads in the same order as a printed 名冊.
   const memberSections = useMemo(() => {
-    const total = currentMembers.length;
-    const withProfileTotal = currentMembers.filter((m) => m.hasProfileData).length;
+    const collator = new Intl.Collator("zh-Hant-u-co-stroke");
+    const sorted = [...currentMembers].sort((a, b) =>
+      collator.compare(a.display_name ?? "", b.display_name ?? ""),
+    );
+    const total = sorted.length;
+    const withProfileTotal = sorted.filter((m) => m.hasProfileData).length;
     const query = memberSearch.trim().toLowerCase();
     const matches = query
-      ? currentMembers.filter((m) => (m.display_name ?? "").toLowerCase().includes(query))
-      : currentMembers;
+      ? sorted.filter((m) => (m.display_name ?? "").toLowerCase().includes(query))
+      : sorted;
     return {
       total,
       withProfileTotal,
