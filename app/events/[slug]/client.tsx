@@ -251,12 +251,11 @@ export function EventDetailClient({
     [userId],
   );
 
-  // Buckets the roster by surname stroke count so visitors can scan the
-  // grid the same way they'd scan a printed 名冊. Names within each bucket
-  // are still sorted by the `co-stroke` collator. Surnames not in the
-  // hardcoded map fall into a final "其他" bucket. Members without a
-  // profile are kept inline (greyed + non-clickable) so the bucket reads
-  // as a complete group, not split across two sections.
+  // Splits the roster into "has profile" (foregrounded) and "no profile
+  // yet" (deprioritised) sections, each bucketed by surname stroke count
+  // under "{n} 畫" headers — the same way a printed 名冊 is organised.
+  // Names within each bucket stay sorted by the `co-stroke` collator;
+  // surnames not in the hardcoded map fall into a final "其他" bucket.
   const memberSections = useMemo(() => {
     const collator = new Intl.Collator("zh-Hant-u-co-stroke");
     const sorted = [...currentMembers].sort((a, b) =>
@@ -269,29 +268,37 @@ export function EventDetailClient({
       ? sorted.filter((m) => (m.display_name ?? "").toLowerCase().includes(query))
       : sorted;
 
-    const buckets = new Map<number | null, EventMember[]>();
-    for (const m of matches) {
-      const stroke = getSurnameStrokes(m.display_name);
-      const list = buckets.get(stroke) ?? [];
-      list.push(m);
-      buckets.set(stroke, list);
-    }
-    const groups = Array.from(buckets.entries())
-      .sort(([a], [b]) => {
-        if (a === null) return 1;
-        if (b === null) return -1;
-        return a - b;
-      })
-      .map(([stroke, members]) => ({
-        key: stroke === null ? "other" : `s${stroke}`,
-        label: stroke === null ? "其他" : `${stroke} 畫`,
-        members,
-      }));
+    const bucket = (members: EventMember[]) => {
+      const map = new Map<number | null, EventMember[]>();
+      for (const m of members) {
+        const stroke = getSurnameStrokes(m.display_name);
+        const list = map.get(stroke) ?? [];
+        list.push(m);
+        map.set(stroke, list);
+      }
+      return Array.from(map.entries())
+        .sort(([a], [b]) => {
+          if (a === null) return 1;
+          if (b === null) return -1;
+          return a - b;
+        })
+        .map(([stroke, list]) => ({
+          key: stroke === null ? "other" : `s${stroke}`,
+          label: stroke === null ? "其他" : `${stroke} 畫`,
+          members: list,
+        }));
+    };
+
+    const withProfile = matches.filter((m) => m.hasProfileData);
+    const withoutProfile = matches.filter((m) => !m.hasProfileData);
 
     return {
       total,
       withProfileTotal,
-      groups,
+      withProfileGroups: bucket(withProfile),
+      withoutProfileGroups: bucket(withoutProfile),
+      withProfileCount: withProfile.length,
+      withoutProfileCount: withoutProfile.length,
       matchCount: matches.length,
     };
   }, [currentMembers, memberSearch]);
@@ -475,14 +482,14 @@ export function EventDetailClient({
                 </div>
               </div>
 
-              {memberSections.groups.map((group) => (
-                <div key={group.key} className="flex flex-col gap-3">
+              {memberSections.withProfileGroups.map((group) => (
+                <div key={`p-${group.key}`} className="flex flex-col gap-3">
                   <div className="flex items-baseline gap-2 border-b border-border pb-1">
                     <h3 className="text-sm font-medium text-muted-foreground">{group.label}</h3>
                     <span className="text-xs text-muted-foreground">{group.members.length}</span>
                   </div>
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-                    {group.members.map((member) => member.hasProfileData ? (
+                    {group.members.map((member) => (
                       <AppLink
                         key={member.id}
                         href={`/profile/${member.id}`}
@@ -498,25 +505,45 @@ export function EventDetailClient({
                           {member.display_name ?? "未知使用者"}
                         </span>
                       </AppLink>
-                    ) : (
-                      <div
-                        key={member.id}
-                        className="flex flex-col items-center gap-2 rounded-lg p-3 opacity-60"
-                      >
-                        <Avatar size="2xl">
-                          {member.avatar_url && <AvatarImage src={member.avatar_url} alt={member.display_name ?? ""} />}
-                          <AvatarFallback>
-                            {(member.display_name ?? "?")[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm text-center line-clamp-1 text-muted-foreground">
-                          {member.display_name ?? "未知使用者"}
-                        </span>
-                      </div>
                     ))}
                   </div>
                 </div>
               ))}
+
+              {memberSections.withoutProfileCount > 0 && (
+                <div className="flex flex-col gap-4 mt-4">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-medium text-muted-foreground">尚未建立個人檔案</h2>
+                    <Badge variant="secondary">{memberSections.withoutProfileCount}</Badge>
+                  </div>
+                  {memberSections.withoutProfileGroups.map((group) => (
+                    <div key={`np-${group.key}`} className="flex flex-col gap-3">
+                      <div className="flex items-baseline gap-2 border-b border-border pb-1">
+                        <h3 className="text-sm font-medium text-muted-foreground">{group.label}</h3>
+                        <span className="text-xs text-muted-foreground">{group.members.length}</span>
+                      </div>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                        {group.members.map((member) => (
+                          <div
+                            key={member.id}
+                            className="flex flex-col items-center gap-2 rounded-lg p-3 opacity-60"
+                          >
+                            <Avatar size="2xl">
+                              {member.avatar_url && <AvatarImage src={member.avatar_url} alt={member.display_name ?? ""} />}
+                              <AvatarFallback>
+                                {(member.display_name ?? "?")[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm text-center line-clamp-1 text-muted-foreground">
+                              {member.display_name ?? "未知使用者"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {memberSections.matchCount === 0 && (
                 <div className="text-center py-12 text-muted-foreground">沒有符合搜尋的學員</div>
