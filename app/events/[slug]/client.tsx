@@ -250,6 +250,25 @@ export function EventDetailClient({
     [userId],
   );
 
+  // Splits the member roster into "has profile" (clickable, foregrounded) and
+  // "no profile yet" (greyed out, non-clickable) so visitors don't keep
+  // bouncing into empty profile pages. Search filters both groups.
+  const memberSections = useMemo(() => {
+    const total = currentMembers.length;
+    const withProfileTotal = currentMembers.filter((m) => m.hasProfileData).length;
+    const query = memberSearch.trim().toLowerCase();
+    const matches = query
+      ? currentMembers.filter((m) => (m.display_name ?? "").toLowerCase().includes(query))
+      : currentMembers;
+    return {
+      total,
+      withProfileTotal,
+      withProfile: matches.filter((m) => m.hasProfileData),
+      withoutProfile: matches.filter((m) => !m.hasProfileData),
+      matchCount: matches.length,
+    };
+  }, [currentMembers, memberSearch]);
+
   return (
     <PageShell>
       <Link
@@ -410,12 +429,15 @@ export function EventDetailClient({
         <div className="flex flex-col gap-6">
           {isAdmin ? (
             <MemberEditor eventId={event.id} members={currentMembers} onMembersChange={setCurrentMembers} />
+          ) : currentMembers.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">尚無成員</div>
           ) : (
-            currentMembers.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">尚無成員</div>
-            ) : (
-              <>
-                <div className="relative max-w-xs">
+            <>
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">
+                  共 {memberSections.total} 位學員，{memberSections.withProfileTotal} 位已建立個人檔案
+                </p>
+                <div className="relative w-full sm:max-w-xs">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="搜尋學員⋯"
@@ -424,32 +446,61 @@ export function EventDetailClient({
                     className="pl-9"
                   />
                 </div>
-                <div className="flex flex-col gap-3">
-                  {currentMembers
-                    .filter((m) => !memberSearch || (m.display_name ?? "").toLowerCase().includes(memberSearch.toLowerCase()))
-                    .map((member) => (
+              </div>
+
+              {memberSections.withProfile.length > 0 && (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                  {memberSections.withProfile.map((member) => (
                     <AppLink
                       key={member.id}
                       href={`/profile/${member.id}`}
-                      className="flex items-center gap-3 rounded-lg px-4 py-3 hover:bg-muted transition-colors"
+                      className="flex flex-col items-center gap-2 rounded-lg p-3 hover:bg-muted transition-colors interactive-scale"
                     >
-                      <Avatar size="sm">
+                      <Avatar size="2xl">
                         {member.avatar_url && <AvatarImage src={member.avatar_url} alt={member.display_name ?? ""} />}
                         <AvatarFallback>
                           {(member.display_name ?? "?")[0]}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm font-medium">
+                      <span className="text-sm font-medium text-center line-clamp-1">
                         {member.display_name ?? "未知使用者"}
                       </span>
-                      {!member.hasProfileData && (
-                        <Badge variant="secondary">尚無資料</Badge>
-                      )}
                     </AppLink>
                   ))}
                 </div>
-              </>
-            )
+              )}
+
+              {memberSections.withoutProfile.length > 0 && (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-muted-foreground">尚未建立個人檔案</h3>
+                    <Badge variant="secondary">{memberSections.withoutProfile.length}</Badge>
+                  </div>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                    {memberSections.withoutProfile.map((member) => (
+                      <div
+                        key={member.id}
+                        className="flex flex-col items-center gap-2 rounded-lg p-3 opacity-60"
+                      >
+                        <Avatar size="2xl">
+                          {member.avatar_url && <AvatarImage src={member.avatar_url} alt={member.display_name ?? ""} />}
+                          <AvatarFallback>
+                            {(member.display_name ?? "?")[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm text-center line-clamp-1 text-muted-foreground">
+                          {member.display_name ?? "未知使用者"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {memberSections.matchCount === 0 && (
+                <div className="text-center py-12 text-muted-foreground">沒有符合搜尋的學員</div>
+              )}
+            </>
           )}
         </div>
       )}
