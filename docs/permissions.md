@@ -251,10 +251,11 @@
 - **`profiles` SELECT 對 authenticated `using (true)`** — phone / linkedin / github 等對登入者公開（User UX 偏好優先）
 - **`storage.resumes` SELECT 對 authenticated** — PDF 下載對所有登入者開放（同上）
 
-## 維護紀律
+## 維護紀律 + 工具鏈
 
 1. 改 RLS / storage policy 必須先改本檔 → review → 寫 migration
 2. 嚴禁 dashboard 直接改 policy（CI 會抓 drift）
-3. RLS test suite (`lib/security/rls.test.ts`) 對著本檔斷言 — 漂移即紅
-4. 每月 cron 跑 `pg_policy` dump 對齊本檔
+3. **RLS contract test** (`lib/security/rls-contracts.test.ts`) 對著 `lib/security/rls-snapshot.json` 跑斷言 — 抓「policy 改了但沒記錄到 snapshot」、「dropped table 被資源化回來」、「critical SELECT 被悄悄放寬」
+4. **Snapshot refresh** — RLS migration ship 之後跑 `scripts/refresh-rls-snapshot.md` 裡的 SQL，更新 `lib/security/rls-snapshot.json`，PR diff 即等於 RLS 變動的人類可讀版
 5. 命名約定：`<role/scope> can <op> <resource>` (e.g. `Admin can update events`)，不要寫成 `Authenticated can read X` 這種容易誤導的形式
+6. （未來）`DATABASE_URL` 進 CI secret 後，可加 `lib/security/rls-runtime.test.ts` 用 SQL `SET LOCAL ROLE` 跑真實 role 模擬 — 抓 contract test 抓不到的 semantic 漂移

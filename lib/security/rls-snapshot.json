@@ -1,0 +1,131 @@
+{
+  "generated_at": "2026-04-30",
+  "project_ref": "hwezfbhjcetpezfuvelf",
+  "note": "Source-of-truth snapshot of all RLS policies in production. Refreshed manually via the SQL in scripts/refresh-rls-snapshot.md. Drift between this file and prod = git diff after running refresh, drift between this file and docs/permissions.md = test failure.",
+  "tables_with_rls": [
+    { "rel": "public.announcements", "policy_count": 5 },
+    { "rel": "public.carousel_slides", "policy_count": 4 },
+    { "rel": "public.competition_owners", "policy_count": 3 },
+    { "rel": "public.competition_private_details", "policy_count": 4 },
+    { "rel": "public.competitions", "policy_count": 4 },
+    { "rel": "public.contacts", "policy_count": 4 },
+    { "rel": "public.event_participants", "policy_count": 3 },
+    { "rel": "public.events", "policy_count": 5 },
+    { "rel": "public.external_results", "policy_count": 4 },
+    { "rel": "public.introduction", "policy_count": 3 },
+    { "rel": "public.oauth_auth_codes", "policy_count": 0 },
+    { "rel": "public.oauth_clients", "policy_count": 2 },
+    { "rel": "public.organization_members", "policy_count": 4 },
+    { "rel": "public.privacy_policy", "policy_count": 2 },
+    { "rel": "public.profiles", "policy_count": 3 },
+    { "rel": "public.public_profiles", "policy_count": 1 },
+    { "rel": "public.recruitment_interests", "policy_count": 3 },
+    { "rel": "public.result_coauthors", "policy_count": 3 },
+    { "rel": "public.result_tags", "policy_count": 3 },
+    { "rel": "public.results", "policy_count": 5 },
+    { "rel": "public.tags", "policy_count": 4 },
+    { "rel": "public.upload_tokens", "policy_count": 1 },
+    { "rel": "storage.objects", "policy_count": 8 }
+  ],
+  "policies": [
+    { "rel": "public.announcements", "polname": "Admin can delete announcement", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin" },
+    { "rel": "public.announcements", "polname": "Admin can insert announcement", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin" },
+    { "rel": "public.announcements", "polname": "Admin can update announcement", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "is_admin" },
+    { "rel": "public.announcements", "polname": "Anon read published announcements", "op": "SELECT", "roles": ["anon"], "using_summary": "status='published'" },
+    { "rel": "public.announcements", "polname": "Authenticated read published or admin announcements", "op": "SELECT", "roles": ["authenticated"], "using_summary": "status='published' OR is_admin" },
+
+    { "rel": "public.carousel_slides", "polname": "Admin can delete carousel_slides", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin" },
+    { "rel": "public.carousel_slides", "polname": "Admin can insert carousel_slides", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin" },
+    { "rel": "public.carousel_slides", "polname": "Admin can update carousel_slides", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "is_admin" },
+    { "rel": "public.carousel_slides", "polname": "Anyone can read carousel_slides", "op": "SELECT", "roles": ["anon", "authenticated"], "using_summary": "true" },
+
+    { "rel": "public.competition_owners", "polname": "Admin can delete competition_owners", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin" },
+    { "rel": "public.competition_owners", "polname": "Admin can insert competition_owners", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin" },
+    { "rel": "public.competition_owners", "polname": "Owner or admin can read competition_owners", "op": "SELECT", "roles": ["authenticated"], "using_summary": "user_id=auth.uid() OR is_admin" },
+
+    { "rel": "public.competition_private_details", "polname": "Admin or owner can delete competition_private_details", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin OR is_recruitment_owner" },
+    { "rel": "public.competition_private_details", "polname": "Admin or owner can insert competition_private_details", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin OR is_recruitment_owner" },
+    { "rel": "public.competition_private_details", "polname": "Admin or owner can update competition_private_details", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "is_admin OR is_recruitment_owner" },
+    { "rel": "public.competition_private_details", "polname": "Authenticated can read competition_private_details", "op": "SELECT", "roles": ["authenticated"], "using_summary": "true", "trade_off": "登入者直接讀薪資/email/需求是產品意圖（TODO #1 拍板）" },
+
+    { "rel": "public.competitions", "polname": "Admin can insert competition", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin" },
+    { "rel": "public.competitions", "polname": "Admin or owner can delete competition", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin OR is_recruitment_owner" },
+    { "rel": "public.competitions", "polname": "Admin or owner can update competition", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "is_admin OR is_recruitment_owner" },
+    { "rel": "public.competitions", "polname": "Public read competitions", "op": "SELECT", "roles": ["public"], "using_summary": "true" },
+
+    { "rel": "public.contacts", "polname": "Admin can delete contacts", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin" },
+    { "rel": "public.contacts", "polname": "Admin can insert contacts", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin" },
+    { "rel": "public.contacts", "polname": "Admin can update contacts", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "is_admin" },
+    { "rel": "public.contacts", "polname": "Anyone can read contacts", "op": "SELECT", "roles": ["anon", "authenticated"], "using_summary": "true" },
+
+    { "rel": "public.event_participants", "polname": "event_participants_delete", "op": "DELETE", "roles": ["public"], "using_summary": "is_admin" },
+    { "rel": "public.event_participants", "polname": "event_participants_insert", "op": "INSERT", "roles": ["public"], "check_summary": "is_admin" },
+    { "rel": "public.event_participants", "polname": "event_participants_select", "op": "SELECT", "roles": ["public"], "using_summary": "true" },
+
+    { "rel": "public.events", "polname": "Admin delete events", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin" },
+    { "rel": "public.events", "polname": "Admin insert events", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin" },
+    { "rel": "public.events", "polname": "Admin update events", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "is_admin" },
+    { "rel": "public.events", "polname": "Authenticated read published or admin events", "op": "SELECT", "roles": ["authenticated"], "using_summary": "status='published' OR is_admin" },
+    { "rel": "public.events", "polname": "Public read published events", "op": "SELECT", "roles": ["anon"], "using_summary": "status='published'" },
+
+    { "rel": "public.external_results", "polname": "owner delete external_results", "op": "DELETE", "roles": ["public"], "using_summary": "user_id=auth.uid()" },
+    { "rel": "public.external_results", "polname": "owner insert external_results", "op": "INSERT", "roles": ["public"], "check_summary": "user_id=auth.uid()" },
+    { "rel": "public.external_results", "polname": "owner update external_results", "op": "UPDATE", "roles": ["public"], "using_summary": "user_id=auth.uid()" },
+    { "rel": "public.external_results", "polname": "public read external_results", "op": "SELECT", "roles": ["public"], "using_summary": "true" },
+
+    { "rel": "public.introduction", "polname": "Admin can insert introduction", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin" },
+    { "rel": "public.introduction", "polname": "Admin can update introduction", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "is_admin" },
+    { "rel": "public.introduction", "polname": "Anyone can read introduction", "op": "SELECT", "roles": ["public"], "using_summary": "true" },
+
+    { "rel": "public.oauth_clients", "polname": "anon can insert oauth clients", "op": "INSERT", "roles": ["anon"], "check_summary": "format_check_only", "note": "DCR registration for sibling MCP repo" },
+    { "rel": "public.oauth_clients", "polname": "anon can read oauth clients", "op": "SELECT", "roles": ["anon"], "using_summary": "true" },
+
+    { "rel": "public.organization_members", "polname": "Admin can delete organization_members", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin" },
+    { "rel": "public.organization_members", "polname": "Admin can insert organization_members", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin" },
+    { "rel": "public.organization_members", "polname": "Admin can update organization_members", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "is_admin" },
+    { "rel": "public.organization_members", "polname": "Anyone can read organization_members", "op": "SELECT", "roles": ["public"], "using_summary": "true" },
+
+    { "rel": "public.privacy_policy", "polname": "Admins can insert privacy policy versions", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin" },
+    { "rel": "public.privacy_policy", "polname": "Anyone can read privacy policy", "op": "SELECT", "roles": ["public"], "using_summary": "true" },
+
+    { "rel": "public.profiles", "polname": "Admin or owner can update profile", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "id=auth.uid() OR is_admin", "check_summary": "is_admin OR (id=auth.uid() AND role unchanged)" },
+    { "rel": "public.profiles", "polname": "Authenticated can read profiles", "op": "SELECT", "roles": ["authenticated"], "using_summary": "true", "trade_off": "phone/social_links 對所有登入者公開（PII vs UX trade-off, commit d3e6ca4）" },
+    { "rel": "public.profiles", "polname": "Users can insert own profile", "op": "INSERT", "roles": ["public"], "check_summary": "id=auth.uid()" },
+
+    { "rel": "public.public_profiles", "polname": "Anyone can read public_profiles", "op": "SELECT", "roles": ["public"], "using_summary": "true" },
+
+    { "rel": "public.recruitment_interests", "polname": "Authenticated user can insert own interest", "op": "INSERT", "roles": ["authenticated"], "check_summary": "user_id=auth.uid()" },
+    { "rel": "public.recruitment_interests", "polname": "Self, owner, or admin can read recruitment_interests", "op": "SELECT", "roles": ["authenticated"], "using_summary": "user_id=auth.uid() OR is_admin OR is_recruitment_owner" },
+    { "rel": "public.recruitment_interests", "polname": "User can delete own interest", "op": "DELETE", "roles": ["authenticated"], "using_summary": "user_id=auth.uid()" },
+
+    { "rel": "public.result_coauthors", "polname": "Result author or admin can delete coauthors", "op": "DELETE", "roles": ["public"], "using_summary": "is_result_author OR is_admin" },
+    { "rel": "public.result_coauthors", "polname": "Result author or admin can insert coauthors", "op": "INSERT", "roles": ["public"], "check_summary": "is_result_author OR is_admin" },
+    { "rel": "public.result_coauthors", "polname": "Self, author of result, coauthor of published, or admin can rea", "op": "SELECT", "roles": ["public"], "using_summary": "user_id=auth.uid() OR (result.status='published' OR is_result_author OR is_admin)", "note": "polname truncated to 63 chars by pg" },
+
+    { "rel": "public.result_tags", "polname": "Author or admin can delete result_tags", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_result_author OR is_admin" },
+    { "rel": "public.result_tags", "polname": "Author or admin can insert result_tags", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_result_author OR is_admin" },
+    { "rel": "public.result_tags", "polname": "Public read result_tags", "op": "SELECT", "roles": ["public"], "using_summary": "true" },
+
+    { "rel": "public.results", "polname": "Author or admin can delete result", "op": "DELETE", "roles": ["authenticated"], "using_summary": "author_id=auth.uid() OR is_admin" },
+    { "rel": "public.results", "polname": "Author or admin can insert result", "op": "INSERT", "roles": ["authenticated"], "check_summary": "author_id=auth.uid() OR is_admin" },
+    { "rel": "public.results", "polname": "Author or admin can update result", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "author_id=auth.uid() OR is_admin" },
+    { "rel": "public.results", "polname": "Authenticated read own, published, or admin results", "op": "SELECT", "roles": ["authenticated"], "using_summary": "status='published' OR author_id=auth.uid() OR is_admin" },
+    { "rel": "public.results", "polname": "Public read published results", "op": "SELECT", "roles": ["anon"], "using_summary": "status='published'" },
+
+    { "rel": "public.tags", "polname": "Admin can delete tags", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin" },
+    { "rel": "public.tags", "polname": "Admin can insert tags", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin" },
+    { "rel": "public.tags", "polname": "Admin can update tags", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "is_admin" },
+    { "rel": "public.tags", "polname": "Public read tags", "op": "SELECT", "roles": ["public"], "using_summary": "true" },
+
+    { "rel": "public.upload_tokens", "polname": "Authenticated users can create own upload tokens", "op": "INSERT", "roles": ["authenticated"], "check_summary": "user_id=auth.uid()" },
+
+    { "rel": "storage.objects", "polname": "Admin can delete announcement-images", "op": "DELETE", "roles": ["authenticated"], "using_summary": "bucket='announcement-images' AND is_admin" },
+    { "rel": "storage.objects", "polname": "Admin can update announcement-images", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "bucket='announcement-images' AND is_admin" },
+    { "rel": "storage.objects", "polname": "Admin can upload announcement-images", "op": "INSERT", "roles": ["authenticated"], "check_summary": "bucket='announcement-images' AND is_admin" },
+    { "rel": "storage.objects", "polname": "Allow public read for announcement-images", "op": "SELECT", "roles": ["public"], "using_summary": "bucket='announcement-images'" },
+    { "rel": "storage.objects", "polname": "resumes_delete_own", "op": "DELETE", "roles": ["authenticated"], "using_summary": "bucket='resumes' AND foldername[1]=auth.uid()" },
+    { "rel": "storage.objects", "polname": "resumes_insert_own", "op": "INSERT", "roles": ["authenticated"], "check_summary": "bucket='resumes' AND foldername[1]=auth.uid()" },
+    { "rel": "storage.objects", "polname": "resumes_select_authenticated", "op": "SELECT", "roles": ["authenticated"], "using_summary": "bucket='resumes'", "trade_off": "登入即可下載任何人 PDF（PII vs UX trade-off, commit 96cba86）" },
+    { "rel": "storage.objects", "polname": "resumes_update_own", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "bucket='resumes' AND foldername[1]=auth.uid()" }
+  ]
+}
