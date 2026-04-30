@@ -79,19 +79,11 @@ export default async function EventResultDetailPage({
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
     const isAdmin = profile?.role === "admin";
     const isAuthor = result.author_id === user.id;
-    let isTeamLeader = false;
-    if (result.type === "team" && result.team_id) {
-      const { data: tm } = await supabase.from("team_members").select("role").eq("team_id", result.team_id).eq("user_id", user.id).single();
-      isTeamLeader = tm?.role === "leader";
-    }
-    canEdit = isAdmin || isAuthor || isTeamLeader;
+    canEdit = isAdmin || isAuthor;
   }
 
   let publisherInfo: PublisherInfo = null;
-  if (result.type === "team" && result.team_id) {
-    const { data: team } = await supabase.from("public_teams").select("name").eq("id", result.team_id).single();
-    if (team) publisherInfo = { name: team.name, href: null };
-  } else if (result.author_id) {
+  if (result.author_id) {
     const { data: profile } = await supabase.from("public_profiles").select("display_name").eq("id", result.author_id).single();
     if (profile) publisherInfo = { name: profile.display_name || "未知使用者", href: `/profile/${result.author_id}` };
   }

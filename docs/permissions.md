@@ -187,34 +187,11 @@
 | INSERT | ❌ | 自己（`user_id = auth.uid()`） | 自己 | 自己 |
 | DELETE | ❌ | 自己投的 | 自己投的 | 自己投的 |
 
-### `teams` — 隊伍
+> ✅ **teams 子系統已下線**（2026-04-30）：`teams` / `team_members` / `team_invitations` / `public_teams` 整組移除，`results.team_id` / `results.type` 欄位也清掉。詳見 commit `20260430000007`。所有 result 現在皆為個人成果（author_id 主導）。
 
-| Op | anon | user | team_leader | admin |
-|----|:-:|:-:|:-:|:-:|
-| SELECT | ❌ | 自己有加入的隊伍 | ✅（透過 team_members） | 自己有加入才看得到 |
-| INSERT | ❌ | 自己當 leader 才能建 | ✅ | 自己當 leader |
-| UPDATE | ❌ | ❌ | 自己率的 | ❌（沒 admin 特權） |
-| DELETE | ❌ | ❌ | 自己率的 | ❌（沒 admin 特權） |
+### `result_coauthors` 的修補
 
-> ⚠️ **TODO 釐清**：admin 沒有 teams UPDATE/DELETE 特權，這是預期嗎？
-
-### `team_members` — 隊員
-
-| Op | anon | user | team_leader | admin |
-|----|:-:|:-:|:-:|:-:|
-| SELECT | ❌ | 自己有加入的隊伍的成員 | ✅ | 自己有加入才看得到 |
-| INSERT | ❌ | ❌ | 自己率的 | ❌ |
-| DELETE | ❌ | 自己（離隊） / leader 移除 | ✅ | ❌ |
-
-> ✅ 已修：靠 `get_user_team_ids()` SECURITY DEFINER 函式破遞迴（commit `695b706`）
-
-### `team_invitations` — 邀請
-
-| Op | anon | user / leader / invitee | admin |
-|----|:-:|:-:|:-:|
-| SELECT | ❌ | 寄出者 / email 對得上的被邀人 | ❌ |
-| INSERT | ❌ | leader 自己率的 | ❌ |
-| UPDATE | ❌ | 寄出者 / email 對得上的被邀人 | ❌ |
+`SELECT` 從原本「published OR 任何登入者」收緊到「self OR (result published OR 你是 author OR 你是 admin)」。draft 成果的 coauthor 列表不再對所有登入者開放。詳見 commit `20260430000007`。
 
 ### `upload_tokens` — 上傳 token
 
@@ -230,7 +207,7 @@
 | SELECT | ✅ | ❌ 沒 policy | ❌ |
 | INSERT | ✅（含格式 check） | ❌ | ❌ |
 
-> ⚠️ **TODO 釐清**：anon 可 insert/read OAuth clients，預期是 OAuth provider flow 的客戶端註冊？確認用法。
+> ✅ **跨 repo 用途**：MCP server (`~/mcp.ai.winlab.tw`) 的 OAuth Dynamic Client Registration (RFC 7591) 在用，避免 client 端帶 `SUPABASE_SERVICE_ROLE_KEY`。anon insert 限定最小欄位 + 格式 check。本 repo 不該動。
 
 ### `oauth_auth_codes`
 
@@ -245,10 +222,10 @@
 | Op | anon | user | admin |
 |----|:-:|:-:|:-:|
 | SELECT | ✅ | ✅ | ✅ |
-| INSERT | ❌ | ✅ | ✅ |
+| INSERT | ❌ | ❌ | ✅ |
 | UPDATE/DELETE | ❌ | ❌ | ✅ |
 
-> ⚠️ **TODO 釐清**：任何登入者都能上傳到 announcement-images 而不只是 admin？目前 policy 是 `bucket_id = 'announcement-images'` 對 authenticated。
+> ✅ **已收緊**（2026-04-30）：INSERT 從「任何登入者」收到「admin only」，因為只有 admin 編輯公告會上傳。詳見 commit `20260430000006`。
 
 ### `resumes` (private bucket)
 
@@ -259,19 +236,20 @@
 
 > ⚠️ **產品決策已記錄**：登入即可下載任何人的履歷 PDF，這是 trade-off（PII vs UX）。詳見 commit `96cba86`。
 
-## 待 Product 釐清的疑點清單
+## 五條 TODO 的拍板紀錄（2026-04-30）
 
-1. **`competition_private_details` SELECT** — 登入者直接讀薪資/email/需求文件，還是該收到「申請過 / owner」？
-2. **`result_coauthors` SELECT** — 登入者讀 draft 成果的 coauthor 是 OK 還是漏掉？
-3. **`teams` UPDATE/DELETE** — admin 沒特權是預期還是漏寫？
-4. **`announcement-images` INSERT** — 任何登入者上傳，還是只開給 admin？
-5. **`oauth_clients` anon insert/read** — 確認是哪個 flow 在用，是否可收緊。
+| # | 議題 | 拍板 |
+|---|------|------|
+| 1 | `competition_private_details` 登入者直接讀薪資/email/需求 | ✅ **預期** — 登入即可看完整職缺是產品意圖 |
+| 2 | `result_coauthors` SELECT 過寬 | ✅ **修** — 收緊到 self / author of result / coauthor of published / admin |
+| 3 | `teams` UPDATE/DELETE admin 沒特權 | ✅ **整組砍** — 子系統 0 row 0 用，連同 `team_id` / `type` 欄位 / `is_team_leader` 等函式 |
+| 4 | `announcement-images` INSERT 任何登入者 | ✅ **收緊到 admin only** |
+| 5 | `oauth_clients` anon insert/read | ✅ **預期** — 跨 repo（MCP server）的 OAuth DCR 在用 |
 
 ## 已修補但仍 trade-off 的（記錄用）
 
 - **`profiles` SELECT 對 authenticated `using (true)`** — phone / linkedin / github 等對登入者公開（User UX 偏好優先）
 - **`storage.resumes` SELECT 對 authenticated** — PDF 下載對所有登入者開放（同上）
-- **`team_members` SELECT** — 已從遞迴 EXISTS 改成 SECURITY DEFINER 函式（recursion bug fix）
 
 ## 維護紀律
 

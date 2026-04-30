@@ -33,14 +33,12 @@ export type Profile = Pick<
   | "social_links"
 >;
 export type PublicProfile = Tables<"public_profiles">;
-export type Team = Omit<Tables<"teams">, never>;
 export type Contact = Tables<"contacts">;
 export type EventParticipant = Tables<"event_participants">;
 
 export type OrganizationMemberCategory = "core" | "legal_entity" | "industry";
 export type OrganizationMember = Tables<"organization_members">;
 
-export type ResultType = "personal" | "team";
 export type Result = Omit<Tables<"results">, "content" | "summary"> & {
   content: Record<string, unknown>;
   summary: string;

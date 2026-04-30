@@ -10,13 +10,6 @@ const migration = readFileSync(
   ),
   "utf8"
 )
-const publicTeamsMigration = readFileSync(
-  resolve(
-    process.cwd(),
-    "supabase/migrations/20260321010000_add_public_teams.sql"
-  ),
-  "utf8"
-)
 const profilePage = readFileSync(resolve(process.cwd(), "app/profile/[id]/page.tsx"), "utf8")
 const profileLayout = readFileSync(resolve(process.cwd(), "app/profile/[id]/layout.tsx"), "utf8")
 const eventPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/page.tsx"), "utf8")
@@ -46,25 +39,26 @@ describe("private data contracts", () => {
     assert.ok(!migration.includes('create policy "Public read competition_private_details"'))
   })
 
-  test("migration publishes team names without exposing private team fields", () => {
-    assert.ok(publicTeamsMigration.includes("create table if not exists public.public_teams"))
-    assert.ok(publicTeamsMigration.includes("name text not null"))
-    assert.ok(publicTeamsMigration.includes('create policy "Anyone can read public_teams"'))
-    assert.ok(!publicTeamsMigration.includes("description"))
-    assert.ok(!publicTeamsMigration.includes("leader_id"))
-  })
-
   test("public profile reads no longer query private profile rows", () => {
     assert.ok(profilePage.includes('.from("public_profiles")'))
     assert.ok(profileLayout.includes('.from("public_profiles")'))
     // The /events/[slug] page moved its data fetches into data.ts for ISR.
-    // Contract still holds: public reads must hit public_profiles/teams.
+    // Contract still holds: public reads must hit public_profiles.
     assert.ok(eventData.includes('.from("public_profiles")'))
     assert.ok(eventResultPage.includes('.from("public_profiles")'))
-    assert.ok(eventData.includes('.from("public_teams")'))
-    assert.ok(eventResultPage.includes('.from("public_teams")'))
-    assert.ok(!eventData.includes('.from("teams")'))
-    assert.ok(!eventResultPage.includes('.from("teams")'))
+  })
+
+  test("teams subsystem is fully removed", () => {
+    // The teams / team_members / team_invitations / public_teams tables were
+    // dropped in 20260430000007 along with the team-leader RLS branches and
+    // the results.team_id / results.type columns. Make sure no caller leaks
+    // back in.
+    assert.ok(!eventData.includes('"teams"'))
+    assert.ok(!eventData.includes('"team_members"'))
+    assert.ok(!eventData.includes('"public_teams"'))
+    assert.ok(!eventResultPage.includes('"teams"'))
+    assert.ok(!eventResultPage.includes('"team_members"'))
+    assert.ok(!eventResultPage.includes('"public_teams"'))
   })
 
   test("recruitment pages fetch summary rows separately from private details", () => {

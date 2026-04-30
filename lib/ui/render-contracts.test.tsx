@@ -74,19 +74,17 @@ const recruitmentFixture: Recruitment = {
   pinned: false,
 }
 
-const teamResultFixture: Result = {
+const resultFixture: Result = {
   id: "res_1",
   created_at: "2026-03-21T00:00:00.000Z",
   updated_at: "2026-03-21T00:00:00.000Z",
-  title: "團隊作品",
+  title: "個人作品",
   date: "2026-03-21",
   header_image: null,
   summary: "這是摘要",
   content: {},
   status: "published",
-  author_id: null,
-  type: "team",
-  team_id: "team_1",
+  author_id: "user_1",
   pinned: false,
   event_id: "evt_1",
 }
@@ -225,28 +223,10 @@ describe("component-owned skeleton render contracts", () => {
     assert.ok(html.includes("text-right"))
   })
 
-  test("renders public team result cards with a visible publisher name", () => {
-    const html = renderToStaticMarkup(
-      <ResultCard
-        item={{ ...teamResultFixture, team_name: "AI Rising Star 團隊" }}
-        href="/events/ai-rising-star/results/res_1"
-      />
-    )
-
-    assert.ok(html.includes("AI Rising Star 團隊"))
-    assert.ok(!html.includes("未知隊伍"))
-  })
-
   test("renders personal result cards with a clickable publisher link", () => {
     const html = renderToStaticMarkup(
       <ResultCard
-        item={{
-          ...teamResultFixture,
-          type: "personal",
-          author_id: "user_1",
-          team_id: null,
-          author_name: "蕭哲安",
-        }}
+        item={{ ...resultFixture, author_name: "蕭哲安" }}
         href="/events/ai-rising-star/results/res_1"
         publisherHref="/profile/user_1"
       />

@@ -238,8 +238,6 @@ export function useProfileEditor({
         content: {},
         status: "draft",
         author_id: userId,
-        type: "personal",
-        team_id: null,
         event_id: eventId,
       })
       .select()

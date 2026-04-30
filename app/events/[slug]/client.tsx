@@ -142,14 +142,10 @@ export function EventDetailClient({
       if (drafts.length === 0) { if (!cancelled) setDraftResults([]); return; }
 
       const authorIds = [...new Set(drafts.map((r) => r.author_id).filter(Boolean))] as string[];
-      const teamIds = [...new Set(drafts.map((r) => r.team_id).filter(Boolean))] as string[];
-      const [{ data: authors }, { data: teams }, { data: coauthorRows }] = await Promise.all([
+      const [{ data: authors }, { data: coauthorRows }] = await Promise.all([
         authorIds.length
           ? supabaseRef.current.from("public_profiles").select("id, display_name").in("id", authorIds)
           : Promise.resolve({ data: [] as { id: string; display_name: string | null }[] }),
-        teamIds.length
-          ? supabaseRef.current.from("public_teams").select("id, name").in("id", teamIds)
-          : Promise.resolve({ data: [] as { id: string; name: string }[] }),
         supabaseRef.current
           .from("result_coauthors")
           .select("result_id, user_id")
@@ -157,9 +153,6 @@ export function EventDetailClient({
       ]);
       const profileMap = Object.fromEntries(
         ((authors as { id: string; display_name: string | null }[] | null) ?? []).map((p) => [p.id, p.display_name]),
-      );
-      const teamMap = Object.fromEntries(
-        ((teams as { id: string; name: string }[] | null) ?? []).map((t) => [t.id, t.name]),
       );
       const coauthorsByResult = new Map<string, { id: string; name: string }[]>();
       const coauthorUserIds = [...new Set(((coauthorRows as { user_id: string }[] | null) ?? []).map((r) => r.user_id))];
@@ -180,7 +173,6 @@ export function EventDetailClient({
       const composed: ResultWithMeta[] = drafts.map((r) => ({
         ...r,
         author_name: r.author_id ? profileMap[r.author_id] ?? null : null,
-        team_name: r.team_id ? teamMap[r.team_id] ?? null : null,
         coauthors: coauthorsByResult.get(r.id) ?? [],
       }));
       if (!cancelled) setDraftResults(composed);
@@ -456,7 +448,7 @@ export function EventDetailClient({
                     key={item.id}
                     item={item}
                     href={isAdmin ? `/events/${slug}/results/${item.id}/edit` : `/events/${slug}/results/${item.id}`}
-                    publisherHref={item.type === "personal" && item.author_id ? `/profile/${item.author_id}` : null}
+                    publisherHref={item.author_id ? `/profile/${item.author_id}` : null}
                     showStatus={showStatus}
                     isAdmin={isAdmin}
                     onPinToggle={isAdmin ? (id, pinned) => togglePin("results", id, pinned) : undefined}

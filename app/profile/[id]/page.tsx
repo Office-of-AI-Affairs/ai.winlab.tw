@@ -62,7 +62,6 @@ export default async function ProfilePage({
       .from("results")
       .select("*")
       .eq("author_id", id)
-      .eq("type", "personal")
       .order("date", { ascending: false }),
     supabase
       .from("external_results")

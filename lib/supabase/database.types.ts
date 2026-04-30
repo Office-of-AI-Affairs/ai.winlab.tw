@@ -592,35 +592,6 @@ export type Database = {
           },
         ]
       }
-      public_teams: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id: string
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "public_teams_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       recruitment_interests: {
         Row: {
           competition_id: string
@@ -725,9 +696,7 @@ export type Database = {
           pinned: boolean
           status: string
           summary: string | null
-          team_id: string | null
           title: string
-          type: string
           updated_at: string
         }
         Insert: {
@@ -741,9 +710,7 @@ export type Database = {
           pinned?: boolean
           status?: string
           summary?: string | null
-          team_id?: string | null
           title?: string
-          type?: string
           updated_at?: string
         }
         Update: {
@@ -757,9 +724,7 @@ export type Database = {
           pinned?: boolean
           status?: string
           summary?: string | null
-          team_id?: string | null
           title?: string
-          type?: string
           updated_at?: string
         }
         Relationships: [
@@ -768,13 +733,6 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "results_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -807,119 +765,6 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "tags"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      team_invitations: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          invited_by: string
-          status: string
-          team_id: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          invited_by: string
-          status?: string
-          team_id: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          invited_by?: string
-          status?: string
-          team_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "team_invitations_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "team_invitations_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      team_members: {
-        Row: {
-          joined_at: string
-          role: string
-          team_id: string
-          user_id: string
-        }
-        Insert: {
-          joined_at?: string
-          role: string
-          team_id: string
-          user_id: string
-        }
-        Update: {
-          joined_at?: string
-          role?: string
-          team_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "team_members_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "team_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      teams: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          leader_id: string
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          leader_id: string
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          leader_id?: string
-          name?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "teams_leader_id_fkey"
-            columns: ["leader_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -990,12 +835,7 @@ export type Database = {
         Args: { p_competition_id: string }
         Returns: Json
       }
-      get_user_team_ids: { Args: { p_user_id: string }; Returns: string[] }
       gravatar_url: { Args: { email: string }; Returns: string }
-      is_team_leader: {
-        Args: { p_team_id: string; p_user_id: string }
-        Returns: boolean
-      }
     }
     Enums: {
       [_ in never]: never

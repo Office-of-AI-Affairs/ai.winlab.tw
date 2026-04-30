@@ -20,26 +20,13 @@ export default async function EventResultEditPage({
     redirect(`/events/${slug}?tab=results`);
   }
 
-  let canEdit = isAdmin || data.author_id === user.id;
-  if (!canEdit && data.type === "team" && data.team_id) {
-    const { data: membership } = await supabase
-      .from("team_members")
-      .select("role")
-      .eq("team_id", data.team_id)
-      .eq("user_id", user.id)
-      .single();
-    canEdit = membership?.role === "leader";
-  }
+  const canEdit = isAdmin || data.author_id === user.id;
 
   if (!canEdit) {
     redirect(`/events/${slug}?tab=results`);
   }
 
-  const result = {
-    ...data,
-    type: (data as Result).type ?? "personal",
-    team_id: (data as Result).team_id ?? null,
-  } as Result;
+  const result = data as Result;
 
   // Fetch existing co-authors
   let initialCoauthors: PublicProfile[] = [];

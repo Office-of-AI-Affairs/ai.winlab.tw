@@ -1,7 +1,7 @@
 import type { Result } from "@/lib/supabase/types";
 import { formatDate } from "@/lib/date";
 import { renderRichTextHtml, richTextDocumentClassName } from "@/lib/ui/rich-text";
-import { User, Users } from "lucide-react";
+import { User } from "lucide-react";
 import Link from "next/link";
 
 export type PublisherInfo = { name: string; href: string | null } | null;
@@ -22,10 +22,7 @@ export function ResultDetail({ result, publisherInfo, coauthors = [] }: Props) {
       <div className="max-w-6xl mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-4">{result.title}</h1>
         <div className="flex items-center gap-2 text-base text-muted-foreground">
-          {result.type === "team"
-            ? <Users className="w-4 h-4 shrink-0" />
-            : <User className="w-4 h-4 shrink-0" />
-          }
+          <User className="w-4 h-4 shrink-0" />
           {publisherInfo ? (
             <>
               {publisherInfo.href ? (

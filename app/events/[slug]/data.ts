@@ -58,7 +58,7 @@ export async function getEventPageData(
       supabase
         .from("results")
         .select(
-          "id, event_id, type, title, summary, content, header_image, date, pinned, status, author_id, team_id, created_at, updated_at",
+          "id, event_id, title, summary, content, header_image, date, pinned, status, author_id, created_at, updated_at",
         )
         .eq("event_id", eventRow.id)
         .eq("status", "published")
@@ -107,22 +107,13 @@ export async function getEventPageData(
 
     const rawResults = (resultsRes.data as Result[]) ?? [];
     const authorIds = [...new Set(rawResults.map((r) => r.author_id).filter(Boolean))] as string[];
-    const teamIds = [...new Set(rawResults.map((r) => r.team_id).filter(Boolean))] as string[];
-    const [profilesRes, teamsRes] = await Promise.all([
-      authorIds.length
-        ? supabase.from("public_profiles").select("id, display_name").in("id", authorIds)
-        : Promise.resolve({ data: [] }),
-      teamIds.length
-        ? supabase.from("public_teams").select("id, name").in("id", teamIds)
-        : Promise.resolve({ data: [] }),
-    ]);
+    const profilesRes = authorIds.length
+      ? await supabase.from("public_profiles").select("id, display_name").in("id", authorIds)
+      : { data: [] };
     const profileMap = Object.fromEntries(
       (((profilesRes.data as unknown) as { id: string; display_name: string | null }[]) ?? []).map(
         (p) => [p.id, p.display_name],
       ),
-    );
-    const teamMap = Object.fromEntries(
-      (((teamsRes.data as unknown) as { id: string; name: string }[]) ?? []).map((t) => [t.id, t.name]),
     );
 
     const resultIds = rawResults.map((r) => r.id);
@@ -149,7 +140,6 @@ export async function getEventPageData(
     const results: ResultWithMeta[] = rawResults.map((r) => ({
       ...r,
       author_name: r.author_id ? profileMap[r.author_id] ?? null : null,
-      team_name: r.team_id ? teamMap[r.team_id] ?? null : null,
       coauthors: coauthorsByResult.get(r.id) ?? [],
     }));
 

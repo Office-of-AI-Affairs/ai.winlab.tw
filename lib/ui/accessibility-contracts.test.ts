@@ -73,7 +73,7 @@ describe("accessibility contracts", () => {
     assert.ok(resultCard.includes("publisherHref?: string | null"))
     assert.ok(resultCard.includes("<AppLink"))
     assert.ok(eventClient.includes("href={isAdmin ? `/events/${slug}/results/${item.id}/edit` : `/events/${slug}/results/${item.id}`}"))
-    assert.ok(eventClient.includes('publisherHref={item.type === "personal" && item.author_id ? `/profile/${item.author_id}` : null}'))
+    assert.ok(eventClient.includes('publisherHref={item.author_id ? `/profile/${item.author_id}` : null}'))
     assert.ok(!eventClient.includes("<Link\n                    href={isAdmin ? `/events/${slug}/results/${item.id}/edit` : `/events/${slug}/results/${item.id}`}"))
   })
 

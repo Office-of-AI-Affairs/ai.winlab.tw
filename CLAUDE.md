@@ -80,7 +80,7 @@ inventory, and how to add a new page.
 ## Data model (`lib/supabase/types.ts`)
 
 - **Announcement** — Tiptap JSON，`status: draft|published`，`event_id`（null = 全域）
-- **Result** — `type: personal|team`，`pinned`，`event_id`
+- **Result** — `pinned`，`event_id`（個人成果，team 子系統 2026-04-30 已下線）
 - **Recruitment**（DB: `competitions`）— `event_id`，JSON: `positions`、`application_method`、`contact`；`created_by`（稽核用，權限判斷不看這個）
 - **CompetitionOwner**（DB: `competition_owners`）— recruitment ↔ user 多對多 pivot，權限判斷核心；新 INSERT 時 trigger `auto_add_recruitment_owner` 把 creator 自動加進去
 - **RecruitmentInterest**（DB: `recruitment_interests`）
@@ -93,7 +93,7 @@ inventory, and how to add a new page.
 - **PublicProfile** — authenticated-reachable view of profiles plus
   `has_profile_data` boolean kept in sync by a trigger (used by the
   cookieless `/events/[slug]` fetcher)
-- **ExternalResult**、**Tag / ResultTag**、**Team**、**CarouselSlide**、**Contact**
+- **ExternalResult**、**Tag / ResultTag**、**CarouselSlide**、**Contact**
 
 Conventions:
 - `event_id IS NULL` → 全域（僅 Announcement）

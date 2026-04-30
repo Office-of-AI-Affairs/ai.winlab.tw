@@ -13,14 +13,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/date";
 import type { Result } from "@/lib/supabase/types";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
-import { Pin, User, Users } from "lucide-react";
+import { Pin, User } from "lucide-react";
 import Image from "next/image";
 
 export type CoauthorMeta = { id: string; name: string };
 
 export type ResultWithMeta = Result & {
   author_name?: string | null;
-  team_name?: string | null;
   coauthors?: CoauthorMeta[];
 };
 
@@ -39,8 +38,7 @@ export function ResultCard({
   showStatus?: boolean;
   onPinToggle?: (id: string, pinned: boolean) => void;
 }) {
-  const primaryName =
-    item.type === "team" ? item.team_name || "未知隊伍" : item.author_name || "匿名";
+  const primaryName = item.author_name || "匿名";
 
   return (
     <Card className="interactive-scale py-0 h-full flex flex-col gap-4 overflow-hidden">
@@ -96,11 +94,7 @@ export function ResultCard({
       <CardFooter className="pt-0 pb-4">
         <div className="flex items-center justify-between w-full gap-2 text-sm text-muted-foreground">
           <div className="flex items-center gap-1.5 min-w-0">
-            {item.type === "team" ? (
-              <Users className="w-3.5 h-3.5 shrink-0" />
-            ) : (
-              <User className="w-3.5 h-3.5 shrink-0" />
-            )}
+            <User className="w-3.5 h-3.5 shrink-0" />
             <span className="flex flex-wrap items-center gap-x-1">
               {publisherHref ? (
                 <AppLink
