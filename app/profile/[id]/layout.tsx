@@ -9,15 +9,16 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const supabase = await createClient();
-  const [profileRes, avatarRes] = await Promise.all([
-    supabase.from("public_profiles").select("display_name").eq("id", id).single(),
-    supabase.from("profiles").select("avatar_url").eq("id", id).single(),
-  ]);
+  const { data: publicProfile } = await supabase
+    .from("public_profiles")
+    .select("display_name, avatar_url")
+    .eq("id", id)
+    .single();
 
-  const name = profileRes.data?.display_name ?? "個人頁面";
+  const name = publicProfile?.display_name ?? "個人頁面";
   const description = `${name} 的公開個人頁面，收錄成果展示、外部作品與相關連結。`;
-  const ogImages = avatarRes.data?.avatar_url
-    ? [{ url: avatarRes.data.avatar_url, width: 400, height: 400, alt: name }]
+  const ogImages = publicProfile?.avatar_url
+    ? [{ url: publicProfile.avatar_url, width: 400, height: 400, alt: name }]
     : [];
   return {
     title: `${name}｜人工智慧專責辦公室`,
