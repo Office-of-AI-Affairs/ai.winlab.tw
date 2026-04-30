@@ -77,6 +77,7 @@ export function EventDetailClient({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingRecruitment, setEditingRecruitment] = useState<Recruitment | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
+  const [recruitmentSearch, setRecruitmentSearch] = useState("");
 
   const [draftAnnouncements, setDraftAnnouncements] = useState<Announcement[]>([]);
   const [draftResults, setDraftResults] = useState<ResultWithMeta[]>([]);
@@ -242,6 +243,25 @@ export function EventDetailClient({
       composeRecruitment(item, privateDetails.get(item.id) ?? null),
     );
   }, [publishedRecruitments, privateDetails]);
+
+  // Display order for the recruitment tab: pinned first, then the viewer's
+  // own recruitments (vendors complained their card was buried), then by
+  // created_at asc as before. Search filters title + company_description.
+  const displayedRecruitments = useMemo(() => {
+    const sorted = [...recruitments].sort((a, b) => {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+      const aOwned = ownedRecruitmentIds.has(a.id);
+      const bOwned = ownedRecruitmentIds.has(b.id);
+      if (aOwned !== bOwned) return aOwned ? -1 : 1;
+      return a.created_at < b.created_at ? -1 : 1;
+    });
+    const query = recruitmentSearch.trim().toLowerCase();
+    if (!query) return sorted;
+    return sorted.filter((item) =>
+      (item.title ?? "").toLowerCase().includes(query) ||
+      (item.company_description ?? "").toLowerCase().includes(query),
+    );
+  }, [recruitments, ownedRecruitmentIds, recruitmentSearch]);
 
   const openCreateSheet = () => { setEditingRecruitment(null); setSheetOpen(true); };
   const openEditSheet = (r: Recruitment) => { setEditingRecruitment(r); setSheetOpen(true); };
@@ -442,18 +462,38 @@ export function EventDetailClient({
           {recruitments.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">尚無徵才資訊</div>
           ) : (
-            <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
-              {recruitments.map((item) => (
-                <RecruitmentCard
-                  key={item.id}
-                  item={item}
-                  href={`/events/${slug}/recruitment/${item.id}`}
-                  isAdmin={isAdmin}
-                  onPinToggle={isAdmin ? (id, pinned) => togglePin("competitions", id, pinned) : undefined}
-                  onEdit={(isAdmin || ownedRecruitmentIds.has(item.id)) ? () => openEditSheet(item) : undefined}
-                />
-              ))}
-            </div>
+            <>
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">
+                  共 {recruitments.length} 筆徵才
+                </p>
+                <div className="relative w-full sm:max-w-xs">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="搜尋企業或職缺⋯"
+                    value={recruitmentSearch}
+                    onChange={(e) => setRecruitmentSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+              {displayedRecruitments.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">沒有符合搜尋的徵才</div>
+              ) : (
+                <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
+                  {displayedRecruitments.map((item) => (
+                    <RecruitmentCard
+                      key={item.id}
+                      item={item}
+                      href={`/events/${slug}/recruitment/${item.id}`}
+                      isAdmin={isAdmin}
+                      onPinToggle={isAdmin ? (id, pinned) => togglePin("competitions", id, pinned) : undefined}
+                      onEdit={(isAdmin || ownedRecruitmentIds.has(item.id)) ? () => openEditSheet(item) : undefined}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )}
           <RecruitmentDialog open={sheetOpen} onOpenChange={setSheetOpen} recruitment={editingRecruitment} eventId={event.id} />
         </div>
