@@ -2,7 +2,7 @@
 
 import { AppLink } from "@/components/app-link";
 import { useAuth } from "@/components/auth-provider";
-import { MemberEditor } from "@/components/member-editor";
+import { AddMemberButton } from "@/components/member-editor";
 import { RecruitmentCard } from "@/components/recruitment-card";
 import { RecruitmentDialog } from "@/components/recruitment-dialog";
 import { ResultCard, type ResultWithMeta } from "@/components/result-card";
@@ -24,10 +24,11 @@ import type {
 } from "@/lib/supabase/types";
 import type { EventMember } from "./data";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Loader2, Pencil, Plus, Search } from "lucide-react";
+import { ArrowLeft, Loader2, Pencil, Plus, Search, X } from "lucide-react";
 import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 type Tab = "announcements" | "results" | "recruitment" | "members";
 
@@ -78,6 +79,24 @@ export function EventDetailClient({
   const [editingRecruitment, setEditingRecruitment] = useState<Recruitment | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
   const [recruitmentSearch, setRecruitmentSearch] = useState("");
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
+
+  const memberIdSet = useMemo(() => new Set(currentMembers.map((m) => m.id)), [currentMembers]);
+
+  async function removeMember(memberId: string) {
+    setRemovingMemberId(memberId);
+    const { error } = await supabaseRef.current
+      .from("event_participants")
+      .delete()
+      .eq("event_id", event.id)
+      .eq("user_id", memberId);
+    if (error) {
+      toast.error("無法移除成員");
+    } else {
+      setCurrentMembers((prev) => prev.filter((m) => m.id !== memberId));
+    }
+    setRemovingMemberId(null);
+  }
 
   const [draftAnnouncements, setDraftAnnouncements] = useState<Announcement[]>([]);
   const [draftResults, setDraftResults] = useState<ResultWithMeta[]>([]);
@@ -501,27 +520,39 @@ export function EventDetailClient({
 
       {tab === "members" && userId && (
         <div className="flex flex-col gap-6">
-          {isAdmin ? (
-            <MemberEditor eventId={event.id} members={currentMembers} onMembersChange={setCurrentMembers} />
-          ) : currentMembers.length === 0 ? (
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              共 {memberSections.total} 位學員，{memberSections.withProfileTotal} 位已建立個人檔案
+            </p>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:max-w-xs">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="搜尋學員⋯"
+                  value={memberSearch}
+                  onChange={(e) => setMemberSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              {isAdmin && (
+                <AddMemberButton
+                  eventId={event.id}
+                  memberIds={memberIdSet}
+                  onMemberAdded={(profile) =>
+                    setCurrentMembers((prev) => [
+                      ...prev,
+                      { id: profile.id, display_name: profile.display_name, avatar_url: profile.avatar_url, hasProfileData: false },
+                    ])
+                  }
+                />
+              )}
+            </div>
+          </div>
+
+          {currentMembers.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">尚無成員</div>
           ) : (
             <>
-              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-muted-foreground">
-                  共 {memberSections.total} 位學員，{memberSections.withProfileTotal} 位已建立個人檔案
-                </p>
-                <div className="relative w-full sm:max-w-xs">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="搜尋學員⋯"
-                    value={memberSearch}
-                    onChange={(e) => setMemberSearch(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-              </div>
-
               {memberSections.withProfileGroups.map((group) => (
                 <div key={`p-${group.key}`} className="flex flex-col gap-3">
                   <div className="flex items-baseline gap-2 border-b border-border pb-1">
@@ -530,21 +561,35 @@ export function EventDetailClient({
                   </div>
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
                     {group.members.map((member) => (
-                      <AppLink
-                        key={member.id}
-                        href={`/profile/${member.id}`}
-                        className="flex flex-col items-center gap-2 rounded-lg p-3 hover:bg-muted transition-colors interactive-scale"
-                      >
-                        <Avatar size="2xl">
-                          {member.avatar_url && <AvatarImage src={member.avatar_url} alt={member.display_name ?? ""} />}
-                          <AvatarFallback>
-                            {(member.display_name ?? "?")[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm font-medium text-center line-clamp-1">
-                          {member.display_name ?? "未知使用者"}
-                        </span>
-                      </AppLink>
+                      <div key={member.id} className="relative group">
+                        <AppLink
+                          href={`/profile/${member.id}`}
+                          className="flex flex-col items-center gap-2 rounded-lg p-3 hover:bg-muted transition-colors interactive-scale"
+                        >
+                          <Avatar size="2xl">
+                            {member.avatar_url && <AvatarImage src={member.avatar_url} alt={member.display_name ?? ""} />}
+                            <AvatarFallback>{(member.display_name ?? "?")[0]}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-medium text-center line-clamp-1">
+                            {member.display_name ?? "未知使用者"}
+                          </span>
+                        </AppLink>
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeMember(member.id); }}
+                            disabled={removingMemberId === member.id}
+                            aria-label={`移除 ${member.display_name ?? "成員"}`}
+                            className="absolute top-1 right-1 size-6 rounded-full bg-background/90 border border-border flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
+                          >
+                            {removingMemberId === member.id ? (
+                              <Loader2 className="size-3 animate-spin" />
+                            ) : (
+                              <X className="size-3" />
+                            )}
+                          </button>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -564,19 +609,31 @@ export function EventDetailClient({
                       </div>
                       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
                         {group.members.map((member) => (
-                          <div
-                            key={member.id}
-                            className="flex flex-col items-center gap-2 rounded-lg p-3 opacity-60"
-                          >
-                            <Avatar size="2xl">
-                              {member.avatar_url && <AvatarImage src={member.avatar_url} alt={member.display_name ?? ""} />}
-                              <AvatarFallback>
-                                {(member.display_name ?? "?")[0]}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm text-center line-clamp-1 text-muted-foreground">
-                              {member.display_name ?? "未知使用者"}
-                            </span>
+                          <div key={member.id} className="relative group">
+                            <div className="flex flex-col items-center gap-2 rounded-lg p-3 opacity-60">
+                              <Avatar size="2xl">
+                                {member.avatar_url && <AvatarImage src={member.avatar_url} alt={member.display_name ?? ""} />}
+                                <AvatarFallback>{(member.display_name ?? "?")[0]}</AvatarFallback>
+                              </Avatar>
+                              <span className="text-sm text-center line-clamp-1 text-muted-foreground">
+                                {member.display_name ?? "未知使用者"}
+                              </span>
+                            </div>
+                            {isAdmin && (
+                              <button
+                                type="button"
+                                onClick={() => removeMember(member.id)}
+                                disabled={removingMemberId === member.id}
+                                aria-label={`移除 ${member.display_name ?? "成員"}`}
+                                className="absolute top-1 right-1 size-6 rounded-full bg-background/90 border border-border flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
+                              >
+                                {removingMemberId === member.id ? (
+                                  <Loader2 className="size-3 animate-spin" />
+                                ) : (
+                                  <X className="size-3" />
+                                )}
+                              </button>
+                            )}
                           </div>
                         ))}
                       </div>
