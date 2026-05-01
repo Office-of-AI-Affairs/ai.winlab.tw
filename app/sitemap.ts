@@ -16,12 +16,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .from("results")
       .select("id, date, event_id, author_id")
       .eq("status", "published"),
-    // 只納入有 published 個人成果的作者，避免大量空 profile 稀釋爬取品質
+    // 只納入有 published 成果的作者，避免大量空 profile 稀釋爬取品質
     supabase
       .from("results")
       .select("author_id")
       .eq("status", "published")
-      .eq("type", "personal")
       .not("author_id", "is", null),
     supabase
       .from("competitions")
