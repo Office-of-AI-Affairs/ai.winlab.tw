@@ -1,7 +1,9 @@
 import { AppLink } from "@/components/app-link";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/date";
 import { createPublicClient } from "@/lib/supabase/public";
+import Link from "next/link";
 
 type ActivityItem = {
   kind: "announcement" | "result" | "recruitment";
@@ -108,21 +110,17 @@ export async function HomeActivity() {
   items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const top = items.slice(0, 10);
 
-  if (top.length === 0) return null;
-
-  // If multiple pinned events, show event name on each row; if just one, drop
-  // the redundancy.
+  // If multiple pinned events, show event name on each row; if just one, the
+  // CTA can point straight at that event.
   const showEventName = events.length > 1;
+  const ctaHref = showEventName ? "/events" : `/events/${events[0].slug}`;
 
   return (
-    <section className="py-16 px-4">
-      <div className="max-w-3xl mx-auto flex flex-col gap-6">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-3xl font-bold">最新動態</h2>
-          {!showEventName && (
-            <span className="text-sm text-muted-foreground">{events[0].name}</span>
-          )}
-        </div>
+    <div className="container max-w-6xl mx-auto py-16 px-4 flex flex-col gap-8">
+      <h2 className="text-2xl font-bold border-l-4 border-primary pl-3">最新動態</h2>
+      {top.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">目前沒有動態</div>
+      ) : (
         <ul className="flex flex-col gap-2">
           {top.map((item) => (
             <li key={`${item.kind}-${item.id}`}>
@@ -148,7 +146,12 @@ export async function HomeActivity() {
             </li>
           ))}
         </ul>
+      )}
+      <div className="flex justify-center">
+        <Button asChild variant="secondary" className="px-12 text-lg">
+          <Link href={ctaHref}>探索更多</Link>
+        </Button>
       </div>
-    </section>
+    </div>
   );
 }
