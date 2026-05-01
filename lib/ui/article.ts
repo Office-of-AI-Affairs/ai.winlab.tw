@@ -2,6 +2,32 @@ import type { JSONContent } from "@tiptap/core"
 
 export type TocItem = { id: string; level: number; text: string }
 
+/**
+ * Walk a Tiptap document and return the first embedded image URL if any.
+ * Used by detail-page generateMetadata to pick a per-article OG image when
+ * the row has no dedicated header_image / cover_image (e.g. announcements,
+ * which only carry images inline in the Tiptap content).
+ */
+export function extractFirstImage(
+  content: JSONContent | Record<string, unknown> | null | undefined,
+): string | null {
+  if (!content || Object.keys(content).length === 0) return null
+  function walk(node: JSONContent): string | null {
+    if (node.type === "image") {
+      const src = node.attrs?.src
+      if (typeof src === "string" && src.length > 0) return src
+    }
+    if (node.content) {
+      for (const child of node.content) {
+        const found = walk(child)
+        if (found) return found
+      }
+    }
+    return null
+  }
+  return walk(content as JSONContent)
+}
+
 function getNodeText(node: JSONContent): string {
   if (node.type === "text") return node.text ?? ""
   if (!node.content) return ""

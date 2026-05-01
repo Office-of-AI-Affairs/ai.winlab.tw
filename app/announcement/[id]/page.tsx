@@ -1,8 +1,11 @@
 import { AnnouncementDetail } from "@/components/announcement-detail";
 import { JsonLd } from "@/components/json-ld";
+import { ShareButtons } from "@/components/share-buttons";
 import { getPublishedAnnouncement, getPublishedAnnouncementIds } from "@/app/announcement/data";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb";
+import { extractFirstImage } from "@/lib/ui/article";
 import { renderArticle } from "@/lib/ui/rich-text";
+import { estimateReadingTime } from "@/lib/ui/reading-time";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -24,23 +27,28 @@ export async function generateMetadata({
   const description = announcement?.category
     ? `${announcement.category}公告：${title}`
     : `${title}｜國立陽明交通大學人工智慧專責辦公室公告`;
+  const inlineImage = announcement
+    ? extractFirstImage(announcement.content as Record<string, unknown> | null)
+    : null;
+  const ogImages = inlineImage
+    ? [{ url: inlineImage, width: 1200, height: 630, alt: title }]
+    : [{ url: "/og.png", width: 1200, height: 630, alt: title }];
+  const twitterImages = ogImages.map((i) => i.url);
   return {
     title: `${title}｜人工智慧專責辦公室`,
     description,
-    alternates: {
-      canonical: `/announcement/${id}`,
-    },
+    alternates: { canonical: `/announcement/${id}` },
     openGraph: {
       title: `${title}｜人工智慧專責辦公室`,
       description,
       url: `/announcement/${id}`,
-      images: [{ url: "/og.png", width: 1200, height: 630, alt: title }],
+      images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
       title: `${title}｜人工智慧專責辦公室`,
       description,
-      images: ["/og.png"],
+      images: twitterImages,
     },
   };
 }
@@ -57,6 +65,7 @@ export default async function AnnouncementDetailPage({
 
   const { html, toc } = renderArticle(announcement.content);
   const contentHtml = html ?? "<p>（無內容）</p>";
+  const { minutes: readingTimeMin } = estimateReadingTime(announcement.content);
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
@@ -82,13 +91,16 @@ export default async function AnnouncementDetailPage({
     <div className="max-w-6xl mx-auto px-4 py-12">
       <JsonLd data={structuredData} />
       <JsonLd data={breadcrumbJsonLd} />
-      <Link
-        href="/announcement"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-10"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        返回列表
-      </Link>
+      <div className="flex items-center justify-between gap-4 mb-10">
+        <Link
+          href="/announcement"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          返回列表
+        </Link>
+        <ShareButtons url={`/announcement/${id}`} title={announcement.title} />
+      </div>
 
       <AnnouncementDetail
         title={announcement.title}
@@ -96,6 +108,7 @@ export default async function AnnouncementDetailPage({
         category={announcement.category}
         contentHtml={contentHtml}
         toc={toc}
+        readingTimeMin={readingTimeMin}
       />
     </div>
   );

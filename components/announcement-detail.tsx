@@ -13,9 +13,10 @@ type Props = {
   category: string;
   contentHtml: string;
   toc?: TocItem[];
+  readingTimeMin?: number;
 };
 
-export function AnnouncementDetail({ title, date, category, contentHtml, toc = [] }: Props) {
+export function AnnouncementDetail({ title, date, category, contentHtml, toc = [], readingTimeMin }: Props) {
   return (
     <>
       <div className="max-w-6xl mb-8">
@@ -32,6 +33,12 @@ export function AnnouncementDetail({ title, date, category, contentHtml, toc = [
           <span className="px-2 py-0.5 bg-muted rounded text-sm font-medium">
             {category}
           </span>
+          {readingTimeMin ? (
+            <>
+              <span className="opacity-30" aria-hidden>·</span>
+              <span>閱讀 {readingTimeMin} 分鐘</span>
+            </>
+          ) : null}
         </div>
       </div>
 

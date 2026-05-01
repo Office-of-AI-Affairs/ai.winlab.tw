@@ -1,7 +1,9 @@
 import { createPublicClient } from "@/lib/supabase/public";
 import { formatDate } from "@/lib/date";
 import { JsonLd } from "@/components/json-ld";
+import { ShareButtons } from "@/components/share-buttons";
 import { Toc } from "@/components/toc";
+import { estimateReadingTime } from "@/lib/ui/reading-time";
 import { renderArticle, richTextDocumentClassName } from "@/lib/ui/rich-text";
 import type { Metadata } from "next";
 
@@ -33,6 +35,9 @@ export default async function PrivacyPage() {
   const { html: contentHtml, toc } = renderArticle(
     data?.content as Record<string, unknown> | null | undefined,
   );
+  const { minutes: readingTimeMin } = estimateReadingTime(
+    data?.content as Record<string, unknown> | null | undefined,
+  );
 
   const updatedAt = data?.created_at
     ? formatDate(data.created_at, "long")
@@ -49,13 +54,24 @@ export default async function PrivacyPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
       <JsonLd data={structuredData} />
-      <h1 className="text-3xl font-bold mb-2">隱私權政策</h1>
-      {updatedAt && (
-        <p className="text-sm text-muted-foreground mb-10">
-          最後更新：{updatedAt}
-          {data?.version ? `（第 ${data.version} 版）` : ""}
-        </p>
-      )}
+      <div className="flex items-start justify-between gap-4 mb-2">
+        <h1 className="text-3xl font-bold">隱私權政策</h1>
+        <ShareButtons url="/privacy" title="隱私權政策｜人工智慧專責辦公室" />
+      </div>
+      <p className="text-sm text-muted-foreground mb-10">
+        {updatedAt && (
+          <>
+            最後更新：{updatedAt}
+            {data?.version ? `（第 ${data.version} 版）` : ""}
+          </>
+        )}
+        {readingTimeMin ? (
+          <>
+            {updatedAt ? <span className="opacity-30 mx-2">·</span> : null}
+            閱讀 {readingTimeMin} 分鐘
+          </>
+        ) : null}
+      </p>
 
       <div className="lg:flex lg:items-start lg:gap-8">
         <div className="flex-1 min-w-0">

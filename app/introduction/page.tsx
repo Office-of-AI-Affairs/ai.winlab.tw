@@ -5,6 +5,8 @@ import { IntroductionEditButton } from "@/components/introduction-edit-button";
 import { JsonLd } from "@/components/json-ld";
 import { PageShell } from "@/components/page-shell";
 import { renderArticle } from "@/lib/ui/rich-text";
+import { estimateReadingTime } from "@/lib/ui/reading-time";
+import { ShareButtons } from "@/components/share-buttons";
 import type { OrganizationMember, OrganizationMemberCategory } from "@/lib/supabase/types";
 import type { Metadata } from "next";
 
@@ -31,6 +33,7 @@ export default async function OrganizationPage() {
 
   const { html, toc } = renderArticle(introduction?.content);
   const contentHtml = html ?? "";
+  const { minutes: readingTimeMin } = estimateReadingTime(introduction?.content);
 
   const membersByCategory = Object.fromEntries(
     CATEGORIES.map((cat) => [cat, members.filter((m) => m.category === cat)])
@@ -51,8 +54,14 @@ export default async function OrganizationPage() {
         <IntroductionDetail
           title={introduction?.title || "國立陽明交通大學 人工智慧專責辦公室"}
           contentHtml={contentHtml}
-          actions={<IntroductionEditButton />}
+          actions={
+            <div className="flex items-center gap-3">
+              <ShareButtons url="/introduction" title="組織｜人工智慧專責辦公室" />
+              <IntroductionEditButton />
+            </div>
+          }
           toc={toc}
+          readingTimeMin={readingTimeMin}
         />
       </PageShell>
       <OrganizationPageClient membersByCategory={membersByCategory} />

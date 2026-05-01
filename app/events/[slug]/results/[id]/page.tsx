@@ -1,5 +1,6 @@
 import { JsonLd } from "@/components/json-ld";
 import { ResultDetail, type PublisherInfo, type CoauthorInfo } from "@/components/result-detail";
+import { ShareButtons } from "@/components/share-buttons";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb";
 import { createClient } from "@/lib/supabase/server";
 import type { Result } from "@/lib/supabase/types";
@@ -151,15 +152,18 @@ export default async function EventResultDetailPage({
           <ArrowLeft className="w-4 h-4" />
           返回活動
         </Link>
-        {canEdit && (
-          <Link
-            href={`/events/${slug}/results/${id}/edit`}
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Pencil className="w-4 h-4" />
-            編輯
-          </Link>
-        )}
+        <div className="flex items-center gap-3">
+          <ShareButtons url={`/events/${slug}/results/${id}`} title={result.title} />
+          {canEdit && (
+            <Link
+              href={`/events/${slug}/results/${id}/edit`}
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Pencil className="w-4 h-4" />
+              編輯
+            </Link>
+          )}
+        </div>
       </div>
 
       <ResultDetail result={result} publisherInfo={publisherInfo} coauthors={coauthors} />

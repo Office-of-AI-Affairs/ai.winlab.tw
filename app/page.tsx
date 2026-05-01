@@ -1,3 +1,4 @@
+import { HomeActivity } from "@/components/home-activity";
 import { HomeAnnouncement } from "@/components/home-announcement";
 import { HomeCarousel } from "@/components/home-carousel";
 import { HomeContacts } from "@/components/home-contacts";
@@ -36,6 +37,7 @@ export default async function Home() {
       <JsonLd data={structuredData} />
       <HomeCarousel />
       <HomeIntroduction />
+      <HomeActivity />
       <HomeAnnouncement />
       <HomeEvents />
       <HomeContacts />

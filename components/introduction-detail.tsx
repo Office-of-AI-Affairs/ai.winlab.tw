@@ -13,15 +13,21 @@ type Props = {
   /** Optional slot rendered next to the title (e.g. Edit button on read-only page) */
   actions?: ReactNode;
   toc?: TocItem[];
+  readingTimeMin?: number;
 };
 
-export function IntroductionDetail({ title, contentHtml, actions, toc = [] }: Props) {
+export function IntroductionDetail({ title, contentHtml, actions, toc = [], readingTimeMin }: Props) {
   return (
     <>
       <div className="max-w-6xl mb-8 flex items-center justify-between gap-4">
-        <h1 className="text-4xl font-extrabold tracking-tight text-balance">
-          {title}
-        </h1>
+        <div className="flex flex-col gap-2 min-w-0">
+          <h1 className="text-4xl font-extrabold tracking-tight text-balance">
+            {title}
+          </h1>
+          {readingTimeMin ? (
+            <p className="text-sm text-muted-foreground">閱讀 {readingTimeMin} 分鐘</p>
+          ) : null}
+        </div>
         {actions}
       </div>
 

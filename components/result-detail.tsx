@@ -2,6 +2,7 @@ import type { Result } from "@/lib/supabase/types";
 import { formatDate } from "@/lib/date";
 import { Toc } from "@/components/toc";
 import { renderArticle, richTextDocumentClassName } from "@/lib/ui/rich-text";
+import { estimateReadingTime } from "@/lib/ui/reading-time";
 import { User } from "lucide-react";
 import Link from "next/link";
 
@@ -18,6 +19,7 @@ type Props = {
 export function ResultDetail({ result, publisherInfo, coauthors = [] }: Props) {
   const { html, toc } = renderArticle(result.content);
   const contentHtml = html ?? "<p>（無內容）</p>";
+  const { minutes: readingTimeMin } = estimateReadingTime(result.content);
 
   return (
     <>
@@ -52,6 +54,12 @@ export function ResultDetail({ result, publisherInfo, coauthors = [] }: Props) {
           ))}
           <span className="opacity-30">·</span>
           <span>{formatDate(result.updated_at)}</span>
+          {readingTimeMin ? (
+            <>
+              <span className="opacity-30">·</span>
+              <span>閱讀 {readingTimeMin} 分鐘</span>
+            </>
+          ) : null}
         </div>
       </div>
 

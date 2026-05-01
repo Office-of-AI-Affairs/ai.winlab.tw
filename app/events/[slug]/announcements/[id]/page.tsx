@@ -3,6 +3,9 @@ import { JsonLd } from "@/components/json-ld";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb";
 import { createClient } from "@/lib/supabase/server";
 import { renderArticle } from "@/lib/ui/rich-text";
+import { extractFirstImage } from "@/lib/ui/article";
+import { estimateReadingTime } from "@/lib/ui/reading-time";
+import { ShareButtons } from "@/components/share-buttons";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -16,15 +19,21 @@ export async function generateMetadata({
   const { slug, id } = await params;
   const supabase = await createClient();
   const [announcementRes, eventRes] = await Promise.all([
-    supabase.from("announcements").select("title, category").eq("id", id).single(),
+    supabase.from("announcements").select("title, category, content").eq("id", id).single(),
     supabase.from("events").select("cover_image, name").eq("slug", slug).single(),
   ]);
   const title = announcementRes.data?.title ?? "公告";
   const description = announcementRes.data?.category
     ? `${announcementRes.data.category}公告：${title}`
     : `${title}｜活動公告`;
-  const ogImages = eventRes.data?.cover_image
-    ? [{ url: eventRes.data.cover_image, width: 1200, height: 630, alt: title }]
+  const inlineImage = announcementRes.data
+    ? extractFirstImage(
+        announcementRes.data.content as Record<string, unknown> | null,
+      )
+    : null;
+  const ogImageUrl = inlineImage ?? eventRes.data?.cover_image ?? null;
+  const ogImages = ogImageUrl
+    ? [{ url: ogImageUrl, width: 1200, height: 630, alt: title }]
     : [];
   const twitterImages = ogImages.length ? ogImages.map((i) => i.url) : ["/og.png"];
   return {
@@ -74,6 +83,9 @@ export default async function EventAnnouncementDetailPage({
     announcement.content as Record<string, unknown> | null,
   );
   const contentHtml = html ?? "<p>（無內容）</p>";
+  const { minutes: readingTimeMin } = estimateReadingTime(
+    announcement.content as Record<string, unknown> | null,
+  );
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -101,13 +113,16 @@ export default async function EventAnnouncementDetailPage({
     <div className="max-w-6xl mx-auto px-4 py-12">
       <JsonLd data={structuredData} />
       <JsonLd data={breadcrumbJsonLd} />
-      <Link
-        href={`/events/${slug}?tab=announcements`}
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-10"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        返回活動
-      </Link>
+      <div className="flex items-center justify-between gap-4 mb-10">
+        <Link
+          href={`/events/${slug}?tab=announcements`}
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          返回活動
+        </Link>
+        <ShareButtons url={`/events/${slug}/announcements/${id}`} title={announcement.title} />
+      </div>
 
       <AnnouncementDetail
         title={announcement.title}
@@ -115,6 +130,7 @@ export default async function EventAnnouncementDetailPage({
         category={announcement.category}
         contentHtml={contentHtml}
         toc={toc}
+        readingTimeMin={readingTimeMin}
       />
     </div>
   );
