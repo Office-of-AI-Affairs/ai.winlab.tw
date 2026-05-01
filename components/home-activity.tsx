@@ -12,6 +12,7 @@ type ActivityItem = {
   eventSlug: string;
   eventName: string;
   createdAt: string;
+  authorName?: string | null;
 };
 
 const KIND_LABEL: Record<ActivityItem["kind"], string> = {
@@ -57,7 +58,7 @@ export async function HomeActivity() {
       .limit(15),
     supabase
       .from("results")
-      .select("id, title, event_id, created_at")
+      .select("id, title, event_id, created_at, author_id")
       .in("event_id", eventIds)
       .eq("status", "published")
       .order("created_at", { ascending: false })
@@ -69,6 +70,27 @@ export async function HomeActivity() {
       .order("created_at", { ascending: false })
       .limit(15),
   ]);
+
+  // Look up display names for result authors. Skipping announcements +
+  // recruitments — those are typically posted by admins / vendors and the
+  // credit isn't interesting on a public timeline.
+  const authorIds = Array.from(
+    new Set(
+      (resultsRes.data ?? [])
+        .map((r) => r.author_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  );
+  const authorNameMap: Record<string, string> = {};
+  if (authorIds.length) {
+    const { data: profiles } = await supabase
+      .from("public_profiles")
+      .select("id, display_name")
+      .in("id", authorIds);
+    for (const p of profiles ?? []) {
+      if (p.display_name) authorNameMap[p.id] = p.display_name;
+    }
+  }
 
   const items: ActivityItem[] = [];
   for (const a of annsRes.data ?? []) {
@@ -93,6 +115,7 @@ export async function HomeActivity() {
       eventSlug: e.slug,
       eventName: e.name,
       createdAt: r.created_at,
+      authorName: r.author_id ? authorNameMap[r.author_id] ?? null : null,
     });
   }
   for (const c of recruitsRes.data ?? []) {
@@ -133,6 +156,9 @@ export async function HomeActivity() {
                 </Badge>
                 <span className="flex-1 line-clamp-1 text-sm sm:text-base">
                   {item.title}
+                  {item.authorName ? (
+                    <span className="text-muted-foreground"> — {item.authorName}</span>
+                  ) : null}
                 </span>
                 {showEventName && (
                   <span className="hidden sm:inline shrink-0 text-xs text-muted-foreground">
