@@ -34,7 +34,6 @@ export default async function Home() {
   return (
     <main className="flex flex-col">
       <JsonLd data={structuredData} />
-      <h1 className="sr-only">國立陽明交通大學 人工智慧專責辦公室</h1>
       <HomeCarousel />
       <HomeIntroduction />
       <HomeAnnouncement />
