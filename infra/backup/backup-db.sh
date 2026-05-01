@@ -38,7 +38,16 @@ if [[ "${size_bytes}" -lt 1024 ]]; then
   exit 1
 fi
 
-# Smoke-check: gzip integrity + first SQL line looks like a Postgres dump
+# Smoke-check: gzip integrity + first SQL line looks like a Postgres dump.
+# Reading the header through `zcat | head -3 | grep` is the obvious form
+# but it kills the script under cron: head closes its stdin after 3 lines,
+# zcat gets SIGPIPE and exits 141, pipefail propagates that out and `set
+# -e` aborts. Capture the header in a subshell with pipefail disabled so
+# zcat's SIGPIPE stays local.
 gzip -t "${out_file}"
-zcat "${out_file}" | head -3 | grep -q "PostgreSQL database dump"
+header="$(set +o pipefail; zcat "${out_file}" | head -3)"
+if ! grep -q "PostgreSQL database dump" <<<"${header}"; then
+  echo "[backup-db] FATAL: dump header missing" >&2
+  exit 1
+fi
 echo "[backup-db] integrity ok"
