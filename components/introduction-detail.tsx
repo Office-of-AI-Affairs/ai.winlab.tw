@@ -3,6 +3,8 @@
  */
 
 import type { ReactNode } from "react";
+import { Toc } from "@/components/toc";
+import type { TocItem } from "@/lib/ui/article";
 import { richTextDocumentClassName } from "@/lib/ui/rich-text";
 
 type Props = {
@@ -10,9 +12,10 @@ type Props = {
   contentHtml: string;
   /** Optional slot rendered next to the title (e.g. Edit button on read-only page) */
   actions?: ReactNode;
+  toc?: TocItem[];
 };
 
-export function IntroductionDetail({ title, contentHtml, actions }: Props) {
+export function IntroductionDetail({ title, contentHtml, actions, toc = [] }: Props) {
   return (
     <>
       <div className="max-w-6xl mb-8 flex items-center justify-between gap-4">
@@ -22,7 +25,8 @@ export function IntroductionDetail({ title, contentHtml, actions }: Props) {
         {actions}
       </div>
 
-      <div className="max-w-6xl">
+      <div className="lg:flex lg:items-start lg:gap-8 max-w-6xl">
+        <div className="flex-1 min-w-0">
         {contentHtml ? (
           <div
             className={richTextDocumentClassName}
@@ -31,6 +35,8 @@ export function IntroductionDetail({ title, contentHtml, actions }: Props) {
         ) : (
           <p className="text-muted-foreground">（無內容）</p>
         )}
+        </div>
+        <Toc items={toc} className="hidden lg:block" />
       </div>
     </>
   );

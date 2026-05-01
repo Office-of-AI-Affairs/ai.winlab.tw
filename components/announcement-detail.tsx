@@ -3,6 +3,8 @@
  */
 
 import { formatDate } from "@/lib/date";
+import { Toc } from "@/components/toc";
+import type { TocItem } from "@/lib/ui/article";
 import { richTextDocumentClassName } from "@/lib/ui/rich-text";
 
 type Props = {
@@ -10,9 +12,10 @@ type Props = {
   date: string;
   category: string;
   contentHtml: string;
+  toc?: TocItem[];
 };
 
-export function AnnouncementDetail({ title, date, category, contentHtml }: Props) {
+export function AnnouncementDetail({ title, date, category, contentHtml, toc = [] }: Props) {
   return (
     <>
       <div className="max-w-6xl mb-8">
@@ -34,11 +37,14 @@ export function AnnouncementDetail({ title, date, category, contentHtml }: Props
 
       <hr className="mb-8" />
 
-      <div className="max-w-6xl">
+      <div className="lg:flex lg:items-start lg:gap-8 max-w-6xl">
+        <div className="flex-1 min-w-0">
         <div
           className={richTextDocumentClassName}
           dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
+        </div>
+        <Toc items={toc} className="hidden lg:block" />
       </div>
     </>
   );

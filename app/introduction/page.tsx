@@ -4,7 +4,7 @@ import { IntroductionDetail } from "@/components/introduction-detail";
 import { IntroductionEditButton } from "@/components/introduction-edit-button";
 import { JsonLd } from "@/components/json-ld";
 import { PageShell } from "@/components/page-shell";
-import { renderRichTextHtml } from "@/lib/ui/rich-text";
+import { renderArticle } from "@/lib/ui/rich-text";
 import type { OrganizationMember, OrganizationMemberCategory } from "@/lib/supabase/types";
 import type { Metadata } from "next";
 
@@ -29,7 +29,8 @@ export default async function OrganizationPage() {
     getOrganizationMembers(),
   ]);
 
-  const contentHtml = renderRichTextHtml(introduction?.content) ?? "";
+  const { html, toc } = renderArticle(introduction?.content);
+  const contentHtml = html ?? "";
 
   const membersByCategory = Object.fromEntries(
     CATEGORIES.map((cat) => [cat, members.filter((m) => m.category === cat)])
@@ -51,6 +52,7 @@ export default async function OrganizationPage() {
           title={introduction?.title || "國立陽明交通大學 人工智慧專責辦公室"}
           contentHtml={contentHtml}
           actions={<IntroductionEditButton />}
+          toc={toc}
         />
       </PageShell>
       <OrganizationPageClient membersByCategory={membersByCategory} />

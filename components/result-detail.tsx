@@ -1,6 +1,7 @@
 import type { Result } from "@/lib/supabase/types";
 import { formatDate } from "@/lib/date";
-import { renderRichTextHtml, richTextDocumentClassName } from "@/lib/ui/rich-text";
+import { Toc } from "@/components/toc";
+import { renderArticle, richTextDocumentClassName } from "@/lib/ui/rich-text";
 import { User } from "lucide-react";
 import Link from "next/link";
 
@@ -15,7 +16,8 @@ type Props = {
 };
 
 export function ResultDetail({ result, publisherInfo, coauthors = [] }: Props) {
-  const contentHtml = renderRichTextHtml(result.content) ?? "<p>（無內容）</p>";
+  const { html, toc } = renderArticle(result.content);
+  const contentHtml = html ?? "<p>（無內容）</p>";
 
   return (
     <>
@@ -55,11 +57,14 @@ export function ResultDetail({ result, publisherInfo, coauthors = [] }: Props) {
 
       <hr className="mb-8" />
 
-      <div className="max-w-6xl">
-        <div
-          className={richTextDocumentClassName}
-          dangerouslySetInnerHTML={{ __html: contentHtml }}
-        />
+      <div className="lg:flex lg:items-start lg:gap-8 max-w-6xl">
+        <div className="flex-1 min-w-0">
+          <div
+            className={richTextDocumentClassName}
+            dangerouslySetInnerHTML={{ __html: contentHtml }}
+          />
+        </div>
+        <Toc items={toc} className="hidden lg:block" />
       </div>
     </>
   );

@@ -2,7 +2,7 @@ import { AnnouncementDetail } from "@/components/announcement-detail";
 import { JsonLd } from "@/components/json-ld";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb";
 import { createClient } from "@/lib/supabase/server";
-import { renderRichTextHtml } from "@/lib/ui/rich-text";
+import { renderArticle } from "@/lib/ui/rich-text";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -70,9 +70,10 @@ export default async function EventAnnouncementDetailPage({
   const announcement = announcementRes.data;
   const eventName = eventRes.data?.name ?? "活動";
 
-  const contentHtml =
-    renderRichTextHtml(announcement.content as Record<string, unknown> | null) ??
-    "<p>（無內容）</p>";
+  const { html, toc } = renderArticle(
+    announcement.content as Record<string, unknown> | null,
+  );
+  const contentHtml = html ?? "<p>（無內容）</p>";
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -113,6 +114,7 @@ export default async function EventAnnouncementDetailPage({
         date={announcement.date}
         category={announcement.category}
         contentHtml={contentHtml}
+        toc={toc}
       />
     </div>
   );

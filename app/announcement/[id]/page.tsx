@@ -2,7 +2,7 @@ import { AnnouncementDetail } from "@/components/announcement-detail";
 import { JsonLd } from "@/components/json-ld";
 import { getPublishedAnnouncement, getPublishedAnnouncementIds } from "@/app/announcement/data";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb";
-import { renderRichTextHtml } from "@/lib/ui/rich-text";
+import { renderArticle } from "@/lib/ui/rich-text";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -55,7 +55,8 @@ export default async function AnnouncementDetailPage({
 
   if (!announcement) notFound();
 
-  const contentHtml = renderRichTextHtml(announcement.content) ?? "<p>（無內容）</p>";
+  const { html, toc } = renderArticle(announcement.content);
+  const contentHtml = html ?? "<p>（無內容）</p>";
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
@@ -94,6 +95,7 @@ export default async function AnnouncementDetailPage({
         date={announcement.date}
         category={announcement.category}
         contentHtml={contentHtml}
+        toc={toc}
       />
     </div>
   );

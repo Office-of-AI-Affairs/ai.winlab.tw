@@ -1,7 +1,8 @@
 import { createPublicClient } from "@/lib/supabase/public";
 import { formatDate } from "@/lib/date";
 import { JsonLd } from "@/components/json-ld";
-import { renderRichTextHtml, richTextDocumentClassName } from "@/lib/ui/rich-text";
+import { Toc } from "@/components/toc";
+import { renderArticle, richTextDocumentClassName } from "@/lib/ui/rich-text";
 import type { Metadata } from "next";
 
 export const revalidate = 3600;
@@ -29,7 +30,7 @@ export default async function PrivacyPage() {
     .limit(1)
     .maybeSingle();
 
-  const contentHtml = renderRichTextHtml(
+  const { html: contentHtml, toc } = renderArticle(
     data?.content as Record<string, unknown> | null | undefined,
   );
 
@@ -56,6 +57,8 @@ export default async function PrivacyPage() {
         </p>
       )}
 
+      <div className="lg:flex lg:items-start lg:gap-8">
+        <div className="flex-1 min-w-0">
       {contentHtml ? (
         <div
           className={richTextDocumentClassName}
@@ -64,6 +67,9 @@ export default async function PrivacyPage() {
       ) : (
         <p className="text-muted-foreground">隱私權政策尚未設定。</p>
       )}
+        </div>
+        <Toc items={toc} className="hidden lg:block" />
+      </div>
     </div>
   );
 }
