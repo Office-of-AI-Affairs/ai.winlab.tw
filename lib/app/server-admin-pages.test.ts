@@ -12,7 +12,8 @@ const eventsPage = readFileSync(resolve(process.cwd(), "app/events/page.tsx"), "
 const eventDetailPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/page.tsx"), "utf8")
 const organizationPage = readFileSync(resolve(process.cwd(), "app/introduction/page.tsx"), "utf8")
 const settingsPage = readFileSync(resolve(process.cwd(), "app/settings/page.tsx"), "utf8")
-const announcementEditPage = readFileSync(resolve(process.cwd(), "app/announcement/[id]/edit/page.tsx"), "utf8")
+const announcementDetailPage = readFileSync(resolve(process.cwd(), "app/announcement/[id]/page.tsx"), "utf8")
+const announcementArticleClient = readFileSync(resolve(process.cwd(), "app/announcement/[id]/article-client.tsx"), "utf8")
 const eventEditPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/edit/page.tsx"), "utf8")
 const contactEditPage = readFileSync(resolve(process.cwd(), "app/contacts/[id]/edit/page.tsx"), "utf8")
 const privacyPage = readFileSync(resolve(process.cwd(), "app/privacy/page.tsx"), "utf8")
@@ -103,16 +104,29 @@ describe("server admin page contracts", () => {
     }
   })
 
-  test("announcement and event edit routes are server-gated wrappers around client editors", () => {
-    for (const content of [announcementEditPage, eventEditPage]) {
+  test("event edit route is server-gated wrapper around the client editor", () => {
+    for (const content of [eventEditPage]) {
       assert.ok(!content.includes('"use client"'))
       assert.ok(content.includes('from "@/lib/supabase/require-admin-server"'))
       assert.ok(content.includes('from "./client"'))
       assert.ok(!content.includes("useAuth("))
       assert.ok(!content.includes("useEffect("))
     }
-    assert.ok(existsSync(resolve(process.cwd(), "app/announcement/[id]/edit/client.tsx")))
     assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/edit/client.tsx")))
+  })
+
+  test("announcement detail hosts both view and edit on a single SSG-friendly route", () => {
+    assert.ok(!existsSync(resolve(process.cwd(), "app/announcement/[id]/edit/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/announcement/[id]/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/announcement/[id]/article-client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/announcement/[id]/draft-fallback.tsx")))
+    assert.ok(announcementDetailPage.includes("AnnouncementArticleClient"))
+    assert.ok(announcementDetailPage.includes("AnnouncementDraftFallback"))
+    assert.ok(announcementArticleClient.includes("useAuth("))
+    assert.ok(announcementArticleClient.includes("useEditMode("))
+    assert.ok(announcementArticleClient.includes("RichTextSurface"))
+    assert.ok(announcementArticleClient.includes("EditModeToggle"))
+    assert.ok(announcementArticleClient.includes("EditActionsPill"))
   })
 
   test("remaining admin edit routes are server-gated wrappers around client editors", () => {

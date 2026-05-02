@@ -56,7 +56,7 @@ export function AnnouncementPageClient({
       .select()
       .single();
     if (error) { toast.error("建立失敗"); setIsCreating(false); return; }
-    router.push(`/announcement/${data.id}/edit`);
+    router.push(`/announcement/${data.id}?mode=edit`);
   };
 
   return (
@@ -77,7 +77,11 @@ export function AnnouncementPageClient({
         <AnnouncementTable
           announcements={announcements}
           showStatus={isAdmin}
-          getHref={(item) => (isAdmin ? `/announcement/${item.id}/edit` : `/announcement/${item.id}`)}
+          getHref={(item) =>
+            isAdmin
+              ? `/announcement/${item.id}${item.status === "draft" ? "?mode=edit" : ""}`
+              : `/announcement/${item.id}`
+          }
         />
       )}
     </PageShell>

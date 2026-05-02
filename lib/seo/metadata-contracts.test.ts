@@ -13,6 +13,7 @@ const privacyPage = readFileSync(resolve(process.cwd(), "app/privacy/page.tsx"),
 const eventLayout = readFileSync(resolve(process.cwd(), "app/events/[slug]/layout.tsx"), "utf8")
 const profileLayout = readFileSync(resolve(process.cwd(), "app/profile/[id]/layout.tsx"), "utf8")
 const announcementDetailPage = readFileSync(resolve(process.cwd(), "app/announcement/[id]/page.tsx"), "utf8")
+const announcementDetailArticleClient = readFileSync(resolve(process.cwd(), "app/announcement/[id]/article-client.tsx"), "utf8")
 const eventAnnouncementDetailPage = readFileSync(
   resolve(process.cwd(), "app/events/[slug]/announcements/[id]/page.tsx"),
   "utf8"
@@ -72,7 +73,9 @@ describe("metadata contracts", () => {
     assert.ok(announcementPage.includes('"@type": "ItemList"'))
     assert.ok(eventsPage.includes('"@type": "ItemList"'))
     assert.ok(profileLayout.includes('"@type": "Person"'))
-    assert.ok(announcementDetailPage.includes('"@type": "NewsArticle"'))
+    // NewsArticle JSON-LD lives in the announcement article client (the
+    // detail page now hands off to the inline view+edit client).
+    assert.ok(announcementDetailArticleClient.includes('"@type": "NewsArticle"'))
     assert.ok(eventPage.includes('"@type": "Event"'))
     assert.ok(eventRecruitmentDetailPage.includes('"@type": "JobPosting"'))
   })

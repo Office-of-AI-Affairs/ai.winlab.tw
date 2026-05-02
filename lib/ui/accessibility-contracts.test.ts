@@ -32,7 +32,6 @@ const organizationMemberDialog = readFileSync(resolve(process.cwd(), "components
 const carouselEditClient = readFileSync(resolve(process.cwd(), "app/carousel/[id]/edit/client.tsx"), "utf8")
 const contactEditClient = readFileSync(resolve(process.cwd(), "app/contacts/[id]/edit/client.tsx"), "utf8")
 const organizationEditClient = readFileSync(resolve(process.cwd(), "app/introduction/[id]/edit/client.tsx"), "utf8")
-const announcementEditClient = readFileSync(resolve(process.cwd(), "app/announcement/[id]/edit/client.tsx"), "utf8")
 const eventAnnouncementEditClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/client.tsx"), "utf8")
 const resultEditClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/client.tsx"), "utf8")
 
@@ -137,7 +136,6 @@ describe("accessibility contracts", () => {
 
   test("primary editor routes no longer rely on preview-mode toggles as the main writing flow", () => {
     for (const content of [
-      announcementEditClient,
       eventAnnouncementEditClient,
       resultEditClient,
     ]) {

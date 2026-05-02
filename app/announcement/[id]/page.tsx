@@ -1,15 +1,10 @@
-import { AnnouncementDetail } from "@/components/announcement-detail";
-import { JsonLd } from "@/components/json-ld";
-import { ShareButtons } from "@/components/share-buttons";
 import { getPublishedAnnouncement, getPublishedAnnouncementIds } from "@/app/announcement/data";
-import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb";
 import { extractFirstImage } from "@/lib/ui/article";
 import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { AnnouncementArticleClient } from "./article-client";
+import { AnnouncementDraftFallback } from "./draft-fallback";
 
 export async function generateStaticParams() {
   const ids = await getPublishedAnnouncementIds();
@@ -61,55 +56,19 @@ export default async function AnnouncementDetailPage({
   const { id } = await params;
   const announcement = await getPublishedAnnouncement(id);
 
-  if (!announcement) notFound();
+  if (!announcement) {
+    return <AnnouncementDraftFallback id={id} />;
+  }
 
   const { html, toc } = renderArticle(announcement.content);
-  const contentHtml = html ?? "<p>（無內容）</p>";
   const { minutes: readingTimeMin } = estimateReadingTime(announcement.content);
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "NewsArticle",
-    headline: announcement.title,
-    datePublished: announcement.date,
-    dateModified: announcement.updated_at,
-    articleSection: announcement.category,
-    url: `https://ai.winlab.tw/announcement/${announcement.id}`,
-    publisher: {
-      "@type": "Organization",
-      name: "國立陽明交通大學 人工智慧專責辦公室",
-      url: "https://ai.winlab.tw",
-    },
-  };
-
-  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: "首頁", path: "/" },
-    { name: "公告", path: "/announcement" },
-    { name: announcement.title, path: `/announcement/${announcement.id}` },
-  ]);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12">
-      <JsonLd data={structuredData} />
-      <JsonLd data={breadcrumbJsonLd} />
-      <div className="flex items-center justify-between gap-4 mb-10">
-        <Link
-          href="/announcement"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          返回列表
-        </Link>
-        <ShareButtons url={`/announcement/${id}`} title={announcement.title} />
-      </div>
-
-      <AnnouncementDetail
-        title={announcement.title}
-        date={announcement.date}
-        category={announcement.category}
-        contentHtml={contentHtml}
-        toc={toc}
-        readingTimeMin={readingTimeMin}
-      />
-    </div>
+    <AnnouncementArticleClient
+      initialAnnouncement={announcement}
+      initialContentHtml={html}
+      initialToc={toc}
+      readingTimeMin={readingTimeMin}
+    />
   );
 }
