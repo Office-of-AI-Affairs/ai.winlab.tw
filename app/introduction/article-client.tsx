@@ -11,8 +11,8 @@ import { useContentEditor } from "@/hooks/use-content-editor"
 import { useEditMode } from "@/hooks/use-edit-mode"
 import type { TocItem } from "@/lib/ui/article"
 import type { Introduction } from "@/lib/supabase/types"
-import { Loader2, LogOut, Save } from "lucide-react"
-import { useCallback, useEffect, useState } from "react"
+import { LogOut } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { revalidateIntroduction } from "./actions"
 
 type Props = {
@@ -51,17 +51,31 @@ export function IntroductionArticleClient({
   const [toc, setToc] = useState<TocItem[]>(initialToc)
   const [actionsOpen, setActionsOpen] = useState(false)
 
-  const handleSave = useCallback(async () => {
-    if (!hasChanges || isSaving) return
-    await save()
-    const { renderArticle } = await import("@/lib/ui/rich-text")
-    const { html, toc: nextToc } = renderArticle(
-      introduction.content as Record<string, unknown> | null,
-    )
-    setRenderedHtml(html)
-    setToc(nextToc)
-    setActionsOpen(false)
-  }, [hasChanges, isSaving, save, introduction.content])
+  // useContentEditor wires save() into useAutoSave (3s debounce +
+  // beforeunload guard). Whenever a save lands, hasChanges flips false —
+  // refresh the rendered HTML so view-mode reflects the latest content
+  // when admin toggles back. Skip the regen on first mount and while dirty.
+  const isInitialRender = useRef(true)
+  useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false
+      return
+    }
+    if (hasChanges) return
+    let cancelled = false
+    void (async () => {
+      const { renderArticle } = await import("@/lib/ui/rich-text")
+      if (cancelled) return
+      const { html, toc: nextToc } = renderArticle(
+        introduction.content as Record<string, unknown> | null,
+      )
+      setRenderedHtml(html)
+      setToc(nextToc)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [hasChanges, introduction.content])
 
   const exitEdit = useCallback(() => {
     if (hasChanges && !window.confirm("你有尚未儲存的變更，確定要離開嗎？")) return
@@ -75,11 +89,11 @@ export function IntroductionArticleClient({
       if (!(event.metaKey || event.ctrlKey)) return
       if (event.key.toLowerCase() !== "s") return
       event.preventDefault()
-      void handleSave()
+      if (hasChanges && !isSaving) void save()
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [isEditing, handleSave])
+  }, [isEditing, hasChanges, isSaving, save])
 
   useEffect(() => {
     if (!isEditing || !hasChanges) return
@@ -157,19 +171,6 @@ export function IntroductionArticleClient({
             >
               <LogOut className="size-4" />
               退出編輯
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleSave}
-              disabled={!hasChanges || isSaving}
-            >
-              {isSaving ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Save className="size-4" />
-              )}
-              儲存
             </Button>
           </div>
         </EditActionsPill>

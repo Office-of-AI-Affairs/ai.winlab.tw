@@ -21,11 +21,11 @@ import type { TocItem } from "@/lib/ui/article"
 import type { PublicProfile, Result } from "@/lib/supabase/types"
 import { uploadResultImage } from "@/lib/upload-image"
 import { isExternalImage, resolveImageSrc } from "@/lib/utils"
-import { ArrowLeft, ImagePlus, Loader2, LogOut, Save, Send, Trash2, User } from "lucide-react"
+import { ArrowLeft, ImagePlus, Loader2, LogOut, Send, Trash2, User } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 export type ResultPublisher = { id: string; name: string } | null
 
@@ -99,17 +99,31 @@ export function ResultArticleClient({
     if (url) setResult((prev) => ({ ...prev, header_image: url }))
   }
 
-  const handleSave = useCallback(async () => {
-    if (!hasChanges || isSaving) return
-    await save()
-    const { renderArticle } = await import("@/lib/ui/rich-text")
-    const { html, toc: nextToc } = renderArticle(
-      result.content as Record<string, unknown> | null,
-    )
-    setRenderedHtml(html)
-    setToc(nextToc)
-    setActionsOpen(false)
-  }, [hasChanges, isSaving, save, result.content])
+  // useContentEditor's save() is wired into useAutoSave (3s debounce +
+  // beforeunload guard). Whenever a save lands, hasChanges flips false —
+  // refresh the rendered HTML so view-mode reflects the latest content
+  // when admin toggles back. Skip the regen on first mount and while dirty.
+  const isInitialRender = useRef(true)
+  useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false
+      return
+    }
+    if (hasChanges) return
+    let cancelled = false
+    void (async () => {
+      const { renderArticle } = await import("@/lib/ui/rich-text")
+      if (cancelled) return
+      const { html, toc: nextToc } = renderArticle(
+        result.content as Record<string, unknown> | null,
+      )
+      setRenderedHtml(html)
+      setToc(nextToc)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [hasChanges, result.content])
 
   const exitEdit = useCallback(() => {
     if (hasChanges && !window.confirm("你有尚未儲存的變更，確定要離開嗎？")) return
@@ -123,11 +137,11 @@ export function ResultArticleClient({
       if (!(event.metaKey || event.ctrlKey)) return
       if (event.key.toLowerCase() !== "s") return
       event.preventDefault()
-      void handleSave()
+      if (hasChanges && !isSaving) void save()
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [isEditing, handleSave])
+  }, [isEditing, hasChanges, isSaving, save])
 
   useEffect(() => {
     if (!isEditing || !hasChanges) return
@@ -365,19 +379,6 @@ export function ResultArticleClient({
               >
                 <LogOut className="size-4" />
                 退出編輯
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleSave}
-                disabled={!hasChanges || isSaving || isPublishing || isDeleting}
-              >
-                {isSaving ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Save className="size-4" />
-                )}
-                儲存
               </Button>
               <Button
                 type="button"
