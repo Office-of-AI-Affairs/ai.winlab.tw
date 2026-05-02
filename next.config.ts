@@ -33,6 +33,7 @@ const nextConfig: NextConfig = {
       { source: "/privacy/edit", destination: "/privacy?mode=edit", permanent: true },
       { source: "/introduction/edit", destination: "/introduction?mode=edit", permanent: true },
       { source: "/announcement/:id/edit", destination: "/announcement/:id?mode=edit", permanent: true },
+      { source: "/events/:slug/edit", destination: "/events/:slug", permanent: true },
       { source: "/events/:slug/announcements/:id/edit", destination: "/events/:slug/announcements/:id?mode=edit", permanent: true },
       { source: "/events/:slug/results/:id/edit", destination: "/events/:slug/results/:id?mode=edit", permanent: true },
     ];

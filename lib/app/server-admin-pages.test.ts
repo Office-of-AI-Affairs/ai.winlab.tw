@@ -14,7 +14,8 @@ const organizationPage = readFileSync(resolve(process.cwd(), "app/introduction/p
 const settingsPage = readFileSync(resolve(process.cwd(), "app/settings/page.tsx"), "utf8")
 const announcementDetailPage = readFileSync(resolve(process.cwd(), "app/announcement/[id]/page.tsx"), "utf8")
 const announcementArticleClient = readFileSync(resolve(process.cwd(), "app/announcement/[id]/article-client.tsx"), "utf8")
-const eventEditPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/edit/page.tsx"), "utf8")
+const eventEditDialog = readFileSync(resolve(process.cwd(), "app/events/[slug]/event-edit-dialog.tsx"), "utf8")
+const eventDetailClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/client.tsx"), "utf8")
 const contactEditPage = readFileSync(resolve(process.cwd(), "app/contacts/[id]/edit/page.tsx"), "utf8")
 const privacyPage = readFileSync(resolve(process.cwd(), "app/privacy/page.tsx"), "utf8")
 const privacyClient = readFileSync(resolve(process.cwd(), "app/privacy/client.tsx"), "utf8")
@@ -104,15 +105,18 @@ describe("server admin page contracts", () => {
     }
   })
 
-  test("event edit route is server-gated wrapper around the client editor", () => {
-    for (const content of [eventEditPage]) {
-      assert.ok(!content.includes('"use client"'))
-      assert.ok(content.includes('from "@/lib/supabase/require-admin-server"'))
-      assert.ok(content.includes('from "./client"'))
-      assert.ok(!content.includes("useAuth("))
-      assert.ok(!content.includes("useEffect("))
-    }
-    assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/edit/client.tsx")))
+  test("event detail edit happens in a floating dialog on the same route", () => {
+    // /events/[slug]/edit was retired — admins now click 編輯活動 in a
+    // FloatingActionStack on /events/[slug], which opens EventEditDialog
+    // (slug uniqueness check + cover image + status toggle + delete all
+    // live in the dialog body).
+    assert.ok(!existsSync(resolve(process.cwd(), "app/events/[slug]/edit/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/events/[slug]/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/event-edit-dialog.tsx")))
+    assert.ok(eventDetailClient.includes("EventEditDialog"))
+    assert.ok(eventDetailClient.includes("FloatingActionStack"))
+    assert.ok(eventEditDialog.includes("useContentEditor("))
+    assert.ok(eventEditDialog.includes("table: \"events\""))
   })
 
   test("announcement detail hosts both view and edit on a single SSG-friendly route", () => {

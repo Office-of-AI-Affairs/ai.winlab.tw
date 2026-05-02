@@ -23,7 +23,7 @@ export function EventDetailNotFoundClient({ slug }: { slug: string }) {
           </Button>
           {isAdmin && !isLoading && (
             <Button asChild>
-              <Link href={`/events/${slug}/edit`}>開啟編輯</Link>
+              <Link href={`/events/${slug}`}>查看活動</Link>
             </Button>
           )}
         </div>

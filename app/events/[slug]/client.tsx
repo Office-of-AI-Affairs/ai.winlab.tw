@@ -2,7 +2,10 @@
 
 import { AppLink } from "@/components/app-link";
 import { useAuth } from "@/components/auth-provider";
-import { FloatingActionPill } from "@/components/floating-action-pill";
+import {
+  FloatingActionPill,
+  FloatingActionStack,
+} from "@/components/floating-action-pill";
 import { AddMemberButton } from "@/components/member-editor";
 import { RecruitmentCard } from "@/components/recruitment-card";
 import { RecruitmentDialog } from "@/components/recruitment-dialog";
@@ -30,6 +33,8 @@ import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+
+import { EventEditDialog } from "./event-edit-dialog";
 
 function TabSummaryBar({
   countLabel,
@@ -116,6 +121,7 @@ export function EventDetailClient({
   const [memberSearch, setMemberSearch] = useState("");
   const [recruitmentSearch, setRecruitmentSearch] = useState("");
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
+  const [eventEditOpen, setEventEditOpen] = useState(false);
 
   const memberIdSet = useMemo(() => new Set(currentMembers.map((m) => m.id)), [currentMembers]);
 
@@ -399,26 +405,15 @@ export function EventDetailClient({
       </Link>
 
       <div className="flex flex-col gap-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold">{event.name}</h1>
-              {event.status === "draft" && (
-                <span className="rounded-full bg-yellow-100 text-yellow-800 px-3 py-0.5 text-sm font-medium">草稿</span>
-              )}
-            </div>
-            {event.description && (
-              <p className="text-muted-foreground">{event.description}</p>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold">{event.name}</h1>
+            {event.status === "draft" && (
+              <span className="rounded-full bg-yellow-100 text-yellow-800 px-3 py-0.5 text-sm font-medium">草稿</span>
             )}
           </div>
-          {isAdmin && (
-            <Link
-              href={`/events/${slug}/edit`}
-              className="inline-flex items-center gap-2 text-sm rounded-lg px-3 py-2 border border-border hover:bg-muted transition-colors shrink-0"
-            >
-              <Pencil className="w-4 h-4" />
-              編輯活動
-            </Link>
+          {event.description && (
+            <p className="text-muted-foreground">{event.description}</p>
           )}
         </div>
       </div>
@@ -684,41 +679,65 @@ export function EventDetailClient({
         </div>
       )}
 
-      {/* Tab-scoped floating create pills. One at a time, bottom-right,
-          identical shape to the edit pills used elsewhere in the site. */}
-      {tab === "announcements" && isAdmin && (
-        <FloatingActionPill
-          icon={Plus}
-          label={isCreatingAnnouncement ? "建立中…" : "新增公告"}
-          onClick={createAnnouncement}
-          loading={isCreatingAnnouncement}
-        />
-      )}
-      {tab === "results" && userId && (
-        <FloatingActionPill
-          icon={Plus}
-          label={isCreatingResult ? "建立中…" : "新增成果"}
-          onClick={createResult}
-          loading={isCreatingResult}
-        />
-      )}
-      {tab === "recruitment" && isAdmin && (
-        <FloatingActionPill
-          icon={Plus}
-          label="新增徵才"
-          onClick={openCreateSheet}
-        />
-      )}
-      {tab === "members" && isAdmin && userId && (
-        <AddMemberButton
-          eventId={event.id}
-          memberIds={memberIdSet}
-          onMemberAdded={(profile) =>
-            setCurrentMembers((prev) => [
-              ...prev,
-              { id: profile.id, display_name: profile.display_name, avatar_url: profile.avatar_url, hasProfileData: false },
-            ])
-          }
+      {/* Floating actions for this page — admin sees `編輯活動` always +
+          the active tab's create pill; non-admin logged-in users see the
+          `+新增成果` pill on the results tab. Stack so multiple pills
+          line up cleanly at the bottom-right anchor. */}
+      <FloatingActionStack>
+        {isAdmin && (
+          <FloatingActionPill
+            inline
+            icon={Pencil}
+            label="編輯活動"
+            onClick={() => setEventEditOpen(true)}
+          />
+        )}
+        {tab === "announcements" && isAdmin && (
+          <FloatingActionPill
+            inline
+            icon={Plus}
+            label={isCreatingAnnouncement ? "建立中…" : "新增公告"}
+            onClick={createAnnouncement}
+            loading={isCreatingAnnouncement}
+          />
+        )}
+        {tab === "results" && userId && (
+          <FloatingActionPill
+            inline
+            icon={Plus}
+            label={isCreatingResult ? "建立中…" : "新增成果"}
+            onClick={createResult}
+            loading={isCreatingResult}
+          />
+        )}
+        {tab === "recruitment" && isAdmin && (
+          <FloatingActionPill
+            inline
+            icon={Plus}
+            label="新增徵才"
+            onClick={openCreateSheet}
+          />
+        )}
+        {tab === "members" && isAdmin && userId && (
+          <AddMemberButton
+            eventId={event.id}
+            memberIds={memberIdSet}
+            inline
+            onMemberAdded={(profile) =>
+              setCurrentMembers((prev) => [
+                ...prev,
+                { id: profile.id, display_name: profile.display_name, avatar_url: profile.avatar_url, hasProfileData: false },
+              ])
+            }
+          />
+        )}
+      </FloatingActionStack>
+
+      {isAdmin && (
+        <EventEditDialog
+          open={eventEditOpen}
+          onOpenChange={setEventEditOpen}
+          event={event}
         />
       )}
     </PageShell>

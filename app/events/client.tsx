@@ -48,11 +48,10 @@ export function EventsPageClient({
 
   return (
     <PageShell tone="dashboard">
-      <Block variant="ghost" className="flex items-center justify-between">
+      <Block variant="ghost" className="flex items-center">
         <SubButton href="/">
           <ArrowLeftIcon className="size-4" /> 返回首頁
         </SubButton>
-        {isAdmin && <EventsCreateButton />}
       </Block>
 
       <div className="w-full grid lg:grid-cols-3 gap-4">
@@ -77,6 +76,8 @@ export function EventsPageClient({
           )}
         </div>
       </div>
+
+      {isAdmin && <EventsCreateButton />}
     </PageShell>
   );
 }

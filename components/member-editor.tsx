@@ -20,9 +20,11 @@ type Props = {
   eventId: string;
   memberIds: Set<string>;
   onMemberAdded: (profile: PublicProfile) => void;
+  /** Render the trigger pill inline (for use inside FloatingActionStack). */
+  inline?: boolean;
 };
 
-export function AddMemberButton({ eventId, memberIds, onMemberAdded }: Props) {
+export function AddMemberButton({ eventId, memberIds, onMemberAdded, inline }: Props) {
   const supabaseRef = useRef(createClient());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [allUsers, setAllUsers] = useState<PublicProfile[]>([]);
@@ -66,6 +68,7 @@ export function AddMemberButton({ eventId, memberIds, onMemberAdded }: Props) {
         <FloatingActionPill
           icon={Plus}
           label="新增成員"
+          inline={inline}
           onClick={() => {
             setQuery("");
             if (allUsers.length === 0) fetchAllUsers();
