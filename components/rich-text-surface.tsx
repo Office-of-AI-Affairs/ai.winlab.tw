@@ -42,7 +42,11 @@ export function RichTextSurface({
   if (editing) {
     return (
       <div data-slot="rich-text-surface" data-mode="edit">
-        <TiptapEditor content={content ?? {}} onChange={(c) => onChange?.(c)} />
+        <TiptapEditor
+          content={content ?? {}}
+          onChange={(c) => onChange?.(c)}
+          flush
+        />
       </div>
     )
   }

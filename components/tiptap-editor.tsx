@@ -1,8 +1,12 @@
 "use client";
 
 import { uploadAnnouncementImage } from "@/lib/upload-image";
-import { editableRichTextDocumentClassName } from "@/lib/ui/rich-text";
+import {
+  editableRichTextDocumentClassName,
+  richTextDocumentClassName,
+} from "@/lib/ui/rich-text";
 import { lowlight } from "@/lib/ui/lowlight";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { TiptapDesktopBubbleMenu } from "./tiptap-desktop-bubble-menu";
 import { TiptapDesktopFloatingMenu } from "./tiptap-desktop-floating-menu";
@@ -28,12 +32,21 @@ interface TiptapEditorProps {
   content: Record<string, unknown>;
   onChange: (content: Record<string, unknown>) => void;
   editable?: boolean;
+  /**
+   * Render flush with the surrounding layout — drops the editor's internal
+   * padding/min-height/canvas frame so an inline edit surface stays
+   * pixel-aligned with its read-mode counterpart. Use for unified
+   * view+edit routes (see RichTextSurface). Default false keeps the
+   * padded canvas that dedicated /edit pages depend on.
+   */
+  flush?: boolean;
 }
 
 export function TiptapEditor({
   content,
   onChange,
   editable = true,
+  flush = false,
 }: TiptapEditorProps) {
   const handleImageDrop = useCallback(
     async (editor: import("@tiptap/core").Editor, files: File[], pos: number) => {
@@ -115,7 +128,9 @@ export function TiptapEditor({
     },
     editorProps: {
       attributes: {
-        class: editableRichTextDocumentClassName,
+        class: flush
+          ? `${richTextDocumentClassName} focus:outline-none`
+          : editableRichTextDocumentClassName,
       },
     },
   });
@@ -134,13 +149,17 @@ export function TiptapEditor({
   }
 
   return (
-    <div data-slot="tiptap-editor" className="flex flex-col gap-4">
+    <div
+      data-slot="tiptap-editor"
+      data-flush={flush ? "" : undefined}
+      className={cn("flex flex-col", flush ? "gap-0" : "gap-4")}
+    >
       {editable && <TiptapDesktopBubbleMenu editor={editor} />}
       {editable && <TiptapDesktopFloatingMenu editor={editor} />}
       {editable && <TiptapMobileToolbar editor={editor} />}
       <div
         data-slot="tiptap-canvas"
-        className="rounded-[2rem] bg-background"
+        className={cn(!flush && "rounded-[2rem] bg-background")}
       >
         <EditorContent editor={editor} />
       </div>
