@@ -2,10 +2,12 @@
 
 import { uploadAnnouncementImage } from "@/lib/upload-image";
 import { editableRichTextDocumentClassName } from "@/lib/ui/rich-text";
+import { lowlight } from "@/lib/ui/lowlight";
 import { toast } from "sonner";
 import { TiptapDesktopBubbleMenu } from "./tiptap-desktop-bubble-menu";
 import { TiptapDesktopFloatingMenu } from "./tiptap-desktop-floating-menu";
 import { TiptapMobileToolbar } from "./tiptap-mobile-toolbar";
+import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
 import FileHandler from "@tiptap/extension-file-handler";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -74,7 +76,11 @@ export function TiptapEditor({
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({ codeBlock: false }),
+      CodeBlockLowlight.configure({
+        lowlight,
+        HTMLAttributes: { class: "rounded-lg" },
+      }),
       Placeholder.configure({
         placeholder: "開始撰寫公告內容…",
       }),

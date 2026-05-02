@@ -1,10 +1,12 @@
 import TiptapImage from "@tiptap/extension-image"
 import { Heading } from "@tiptap/extension-heading"
+import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight"
 import Youtube from "@tiptap/extension-youtube"
 import { generateHTML } from "@tiptap/html"
 import StarterKit from "@tiptap/starter-kit"
 import type { JSONContent } from "@tiptap/core"
 import { processArticle, type TocItem } from "./article"
+import { lowlight } from "./lowlight"
 
 export const richTextDocumentClassName =
   "prose prose-sm sm:prose-base max-w-none [&_img]:pt-4 [&_h1]:scroll-mt-24 [&_h2]:scroll-mt-24 [&_h3]:scroll-mt-24 [&_h4]:scroll-mt-24"
@@ -28,8 +30,12 @@ const HeadingWithId = Heading.extend({
 })
 
 const richTextHtmlExtensions = [
-  StarterKit.configure({ heading: false }),
+  StarterKit.configure({ heading: false, codeBlock: false }),
   HeadingWithId,
+  CodeBlockLowlight.configure({
+    lowlight,
+    HTMLAttributes: { class: "rounded-lg" },
+  }),
   TiptapImage.configure({
     HTMLAttributes: {
       class: "rounded-lg max-w-full h-auto",

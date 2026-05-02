@@ -258,3 +258,73 @@
   @apply text-muted-foreground pointer-events-none float-left h-0;
   content: attr(data-placeholder);
 }
+
+/* Code syntax highlighting (lowlight + highlight.js classes). Theme-friendly:
+   uses OKLCH so colors stay consistent in both light and dark modes. */
+.prose pre code.hljs,
+.tiptap pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+.hljs-comment,
+.hljs-quote {
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in,
+.hljs-meta {
+  color: oklch(0.5 0.18 290);
+  font-weight: 600;
+}
+.hljs-string,
+.hljs-attr,
+.hljs-doctag {
+  color: oklch(0.5 0.15 145);
+}
+.hljs-number,
+.hljs-literal,
+.hljs-symbol,
+.hljs-bullet {
+  color: oklch(0.55 0.16 30);
+}
+.hljs-title,
+.hljs-section,
+.hljs-name,
+.hljs-attribute {
+  color: oklch(0.5 0.18 240);
+  font-weight: 600;
+}
+.hljs-variable,
+.hljs-template-variable,
+.hljs-regexp,
+.hljs-link {
+  color: oklch(0.55 0.18 0);
+}
+.hljs-tag {
+  color: var(--muted-foreground);
+}
+.hljs-emphasis {
+  font-style: italic;
+}
+.hljs-strong {
+  font-weight: bold;
+}
+.hljs-deletion {
+  color: oklch(0.55 0.18 0);
+  background: oklch(0.95 0.05 0);
+}
+.hljs-addition {
+  color: oklch(0.5 0.15 145);
+  background: oklch(0.95 0.05 145);
+}
+.dark .hljs-deletion {
+  background: oklch(0.25 0.08 0);
+}
+.dark .hljs-addition {
+  background: oklch(0.25 0.08 145);
+}
