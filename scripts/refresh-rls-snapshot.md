@@ -75,5 +75,6 @@ they appear in the SQL. Branches in AND'd predicates are joined with ` AND `.
 ## When to NOT use this workflow
 
 - For one-off ad-hoc inspection: just run the SQL, don't update the snapshot.
-- For a brand-new role / table that the docs/permissions.md doesn't cover yet:
-  update `docs/permissions.md` first, then this snapshot, then write the test.
+- For a brand-new role / table that the `rls-permissions` skill doesn't cover
+  yet: update `.claude/skills/rls-permissions/SKILL.md` first, then this
+  snapshot, then write the test.

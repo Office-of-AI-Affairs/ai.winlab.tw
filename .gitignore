@@ -12,7 +12,8 @@ build/
 next-env.d.ts
 
 .cursor/
-.claude/
+.claude/*
+!.claude/skills/
 .agents/
 .worktrees/
 

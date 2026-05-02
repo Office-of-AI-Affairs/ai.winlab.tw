@@ -36,6 +36,8 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=
 
 ## Documentation
 
+For humans:
+
 - [`DESIGN.md`](DESIGN.md) — design system spec (tokens, layout, floating
   surfaces, component primitives, do's and don'ts). Follows the
   [Google DESIGN.md format](https://github.com/google-labs-code/design.md):
@@ -43,9 +45,13 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=
   at [`/design`](https://ai.winlab.tw/design).
 - [`CLAUDE.md`](CLAUDE.md) — codebase conventions (architecture, ISR
   pattern, hooks, auth, schema regen). Read this before opening a PR.
-- [`docs/`](docs) — operational guides: `isr-pattern.md`,
-  `permissions.md`, `storage-buckets.md`, `cdn-setup.md`,
-  `perf-baseline.md`.
+
+For Claude Code (load on demand):
+
+- [`.claude/skills/`](.claude/skills) — project-scoped agent skills.
+  `isr-page`, `rls-permissions`, `supabase-storage`, `inline-view-edit`,
+  `cdn-deploy`, `perf-audit`. Each loads only when relevant — see
+  [`.claude/skills/README.md`](.claude/skills/README.md) for the index.
 
 ## License
 

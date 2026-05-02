@@ -22,7 +22,7 @@
 - `bun run lint` — ESLint（CI-gated；本地可單獨跑）
 - `bun run e2e` — Playwright smoke suite on prod（`.pw.ts` under `e2e/`，本地手動執行；CI 目前沒有 e2e job）
 - `bun run analyze` — bundle analyzer (`ANALYZE=true next build`)
-- Lighthouse baseline + methodology：`docs/perf-baseline.md`
+- Lighthouse baseline + methodology: `perf-audit` skill (`.claude/skills/perf-audit/`)
 
 ### Schema regen
 
@@ -36,7 +36,7 @@
 ## Architecture
 
 - Root layout is **cookieless** — `AuthProvider` hydrates `useAuth()`
-  from the browser Supabase client on mount (see `docs/isr-pattern.md`)
+  from the browser Supabase client on mount (see `isr-page` skill)
 - `useAuth()`: `user`, `profile`, `isAdmin`, `isVendor`, `isLoading`, `signIn`, `signOut`, `refreshProfile`
 - `NuqsAdapter` in root layout for URL search param state
 - Root layout fetches pinned events through the cached `getPinnedEvents()`
@@ -50,8 +50,8 @@ Public-facing pages (`/`, `/introduction`, `/announcement`, `/events`,
 pattern: `page.tsx` (server, cookieless) + `data.ts`
 (`unstable_cache` + `createPublicClient`) + `actions.ts` (Server
 Actions that `updateTag`) + `client.tsx` (admin UI + draft merge via
-`useAuth`). See `docs/isr-pattern.md` for the full playbook, tag
-inventory, and how to add a new page.
+`useAuth`). Full playbook, cache-tag inventory, and add-a-new-page
+checklist live in the `isr-page` skill.
 
 ## Auth
 
@@ -106,7 +106,7 @@ Conventions:
 ## Database & storage
 
 - Migrations: `supabase/migrations/`，依序在 SQL Editor 執行，所有表 RLS
-- Buckets — see `docs/storage-buckets.md` for the full layout, RLS, and
+- Buckets — see `supabase-storage` skill for the full layout, RLS, and
   maintenance scripts:
   - `announcement-images` (public) — visitor-facing images, WebP-first
   - `resumes` (private) — per-user folders, session-gated download via
@@ -123,7 +123,7 @@ Conventions:
 - `toCdnUrl()` in `lib/cdn.ts` — 把 Supabase public storage URL 改寫成
   CDN domain；未設 `NEXT_PUBLIC_CDN_BASE_URL` 就是 no-op，可先 deploy
   程式再從 Vercel 切流量
-- Setup 步驟：`docs/cdn-setup.md`
+- Setup 步驟：`cdn-deploy` skill
 
 ## Pages
 
@@ -162,7 +162,7 @@ Conventions:
 - All CRUD operations must show `toast.error` on failure
 - Edit pages 接收 server-passed `initialData`（page.tsx fetch → client props），不做 client-side fetch
 - Wire mutations to cache tags via the `onAfter*` callbacks; see
-  `docs/isr-pattern.md` for the tag inventory
+  the `isr-page` skill for the tag inventory
 
 ## Editor
 
