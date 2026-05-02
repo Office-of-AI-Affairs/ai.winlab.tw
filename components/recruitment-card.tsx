@@ -1,6 +1,7 @@
 "use client";
 
 import { AppLink } from "@/components/app-link";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -72,11 +73,7 @@ export function RecruitmentCard({ item, href, isAdmin, onEdit, onPinToggle }: Re
               {item.start_date}
               {item.end_date ? ` ~ ${item.end_date}` : " 起"}
             </span>
-            {isExpired && (
-              <span className="bg-red-100 text-red-800 rounded-full px-2 py-0.5 text-xs">
-                已截止
-              </span>
-            )}
+            {isExpired && <Badge variant="destructive">已截止</Badge>}
           </div>
         </CardContent>
       </AppLink>

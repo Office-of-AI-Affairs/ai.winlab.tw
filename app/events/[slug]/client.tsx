@@ -408,9 +408,7 @@ export function EventDetailClient({
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold">{event.name}</h1>
-            {event.status === "draft" && (
-              <span className="rounded-full bg-yellow-100 text-yellow-800 px-3 py-0.5 text-sm font-medium">草稿</span>
-            )}
+            {event.status === "draft" && <Badge variant="secondary">草稿</Badge>}
           </div>
           {event.description && (
             <p className="text-muted-foreground">{event.description}</p>

@@ -574,7 +574,7 @@ export function ProfilePageClient({
                                 <Badge variant="default">{eventName}</Badge>
                               )}
                               {isOwner && result.status === "draft" && (
-                                <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-200">草稿</Badge>
+                                <Badge variant="secondary">草稿</Badge>
                               )}
                             </div>
                             {result.summary && (
@@ -618,7 +618,7 @@ export function ProfilePageClient({
                       <div className="grid gap-2 lg:content-center">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="text-lg font-bold break-keep">{ext.title}</h3>
-                          <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">外部</Badge>
+                          <Badge variant="outline">外部</Badge>
                         </div>
                         {ext.description && (
                           <p className="text-sm text-muted-foreground line-clamp-3">{ext.description}</p>

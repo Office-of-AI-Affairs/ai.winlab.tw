@@ -1,4 +1,5 @@
 import { AppLink } from "@/components/app-link";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getApplicationMethodLinks } from "@/lib/recruitment-application-method";
 import type {
@@ -98,11 +99,7 @@ export function RecruitmentDetail({
               <Calendar className="w-4 h-4" />
               {recruitment.start_date} ~ {recruitment.end_date ?? "截止日未定"}
             </span>
-            {isExpired && (
-              <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                已截止
-              </span>
-            )}
+            {isExpired && <Badge variant="destructive">已截止</Badge>}
             {canViewPrivateDetails && (
               <span className="inline-flex items-center gap-1.5">
                 <Briefcase className="w-4 h-4" />
