@@ -2,6 +2,7 @@
 
 import { AppLink } from "@/components/app-link";
 import { useAuth } from "@/components/auth-provider";
+import { FloatingActionPill } from "@/components/floating-action-pill";
 import { AddMemberButton } from "@/components/member-editor";
 import { RecruitmentCard } from "@/components/recruitment-card";
 import { RecruitmentDialog } from "@/components/recruitment-dialog";
@@ -29,6 +30,33 @@ import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+
+function TabSummaryBar({
+  countLabel,
+  searchValue,
+  onSearchChange,
+  searchPlaceholder,
+}: {
+  countLabel: string;
+  searchValue: string;
+  onSearchChange: (value: string) => void;
+  searchPlaceholder: string;
+}) {
+  return (
+    <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sm text-muted-foreground">{countLabel}</p>
+      <div className="relative w-full sm:max-w-xs">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder={searchPlaceholder}
+          value={searchValue}
+          onChange={(event) => onSearchChange(event.target.value)}
+          className="pl-9"
+        />
+      </div>
+    </div>
+  );
+}
 
 type Tab = "announcements" | "results" | "recruitment" | "members";
 
@@ -72,11 +100,19 @@ export function EventDetailClient({
   const userId = user?.id ?? null;
   const supabaseRef = useRef(createClient());
   const [tab, setTab] = useQueryState("tab", tabParser);
-  const { isCreating, createAnnouncement, togglePin } = useEventActions(event.id, slug, userId);
+  const {
+    isCreatingAnnouncement,
+    isCreatingResult,
+    createAnnouncement,
+    createResult,
+    togglePin,
+  } = useEventActions(event.id, slug, userId);
 
   const [currentMembers, setCurrentMembers] = useState(initialMembers);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingRecruitment, setEditingRecruitment] = useState<Recruitment | null>(null);
+  const [announcementSearch, setAnnouncementSearch] = useState("");
+  const [resultSearch, setResultSearch] = useState("");
   const [memberSearch, setMemberSearch] = useState("");
   const [recruitmentSearch, setRecruitmentSearch] = useState("");
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
@@ -244,10 +280,28 @@ export function EventDetailClient({
     () => (draftAnnouncements.length > 0 ? sortAnnouncements([...draftAnnouncements, ...publishedAnnouncements]) : publishedAnnouncements),
     [draftAnnouncements, publishedAnnouncements],
   );
+  const displayedAnnouncements = useMemo(() => {
+    const query = announcementSearch.trim().toLowerCase();
+    if (!query) return announcements;
+    return announcements.filter((item) =>
+      (item.title ?? "").toLowerCase().includes(query) ||
+      (item.category ?? "").toLowerCase().includes(query),
+    );
+  }, [announcements, announcementSearch]);
+
   const results = useMemo(
     () => (draftResults.length > 0 ? sortResults([...draftResults, ...publishedResults]) : publishedResults),
     [draftResults, publishedResults],
   );
+  const displayedResults = useMemo(() => {
+    const query = resultSearch.trim().toLowerCase();
+    if (!query) return results;
+    return results.filter((item) =>
+      (item.title ?? "").toLowerCase().includes(query) ||
+      (item.summary ?? "").toLowerCase().includes(query) ||
+      (item.author_name ?? "").toLowerCase().includes(query),
+    );
+  }, [results, resultSearch]);
   const recruitments = useMemo(() => {
     if (!privateDetails || privateDetails.size === 0) return publishedRecruitments;
     return publishedRecruitments.map((item) =>
@@ -384,56 +438,60 @@ export function EventDetailClient({
 
       {tab === "announcements" && (
         <div className="flex flex-col gap-6">
-          {isAdmin && (
-            <div className="flex justify-end">
-              <Button variant="secondary" onClick={createAnnouncement} disabled={isCreating}>
-                {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                新增公告
-              </Button>
-            </div>
-          )}
           {announcements.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">尚無公告</div>
           ) : (
-            <div className="rounded-xl border border-border overflow-hidden">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-muted h-12">
-                    <th className="text-base font-bold text-left pl-5 pr-4 py-3 w-32">公告日期</th>
-                    <th className="text-base font-bold text-left px-4 py-3 w-28">類別</th>
-                    <th className="text-base font-bold text-left px-4 py-3">標題</th>
-                    {isAdmin && <th className="text-base font-bold text-left px-4 py-3 w-20">狀態</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {announcements.map((item) => (
-                    <tr key={item.id} className="h-12 border-t border-border hover:bg-muted/60 transition-colors">
-                      <td colSpan={isAdmin ? 4 : 3} className="p-0">
-                        <Link
-                          href={
-                            isAdmin
-                              ? `/events/${slug}/announcements/${item.id}${item.status === "draft" ? "?mode=edit" : ""}`
-                              : `/events/${slug}/announcements/${item.id}`
-                          }
-                          className="flex items-center w-full h-full"
-                        >
-                          <span className="pl-5 pr-4 py-3 w-32 text-base shrink-0">{formatDate(item.date)}</span>
-                          <span className="px-4 py-3 w-28 text-base shrink-0">{item.category}</span>
-                          <span className="px-4 py-3 text-base flex-1">{item.title || "(無標題)"}</span>
-                          {isAdmin && (
-                            <span className="px-4 py-3 w-20 text-base shrink-0">
-                              <Badge variant={item.status === "published" ? "default" : "secondary"}>
-                                {item.status === "published" ? "已發布" : "草稿"}
-                              </Badge>
-                            </span>
-                          )}
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <>
+              <TabSummaryBar
+                countLabel={`共 ${announcements.length} 則公告`}
+                searchValue={announcementSearch}
+                onSearchChange={setAnnouncementSearch}
+                searchPlaceholder="搜尋公告⋯"
+              />
+              {displayedAnnouncements.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">沒有符合搜尋的公告</div>
+              ) : (
+                <div className="rounded-xl border border-border overflow-hidden">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-muted h-12">
+                        <th className="text-base font-bold text-left pl-5 pr-4 py-3 w-32">公告日期</th>
+                        <th className="text-base font-bold text-left px-4 py-3 w-28">類別</th>
+                        <th className="text-base font-bold text-left px-4 py-3">標題</th>
+                        {isAdmin && <th className="text-base font-bold text-left px-4 py-3 w-20">狀態</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {displayedAnnouncements.map((item) => (
+                        <tr key={item.id} className="h-12 border-t border-border hover:bg-muted/60 transition-colors">
+                          <td colSpan={isAdmin ? 4 : 3} className="p-0">
+                            <Link
+                              href={
+                                isAdmin
+                                  ? `/events/${slug}/announcements/${item.id}${item.status === "draft" ? "?mode=edit" : ""}`
+                                  : `/events/${slug}/announcements/${item.id}`
+                              }
+                              className="flex items-center w-full h-full"
+                            >
+                              <span className="pl-5 pr-4 py-3 w-32 text-base shrink-0">{formatDate(item.date)}</span>
+                              <span className="px-4 py-3 w-28 text-base shrink-0">{item.category}</span>
+                              <span className="px-4 py-3 text-base flex-1">{item.title || "(無標題)"}</span>
+                              {isAdmin && (
+                                <span className="px-4 py-3 w-20 text-base shrink-0">
+                                  <Badge variant={item.status === "published" ? "default" : "secondary"}>
+                                    {item.status === "published" ? "已發布" : "草稿"}
+                                  </Badge>
+                                </span>
+                              )}
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -443,59 +501,55 @@ export function EventDetailClient({
           {results.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">尚無成果</div>
           ) : (
-            <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
-              {results.map((item) => {
-                const isOwner = userId === item.author_id;
-                const showStatus = isAdmin || isOwner;
-                return (
-                  <ResultCard
-                    key={item.id}
-                    item={item}
-                    href={
-                      isAdmin
-                        ? `/events/${slug}/results/${item.id}${item.status === "draft" ? "?mode=edit" : ""}`
-                        : `/events/${slug}/results/${item.id}`
-                    }
-                    publisherHref={item.author_id ? `/profile/${item.author_id}` : null}
-                    showStatus={showStatus}
-                    isAdmin={isAdmin}
-                    onPinToggle={isAdmin ? (id, pinned) => togglePin("results", id, pinned) : undefined}
-                  />
-                );
-              })}
-            </div>
+            <>
+              <TabSummaryBar
+                countLabel={`共 ${results.length} 個成果`}
+                searchValue={resultSearch}
+                onSearchChange={setResultSearch}
+                searchPlaceholder="搜尋成果或作者⋯"
+              />
+              {displayedResults.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">沒有符合搜尋的成果</div>
+              ) : (
+                <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
+                  {displayedResults.map((item) => {
+                    const isOwner = userId === item.author_id;
+                    const showStatus = isAdmin || isOwner;
+                    return (
+                      <ResultCard
+                        key={item.id}
+                        item={item}
+                        href={
+                          isAdmin
+                            ? `/events/${slug}/results/${item.id}${item.status === "draft" ? "?mode=edit" : ""}`
+                            : `/events/${slug}/results/${item.id}`
+                        }
+                        publisherHref={item.author_id ? `/profile/${item.author_id}` : null}
+                        showStatus={showStatus}
+                        isAdmin={isAdmin}
+                        onPinToggle={isAdmin ? (id, pinned) => togglePin("results", id, pinned) : undefined}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
 
       {tab === "recruitment" && (
         <div className="flex flex-col gap-6">
-          {isAdmin && (
-            <div className="flex justify-end">
-              <Button variant="secondary" onClick={openCreateSheet}>
-                <Plus className="w-4 h-4" />
-                新增徵才
-              </Button>
-            </div>
-          )}
           {recruitments.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">尚無徵才資訊</div>
           ) : (
             <>
-              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-muted-foreground">
-                  共 {recruitments.length} 筆徵才
-                </p>
-                <div className="relative w-full sm:max-w-xs">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="搜尋企業或職缺⋯"
-                    value={recruitmentSearch}
-                    onChange={(e) => setRecruitmentSearch(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-              </div>
+              <TabSummaryBar
+                countLabel={`共 ${recruitments.length} 筆徵才`}
+                searchValue={recruitmentSearch}
+                onSearchChange={setRecruitmentSearch}
+                searchPlaceholder="搜尋企業或職缺⋯"
+              />
               {displayedRecruitments.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">沒有符合搜尋的徵才</div>
               ) : (
@@ -520,34 +574,14 @@ export function EventDetailClient({
 
       {tab === "members" && userId && (
         <div className="flex flex-col gap-6">
-          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-              共 {memberSections.total} 位學員，{memberSections.withProfileTotal} 位已建立個人檔案
-            </p>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:max-w-xs">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="搜尋學員⋯"
-                  value={memberSearch}
-                  onChange={(e) => setMemberSearch(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              {isAdmin && (
-                <AddMemberButton
-                  eventId={event.id}
-                  memberIds={memberIdSet}
-                  onMemberAdded={(profile) =>
-                    setCurrentMembers((prev) => [
-                      ...prev,
-                      { id: profile.id, display_name: profile.display_name, avatar_url: profile.avatar_url, hasProfileData: false },
-                    ])
-                  }
-                />
-              )}
-            </div>
-          </div>
+          {currentMembers.length > 0 && (
+            <TabSummaryBar
+              countLabel={`共 ${memberSections.total} 位學員 · ${memberSections.withProfileTotal} 位已建檔`}
+              searchValue={memberSearch}
+              onSearchChange={setMemberSearch}
+              searchPlaceholder="搜尋學員⋯"
+            />
+          )}
 
           {currentMembers.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">尚無成員</div>
@@ -648,6 +682,44 @@ export function EventDetailClient({
             </>
           )}
         </div>
+      )}
+
+      {/* Tab-scoped floating create pills. One at a time, bottom-right,
+          identical shape to the edit pills used elsewhere in the site. */}
+      {tab === "announcements" && isAdmin && (
+        <FloatingActionPill
+          icon={Plus}
+          label={isCreatingAnnouncement ? "建立中…" : "新增公告"}
+          onClick={createAnnouncement}
+          loading={isCreatingAnnouncement}
+        />
+      )}
+      {tab === "results" && userId && (
+        <FloatingActionPill
+          icon={Plus}
+          label={isCreatingResult ? "建立中…" : "新增成果"}
+          onClick={createResult}
+          loading={isCreatingResult}
+        />
+      )}
+      {tab === "recruitment" && isAdmin && (
+        <FloatingActionPill
+          icon={Plus}
+          label="新增徵才"
+          onClick={openCreateSheet}
+        />
+      )}
+      {tab === "members" && isAdmin && userId && (
+        <AddMemberButton
+          eventId={event.id}
+          memberIds={memberIdSet}
+          onMemberAdded={(profile) =>
+            setCurrentMembers((prev) => [
+              ...prev,
+              { id: profile.id, display_name: profile.display_name, avatar_url: profile.avatar_url, hasProfileData: false },
+            ])
+          }
+        />
       )}
     </PageShell>
   );

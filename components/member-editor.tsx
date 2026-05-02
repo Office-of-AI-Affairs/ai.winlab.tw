@@ -1,7 +1,6 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { FloatingActionPill } from "@/components/floating-action-pill";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 import type { PublicProfile } from "@/lib/supabase/types";
@@ -63,16 +63,14 @@ export function AddMemberButton({ eventId, memberIds, onMemberAdded }: Props) {
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="secondary"
+        <FloatingActionPill
+          icon={Plus}
+          label="新增成員"
           onClick={() => {
             setQuery("");
             if (allUsers.length === 0) fetchAllUsers();
           }}
-        >
-          <Plus className="w-4 h-4" />
-          新增成員
-        </Button>
+        />
       </DialogTrigger>
       <DialogContent className="max-h-[80vh] flex flex-col overflow-hidden">
         <DialogHeader>

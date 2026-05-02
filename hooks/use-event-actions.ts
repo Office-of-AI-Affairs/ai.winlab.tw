@@ -8,11 +8,12 @@ import { toast } from "sonner";
 export function useEventActions(eventId: string, slug: string, userId: string | null) {
   const router = useRouter();
   const supabaseRef = useRef(createClient());
-  const [isCreating, setIsCreating] = useState(false);
+  const [isCreatingAnnouncement, setIsCreatingAnnouncement] = useState(false);
+  const [isCreatingResult, setIsCreatingResult] = useState(false);
 
   const createAnnouncement = useCallback(async () => {
     if (!userId) return;
-    setIsCreating(true);
+    setIsCreatingAnnouncement(true);
     const { data, error } = await supabaseRef.current
       .from("announcements")
       .insert({
@@ -26,8 +27,29 @@ export function useEventActions(eventId: string, slug: string, userId: string | 
       })
       .select()
       .single();
-    if (error) { setIsCreating(false); toast.error("操作失敗"); return; }
+    if (error) { setIsCreatingAnnouncement(false); toast.error("操作失敗"); return; }
     router.push(`/events/${slug}/announcements/${data.id}?mode=edit`);
+  }, [eventId, router, slug, userId]);
+
+  const createResult = useCallback(async () => {
+    if (!userId) return;
+    setIsCreatingResult(true);
+    const today = new Date().toISOString().slice(0, 10);
+    const { data, error } = await supabaseRef.current
+      .from("results")
+      .insert({
+        title: "新成果",
+        summary: "",
+        content: {},
+        status: "draft",
+        date: today,
+        author_id: userId,
+        event_id: eventId,
+      })
+      .select()
+      .single();
+    if (error) { setIsCreatingResult(false); toast.error("操作失敗"); return; }
+    router.push(`/events/${slug}/results/${data.id}?mode=edit`);
   }, [eventId, router, slug, userId]);
 
   const togglePin = useCallback(
@@ -39,5 +61,12 @@ export function useEventActions(eventId: string, slug: string, userId: string | 
     [router],
   );
 
-  return { isCreating, createAnnouncement, togglePin };
+  return {
+    isCreating: isCreatingAnnouncement || isCreatingResult,
+    isCreatingAnnouncement,
+    isCreatingResult,
+    createAnnouncement,
+    createResult,
+    togglePin,
+  };
 }
