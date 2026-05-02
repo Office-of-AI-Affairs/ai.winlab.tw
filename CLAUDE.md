@@ -169,31 +169,49 @@ Conventions:
 - `TiptapEditor`（`components/tiptap-editor.tsx`）— 圖片上傳用 `uploadAnnouncementImage`
 - `nuqs` — URL params（`NuqsAdapter` in root layout）
 
-## UI rules
+## Design system
 
-**圓角** — `rounded-sm/md` = 1rem（內部）、`rounded-lg+` = 2rem（外層）、`--radius: 2rem`
+**Single source of truth**: [`DESIGN.md`](DESIGN.md) at the repo root —
+canonical spec (Google's DESIGN.md format: YAML frontmatter + canonical
+sections). Live gallery at `/design` renders one specimen of every
+primitive listed there.
 
-**互動** — `duration-200` only、`hover:scale-[1.02]` + `active:scale-[0.98]` 或 `.interactive-scale`
+Quick reminders that bite during implementation (full rationale in
+`DESIGN.md`):
 
-**間距** — 首頁 `py-16`、內容 `py-12`、admin `py-8`；用 `PageSection` / `PageShell` variants
+- **Tokens** — semantic only (`text-foreground`, `bg-primary`, `border-border`).
+  Never hardcode `gray-*` or hex literals.
+- **Radius** — `rounded-sm/md` = 1rem, `rounded-lg+` = 2rem, `rounded-full`
+  for capsule (single-row floating action surfaces).
+- **Interaction** — `duration-200` only; `hover:scale-[1.02]` +
+  `active:scale-[0.98]` or `.interactive-scale`. **Never `transition-all`**
+  (banned by `lib/ui/patterns.test.ts`).
+- **Layout** — `<PageShell tone="...">` / `<PageSection tone="...">` from
+  `lib/ui/patterns.ts`. Six shell tones: `content` / `dashboard` / `admin`
+  / `editor` / `auth` / `profile`.
+- **Floating tools** — two families on the same glass treatment
+  (`border bg-background/95 shadow-lg backdrop-blur-sm`). Capsule
+  (`rounded-full`, `h-10`) for single-row action surfaces; panel
+  (`rounded-2xl`) for multi-row. Bottom-anchored ones sit at
+  `bottom-4 md:bottom-6` so they share the same baseline.
+- **Inline view+edit pages** — server HTML in view, `RichTextSurface`
+  swaps in `TiptapEditor flush` for admin, floating pill + dialog for
+  actions (`/privacy` is the canonical example).
+- **Editor** — desktop uses `BubbleMenu` + `FloatingMenu` (incl.
+  `/`-trigger), mobile uses `TiptapMobileToolbar`. Don't ship a persistent
+  full toolbar.
+- **Status** — `<Badge>` always: `default` = 已發布, `secondary` = 草稿.
+- **Empty state** — `尚無{entity}` centered, `text-muted-foreground`.
+- **Links** — `<AppLink>`, never raw `<a>`.
+- **Skeletons** — high-level components own their matching skeleton;
+  route-level `loading.tsx` composes from those, doesn't draft from raw
+  `<Skeleton>`.
 
-**連結** — 統一用 `AppLink`，不用 raw `<a>`
-
-**Skeleton** — High-level UI components should own their matching skeleton components；Route-level loading files should compose layout with component-owned skeletons
-
-**Editor** — Desktop Tiptap editing should use contextual controls instead of a persistent full toolbar；`BubbleMenu`（inline）+ `FloatingMenu`（block，含 `/`-triggered insertion）；Mobile Tiptap editing should use a dedicated compact toolbar instead of desktop-style floating controls
-
-**Status** — 統一用 `Badge` component（`variant="default"` = 已發布，`variant="secondary"` = 草稿）
-
-**Empty state** — 統一用 `尚無{entity}` 格式，centered text with `text-muted-foreground`
-
-**Color** — 用 semantic tokens（`text-foreground`、`bg-background` 等），不硬編碼 `gray-*`
-
-**套件** — shadcn/ui in `components/ui/`、Tailwind v4 in `app/globals.css`（無 `tailwind.config.js`）、`next-themes` defaultTheme="light"
-
-**字型** — `--font-noto-sans`（UI）、`--font-noto-sans-mono`（code）、`--font-instrument-serif`（裝飾，需 inline style）
-
-**元件** — `card.tsx` 純 div Server Component、`data-slot` 用於 CSS selectors、`next/image`（允許 `*.supabase.co` 與 `cdn.winlab.tw`）
+**Stack notes**: shadcn/ui in `components/ui/`, Tailwind v4 in
+`app/globals.css` (no `tailwind.config.js`), `next-themes` defaultTheme
+`light`. `card.tsx` stays a plain `<div>` Server Component; `data-slot`
+is the standard selector hook; `next/image` allows `*.supabase.co` and
+`cdn.winlab.tw`.
 
 ## Delivery
 
