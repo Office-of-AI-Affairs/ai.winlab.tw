@@ -20,7 +20,7 @@ import { isExternalImage, resolveImageSrc } from "@/lib/utils"
 import { ImagePlus, Loader2, LogOut, Pin, Save, Send, Trash2 } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 
 type Props = {
   open: boolean
@@ -83,10 +83,8 @@ export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Pro
     },
   })
 
-  // Reset when the dialog re-opens against a (potentially) refreshed event row.
-  useEffect(() => {
-    if (!open) setSlugError(null)
-  }, [open])
+  // The slug input's onChange already clears any stale error; we don't
+  // need an effect to reset it on dialog close.
 
   const { isUploading: isUploadingImage, fileInputRef, triggerFileInput, handleFileChange } =
     useImageUpload(uploadEventImage)
