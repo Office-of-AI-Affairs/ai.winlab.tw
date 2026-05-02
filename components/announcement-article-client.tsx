@@ -10,7 +10,6 @@ import { Toc } from "@/components/toc"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
 import { useContentEditor } from "@/hooks/use-content-editor"
 import { useEditMode } from "@/hooks/use-edit-mode"
 import { formatDate } from "@/lib/date"
@@ -248,76 +247,33 @@ export function AnnouncementArticleClient({
           open={actionsOpen}
           onOpenChange={setActionsOpen}
         >
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="announcement-date" className="text-sm">公告日期</Label>
-              <Input
-                id="announcement-date"
-                type="date"
-                value={announcement.date}
-                onChange={(event) =>
-                  setAnnouncement((prev) => ({ ...prev, date: event.target.value }))
-                }
-                disabled={isSaving || isPublishing || isDeleting}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="announcement-category" className="text-sm">類別</Label>
-              <Input
-                id="announcement-category"
-                value={announcement.category}
-                onChange={(event) =>
-                  setAnnouncement((prev) => ({ ...prev, category: event.target.value }))
-                }
-                placeholder="請輸入類別"
-                disabled={isSaving || isPublishing || isDeleting}
-              />
-            </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="announcement-date" className="text-sm">公告日期</Label>
+            <Input
+              id="announcement-date"
+              type="date"
+              value={announcement.date}
+              onChange={(event) =>
+                setAnnouncement((prev) => ({ ...prev, date: event.target.value }))
+              }
+              disabled={isSaving || isPublishing || isDeleting}
+            />
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={exitEdit}
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="announcement-category" className="text-sm">類別</Label>
+            <Input
+              id="announcement-category"
+              value={announcement.category}
+              onChange={(event) =>
+                setAnnouncement((prev) => ({ ...prev, category: event.target.value }))
+              }
+              placeholder="請輸入類別"
               disabled={isSaving || isPublishing || isDeleting}
-            >
-              <LogOut className="size-4" />
-              退出編輯
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleSave}
-              disabled={!hasChanges || isSaving || isPublishing || isDeleting}
-            >
-              {isSaving ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Save className="size-4" />
-              )}
-              儲存
-            </Button>
-            <Button
-              type="button"
-              variant={announcement.status === "published" ? "outline" : "default"}
-              size="sm"
-              onClick={() => void publish()}
-              disabled={isSaving || isPublishing || isDeleting}
-            >
-              {isPublishing ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Send className="size-4" />
-              )}
-              {announcement.status === "published" ? "取消發布" : "發布"}
-            </Button>
+            />
           </div>
 
-          <Separator />
-
-          <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <Button
               type="button"
               variant="destructive"
@@ -335,6 +291,45 @@ export function AnnouncementArticleClient({
               )}
               刪除公告
             </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={exitEdit}
+                disabled={isSaving || isPublishing || isDeleting}
+              >
+                <LogOut className="size-4" />
+                退出編輯
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleSave}
+                disabled={!hasChanges || isSaving || isPublishing || isDeleting}
+              >
+                {isSaving ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Save className="size-4" />
+                )}
+                儲存
+              </Button>
+              <Button
+                type="button"
+                variant={announcement.status === "published" ? "outline" : "default"}
+                size="sm"
+                onClick={() => void publish()}
+                disabled={isSaving || isPublishing || isDeleting}
+              >
+                {isPublishing ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Send className="size-4" />
+                )}
+                {announcement.status === "published" ? "取消發布" : "發布"}
+              </Button>
+            </div>
           </div>
         </EditActionsPill>
       )}

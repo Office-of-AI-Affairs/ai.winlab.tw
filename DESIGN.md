@@ -276,6 +276,12 @@ When a Dialog has a primary + secondary action, both buttons need an outline. Us
 
 Pair an `<Input>` with `<Label>` and a placeholder. Skip the helper-text paragraph below by default — the placeholder describes the field, the action button below describes what happens on submit. Only add helper text when it conveys a hidden constraint the user otherwise can't see (format requirements, character limits, irreversible side effects).
 
+Stack form fields vertically (`flex flex-col gap-2`); inputs default to `w-full` and should fill the dialog width. Don't put two short fields side-by-side just because they fit — comma-separated reading order is harder to scan than top-to-bottom.
+
+#### Action rows in overlays — destructive far left, primary rightmost
+
+When a dialog has both a destructive action (delete, remove, leave) and a primary action group (save / publish / exit), put the destructive button on the **left** and the primary group on the **right** in a single row (`flex items-center justify-between gap-2`). Don't split them across two rows with a `<Separator />` — the visual gutter the row already provides is enough, and a separator implies a major section change that doesn't exist here. Within the primary group, order from least to most committal: e.g. `退出編輯` → `儲存` → `發布`.
+
 ### Avatar
 
 `<Avatar>` with `size="default" | "sm" | "lg" | "xl"`. `AvatarImage` falls back to `AvatarFallback` (initials) when `src` fails. Used in members grid, profile header, header user menu.

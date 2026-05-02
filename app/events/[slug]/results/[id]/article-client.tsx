@@ -12,7 +12,6 @@ import { Toc } from "@/components/toc"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
 import { useContentEditor } from "@/hooks/use-content-editor"
 import { useEditMode } from "@/hooks/use-edit-mode"
 import { useImageUpload } from "@/hooks/use-image-upload"
@@ -338,49 +337,7 @@ export function ResultArticleClient({
             onCoauthorsChange={setCoauthors}
           />
 
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={exitEdit}
-              disabled={isSaving || isPublishing || isDeleting}
-            >
-              <LogOut className="size-4" />
-              退出編輯
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleSave}
-              disabled={!hasChanges || isSaving || isPublishing || isDeleting}
-            >
-              {isSaving ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Save className="size-4" />
-              )}
-              儲存
-            </Button>
-            <Button
-              type="button"
-              variant={result.status === "published" ? "outline" : "default"}
-              size="sm"
-              onClick={() => void publish()}
-              disabled={isSaving || isPublishing || isDeleting}
-            >
-              {isPublishing ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Send className="size-4" />
-              )}
-              {result.status === "published" ? "取消發布" : "發布"}
-            </Button>
-          </div>
-
-          <Separator />
-
-          <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <Button
               type="button"
               variant="destructive"
@@ -398,6 +355,45 @@ export function ResultArticleClient({
               )}
               刪除成果
             </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={exitEdit}
+                disabled={isSaving || isPublishing || isDeleting}
+              >
+                <LogOut className="size-4" />
+                退出編輯
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleSave}
+                disabled={!hasChanges || isSaving || isPublishing || isDeleting}
+              >
+                {isSaving ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Save className="size-4" />
+                )}
+                儲存
+              </Button>
+              <Button
+                type="button"
+                variant={result.status === "published" ? "outline" : "default"}
+                size="sm"
+                onClick={() => void publish()}
+                disabled={isSaving || isPublishing || isDeleting}
+              >
+                {isPublishing ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Send className="size-4" />
+                )}
+                {result.status === "published" ? "取消發布" : "發布"}
+              </Button>
+            </div>
           </div>
         </EditActionsPill>
       )}
