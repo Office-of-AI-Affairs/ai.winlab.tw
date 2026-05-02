@@ -27,19 +27,14 @@ export function Reveal({ children, delay = 0, className }: Props) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    // Respect users who've asked the OS for less motion.
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setVisible(true);
-      return;
-    }
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
         if (delay > 0) {
-          const t = setTimeout(() => setVisible(true), delay);
-          return () => clearTimeout(t);
+          setTimeout(() => setVisible(true), delay);
+        } else {
+          setVisible(true);
         }
-        setVisible(true);
         observer.disconnect();
       },
       { rootMargin: "0px 0px -10% 0px", threshold: 0.1 },
@@ -52,8 +47,13 @@ export function Reveal({ children, delay = 0, className }: Props) {
     <div
       ref={ref}
       className={cn(
-        "transition-[opacity,transform] duration-700 ease-out",
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6",
+        // Tailwind's motion-reduce: variants snap the element straight to its
+        // final state when the OS asks for less motion — no synchronous
+        // setState gymnastics in the effect, no flicker.
+        "transition-[opacity,transform] duration-700 ease-out motion-reduce:transition-none",
+        visible
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 translate-y-6 motion-reduce:opacity-100 motion-reduce:translate-y-0",
         className,
       )}
     >
