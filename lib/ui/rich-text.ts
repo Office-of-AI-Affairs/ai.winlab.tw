@@ -8,11 +8,10 @@ import type { JSONContent } from "@tiptap/core"
 import { processArticle, type TocItem } from "./article"
 import { lowlight } from "./lowlight"
 
-export const richTextDocumentClassName =
-  "prose prose-sm sm:prose-base max-w-none [&_img]:pt-4 [&_h1]:scroll-mt-24 [&_h2]:scroll-mt-24 [&_h3]:scroll-mt-24 [&_h4]:scroll-mt-24"
-
-export const editableRichTextDocumentClassName =
-  `${richTextDocumentClassName} min-h-[360px] px-0 py-6 sm:py-8 focus:outline-none`
+export {
+  richTextDocumentClassName,
+  editableRichTextDocumentClassName,
+} from "./rich-text-classes"
 
 // Default StarterKit heading drops unknown attrs; extend it so the slug `id`
 // we inject in processArticle survives into the HTML.

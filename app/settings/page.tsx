@@ -18,7 +18,7 @@ const items = [
     description: "查看所有已註冊用戶及其角色",
   },
   {
-    href: "/privacy/edit",
+    href: "/privacy?mode=edit",
     icon: FileText,
     label: "隱私權政策",
     description: "編輯隱私權政策內容，支援版本紀錄",

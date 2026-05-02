@@ -211,7 +211,7 @@ get a fast path to their draft.
 | `/introduction`     | `○`          | `introduction`, `organization-members`  |
 | `/announcement`     | `○`          | `announcements-published`               |
 | `/events`           | `○`          | `events-published`, `pinned-events`     |
-| `/privacy`          | `○`          | (no tags — trivial content)             |
+| `/privacy`          | `○`          | `privacy` (inline view+edit on the same route) |
 | `/announcement/[id]`| `●`          | `announcements-published`               |
 | `/events/[slug]`    | `ƒ`          | (none — see note below)                 |
 

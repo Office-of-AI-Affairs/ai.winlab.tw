@@ -73,8 +73,11 @@ inventory, and how to add a new page.
   - ISR 客戶端：`useAuth().isAdmin`
   - Server Component edit 頁：`requireAdminServer()` in
     `lib/supabase/require-admin-server.ts` — 非 admin 自動 redirect；
-    `/carousel`、`/contacts`、`/introduction/edit`、`/privacy/edit`、
+    `/carousel`、`/contacts`、`/introduction/edit`、
     `/settings/users`、各 `[id]/edit` 都用它
+  - Inline view+edit 共用同一條路由（`?mode=edit` 透過
+    `useEditMode` 切換）：`/privacy` 已採此 pattern，由 `useAuth().isAdmin`
+    + `RichTextSurface` 在客戶端動態載入 Tiptap，不污染訪客 bundle
   - `getViewer()` 只剩 `/settings/page.tsx` 與 `/profile/[id]/page.tsx`
 
 ## Data model (`lib/supabase/types.ts`)
@@ -128,7 +131,7 @@ Conventions:
 
 **活動** `/events` → `/events/[slug]`（公告/成果/招募 tabs）→ `[slug]/edit`、`announcements/[id]`、`results/[id]`、`recruitment/[id]`
 
-**內容** `/announcement`、`/introduction`（內含 `OrganizationMember` CRUD）、`/carousel`、`/contacts`、`/privacy`（各有 `/edit`）
+**內容** `/announcement`、`/introduction`（內含 `OrganizationMember` CRUD）、`/carousel`、`/contacts`（各有 `/edit`）、`/privacy`（view+edit 共用同一路由 + `?mode=edit`）
 
 **帳號** `/account`、`/profile/[id]`（vendor 可見 My Events）
 
@@ -138,7 +141,7 @@ Conventions:
 
 **Design system** `/design` — shadcn gallery + 專案 UI patterns 展示
 
-**Legacy redirects**（`next.config.ts`）— `/organization` → `/introduction`、`/recruitment*` → `/events`、`/team/:id` → `/`
+**Legacy redirects**（`next.config.ts`）— `/organization` → `/introduction`、`/recruitment*` → `/events`、`/team/:id` → `/`、`/privacy/edit` → `/privacy?mode=edit`
 
 ## Hooks
 

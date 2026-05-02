@@ -22,7 +22,6 @@ const homeEvents = readFileSync(resolve(process.cwd(), "components/home-events.t
 const homeAnnouncement = readFileSync(resolve(process.cwd(), "components/home-announcement.tsx"), "utf8")
 const homeIntroduction = readFileSync(resolve(process.cwd(), "components/home-introduction.tsx"), "utf8")
 const homeOrganization = readFileSync(resolve(process.cwd(), "components/home-organization.tsx"), "utf8")
-const privacyEditPage = readFileSync(resolve(process.cwd(), "app/privacy/edit/page.tsx"), "utf8")
 const teamPagePath = resolve(process.cwd(), "app/team/[id]/page.tsx")
 const eventResultPage = readFileSync(
   resolve(process.cwd(), "app/events/[slug]/results/[id]/page.tsx"),
@@ -108,7 +107,6 @@ describe("accessibility contracts", () => {
     assert.ok(!homeAnnouncement.includes("<Link href=\"/announcement\">\n          <Button"))
     assert.ok(!homeIntroduction.includes("<Link href=\"/introduction\">\n          <Button"))
     assert.ok(!homeOrganization.includes("<Link href=\"/introduction\">\n            <Button"))
-    assert.ok(!privacyEditPage.includes("<Link href=\"/privacy\">\n          <Button"))
   })
 
   test("team pages are removed and result publishers do not link to dead team routes", () => {

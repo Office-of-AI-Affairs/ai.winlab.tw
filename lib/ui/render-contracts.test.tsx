@@ -33,6 +33,10 @@ const richTextContractPath = resolve(process.cwd(), "lib/ui/rich-text.ts")
 const richTextContractSource = existsSync(richTextContractPath)
   ? readFileSync(richTextContractPath, "utf8")
   : ""
+const richTextClassesPath = resolve(process.cwd(), "lib/ui/rich-text-classes.ts")
+const richTextClassesSource = existsSync(richTextClassesPath)
+  ? readFileSync(richTextClassesPath, "utf8")
+  : ""
 const tiptapMobileToolbarSource = existsSync(tiptapMobileToolbarPath)
   ? readFileSync(tiptapMobileToolbarPath, "utf8")
   : ""
@@ -248,9 +252,13 @@ describe("tiptap editor render contracts", () => {
 
   test("matches read-mode document typography more closely than a padded widget shell", () => {
     assert.ok(existsSync(richTextContractPath))
-    assert.ok(richTextContractSource.includes("richTextDocumentClassName"))
-    assert.ok(richTextContractSource.includes("editableRichTextDocumentClassName"))
-    assert.ok(richTextContractSource.includes("prose prose-sm sm:prose-base max-w-none [&_img]:pt-4"))
+    assert.ok(existsSync(richTextClassesPath))
+    // Class definitions live in rich-text-classes.ts so view-mode surfaces
+    // can pull them without dragging Tiptap's HTML-rendering bundle along.
+    assert.ok(richTextClassesSource.includes("richTextDocumentClassName"))
+    assert.ok(richTextClassesSource.includes("editableRichTextDocumentClassName"))
+    assert.ok(richTextClassesSource.includes("prose prose-sm sm:prose-base max-w-none [&_img]:pt-4"))
+    assert.ok(richTextContractSource.includes('from "./rich-text-classes"'))
     assert.ok(tiptapEditorSource.includes("editableRichTextDocumentClassName"))
     assert.ok(!tiptapEditorSource.includes("min-h-[300px] focus:outline-none p-4"))
   })

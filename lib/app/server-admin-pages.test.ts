@@ -15,7 +15,8 @@ const settingsPage = readFileSync(resolve(process.cwd(), "app/settings/page.tsx"
 const announcementEditPage = readFileSync(resolve(process.cwd(), "app/announcement/[id]/edit/page.tsx"), "utf8")
 const eventEditPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/edit/page.tsx"), "utf8")
 const contactEditPage = readFileSync(resolve(process.cwd(), "app/contacts/[id]/edit/page.tsx"), "utf8")
-const privacyEditPage = readFileSync(resolve(process.cwd(), "app/privacy/edit/page.tsx"), "utf8")
+const privacyPage = readFileSync(resolve(process.cwd(), "app/privacy/page.tsx"), "utf8")
+const privacyClient = readFileSync(resolve(process.cwd(), "app/privacy/client.tsx"), "utf8")
 const introductionEditPage = readFileSync(resolve(process.cwd(), "app/introduction/edit/page.tsx"), "utf8")
 const carouselEditPage = readFileSync(resolve(process.cwd(), "app/carousel/[id]/edit/page.tsx"), "utf8")
 const organizationEditPage = readFileSync(resolve(process.cwd(), "app/introduction/[id]/edit/page.tsx"), "utf8")
@@ -31,7 +32,6 @@ const introductionEditClient = readFileSync(resolve(process.cwd(), "app/introduc
 const carouselEditClient = readFileSync(resolve(process.cwd(), "app/carousel/[id]/edit/client.tsx"), "utf8")
 const organizationEditClient = readFileSync(resolve(process.cwd(), "app/introduction/[id]/edit/client.tsx"), "utf8")
 const eventAnnouncementEditClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/client.tsx"), "utf8")
-const privacyEditClient = readFileSync(resolve(process.cwd(), "app/privacy/edit/client.tsx"), "utf8")
 const resultEditClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/client.tsx"), "utf8")
 
 describe("server admin page contracts", () => {
@@ -86,6 +86,7 @@ describe("server admin page contracts", () => {
       { page: organizationPage, route: "introduction", tags: ["introduction", "organization-members"] },
       { page: announcementPage, route: "announcement", tags: ["announcements-published"] },
       { page: eventsPage, route: "events", tags: ["events-published"] },
+      { page: privacyPage, route: "privacy", tags: ["privacy"] },
     ]
     for (const { page, route, tags } of cases) {
       assert.ok(!page.includes('from "@/lib/supabase/get-viewer"'))
@@ -117,7 +118,6 @@ describe("server admin page contracts", () => {
   test("remaining admin edit routes are server-gated wrappers around client editors", () => {
     for (const content of [
       contactEditPage,
-      privacyEditPage,
       introductionEditPage,
       carouselEditPage,
       organizationEditPage,
@@ -130,11 +130,31 @@ describe("server admin page contracts", () => {
       assert.ok(!content.includes("useEffect("))
     }
     assert.ok(existsSync(resolve(process.cwd(), "app/contacts/[id]/edit/client.tsx")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/privacy/edit/client.tsx")))
     assert.ok(existsSync(resolve(process.cwd(), "app/introduction/edit/client.tsx")))
     assert.ok(existsSync(resolve(process.cwd(), "app/carousel/[id]/edit/client.tsx")))
     assert.ok(existsSync(resolve(process.cwd(), "app/introduction/[id]/edit/client.tsx")))
     assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/client.tsx")))
+  })
+
+  test("privacy page hosts both view and edit on a single ISR-friendly route", () => {
+    // /privacy/edit was retired — the read view and the admin editor share
+    // the same URL and visual layout, gated by useEditMode + useAuth in
+    // app/privacy/client.tsx. Catches accidental reintroduction of a
+    // dedicated edit subroute.
+    assert.ok(!existsSync(resolve(process.cwd(), "app/privacy/edit/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/privacy/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/privacy/data.ts")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/privacy/actions.ts")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/privacy/client.tsx")))
+    assert.ok(privacyPage.includes('from "./data"'))
+    assert.ok(privacyPage.includes('from "./client"'))
+    assert.ok(privacyClient.includes('"use client"'))
+    assert.ok(privacyClient.includes("useAuth("))
+    assert.ok(privacyClient.includes("useEditMode("))
+    assert.ok(privacyClient.includes("RichTextSurface"))
+    assert.ok(privacyClient.includes("AdminEditToolbar"))
+    assert.ok(privacyClient.includes("EditModeToggle"))
+    assert.ok(privacyClient.includes('from "./actions"'))
   })
 
   test("result edit route is server-gated before the client editor mounts", () => {
@@ -178,7 +198,6 @@ describe("server admin page contracts", () => {
   test("server-wrapped admin editors do not keep depending on useAuth in the client layer", () => {
     for (const content of [
       contactEditClient,
-      privacyEditClient,
       introductionEditClient,
       carouselEditClient,
       organizationEditClient,

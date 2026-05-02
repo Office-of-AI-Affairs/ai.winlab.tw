@@ -22,10 +22,11 @@ const contactsEditButton = readFileSync(resolve(process.cwd(), "components/conta
 const eventsCreateButton = readFileSync(resolve(process.cwd(), "components/events-create-button.tsx"), "utf8")
 const eventDetailClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/client.tsx"), "utf8")
 const richTextContract = readFileSync(resolve(process.cwd(), "lib/ui/rich-text.ts"), "utf8")
+const richTextClasses = readFileSync(resolve(process.cwd(), "lib/ui/rich-text-classes.ts"), "utf8")
 const announcementDetail = readFileSync(resolve(process.cwd(), "components/announcement-detail.tsx"), "utf8")
 const introductionDetail = readFileSync(resolve(process.cwd(), "components/introduction-detail.tsx"), "utf8")
 const resultDetail = readFileSync(resolve(process.cwd(), "components/result-detail.tsx"), "utf8")
-const privacyPage = readFileSync(resolve(process.cwd(), "app/privacy/page.tsx"), "utf8")
+const richTextSurface = readFileSync(resolve(process.cwd(), "components/rich-text-surface.tsx"), "utf8")
 
 function collectProjectFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((entry) => {
@@ -138,14 +139,18 @@ describe("global UI patterns", () => {
   })
 
   test("shares one rich-text contract across read and edit surfaces", () => {
-    assert.ok(richTextContract.includes("richTextDocumentClassName"))
-    assert.ok(richTextContract.includes("editableRichTextDocumentClassName"))
+    // Class names live in their own module so view-mode surfaces can pull
+    // them without dragging Tiptap's HTML extensions into the visitor JS
+    // bundle. The renderer file just re-exports for backward compat.
+    assert.ok(richTextClasses.includes("richTextDocumentClassName"))
+    assert.ok(richTextClasses.includes("editableRichTextDocumentClassName"))
+    assert.ok(richTextContract.includes('from "./rich-text-classes"'))
     assert.ok(announcementDetail.includes("richTextDocumentClassName"))
     assert.ok(introductionDetail.includes("richTextDocumentClassName"))
     assert.ok(resultDetail.includes("richTextDocumentClassName"))
-    assert.ok(privacyPage.includes("richTextDocumentClassName"))
+    assert.ok(richTextSurface.includes("richTextDocumentClassName"))
     assert.ok(tiptapEditor.includes("editableRichTextDocumentClassName"))
-    assert.ok(!privacyPage.includes("prose-neutral dark:prose-invert"))
+    assert.ok(!richTextSurface.includes("prose-neutral dark:prose-invert"))
   })
 })
 
