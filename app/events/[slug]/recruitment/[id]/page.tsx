@@ -13,6 +13,7 @@ import type {
 } from "@/lib/supabase/types";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { RecruitmentEditAffordance } from "./edit-affordance-client";
 
 export async function generateMetadata({
   params,
@@ -261,6 +262,13 @@ export default async function EventRecruitmentDetailPage({
         <RecruitmentInterestList
           applicants={applicants}
           count={interestCount}
+        />
+      )}
+
+      {canViewApplicants && (
+        <RecruitmentEditAffordance
+          recruitment={recruitment as Recruitment}
+          eventId={summary.event_id}
         />
       )}
     </div>
