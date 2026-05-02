@@ -14,7 +14,7 @@ import { useEditMode } from "@/hooks/use-edit-mode"
 import { formatDate } from "@/lib/date"
 import { createClient } from "@/lib/supabase/client"
 import type { TocItem } from "@/lib/ui/article"
-import { LogOut, RotateCcw, Send } from "lucide-react"
+import { Check, LogOut, RotateCcw, Send } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import { revalidatePrivacy } from "./actions"
@@ -309,15 +309,23 @@ function VersionHistoryTable({
               </p>
             </div>
             {isCurrent ? (
-              <span className="shrink-0 self-center text-xs text-muted-foreground">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                tabIndex={-1}
+                aria-current="true"
+                className="pointer-events-none shrink-0 self-center"
+              >
+                <Check className="size-3.5" />
                 目前
-              </span>
+              </Button>
             ) : (
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="shrink-0"
+                className="shrink-0 self-center"
                 onClick={() => onRestore(version)}
               >
                 <RotateCcw className="size-3.5" />
