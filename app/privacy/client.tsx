@@ -285,45 +285,51 @@ function VersionHistoryTable({
     return <p className="py-6 text-center text-sm text-muted-foreground">尚無版本紀錄</p>
   }
   return (
-    <div className="max-h-72 overflow-auto rounded-xl border">
-      <table className="w-full text-sm">
-        <thead className="sticky top-0 z-10 bg-muted/40">
-          <tr className="border-b">
-            <th className="w-14 px-3 py-2.5 text-left font-semibold">版本</th>
-            <th className="px-3 py-2.5 text-left font-semibold">發布時間</th>
-            <th className="px-3 py-2.5 text-left font-semibold">發布者</th>
-            <th className="px-3 py-2.5 text-left font-semibold">備註</th>
-            <th className="w-24 px-3 py-2.5" />
-          </tr>
-        </thead>
-        <tbody className="divide-y">
-          {versions.map((version) => (
-            <tr key={version.id} className="hover:bg-muted/30">
-              <td className="px-3 py-2.5 font-mono text-muted-foreground">v{version.version}</td>
-              <td className="px-3 py-2.5 text-muted-foreground">
-                {formatDate(version.created_at, "long")}
-              </td>
-              <td className="px-3 py-2.5">{version.profiles?.display_name || "—"}</td>
-              <td className="px-3 py-2.5 text-muted-foreground">{version.note || "—"}</td>
-              <td className="px-3 py-2.5 text-right">
-                {version.version === latestVersion ? (
-                  <span className="text-xs text-muted-foreground">目前</span>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onRestore(version)}
-                  >
-                    <RotateCcw className="size-3.5" />
-                    載入
-                  </Button>
+    <ul className="max-h-72 divide-y overflow-auto rounded-xl border">
+      {versions.map((version) => {
+        const isCurrent = version.version === latestVersion
+        return (
+          <li
+            key={version.id}
+            className="flex items-start gap-3 p-3 hover:bg-muted/30"
+          >
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+                <span className="font-mono">v{version.version}</span>
+                <span aria-hidden className="opacity-30">·</span>
+                <span>{formatDate(version.created_at, "long")}</span>
+                {version.profiles?.display_name ? (
+                  <>
+                    <span aria-hidden className="opacity-30">·</span>
+                    <span>{version.profiles.display_name}</span>
+                  </>
+                ) : null}
+              </div>
+              <p className="mt-1 text-sm">
+                {version.note || (
+                  <span className="text-muted-foreground">尚無備註</span>
                 )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+              </p>
+            </div>
+            {isCurrent ? (
+              <span className="shrink-0 self-center text-xs text-muted-foreground">
+                目前
+              </span>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="shrink-0"
+                onClick={() => onRestore(version)}
+              >
+                <RotateCcw className="size-3.5" />
+                載入
+              </Button>
+            )}
+          </li>
+        )
+      })}
+    </ul>
   )
 }
