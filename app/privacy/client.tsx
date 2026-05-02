@@ -223,15 +223,12 @@ export function PrivacyClient({
               placeholder="本次修訂重點（選填）"
               disabled={isPublishing}
             />
-            <p className="text-xs text-muted-foreground">
-              發布後會建立新版本，舊版仍可在下方紀錄載入。
-            </p>
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-2">
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={exitEdit}
               disabled={isPublishing}
@@ -285,13 +282,13 @@ function VersionHistoryTable({
     return <p className="py-6 text-center text-sm text-muted-foreground">尚無版本紀錄</p>
   }
   return (
-    <ul className="max-h-72 divide-y overflow-auto rounded-xl border">
+    <ul className="max-h-72 divide-y overflow-auto">
       {versions.map((version) => {
         const isCurrent = version.version === latestVersion
         return (
           <li
             key={version.id}
-            className="flex items-start gap-3 p-3 hover:bg-muted/30"
+            className="flex items-start gap-3 py-3 hover:bg-muted/30"
           >
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">

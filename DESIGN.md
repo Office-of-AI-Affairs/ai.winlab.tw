@@ -258,6 +258,24 @@ The live gallery at **`/design`** renders one specimen of every primitive listed
 - `<AlertDialog>` — destructive confirmations. Always pair `AlertDialogAction variant="destructive"` with a clear `AlertDialogCancel`.
 - `<Popover>` — anchored inline overlay (tag picker in users table, owner picker for recruitment).
 
+#### Container hierarchy: don't nest cards
+
+The dialog itself is the card. **Don't wrap inner content in another bordered surface** (`rounded-xl border` around a list, `<Card>` inside a `<DialogContent>`, etc.) — that's a card inside a card and reads as overcomplicated chrome. Group inner content via:
+
+- `divide-y` on lists for row separators (no outer border)
+- a single `<Separator />` between two distinct semantic groups
+- whitespace and a small section heading (`text-sm font-semibold`)
+
+Same rule for `<Popover>`, `<EditActionsPill>` body, and `<Card>` interiors — the outer container provides the visual frame, inside is flat.
+
+#### Buttons in overlays — every action has a visible boundary
+
+When a Dialog has a primary + secondary action, both buttons need an outline. Use `variant="default"` for primary, `variant="outline"` for secondary. **Don't use `variant="ghost"` for a real action** — it looks unclickable next to a filled button. `ghost` is fine for tertiary back-links and icon buttons, not for "Cancel" / "Exit" sitting beside "Publish".
+
+#### Form fields in overlays — label + placeholder is the default
+
+Pair an `<Input>` with `<Label>` and a placeholder. Skip the helper-text paragraph below by default — the placeholder describes the field, the action button below describes what happens on submit. Only add helper text when it conveys a hidden constraint the user otherwise can't see (format requirements, character limits, irreversible side effects).
+
 ### Avatar
 
 `<Avatar>` with `size="default" | "sm" | "lg" | "xl"`. `AvatarImage` falls back to `AvatarFallback` (initials) when `src` fails. Used in members grid, profile header, header user menu.
@@ -348,6 +366,9 @@ This trio is the inline view+edit template. Other rich-text pages (announcement,
 - Don't add `transition-transform` separately from `interactive-scale` — that utility already includes the transition.
 - Don't introduce new radius values. `rounded-sm/md` (1rem) and `rounded-lg+` (2rem) cover everything; capsule is `rounded-full`.
 - Don't push admin chrome into the read flow. If admin needs to manage something, use a floating pill + dialog (see `/privacy`). Toolbars that push content down break the inline-edit philosophy.
+- Don't nest cards. The Dialog / Popover / EditActionsPill / Card itself is the card — inside, use `divide-y`, `<Separator />`, or whitespace to group. No `rounded-xl border` around a list within a Dialog.
+- Don't use `variant="ghost"` for a real action sitting next to a filled button — it reads as unclickable. Pair primary (`default`) with secondary (`outline`).
+- Don't add helper text under a form field by default. Label + placeholder is enough; only add helper text when it conveys a hidden constraint (format, limit, side effect).
 - Don't draft your own loading skeleton if a component-owned skeleton already exists.
 - Don't use raw `<a>`. Use `<AppLink>`.
 - Don't expand the lowlight language registry without need — every language pack adds to the editor bundle (`lib/ui/lowlight.ts` lists what's currently registered).
