@@ -24,7 +24,7 @@ const eventDetailClient = readFileSync(resolve(process.cwd(), "app/events/[slug]
 const richTextContract = readFileSync(resolve(process.cwd(), "lib/ui/rich-text.ts"), "utf8")
 const richTextClasses = readFileSync(resolve(process.cwd(), "lib/ui/rich-text-classes.ts"), "utf8")
 const announcementArticleClient = readFileSync(resolve(process.cwd(), "components/announcement-article-client.tsx"), "utf8")
-const resultDetail = readFileSync(resolve(process.cwd(), "components/result-detail.tsx"), "utf8")
+const resultArticleClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/article-client.tsx"), "utf8")
 const richTextSurface = readFileSync(resolve(process.cwd(), "components/rich-text-surface.tsx"), "utf8")
 
 function collectProjectFiles(directory: string): string[] {
@@ -145,7 +145,7 @@ describe("global UI patterns", () => {
     assert.ok(richTextClasses.includes("editableRichTextDocumentClassName"))
     assert.ok(richTextContract.includes('from "./rich-text-classes"'))
     assert.ok(announcementArticleClient.includes("RichTextSurface"))
-    assert.ok(resultDetail.includes("richTextDocumentClassName"))
+    assert.ok(resultArticleClient.includes("RichTextSurface"))
     assert.ok(richTextSurface.includes("richTextDocumentClassName"))
     assert.ok(tiptapEditor.includes("editableRichTextDocumentClassName"))
     assert.ok(!richTextSurface.includes("prose-neutral dark:prose-invert"))

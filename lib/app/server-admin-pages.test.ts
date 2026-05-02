@@ -24,7 +24,8 @@ const carouselEditPage = readFileSync(resolve(process.cwd(), "app/carousel/[id]/
 const organizationEditPage = readFileSync(resolve(process.cwd(), "app/introduction/[id]/edit/page.tsx"), "utf8")
 const eventAnnouncementDetailPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/page.tsx"), "utf8")
 const eventAnnouncementArticleClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/article-client.tsx"), "utf8")
-const resultEditPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/page.tsx"), "utf8")
+const eventResultDetailPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/page.tsx"), "utf8")
+const eventResultArticleClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/article-client.tsx"), "utf8")
 const rootLayout = readFileSync(resolve(process.cwd(), "app/layout.tsx"), "utf8")
 const homePage = readFileSync(resolve(process.cwd(), "app/page.tsx"), "utf8")
 const homeCarousel = readFileSync(resolve(process.cwd(), "components/home-carousel.tsx"), "utf8")
@@ -33,7 +34,6 @@ const authProvider = readFileSync(resolve(process.cwd(), "components/auth-provid
 const contactEditClient = readFileSync(resolve(process.cwd(), "app/contacts/[id]/edit/client.tsx"), "utf8")
 const carouselEditClient = readFileSync(resolve(process.cwd(), "app/carousel/[id]/edit/client.tsx"), "utf8")
 const organizationEditClient = readFileSync(resolve(process.cwd(), "app/introduction/[id]/edit/client.tsx"), "utf8")
-const resultEditClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/client.tsx"), "utf8")
 
 describe("server admin page contracts", () => {
   test("carousel, contacts, and settings users pages are server-gated", () => {
@@ -200,12 +200,20 @@ describe("server admin page contracts", () => {
     assert.ok(!privacyClient.includes("AdminEditToolbar"))
   })
 
-  test("result edit route is server-gated before the client editor mounts", () => {
-    assert.ok(!resultEditPage.includes('"use client"'))
-    assert.ok(resultEditPage.includes('from "@/lib/supabase/get-viewer"'))
-    assert.ok(resultEditPage.includes('from "./client"'))
-    assert.ok(!resultEditPage.includes("useAuth("))
-    assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/client.tsx")))
+  test("event result detail hosts both view and edit on a single route", () => {
+    assert.ok(!existsSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/article-client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/draft-fallback.tsx")))
+    assert.ok(eventResultDetailPage.includes("ResultArticleClient"))
+    assert.ok(eventResultDetailPage.includes("ResultDraftFallback"))
+    assert.ok(eventResultArticleClient.includes("useAuth("))
+    assert.ok(eventResultArticleClient.includes("useEditMode("))
+    assert.ok(eventResultArticleClient.includes("RichTextSurface"))
+    assert.ok(eventResultArticleClient.includes("EditModeToggle"))
+    assert.ok(eventResultArticleClient.includes("EditActionsPill"))
+    // Author OR admin may edit, so useEditMode must be enabled by canEdit.
+    assert.ok(eventResultArticleClient.includes("isAuthor"))
   })
 
   test("root layout stays cookieless so downstream pages can SSG/ISR", () => {
@@ -243,7 +251,6 @@ describe("server admin page contracts", () => {
       contactEditClient,
       carouselEditClient,
       organizationEditClient,
-      resultEditClient,
     ]) {
       assert.ok(!content.includes('from "@/components/auth-provider"'))
       assert.ok(!content.includes("useAuth("))

@@ -247,7 +247,7 @@ export function useProfileEditor({
       setCreatingEventResultId(null);
       return;
     }
-    router.push(`/events/${slug}/results/${data.id}/edit`);
+    router.push(`/events/${slug}/results/${data.id}?mode=edit`);
   }, [userId, router]);
 
   return {

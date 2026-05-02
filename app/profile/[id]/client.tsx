@@ -103,9 +103,9 @@ export function ProfilePageClient({
   function resultHref(result: Result): string {
     const slug = result.event_id ? eventSlugMap[result.event_id] : null;
     if (!slug) return `/profile/${initialProfile.id}`;
-    return isOwner
-      ? `/events/${slug}/results/${result.id}/edit`
-      : `/events/${slug}/results/${result.id}`;
+    if (!isOwner) return `/events/${slug}/results/${result.id}`;
+    const draftSuffix = result.status === "draft" ? "?mode=edit" : "";
+    return `/events/${slug}/results/${result.id}${draftSuffix}`;
   }
 
   const mergedItems = useMemo<ProfileItem[]>(() => {

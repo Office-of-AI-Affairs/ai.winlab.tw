@@ -32,7 +32,6 @@ const organizationMemberDialog = readFileSync(resolve(process.cwd(), "components
 const carouselEditClient = readFileSync(resolve(process.cwd(), "app/carousel/[id]/edit/client.tsx"), "utf8")
 const contactEditClient = readFileSync(resolve(process.cwd(), "app/contacts/[id]/edit/client.tsx"), "utf8")
 const organizationEditClient = readFileSync(resolve(process.cwd(), "app/introduction/[id]/edit/client.tsx"), "utf8")
-const resultEditClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/client.tsx"), "utf8")
 
 describe("accessibility contracts", () => {
   test("root layout provides a skip link and a main landmark", () => {
@@ -68,9 +67,10 @@ describe("accessibility contracts", () => {
     assert.ok(resultCard.includes("href: string"))
     assert.ok(resultCard.includes("publisherHref?: string | null"))
     assert.ok(resultCard.includes("<AppLink"))
-    assert.ok(eventClient.includes("href={isAdmin ? `/events/${slug}/results/${item.id}/edit` : `/events/${slug}/results/${item.id}`}"))
+    assert.ok(eventClient.includes("`/events/${slug}/results/${item.id}`"))
     assert.ok(eventClient.includes('publisherHref={item.author_id ? `/profile/${item.author_id}` : null}'))
-    assert.ok(!eventClient.includes("<Link\n                    href={isAdmin ? `/events/${slug}/results/${item.id}/edit` : `/events/${slug}/results/${item.id}`}"))
+    // Note: result row uses ResultCard's own Link wrapper (not a raw Link
+    // wrapping a card), so we don't need to re-assert the anti-pattern here.
   })
 
   test("interactive controls do not rely on role=button shims", () => {
@@ -133,11 +133,8 @@ describe("accessibility contracts", () => {
     // carouselEditClient, contactEditClient, and organizationEditClient delegate to useContentEditor/useImageUpload which handle toast internally
   })
 
-  test("primary editor routes no longer rely on preview-mode toggles as the main writing flow", () => {
-    for (const content of [resultEditClient]) {
-      assert.ok(!content.includes("isPreview"))
-      assert.ok(!content.includes("預覽"))
-      assert.ok(content.includes("<TiptapEditor"))
-    }
-  })
+  // The preview-mode contract is now subsumed by the inline view+edit
+  // pattern (RichTextSurface swaps Tiptap into the read layout in place,
+  // there is no separate preview toggle). The earlier admin /edit pages
+  // are gone; this contract is intentionally retired.
 })

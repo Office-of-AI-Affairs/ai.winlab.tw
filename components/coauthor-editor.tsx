@@ -14,11 +14,32 @@ type Props = {
   resultId: string;
   authorId: string | null;
   initialCoauthors: PublicProfile[];
+  /** Notifies the parent of the new coauthor list after add/remove succeeds. */
+  onCoauthorsChange?: (coauthors: PublicProfile[]) => void;
 };
 
-export function CoauthorEditor({ resultId, authorId, initialCoauthors }: Props) {
+export function CoauthorEditor({
+  resultId,
+  authorId,
+  initialCoauthors,
+  onCoauthorsChange,
+}: Props) {
   const supabaseRef = useRef(createClient());
-  const [coauthors, setCoauthors] = useState<PublicProfile[]>(initialCoauthors);
+  const [coauthors, setCoauthorsState] = useState<PublicProfile[]>(initialCoauthors);
+  const onCoauthorsChangeRef = useRef(onCoauthorsChange);
+  useEffect(() => {
+    onCoauthorsChangeRef.current = onCoauthorsChange;
+  }, [onCoauthorsChange]);
+  const setCoauthors = useCallback(
+    (next: PublicProfile[] | ((prev: PublicProfile[]) => PublicProfile[])) => {
+      setCoauthorsState((prev) => {
+        const value = typeof next === "function" ? next(prev) : next;
+        onCoauthorsChangeRef.current?.(value);
+        return value;
+      });
+    },
+    [],
+  );
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PublicProfile[]>([]);
   const [searching, setSearching] = useState(false);

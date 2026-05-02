@@ -451,7 +451,11 @@ export function EventDetailClient({
                   <ResultCard
                     key={item.id}
                     item={item}
-                    href={isAdmin ? `/events/${slug}/results/${item.id}/edit` : `/events/${slug}/results/${item.id}`}
+                    href={
+                      isAdmin
+                        ? `/events/${slug}/results/${item.id}${item.status === "draft" ? "?mode=edit" : ""}`
+                        : `/events/${slug}/results/${item.id}`
+                    }
                     publisherHref={item.author_id ? `/profile/${item.author_id}` : null}
                     showStatus={showStatus}
                     isAdmin={isAdmin}
