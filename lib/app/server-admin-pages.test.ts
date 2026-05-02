@@ -152,9 +152,12 @@ describe("server admin page contracts", () => {
     assert.ok(privacyClient.includes("useAuth("))
     assert.ok(privacyClient.includes("useEditMode("))
     assert.ok(privacyClient.includes("RichTextSurface"))
-    assert.ok(privacyClient.includes("AdminEditToolbar"))
     assert.ok(privacyClient.includes("EditModeToggle"))
+    assert.ok(privacyClient.includes("EditActionsPill"))
     assert.ok(privacyClient.includes('from "./actions"'))
+    // Edit-mode actions live inside a floating dialog so the canvas itself
+    // stays byte-identical to view mode — no top toolbar pushing layout down.
+    assert.ok(!privacyClient.includes("AdminEditToolbar"))
   })
 
   test("result edit route is server-gated before the client editor mounts", () => {
