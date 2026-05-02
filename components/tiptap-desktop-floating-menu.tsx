@@ -73,7 +73,7 @@ export function TiptapDesktopFloatingMenu({ editor }: { editor: Editor | null })
       ) : (
         <div
           data-slot="tiptap-block-menu"
-          className="flex items-center gap-1 rounded-xl border border-border bg-background/95 p-1 shadow-lg backdrop-blur-sm"
+          className="flex items-center gap-1 rounded-full border border-border bg-background/95 p-1 shadow-lg backdrop-blur-sm"
         >
           {headingCommands.slice(0, 2).map((command) => {
             const Icon = command.icon;

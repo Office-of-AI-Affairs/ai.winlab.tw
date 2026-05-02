@@ -21,7 +21,7 @@ export function TiptapDesktopBubbleMenu({ editor }: { editor: Editor | null }) {
         currentEditor.isEditable &&
         !currentEditor.state.selection.empty
       }
-      className="hidden md:flex items-center gap-1 rounded-xl border border-border bg-background/95 p-1 shadow-lg backdrop-blur-sm"
+      className="hidden md:flex items-center gap-1 rounded-full border border-border bg-background/95 p-1 shadow-lg backdrop-blur-sm"
       options={{ placement: "top" }}
     >
       {textFormattingCommands.map((command) => {
