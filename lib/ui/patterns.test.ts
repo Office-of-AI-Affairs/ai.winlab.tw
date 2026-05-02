@@ -23,7 +23,7 @@ const eventsCreateButton = readFileSync(resolve(process.cwd(), "components/event
 const eventDetailClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/client.tsx"), "utf8")
 const richTextContract = readFileSync(resolve(process.cwd(), "lib/ui/rich-text.ts"), "utf8")
 const richTextClasses = readFileSync(resolve(process.cwd(), "lib/ui/rich-text-classes.ts"), "utf8")
-const announcementDetail = readFileSync(resolve(process.cwd(), "components/announcement-detail.tsx"), "utf8")
+const announcementArticleClient = readFileSync(resolve(process.cwd(), "components/announcement-article-client.tsx"), "utf8")
 const resultDetail = readFileSync(resolve(process.cwd(), "components/result-detail.tsx"), "utf8")
 const richTextSurface = readFileSync(resolve(process.cwd(), "components/rich-text-surface.tsx"), "utf8")
 
@@ -144,7 +144,7 @@ describe("global UI patterns", () => {
     assert.ok(richTextClasses.includes("richTextDocumentClassName"))
     assert.ok(richTextClasses.includes("editableRichTextDocumentClassName"))
     assert.ok(richTextContract.includes('from "./rich-text-classes"'))
-    assert.ok(announcementDetail.includes("richTextDocumentClassName"))
+    assert.ok(announcementArticleClient.includes("RichTextSurface"))
     assert.ok(resultDetail.includes("richTextDocumentClassName"))
     assert.ok(richTextSurface.includes("richTextDocumentClassName"))
     assert.ok(tiptapEditor.includes("editableRichTextDocumentClassName"))

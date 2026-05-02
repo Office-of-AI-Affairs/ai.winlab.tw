@@ -1,15 +1,11 @@
-import { AnnouncementDetail } from "@/components/announcement-detail";
-import { JsonLd } from "@/components/json-ld";
-import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb";
-import { createClient } from "@/lib/supabase/server";
-import { renderArticle } from "@/lib/ui/rich-text";
+import { createPublicClient } from "@/lib/supabase/public";
+import type { Announcement } from "@/lib/supabase/types";
 import { extractFirstImage } from "@/lib/ui/article";
+import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
-import { ShareButtons } from "@/components/share-buttons";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { EventAnnouncementArticleClient } from "./article-client";
+import { EventAnnouncementDraftFallback } from "./draft-fallback";
 
 export async function generateMetadata({
   params,
@@ -17,10 +13,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string; id: string }>;
 }): Promise<Metadata> {
   const { slug, id } = await params;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const [announcementRes, eventRes] = await Promise.all([
-    supabase.from("announcements").select("title, category, content").eq("id", id).single(),
-    supabase.from("events").select("cover_image, name").eq("slug", slug).single(),
+    supabase.from("announcements").select("title, category, content").eq("id", id).maybeSingle(),
+    supabase.from("events").select("cover_image, name").eq("slug", slug).maybeSingle(),
   ]);
   const title = announcementRes.data?.title ?? "公告";
   const description = announcementRes.data?.category
@@ -39,9 +35,7 @@ export async function generateMetadata({
   return {
     title: `${title}｜人工智慧專責辦公室`,
     description,
-    alternates: {
-      canonical: `/events/${slug}/announcements/${id}`,
-    },
+    alternates: { canonical: `/events/${slug}/announcements/${id}` },
     openGraph: {
       title: `${title}｜人工智慧專責辦公室`,
       description,
@@ -63,7 +57,7 @@ export default async function EventAnnouncementDetailPage({
   params: Promise<{ slug: string; id: string }>;
 }) {
   const { slug, id } = await params;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const [announcementRes, eventRes] = await Promise.all([
     supabase
@@ -71,67 +65,28 @@ export default async function EventAnnouncementDetailPage({
       .select("*")
       .eq("id", id)
       .eq("status", "published")
-      .single(),
-    supabase.from("events").select("name").eq("slug", slug).single(),
+      .maybeSingle(),
+    supabase.from("events").select("name").eq("slug", slug).maybeSingle(),
   ]);
 
-  if (announcementRes.error || !announcementRes.data) notFound();
-  const announcement = announcementRes.data;
+  if (!announcementRes.data) {
+    return <EventAnnouncementDraftFallback slug={slug} id={id} />;
+  }
+
+  const announcement = announcementRes.data as Announcement;
   const eventName = eventRes.data?.name ?? "活動";
 
-  const { html, toc } = renderArticle(
-    announcement.content as Record<string, unknown> | null,
-  );
-  const contentHtml = html ?? "<p>（無內容）</p>";
-  const { minutes: readingTimeMin } = estimateReadingTime(
-    announcement.content as Record<string, unknown> | null,
-  );
-
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "NewsArticle",
-    headline: announcement.title,
-    datePublished: announcement.date,
-    dateModified: announcement.updated_at,
-    articleSection: announcement.category,
-    url: `https://ai.winlab.tw/events/${slug}/announcements/${id}`,
-    publisher: {
-      "@type": "Organization",
-      name: "國立陽明交通大學 人工智慧專責辦公室",
-      url: "https://ai.winlab.tw",
-    },
-  };
-
-  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: "首頁", path: "/" },
-    { name: "活動", path: "/events" },
-    { name: eventName, path: `/events/${slug}` },
-    { name: announcement.title, path: `/events/${slug}/announcements/${id}` },
-  ]);
+  const { html, toc } = renderArticle(announcement.content);
+  const { minutes: readingTimeMin } = estimateReadingTime(announcement.content);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12">
-      <JsonLd data={structuredData} />
-      <JsonLd data={breadcrumbJsonLd} />
-      <div className="flex items-center justify-between gap-4 mb-10">
-        <Link
-          href={`/events/${slug}?tab=announcements`}
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          返回活動
-        </Link>
-        <ShareButtons url={`/events/${slug}/announcements/${id}`} title={announcement.title} />
-      </div>
-
-      <AnnouncementDetail
-        title={announcement.title}
-        date={announcement.date}
-        category={announcement.category}
-        contentHtml={contentHtml}
-        toc={toc}
-        readingTimeMin={readingTimeMin}
-      />
-    </div>
+    <EventAnnouncementArticleClient
+      slug={slug}
+      eventName={eventName}
+      initialAnnouncement={announcement}
+      initialContentHtml={html}
+      initialToc={toc}
+      readingTimeMin={readingTimeMin}
+    />
   );
 }

@@ -1,5 +1,5 @@
 // Rich-text prose classes split out from rich-text.ts so that view-mode
-// surfaces (RichTextSurface, AnnouncementDetail, etc.) can pull the class
+// surfaces (RichTextSurface, ResultDetail, etc.) can pull the class
 // names without dragging the full Tiptap HTML extension bundle (lowlight,
 // generateHTML, codeblock language packs) into the visitor JS chunk.
 

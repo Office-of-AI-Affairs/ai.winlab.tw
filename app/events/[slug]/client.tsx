@@ -410,7 +410,11 @@ export function EventDetailClient({
                     <tr key={item.id} className="h-12 border-t border-border hover:bg-muted/60 transition-colors">
                       <td colSpan={isAdmin ? 4 : 3} className="p-0">
                         <Link
-                          href={isAdmin ? `/events/${slug}/announcements/${item.id}/edit` : `/events/${slug}/announcements/${item.id}`}
+                          href={
+                            isAdmin
+                              ? `/events/${slug}/announcements/${item.id}${item.status === "draft" ? "?mode=edit" : ""}`
+                              : `/events/${slug}/announcements/${item.id}`
+                          }
                           className="flex items-center w-full h-full"
                         >
                           <span className="pl-5 pr-4 py-3 w-32 text-base shrink-0">{formatDate(item.date)}</span>

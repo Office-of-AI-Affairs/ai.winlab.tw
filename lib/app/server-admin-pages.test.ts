@@ -22,7 +22,8 @@ const introductionPage = readFileSync(resolve(process.cwd(), "app/introduction/p
 const introductionArticleClient = readFileSync(resolve(process.cwd(), "app/introduction/article-client.tsx"), "utf8")
 const carouselEditPage = readFileSync(resolve(process.cwd(), "app/carousel/[id]/edit/page.tsx"), "utf8")
 const organizationEditPage = readFileSync(resolve(process.cwd(), "app/introduction/[id]/edit/page.tsx"), "utf8")
-const eventAnnouncementEditPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/page.tsx"), "utf8")
+const eventAnnouncementDetailPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/page.tsx"), "utf8")
+const eventAnnouncementArticleClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/article-client.tsx"), "utf8")
 const resultEditPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/page.tsx"), "utf8")
 const rootLayout = readFileSync(resolve(process.cwd(), "app/layout.tsx"), "utf8")
 const homePage = readFileSync(resolve(process.cwd(), "app/page.tsx"), "utf8")
@@ -32,7 +33,6 @@ const authProvider = readFileSync(resolve(process.cwd(), "components/auth-provid
 const contactEditClient = readFileSync(resolve(process.cwd(), "app/contacts/[id]/edit/client.tsx"), "utf8")
 const carouselEditClient = readFileSync(resolve(process.cwd(), "app/carousel/[id]/edit/client.tsx"), "utf8")
 const organizationEditClient = readFileSync(resolve(process.cwd(), "app/introduction/[id]/edit/client.tsx"), "utf8")
-const eventAnnouncementEditClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/client.tsx"), "utf8")
 const resultEditClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/client.tsx"), "utf8")
 
 describe("server admin page contracts", () => {
@@ -122,11 +122,17 @@ describe("server admin page contracts", () => {
     assert.ok(existsSync(resolve(process.cwd(), "app/announcement/[id]/draft-fallback.tsx")))
     assert.ok(announcementDetailPage.includes("AnnouncementArticleClient"))
     assert.ok(announcementDetailPage.includes("AnnouncementDraftFallback"))
-    assert.ok(announcementArticleClient.includes("useAuth("))
-    assert.ok(announcementArticleClient.includes("useEditMode("))
-    assert.ok(announcementArticleClient.includes("RichTextSurface"))
-    assert.ok(announcementArticleClient.includes("EditModeToggle"))
-    assert.ok(announcementArticleClient.includes("EditActionsPill"))
+    // Shared inline-edit client lives in components/; route-level wrappers
+    // just specialize back-link / cache-tag / breadcrumb.
+    const sharedAnnouncementArticleClient = readFileSync(
+      resolve(process.cwd(), "components/announcement-article-client.tsx"),
+      "utf8",
+    )
+    assert.ok(sharedAnnouncementArticleClient.includes("useAuth("))
+    assert.ok(sharedAnnouncementArticleClient.includes("useEditMode("))
+    assert.ok(sharedAnnouncementArticleClient.includes("RichTextSurface"))
+    assert.ok(sharedAnnouncementArticleClient.includes("EditModeToggle"))
+    assert.ok(sharedAnnouncementArticleClient.includes("EditActionsPill"))
   })
 
   test("remaining admin edit routes are server-gated wrappers around client editors", () => {
@@ -134,7 +140,6 @@ describe("server admin page contracts", () => {
       contactEditPage,
       carouselEditPage,
       organizationEditPage,
-      eventAnnouncementEditPage,
     ]) {
       assert.ok(!content.includes('"use client"'))
       assert.ok(content.includes('from "@/lib/supabase/require-admin-server"'))
@@ -145,7 +150,17 @@ describe("server admin page contracts", () => {
     assert.ok(existsSync(resolve(process.cwd(), "app/contacts/[id]/edit/client.tsx")))
     assert.ok(existsSync(resolve(process.cwd(), "app/carousel/[id]/edit/client.tsx")))
     assert.ok(existsSync(resolve(process.cwd(), "app/introduction/[id]/edit/client.tsx")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/client.tsx")))
+  })
+
+  test("event announcement detail hosts both view and edit on a single route", () => {
+    assert.ok(!existsSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/article-client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/draft-fallback.tsx")))
+    assert.ok(eventAnnouncementDetailPage.includes("EventAnnouncementArticleClient"))
+    assert.ok(eventAnnouncementDetailPage.includes("EventAnnouncementDraftFallback"))
+    assert.ok(eventAnnouncementArticleClient.includes("SharedAnnouncementArticleClient"))
+    assert.ok(existsSync(resolve(process.cwd(), "components/announcement-article-client.tsx")))
   })
 
   test("introduction page hosts both view and edit on a single ISR-friendly route", () => {
@@ -228,7 +243,6 @@ describe("server admin page contracts", () => {
       contactEditClient,
       carouselEditClient,
       organizationEditClient,
-      eventAnnouncementEditClient,
       resultEditClient,
     ]) {
       assert.ok(!content.includes('from "@/components/auth-provider"'))

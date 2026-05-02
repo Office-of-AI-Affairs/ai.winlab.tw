@@ -27,7 +27,7 @@ export function useEventActions(eventId: string, slug: string, userId: string | 
       .select()
       .single();
     if (error) { setIsCreating(false); toast.error("操作失敗"); return; }
-    router.push(`/events/${slug}/announcements/${data.id}/edit`);
+    router.push(`/events/${slug}/announcements/${data.id}?mode=edit`);
   }, [eventId, router, slug, userId]);
 
   const togglePin = useCallback(
