@@ -131,7 +131,7 @@ Conventions:
 
 **活動** `/events` → `/events/[slug]`（公告/成果/招募 tabs）→ `[slug]/edit`、`announcements/[id]`、`results/[id]`、`recruitment/[id]`
 
-**內容** `/announcement`、`/introduction`（內含 `OrganizationMember` CRUD）、`/carousel`、`/contacts`（各有 `/edit`）、`/privacy`（view+edit 共用同一路由 + `?mode=edit`）
+**內容** `/announcement`、`/carousel`、`/contacts`（各有 `/edit`）；inline view+edit（`?mode=edit` 切換）：`/privacy`、`/introduction`（後者額外掛 `OrganizationMember` CRUD）
 
 **帳號** `/account`、`/profile/[id]`（vendor 可見 My Events）
 
@@ -141,7 +141,7 @@ Conventions:
 
 **Design system** `/design` — shadcn gallery + 專案 UI patterns 展示
 
-**Legacy redirects**（`next.config.ts`）— `/organization` → `/introduction`、`/recruitment*` → `/events`、`/team/:id` → `/`、`/privacy/edit` → `/privacy?mode=edit`
+**Legacy redirects**（`next.config.ts`）— `/organization` → `/introduction`、`/recruitment*` → `/events`、`/team/:id` → `/`、`/privacy/edit` → `/privacy?mode=edit`、`/introduction/edit` → `/introduction?mode=edit`
 
 ## Hooks
 

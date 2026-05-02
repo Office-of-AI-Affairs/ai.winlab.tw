@@ -1,16 +1,22 @@
-import { OrganizationPageClient } from "./client";
-import { getIntroduction, getOrganizationMembers } from "./data";
-import { IntroductionDetail } from "@/components/introduction-detail";
-import { IntroductionEditButton } from "@/components/introduction-edit-button";
 import { JsonLd } from "@/components/json-ld";
 import { PageShell } from "@/components/page-shell";
 import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
-import { ShareButtons } from "@/components/share-buttons";
-import type { OrganizationMember, OrganizationMemberCategory } from "@/lib/supabase/types";
+import type { Introduction, OrganizationMember, OrganizationMemberCategory } from "@/lib/supabase/types";
 import type { Metadata } from "next";
+import { IntroductionArticleClient } from "./article-client";
+import { OrganizationPageClient } from "./client";
+import { getIntroduction, getOrganizationMembers } from "./data";
 
 const CATEGORIES: OrganizationMemberCategory[] = ["core", "legal_entity", "industry"];
+
+const FALLBACK_INTRODUCTION = {
+  id: "",
+  title: "國立陽明交通大學 人工智慧專責辦公室",
+  content: {} as Record<string, unknown>,
+  created_at: "",
+  updated_at: "",
+} as unknown as Introduction;
 
 export const metadata: Metadata = {
   title: "組織｜人工智慧專責辦公室",
@@ -32,7 +38,6 @@ export default async function OrganizationPage() {
   ]);
 
   const { html, toc } = renderArticle(introduction?.content);
-  const contentHtml = html ?? "";
   const { minutes: readingTimeMin } = estimateReadingTime(introduction?.content);
 
   const membersByCategory = Object.fromEntries(
@@ -51,16 +56,10 @@ export default async function OrganizationPage() {
     <>
       <JsonLd data={structuredData} />
       <PageShell>
-        <IntroductionDetail
-          title={introduction?.title || "國立陽明交通大學 人工智慧專責辦公室"}
-          contentHtml={contentHtml}
-          actions={
-            <div className="flex items-center gap-3">
-              <ShareButtons url="/introduction" title="組織｜人工智慧專責辦公室" />
-              <IntroductionEditButton />
-            </div>
-          }
-          toc={toc}
+        <IntroductionArticleClient
+          initialIntroduction={(introduction as Introduction | null) ?? FALLBACK_INTRODUCTION}
+          initialContentHtml={html}
+          initialToc={toc}
           readingTimeMin={readingTimeMin}
         />
       </PageShell>

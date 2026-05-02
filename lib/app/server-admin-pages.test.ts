@@ -17,7 +17,8 @@ const eventEditPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/edi
 const contactEditPage = readFileSync(resolve(process.cwd(), "app/contacts/[id]/edit/page.tsx"), "utf8")
 const privacyPage = readFileSync(resolve(process.cwd(), "app/privacy/page.tsx"), "utf8")
 const privacyClient = readFileSync(resolve(process.cwd(), "app/privacy/client.tsx"), "utf8")
-const introductionEditPage = readFileSync(resolve(process.cwd(), "app/introduction/edit/page.tsx"), "utf8")
+const introductionPage = readFileSync(resolve(process.cwd(), "app/introduction/page.tsx"), "utf8")
+const introductionArticleClient = readFileSync(resolve(process.cwd(), "app/introduction/article-client.tsx"), "utf8")
 const carouselEditPage = readFileSync(resolve(process.cwd(), "app/carousel/[id]/edit/page.tsx"), "utf8")
 const organizationEditPage = readFileSync(resolve(process.cwd(), "app/introduction/[id]/edit/page.tsx"), "utf8")
 const eventAnnouncementEditPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/page.tsx"), "utf8")
@@ -28,7 +29,6 @@ const homeCarousel = readFileSync(resolve(process.cwd(), "components/home-carous
 const homeContacts = readFileSync(resolve(process.cwd(), "components/home-contacts.tsx"), "utf8")
 const authProvider = readFileSync(resolve(process.cwd(), "components/auth-provider.tsx"), "utf8")
 const contactEditClient = readFileSync(resolve(process.cwd(), "app/contacts/[id]/edit/client.tsx"), "utf8")
-const introductionEditClient = readFileSync(resolve(process.cwd(), "app/introduction/edit/client.tsx"), "utf8")
 const carouselEditClient = readFileSync(resolve(process.cwd(), "app/carousel/[id]/edit/client.tsx"), "utf8")
 const organizationEditClient = readFileSync(resolve(process.cwd(), "app/introduction/[id]/edit/client.tsx"), "utf8")
 const eventAnnouncementEditClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/client.tsx"), "utf8")
@@ -118,7 +118,6 @@ describe("server admin page contracts", () => {
   test("remaining admin edit routes are server-gated wrappers around client editors", () => {
     for (const content of [
       contactEditPage,
-      introductionEditPage,
       carouselEditPage,
       organizationEditPage,
       eventAnnouncementEditPage,
@@ -130,10 +129,22 @@ describe("server admin page contracts", () => {
       assert.ok(!content.includes("useEffect("))
     }
     assert.ok(existsSync(resolve(process.cwd(), "app/contacts/[id]/edit/client.tsx")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/introduction/edit/client.tsx")))
     assert.ok(existsSync(resolve(process.cwd(), "app/carousel/[id]/edit/client.tsx")))
     assert.ok(existsSync(resolve(process.cwd(), "app/introduction/[id]/edit/client.tsx")))
     assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/client.tsx")))
+  })
+
+  test("introduction page hosts both view and edit on a single ISR-friendly route", () => {
+    assert.ok(!existsSync(resolve(process.cwd(), "app/introduction/edit/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/introduction/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/introduction/article-client.tsx")))
+    assert.ok(introductionPage.includes("IntroductionArticleClient"))
+    assert.ok(introductionArticleClient.includes('"use client"'))
+    assert.ok(introductionArticleClient.includes("useAuth("))
+    assert.ok(introductionArticleClient.includes("useEditMode("))
+    assert.ok(introductionArticleClient.includes("RichTextSurface"))
+    assert.ok(introductionArticleClient.includes("EditModeToggle"))
+    assert.ok(introductionArticleClient.includes("EditActionsPill"))
   })
 
   test("privacy page hosts both view and edit on a single ISR-friendly route", () => {
@@ -201,7 +212,6 @@ describe("server admin page contracts", () => {
   test("server-wrapped admin editors do not keep depending on useAuth in the client layer", () => {
     for (const content of [
       contactEditClient,
-      introductionEditClient,
       carouselEditClient,
       organizationEditClient,
       eventAnnouncementEditClient,

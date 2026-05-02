@@ -26,9 +26,11 @@ const nextConfig: NextConfig = {
       { source: "/recruitment", destination: "/events", permanent: true },
       { source: "/recruitment/:id", destination: "/events", permanent: true },
       { source: "/organization", destination: "/introduction", permanent: true },
-      // /privacy/edit collapsed back into /privacy with ?mode=edit driving
-      // the inline editor; the dedicated edit route was removed.
+      // /privacy/edit, /introduction/edit collapsed back into their read
+      // routes with ?mode=edit driving the inline editor; the dedicated
+      // edit subroutes were removed.
       { source: "/privacy/edit", destination: "/privacy?mode=edit", permanent: true },
+      { source: "/introduction/edit", destination: "/introduction?mode=edit", permanent: true },
     ];
   },
 };

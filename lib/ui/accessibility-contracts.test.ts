@@ -31,7 +31,6 @@ const profileClient = readFileSync(resolve(process.cwd(), "app/profile/[id]/clie
 const organizationMemberDialog = readFileSync(resolve(process.cwd(), "components/organization-member-dialog.tsx"), "utf8")
 const carouselEditClient = readFileSync(resolve(process.cwd(), "app/carousel/[id]/edit/client.tsx"), "utf8")
 const contactEditClient = readFileSync(resolve(process.cwd(), "app/contacts/[id]/edit/client.tsx"), "utf8")
-const introductionEditClient = readFileSync(resolve(process.cwd(), "app/introduction/edit/client.tsx"), "utf8")
 const organizationEditClient = readFileSync(resolve(process.cwd(), "app/introduction/[id]/edit/client.tsx"), "utf8")
 const announcementEditClient = readFileSync(resolve(process.cwd(), "app/announcement/[id]/edit/client.tsx"), "utf8")
 const eventAnnouncementEditClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/client.tsx"), "utf8")
@@ -133,7 +132,7 @@ describe("accessibility contracts", () => {
   })
 
   test("editor failure states surface user-visible toast feedback instead of console-only logging", () => {
-    // carouselEditClient, contactEditClient, introductionEditClient, and organizationEditClient delegate to useContentEditor/useImageUpload which handle toast internally
+    // carouselEditClient, contactEditClient, and organizationEditClient delegate to useContentEditor/useImageUpload which handle toast internally
   })
 
   test("primary editor routes no longer rely on preview-mode toggles as the main writing flow", () => {
@@ -141,7 +140,6 @@ describe("accessibility contracts", () => {
       announcementEditClient,
       eventAnnouncementEditClient,
       resultEditClient,
-      introductionEditClient,
     ]) {
       assert.ok(!content.includes("isPreview"))
       assert.ok(!content.includes("預覽"))
