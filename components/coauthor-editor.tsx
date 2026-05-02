@@ -126,7 +126,7 @@ export function CoauthorEditor({
 
   return (
     <div className="flex flex-col gap-2">
-      <Label className="text-sm mx-2">共同作者</Label>
+      <Label className="text-sm">共同作者</Label>
 
       {coauthors.length > 0 && (
         <div className="flex flex-wrap gap-2">
