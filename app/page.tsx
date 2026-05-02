@@ -4,6 +4,7 @@ import { HomeCarousel } from "@/components/home-carousel";
 import { HomeContacts } from "@/components/home-contacts";
 import { HomeEvents } from "@/components/home-events";
 import { HomeIntroduction } from "@/components/home-introduction";
+import { Reveal } from "@/components/reveal";
 import { JsonLd } from "@/components/json-ld";
 import type { Metadata } from "next";
 
@@ -36,11 +37,11 @@ export default async function Home() {
     <main className="flex flex-col">
       <JsonLd data={structuredData} />
       <HomeCarousel />
-      <HomeIntroduction />
-      <HomeActivity />
-      <HomeAnnouncement />
-      <HomeEvents />
-      <HomeContacts />
+      <Reveal><HomeIntroduction /></Reveal>
+      <Reveal><HomeActivity /></Reveal>
+      <Reveal><HomeAnnouncement /></Reveal>
+      <Reveal><HomeEvents /></Reveal>
+      <Reveal><HomeContacts /></Reveal>
     </main>
   );
 }
