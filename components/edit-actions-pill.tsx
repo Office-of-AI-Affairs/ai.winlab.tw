@@ -67,7 +67,7 @@ export function EditActionsPill({
           type="button"
           aria-label={`${label}．展開編輯工具`}
           className={cn(
-            "interactive-scale fixed bottom-24 right-6 z-30 inline-flex items-center gap-2 rounded-full border border-border bg-background/95 px-4 py-2 text-sm font-medium text-foreground shadow-lg backdrop-blur-sm transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:bottom-6",
+            "interactive-scale fixed bottom-4 right-4 z-30 inline-flex h-10 items-center gap-2 rounded-full border border-border bg-background/95 px-4 text-sm font-medium text-foreground shadow-lg backdrop-blur-sm transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:bottom-6 md:right-6",
             className,
           )}
         >
