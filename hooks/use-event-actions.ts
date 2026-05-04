@@ -1,18 +1,29 @@
 "use client";
 
+import { useAuth } from "@/components/auth-provider";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 
+function isRlsViolation(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  return error.code === "42501" || /row-level security/i.test(error.message ?? "");
+}
+
 export function useEventActions(eventId: string, slug: string, userId: string | null) {
   const router = useRouter();
   const supabaseRef = useRef(createClient());
+  const { isAdmin } = useAuth();
   const [isCreatingAnnouncement, setIsCreatingAnnouncement] = useState(false);
   const [isCreatingResult, setIsCreatingResult] = useState(false);
 
   const createAnnouncement = useCallback(async () => {
     if (!userId) return;
+    if (!isAdmin) {
+      toast.error("只有管理員可以建立公告");
+      return;
+    }
     setIsCreatingAnnouncement(true);
     const { data, error } = await supabaseRef.current
       .from("announcements")
@@ -27,9 +38,13 @@ export function useEventActions(eventId: string, slug: string, userId: string | 
       })
       .select()
       .single();
-    if (error) { setIsCreatingAnnouncement(false); toast.error("操作失敗"); return; }
+    if (error) {
+      setIsCreatingAnnouncement(false);
+      toast.error(isRlsViolation(error) ? "沒有權限建立公告" : "操作失敗");
+      return;
+    }
     router.push(`/events/${slug}/announcements/${data.id}?mode=edit`);
-  }, [eventId, router, slug, userId]);
+  }, [eventId, isAdmin, router, slug, userId]);
 
   const createResult = useCallback(async () => {
     if (!userId) return;
@@ -48,7 +63,11 @@ export function useEventActions(eventId: string, slug: string, userId: string | 
       })
       .select()
       .single();
-    if (error) { setIsCreatingResult(false); toast.error("操作失敗"); return; }
+    if (error) {
+      setIsCreatingResult(false);
+      toast.error(isRlsViolation(error) ? "沒有權限建立成果" : "操作失敗");
+      return;
+    }
     router.push(`/events/${slug}/results/${data.id}?mode=edit`);
   }, [eventId, router, slug, userId]);
 
