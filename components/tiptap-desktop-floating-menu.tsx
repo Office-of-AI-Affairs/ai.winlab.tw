@@ -4,7 +4,8 @@ import type { Editor } from "@tiptap/react";
 import { FloatingMenu } from "@tiptap/react/menus";
 
 import {
-  blockCommands,
+  createBlockCommands,
+  type EditorUploadFn,
   getSlashQuery,
   headingCommands,
   ToolbarButton,
@@ -12,9 +13,16 @@ import {
 } from "@/components/tiptap-editor-shared";
 import { Button } from "@/components/ui/button";
 
-export function TiptapDesktopFloatingMenu({ editor }: { editor: Editor | null }) {
+export function TiptapDesktopFloatingMenu({
+  editor,
+  uploadFn,
+}: {
+  editor: Editor | null;
+  uploadFn: EditorUploadFn;
+}) {
   if (!editor) return null;
 
+  const blockCommands = createBlockCommands(uploadFn);
   const slashQuery = getSlashQuery(editor);
   const isSlashMode = slashQuery !== null;
   const filteredSlashCommands = isSlashMode

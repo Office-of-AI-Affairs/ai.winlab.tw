@@ -277,6 +277,7 @@ export function ResultArticleClient({
             editing={isEditing}
             onChange={(content) => setResult((prev) => ({ ...prev, content }))}
             emptyText="（無內容）"
+            uploadFn={uploadResultImage}
           />
         </div>
         <Toc items={toc} className="hidden lg:block" />

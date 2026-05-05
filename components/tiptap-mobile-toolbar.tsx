@@ -4,7 +4,8 @@ import type { Editor } from "@tiptap/react";
 import { useState } from "react";
 
 import {
-  blockCommands,
+  createBlockCommands,
+  type EditorUploadFn,
   headingCommands,
   listCommands,
   runBlockCommand,
@@ -14,11 +15,18 @@ import {
 import { cn } from "@/lib/utils";
 import { Plus } from "lucide-react";
 
-export function TiptapMobileToolbar({ editor }: { editor: Editor | null }) {
+export function TiptapMobileToolbar({
+  editor,
+  uploadFn,
+}: {
+  editor: Editor | null;
+  uploadFn: EditorUploadFn;
+}) {
   const [showInsertMenu, setShowInsertMenu] = useState(false);
 
   if (!editor) return null;
 
+  const blockCommands = createBlockCommands(uploadFn);
   const compactCommands = [
     textFormattingCommands[0],
     textFormattingCommands[1],

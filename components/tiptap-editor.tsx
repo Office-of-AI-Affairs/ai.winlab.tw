@@ -1,6 +1,7 @@
 "use client";
 
 import { uploadAnnouncementImage } from "@/lib/upload-image";
+import type { EditorUploadFn } from "@/components/tiptap-editor-shared";
 import {
   editableRichTextDocumentClassName,
   richTextDocumentClassName,
@@ -40,6 +41,12 @@ interface TiptapEditorProps {
    * padded canvas that dedicated /edit pages depend on.
    */
   flush?: boolean;
+  /**
+   * Upload function for image drop / paste / toolbar. Determines storage
+   * bucket prefix (e.g. `uploadResultImage` writes under `results/`), which
+   * the storage RLS keys off of. Defaults to admin-only announcement prefix.
+   */
+  uploadFn?: EditorUploadFn;
 }
 
 export function TiptapEditor({
@@ -47,11 +54,12 @@ export function TiptapEditor({
   onChange,
   editable = true,
   flush = false,
+  uploadFn = uploadAnnouncementImage,
 }: TiptapEditorProps) {
   const handleImageDrop = useCallback(
     async (editor: import("@tiptap/core").Editor, files: File[], pos: number) => {
       const results = await Promise.all(
-        files.map((file) => uploadAnnouncementImage(file))
+        files.map((file) => uploadFn(file))
       );
       const urls = results
         .filter((r): r is { url: string } => "url" in r)
@@ -66,7 +74,7 @@ export function TiptapEditor({
           : urls.map((url) => ({ type: "image" as const, attrs: { src: url } }));
       editor.chain().focus().insertContentAt(pos, content).run();
     },
-    []
+    [uploadFn]
   );
 
   const handleImagePaste = useCallback(
@@ -75,7 +83,7 @@ export function TiptapEditor({
       files: File[]
     ) => {
       for (const file of files) {
-        const result = await uploadAnnouncementImage(file);
+        const result = await uploadFn(file);
         if ("error" in result) {
           console.error(result.error);
           toast.error("圖片上傳失敗");
@@ -84,7 +92,7 @@ export function TiptapEditor({
         editor.chain().focus().setImage({ src: result.url }).run();
       }
     },
-    []
+    [uploadFn]
   );
 
   const editor = useEditor({
@@ -155,8 +163,8 @@ export function TiptapEditor({
       className={cn("flex flex-col", flush ? "gap-0" : "gap-4")}
     >
       {editable && <TiptapDesktopBubbleMenu editor={editor} />}
-      {editable && <TiptapDesktopFloatingMenu editor={editor} />}
-      {editable && <TiptapMobileToolbar editor={editor} />}
+      {editable && <TiptapDesktopFloatingMenu editor={editor} uploadFn={uploadFn} />}
+      {editable && <TiptapMobileToolbar editor={editor} uploadFn={uploadFn} />}
       <div
         data-slot="tiptap-canvas"
         className={cn(!flush && "rounded-[2rem] bg-background")}

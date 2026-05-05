@@ -68,7 +68,19 @@ Role swap requires admin. Teams subsystem retired 2026-04-30.
 
 ## Storage Buckets
 
-`announcement-images` (public) — SELECT all. INSERT/UPDATE/DELETE: admin only (tightened 2026-04-30 `20260430000006`).
+`announcement-images` (public) — SELECT all. INSERT split by path prefix (2026-05-05 `20260505000001`):
+
+| Prefix | INSERT allowed |
+|---|---|
+| `<root>` (announcements) | admin |
+| `carousel/` | admin |
+| `events/` | admin |
+| `organization/` | admin |
+| `external-results/` | admin |
+| `results/` | any authenticated (rationale: `results` row INSERT RLS already gates `author_id = self`; image path is generated before the row exists, so storage can't join the business table) |
+| `recruitment/` | admin OR row in `competition_owners` (recruitment_owner of any recruitment) |
+
+UPDATE/DELETE: admin only across the whole bucket. **Trade-off**: `results/` prefix accepts any authenticated upload — path-time row ownership can't be verified because the URL is needed before the row exists. Mitigations: orphan cleanup script (`scripts/cleanup-orphans.ts`), random filename, `upsert: false`.
 
 `resumes` (private) — SELECT: user reads all (incl. others' PDFs) / admin all. INSERT/UPDATE/DELETE: own folder (`name` first segment = `auth.uid()`). **Trade-off**: any logged-in user can download any resume (commit `96cba86`). Gated via `/profile/[id]/resume` route handler.
 

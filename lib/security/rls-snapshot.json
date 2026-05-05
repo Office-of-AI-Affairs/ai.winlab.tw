@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-30",
+  "generated_at": "2026-05-05",
   "project_ref": "hwezfbhjcetpezfuvelf",
   "note": "Source-of-truth snapshot of all RLS policies in production. Refreshed manually via the SQL in scripts/refresh-rls-snapshot.md. Drift between this file and prod = git diff after running refresh, drift between this file and docs/permissions.md = test failure.",
   "tables_with_rls": [
@@ -121,7 +121,7 @@
 
     { "rel": "storage.objects", "polname": "Admin can delete announcement-images", "op": "DELETE", "roles": ["authenticated"], "using_summary": "bucket='announcement-images' AND is_admin" },
     { "rel": "storage.objects", "polname": "Admin can update announcement-images", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "bucket='announcement-images' AND is_admin" },
-    { "rel": "storage.objects", "polname": "Admin can upload announcement-images", "op": "INSERT", "roles": ["authenticated"], "check_summary": "bucket='announcement-images' AND is_admin" },
+    { "rel": "storage.objects", "polname": "Insert announcement-images by prefix", "op": "INSERT", "roles": ["authenticated"], "check_summary": "bucket='announcement-images' AND (is_admin OR name LIKE 'results/%' OR (name LIKE 'recruitment/%' AND is_recruitment_owner))" },
     { "rel": "storage.objects", "polname": "Allow public read for announcement-images", "op": "SELECT", "roles": ["public"], "using_summary": "bucket='announcement-images'" },
     { "rel": "storage.objects", "polname": "resumes_delete_own", "op": "DELETE", "roles": ["authenticated"], "using_summary": "bucket='resumes' AND foldername[1]=auth.uid()" },
     { "rel": "storage.objects", "polname": "resumes_insert_own", "op": "INSERT", "roles": ["authenticated"], "check_summary": "bucket='resumes' AND foldername[1]=auth.uid()" },

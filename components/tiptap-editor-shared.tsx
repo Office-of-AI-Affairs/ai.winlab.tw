@@ -23,7 +23,10 @@ import type { ComponentProps } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { uploadAnnouncementImage } from "@/lib/upload-image";
+
+export type EditorUploadFn = (
+  file: File,
+) => Promise<{ url: string } | { error: string }>;
 
 export function ToolbarButton({
   ariaLabel,
@@ -212,44 +215,48 @@ async function pickImageFile() {
   return file;
 }
 
-export const mediaCommands: EditorCommand[] = [
-  {
-    ariaLabel: "插入圖片",
-    label: "插入圖片",
-    icon: ImagePlus,
-    keywords: ["image", "photo", "picture", "media"],
-    onClick: async (editor) => {
-      const file = await pickImageFile();
-      if (!file) return;
+export function createMediaCommands(uploadFn: EditorUploadFn): EditorCommand[] {
+  return [
+    {
+      ariaLabel: "插入圖片",
+      label: "插入圖片",
+      icon: ImagePlus,
+      keywords: ["image", "photo", "picture", "media"],
+      onClick: async (editor) => {
+        const file = await pickImageFile();
+        if (!file) return;
 
-      const result = await uploadAnnouncementImage(file);
-      if ("error" in result) {
-        toast.error(result.error);
-        return;
-      }
+        const result = await uploadFn(file);
+        if ("error" in result) {
+          toast.error(result.error);
+          return;
+        }
 
-      editor.chain().focus().setImage({ src: result.url }).run();
+        editor.chain().focus().setImage({ src: result.url }).run();
+      },
     },
-  },
-  {
-    ariaLabel: "插入 YouTube 影片",
-    label: "插入 YouTube",
-    icon: YoutubeIcon,
-    keywords: ["youtube", "video", "media"],
-    onClick: (editor) => {
-      const url = window.prompt("請輸入 YouTube 影片網址");
-      if (url) {
-        editor.chain().focus().setYoutubeVideo({ src: url }).run();
-      }
+    {
+      ariaLabel: "插入 YouTube 影片",
+      label: "插入 YouTube",
+      icon: YoutubeIcon,
+      keywords: ["youtube", "video", "media"],
+      onClick: (editor) => {
+        const url = window.prompt("請輸入 YouTube 影片網址");
+        if (url) {
+          editor.chain().focus().setYoutubeVideo({ src: url }).run();
+        }
+      },
     },
-  },
-];
+  ];
+}
 
-export const blockCommands: EditorCommand[] = [
-  ...headingCommands.slice(0, 2),
-  ...listCommands,
-  ...mediaCommands,
-];
+export function createBlockCommands(uploadFn: EditorUploadFn): EditorCommand[] {
+  return [
+    ...headingCommands.slice(0, 2),
+    ...listCommands,
+    ...createMediaCommands(uploadFn),
+  ];
+}
 
 export function getSlashQuery(editor: Editor) {
   const { empty, $from } = editor.state.selection;

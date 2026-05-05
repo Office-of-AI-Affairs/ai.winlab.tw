@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic"
 import { Skeleton } from "@/components/ui/skeleton"
+import type { EditorUploadFn } from "@/components/tiptap-editor-shared"
 import { richTextDocumentClassName } from "@/lib/ui/rich-text-classes"
 
 const TiptapEditor = dynamic(
@@ -30,6 +31,8 @@ type Props = {
   onChange?: (content: Record<string, unknown>) => void
   /** Empty-state copy when both content and contentHtml are missing in view mode. */
   emptyText?: string
+  /** Upload function for embedded images. Picks the storage prefix that gates RLS. Defaults to admin-only announcement bucket prefix. */
+  uploadFn?: EditorUploadFn
 }
 
 export function RichTextSurface({
@@ -38,6 +41,7 @@ export function RichTextSurface({
   editing,
   onChange,
   emptyText = "尚無內容",
+  uploadFn,
 }: Props) {
   if (editing) {
     return (
@@ -46,6 +50,7 @@ export function RichTextSurface({
           content={content ?? {}}
           onChange={(c) => onChange?.(c)}
           flush
+          uploadFn={uploadFn}
         />
       </div>
     )
