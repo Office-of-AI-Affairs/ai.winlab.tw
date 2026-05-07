@@ -41,8 +41,8 @@ export function ResultCard({
   const primaryName = item.author_name || "匿名";
 
   return (
-    <Card className="interactive-scale py-0 h-full flex flex-col gap-4 overflow-hidden">
-      <AppLink href={href} className="flex flex-1 flex-col gap-4" interactive={false}>
+    <Card className="relative interactive-scale py-0 h-full flex flex-col gap-4 overflow-hidden">
+      <div className="flex flex-1 flex-col gap-4">
         <div className="relative w-full aspect-video shrink-0">
           <Image
             src={resolveImageSrc(item.header_image)}
@@ -54,7 +54,7 @@ export function ResultCard({
           {showStatus && (
             <Badge
               variant={item.status === "published" ? "default" : "secondary"}
-              className="absolute top-2 left-2"
+              className="absolute top-2 left-2 z-20"
             >
               {item.status === "published" ? "已發布" : "草稿"}
             </Badge>
@@ -64,7 +64,7 @@ export function ResultCard({
               type="button"
               aria-label={item.pinned ? "取消釘選" : "釘選"}
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPinToggle?.(item.id, !item.pinned); }}
-              className={`absolute top-2 right-2 rounded-full p-1.5 interactive-opacity text-white ${item.pinned
+              className={`absolute top-2 right-2 z-20 rounded-full p-1.5 interactive-opacity text-white ${item.pinned
                 ? "bg-black/50 opacity-100"
                 : "bg-black/50 opacity-40 hover:opacity-80"
                 }`}
@@ -73,7 +73,7 @@ export function ResultCard({
             </button>
           ) : item.pinned ? (
             <div
-              className="absolute top-2 right-2 rounded-full bg-black/50 p-1.5 text-white pointer-events-none"
+              className="absolute top-2 right-2 z-20 rounded-full bg-black/50 p-1.5 text-white pointer-events-none"
               aria-hidden
             >
               <Pin className="w-4 h-4" fill="currentColor" />
@@ -90,8 +90,14 @@ export function ResultCard({
             {item.summary || "（無摘要）"}
           </p>
         </CardContent>
-      </AppLink>
-      <CardFooter className="pt-0 pb-4">
+      </div>
+      <AppLink
+        href={href}
+        className="absolute inset-0 z-10"
+        aria-label={item.title || "(無標題)"}
+        interactive={false}
+      />
+      <CardFooter className="relative z-20 pt-0 pb-4">
         <div className="flex items-center justify-between w-full gap-2 text-sm text-muted-foreground">
           <div className="flex items-center gap-1.5 min-w-0">
             <User className="w-3.5 h-3.5 shrink-0" />

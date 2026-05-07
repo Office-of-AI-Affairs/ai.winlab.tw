@@ -27,7 +27,7 @@ export function RecruitmentCard({ item, href, isAdmin, onEdit, onPinToggle }: Re
 
   return (
     <Card className="relative py-0 h-full overflow-hidden">
-      <AppLink href={href} className="flex h-full flex-col gap-4">
+      <div className="flex h-full flex-col gap-4">
         <div className="relative w-full aspect-video shrink-0">
           <Image
             src={resolveImageSrc(item.image)}
@@ -41,7 +41,7 @@ export function RecruitmentCard({ item, href, isAdmin, onEdit, onPinToggle }: Re
               type="button"
               aria-label={item.pinned ? "取消訂選" : "訂選"}
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPinToggle?.(item.id, !item.pinned); }}
-              className={`absolute top-2 right-2 z-10 rounded-full p-1.5 interactive-opacity text-white ${item.pinned
+              className={`absolute top-2 right-2 z-20 rounded-full p-1.5 interactive-opacity text-white ${item.pinned
                 ? "bg-black/50 opacity-100"
                 : "bg-black/50 opacity-40 hover:opacity-80"
                 }`}
@@ -50,7 +50,7 @@ export function RecruitmentCard({ item, href, isAdmin, onEdit, onPinToggle }: Re
             </button>
           ) : item.pinned ? (
             <div
-              className="absolute top-2 right-2 rounded-full bg-black/50 p-1.5 text-white pointer-events-none"
+              className="absolute top-2 right-2 z-20 rounded-full bg-black/50 p-1.5 text-white pointer-events-none"
               aria-hidden
             >
               <Pin className="w-4 h-4" fill="currentColor" />
@@ -76,11 +76,17 @@ export function RecruitmentCard({ item, href, isAdmin, onEdit, onPinToggle }: Re
             {isExpired && <Badge variant="destructive">已截止</Badge>}
           </div>
         </CardContent>
-      </AppLink>
+      </div>
+      <AppLink
+        href={href}
+        className="absolute inset-0 z-10"
+        aria-label={item.title || "(無標題)"}
+        interactive={false}
+      />
       {onEdit && (
         <button
           type="button"
-          className="absolute top-2 right-12 z-10 rounded-full bg-black/50 p-1.5 text-white hover:bg-black/70 transition-colors cursor-pointer"
+          className="absolute top-2 right-12 z-20 rounded-full bg-black/50 p-1.5 text-white hover:bg-black/70 transition-colors cursor-pointer"
           onClick={onEdit}
           aria-label="編輯"
         >
