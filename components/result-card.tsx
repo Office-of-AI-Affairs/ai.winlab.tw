@@ -41,7 +41,7 @@ export function ResultCard({
   const primaryName = item.author_name || "匿名";
 
   return (
-    <Card className="relative interactive-scale py-0 h-full flex flex-col gap-4 overflow-hidden">
+    <Card className="relative interactive-scale py-0 md:h-full flex flex-col gap-4 overflow-hidden">
       <div className="flex flex-1 flex-col gap-4">
         <div className="relative w-full h-[200px] md:h-auto md:aspect-video shrink-0">
           <Image
@@ -136,7 +136,7 @@ export function ResultCard({
 
 export function ResultCardSkeleton() {
   return (
-    <Card className="py-0 h-full flex flex-col gap-4 overflow-hidden">
+    <Card className="py-0 md:h-full flex flex-col gap-4 overflow-hidden">
       <Skeleton className="h-[200px] md:h-auto md:aspect-video w-full rounded-none" />
       <CardHeader className="shrink-0 pb-0">
         <Skeleton className="h-7 w-3/4 rounded-lg" />
