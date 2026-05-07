@@ -28,7 +28,7 @@ export function RecruitmentCard({ item, href, isAdmin, onEdit, onPinToggle }: Re
   return (
     <Card className="relative py-0 h-full overflow-hidden">
       <div className="flex h-full flex-col gap-4">
-        <div className="relative w-full aspect-video shrink-0">
+        <div className="relative w-full h-[200px] md:h-auto md:aspect-video shrink-0">
           <Image
             src={resolveImageSrc(item.image)}
             alt={item.title}
@@ -100,7 +100,7 @@ export function RecruitmentCard({ item, href, isAdmin, onEdit, onPinToggle }: Re
 export function RecruitmentCardSkeleton() {
   return (
     <Card className="py-0 h-full flex flex-col gap-4 overflow-hidden">
-      <Skeleton className="aspect-video w-full rounded-none" />
+      <Skeleton className="h-[200px] md:h-auto md:aspect-video w-full rounded-none" />
       <CardHeader className="shrink-0 pb-0">
         <Skeleton className="h-7 w-3/4 rounded-lg" />
       </CardHeader>
