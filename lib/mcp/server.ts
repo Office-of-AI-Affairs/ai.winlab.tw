@@ -10,6 +10,7 @@ import { registerIntroductionTools } from "@/lib/tools/introduction";
 import { registerProfileTools } from "@/lib/tools/profiles";
 import { registerRecruitmentTools } from "@/lib/tools/recruitment";
 import { registerResultTools } from "@/lib/tools/results";
+import { registerUserTools } from "@/lib/tools/users";
 
 export function createMcpServer(supabase: SupabaseClient, userId: string, accessToken: string) {
   const server = new McpServer({
@@ -27,6 +28,7 @@ export function createMcpServer(supabase: SupabaseClient, userId: string, access
   registerCarouselTools(server, supabase);
   registerIntroductionTools(server, supabase);
   registerProfileTools(server, supabase, userId);
+  registerUserTools(server, supabase);
 
   return server;
 }
