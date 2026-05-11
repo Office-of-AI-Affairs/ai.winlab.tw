@@ -341,4 +341,91 @@ export function registerRecruitmentTools(
       return success(composeRecruitment(data, details));
     }
   );
+
+  // --- list_recruitment_owners (admin only) ---
+  // Mirrors RecruitmentOwnerPicker — owners gain edit + applicant-view rights
+  // on the recruitment via the competition_owners pivot.
+  server.tool(
+    "list_recruitment_owners",
+    {
+      recruitment_id: z.string().uuid(),
+    },
+    async ({ recruitment_id }) => {
+      const { data: ownerRows, error: ownersError } = await supabase
+        .from("competition_owners")
+        .select("user_id")
+        .eq("competition_id", recruitment_id);
+
+      if (ownersError) {
+        return error(ownersError.message);
+      }
+
+      const userIds = (ownerRows ?? []).map((row) => row.user_id);
+      if (userIds.length === 0) {
+        return success([]);
+      }
+
+      const { data: allUsers, error: usersError } = await supabase.rpc("get_all_users");
+
+      if (usersError) {
+        return error(usersError.message);
+      }
+
+      const userById = new Map(
+        ((allUsers as { id: string; email: string; display_name: string | null }[] | null) ?? []).map((u) => [u.id, u])
+      );
+
+      return success(
+        userIds.map((uid) => ({
+          user_id: uid,
+          email: userById.get(uid)?.email ?? null,
+          display_name: userById.get(uid)?.display_name ?? null,
+        }))
+      );
+    }
+  );
+
+  // --- add_recruitment_owner (admin only) ---
+  server.tool(
+    "add_recruitment_owner",
+    {
+      recruitment_id: z.string().uuid(),
+      user_id: z.string().uuid(),
+    },
+    async ({ recruitment_id, user_id }) => {
+      const { data, error: dbError } = await supabase
+        .from("competition_owners")
+        .insert({ competition_id: recruitment_id, user_id })
+        .select("competition_id, user_id")
+        .single();
+
+      if (dbError) {
+        return error(dbError.message);
+      }
+
+      return success(data);
+    }
+  );
+
+  // --- remove_recruitment_owner (admin only) ---
+  server.tool(
+    "remove_recruitment_owner",
+    {
+      recruitment_id: z.string().uuid(),
+      user_id: z.string().uuid(),
+    },
+    async ({ recruitment_id, user_id }) => {
+      const { error: dbError } = await supabase
+        .from("competition_owners")
+        .delete()
+        .eq("competition_id", recruitment_id)
+        .eq("user_id", user_id);
+
+      if (dbError) {
+        return error(dbError.message);
+      }
+
+      return success({ recruitment_id, user_id });
+    }
+  );
 }
