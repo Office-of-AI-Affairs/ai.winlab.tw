@@ -108,6 +108,40 @@ export function registerUserTools(server: McpServer, supabase: SupabaseClient) {
     }
   );
 
+  // --- update_user_display_name (admin only) ---
+  // admin_create_user RPC is known to drop p_name on the floor — this fills
+  // the gap so freshly-created accounts can actually get a name. Also covers
+  // the case where a vendor company rebrands. Writes both profiles and
+  // public_profiles since they're separate tables with their own RLS.
+  server.tool(
+    "update_user_display_name",
+    {
+      user_id: z.string().uuid(),
+      display_name: z.string(),
+    },
+    async ({ user_id, display_name }) => {
+      const { error: privateError } = await supabase
+        .from("profiles")
+        .update({ display_name })
+        .eq("id", user_id);
+
+      if (privateError) {
+        return error(privateError.message);
+      }
+
+      const { error: publicError } = await supabase
+        .from("public_profiles")
+        .update({ display_name })
+        .eq("id", user_id);
+
+      if (publicError) {
+        return error(publicError.message);
+      }
+
+      return success({ id: user_id, display_name });
+    }
+  );
+
   // --- update_user_tags (admin only) ---
   // Replaces the whole tags array. Pass [] to clear.
   server.tool(
