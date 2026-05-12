@@ -2,7 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
-import { composeRecruitment } from "@/lib/recruitment-records";
+import { composeRecruitment } from "@winlab/domain";
 import {
   normalizeApplicationMethod,
   resolveRecruitmentLink,
@@ -10,7 +10,7 @@ import {
 import type {
   RecruitmentPrivateDetails,
   RecruitmentSummary,
-} from "@/lib/supabase/types";
+} from "@winlab/db";
 
 function success(data: unknown) {
   return {

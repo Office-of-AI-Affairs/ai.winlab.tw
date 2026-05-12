@@ -6,7 +6,7 @@ import {
   normalizeApplicationMethod,
   resolveRecruitmentLink,
 } from "@/lib/recruitment-links";
-import type { ApplicationMethod } from "@/lib/supabase/types";
+import type { ApplicationMethod } from "@winlab/db";
 
 describe("getApplicationMethodLinks", () => {
   test("returns sanitized named links and keeps legacy url compatibility", () => {

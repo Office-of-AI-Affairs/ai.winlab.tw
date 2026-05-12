@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { revalidateCarousel } from "@/app/carousel/actions";
 import { useCrudList } from "@/hooks/use-crud-list";
-import type { CarouselSlide } from "@/lib/supabase/types";
+import type { CarouselSlide } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import {
   DndContext,

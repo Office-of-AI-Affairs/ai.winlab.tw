@@ -1,6 +1,6 @@
 import { ContactEditClient } from "./client";
 import { requireAdminServer } from "@/lib/supabase/require-admin-server";
-import type { Contact } from "@/lib/supabase/types";
+import type { Contact } from "@winlab/db";
 import { redirect } from "next/navigation";
 
 export default async function ContactEditPage({

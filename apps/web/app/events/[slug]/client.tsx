@@ -18,14 +18,14 @@ import { useEventActions } from "@/hooks/use-event-actions";
 import { formatDate } from "@/lib/date";
 import { createClient } from "@/lib/supabase/client";
 import { getSurnameStrokes } from "@/lib/chinese-stroke";
-import { composeRecruitment } from "@/lib/recruitment-records";
+import { composeRecruitment } from "@winlab/domain";
 import type {
   Announcement,
   Event,
   Recruitment,
   RecruitmentPrivateDetails,
   Result,
-} from "@/lib/supabase/types";
+} from "@winlab/db";
 import type { EventMember } from "./data";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Loader2, Pencil, Plus, Search, X } from "lucide-react";

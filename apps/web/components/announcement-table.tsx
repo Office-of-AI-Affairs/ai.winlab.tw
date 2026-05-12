@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDate } from "@/lib/date";
-import type { Announcement } from "@/lib/supabase/types";
+import type { Announcement } from "@winlab/db";
 
 export function AnnouncementTable({
   announcements,

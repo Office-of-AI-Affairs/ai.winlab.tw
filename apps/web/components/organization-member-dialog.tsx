@@ -9,7 +9,7 @@ import { useDialogForm } from "@/hooks/use-dialog-form";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { uploadOrganizationImage } from "@/lib/upload-image";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
-import type { OrganizationMember, OrganizationMemberCategory } from "@/lib/supabase/types";
+import type { OrganizationMember, OrganizationMemberCategory } from "@winlab/db";
 
 import {
   Dialog,

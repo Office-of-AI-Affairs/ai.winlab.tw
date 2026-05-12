@@ -16,7 +16,7 @@ import { RecruitmentDetail } from "@/components/recruitment-detail"
 import { SettingsMenuSkeleton } from "@/components/settings-menu"
 import { UsersTableSkeleton } from "@/components/users-table"
 import { BlockSkeleton } from "@/components/ui/block"
-import type { Recruitment, Result } from "@/lib/supabase/types"
+import type { Recruitment, Result } from "@winlab/db"
 
 const tiptapEditorSource = readFileSync(resolve(process.cwd(), "components/tiptap-editor.tsx"), "utf8")
 const tiptapSharedCommandsPath = resolve(process.cwd(), "components/tiptap-editor-shared.tsx")

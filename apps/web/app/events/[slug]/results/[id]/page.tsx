@@ -1,5 +1,5 @@
 import { createPublicClient } from "@/lib/supabase/public";
-import type { PublicProfile, Result } from "@/lib/supabase/types";
+import type { PublicProfile, Result } from "@winlab/db";
 import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
 import type { Metadata } from "next";

@@ -3,14 +3,14 @@ import { RecruitmentInterestButton } from "@/components/recruitment-interest-but
 import { RecruitmentInterestList } from "@/components/recruitment-interest-list";
 import { JsonLd } from "@/components/json-ld";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb";
-import { composeRecruitment } from "@/lib/recruitment-records";
+import { composeRecruitment } from "@winlab/domain";
 import { isRecruitmentOwner } from "@/lib/supabase/check-recruitment-owner";
 import { createClient } from "@/lib/supabase/server";
 import type {
   Recruitment,
   RecruitmentPrivateDetails,
   RecruitmentSummary,
-} from "@/lib/supabase/types";
+} from "@winlab/db";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { RecruitmentEditAffordance } from "./edit-affordance-client";

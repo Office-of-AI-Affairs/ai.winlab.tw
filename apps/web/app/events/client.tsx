@@ -7,7 +7,7 @@ import { PageShell } from "@/components/page-shell";
 import { Block } from "@/components/ui/block";
 import { SubButton } from "@/components/ui/sub-button";
 import { createClient } from "@/lib/supabase/client";
-import type { Event } from "@/lib/supabase/types";
+import type { Event } from "@winlab/db";
 import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";

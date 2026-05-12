@@ -11,7 +11,7 @@ import { useImageUpload } from "@/hooks/use-image-upload";
 import type {
   OrganizationMember,
   OrganizationMemberCategory,
-} from "@/lib/supabase/types";
+} from "@winlab/db";
 import { uploadOrganizationImage } from "@/lib/upload-image";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { ArrowLeft, Check, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict"
 import { describe, test } from "node:test"
 
-import { composeProfile } from "@/lib/profile-records"
-import type { Profile, PublicProfile } from "@/lib/supabase/types"
+import { composeProfile } from "@winlab/domain"
+import type { Profile, PublicProfile } from "@winlab/db"
 
 const publicProfileFixture: PublicProfile = {
   id: "user_1",

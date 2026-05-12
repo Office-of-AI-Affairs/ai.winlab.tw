@@ -2,8 +2,8 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
-import { composeProfile } from "@/lib/profile-records";
-import type { Profile, PublicProfile } from "@/lib/supabase/types";
+import { composeProfile } from "@winlab/domain";
+import type { Profile, PublicProfile } from "@winlab/db";
 
 const RESUME_BUCKET = "resumes";
 const RESUME_SIGNED_TTL_SEC = 3600;

@@ -1,6 +1,6 @@
 import { CarouselEditClient } from "./client";
 import { requireAdminServer } from "@/lib/supabase/require-admin-server";
-import type { CarouselSlide } from "@/lib/supabase/types";
+import type { CarouselSlide } from "@winlab/db";
 import { redirect } from "next/navigation";
 
 export default async function CarouselEditPage({ params }: { params: Promise<{ id: string }> }) {

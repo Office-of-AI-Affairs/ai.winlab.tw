@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useContentEditor } from "@/hooks/use-content-editor";
-import type { Contact } from "@/lib/supabase/types";
+import type { Contact } from "@winlab/db";
 import { ArrowLeft, Check, Loader2, Save, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 

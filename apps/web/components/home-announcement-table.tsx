@@ -1,7 +1,7 @@
 "use client";
 
 import { AnnouncementTable } from "@/components/announcement-table";
-import type { Announcement } from "@/lib/supabase/types";
+import type { Announcement } from "@winlab/db";
 
 export function HomeAnnouncementTable({
   announcements,

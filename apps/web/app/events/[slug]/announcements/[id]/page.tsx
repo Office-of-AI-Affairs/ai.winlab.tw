@@ -1,5 +1,5 @@
 import { createPublicClient } from "@/lib/supabase/public";
-import type { Announcement } from "@/lib/supabase/types";
+import type { Announcement } from "@winlab/db";
 import { extractFirstImage } from "@/lib/ui/article";
 import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useContentEditor } from "@/hooks/use-content-editor";
 import { useImageUpload } from "@/hooks/use-image-upload";
-import type { CarouselSlide } from "@/lib/supabase/types";
+import type { CarouselSlide } from "@winlab/db";
 import { uploadCarouselImage } from "@/lib/upload-image";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { ArrowLeft, Check, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";

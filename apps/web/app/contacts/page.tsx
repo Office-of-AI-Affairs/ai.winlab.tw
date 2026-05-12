@@ -1,6 +1,6 @@
 import { ContactsAdminPageClient } from "./client";
 import { requireAdminServer } from "@/lib/supabase/require-admin-server";
-import type { Contact } from "@/lib/supabase/types";
+import type { Contact } from "@winlab/db";
 
 export default async function ContactsAdminPage() {
   const { supabase } = await requireAdminServer();

@@ -28,7 +28,7 @@ import type {
   Recruitment,
   RecruitmentPosition,
   RecruitmentPositionType,
-} from "@/lib/supabase/types";
+} from "@winlab/db";
 
 import {
   Dialog,

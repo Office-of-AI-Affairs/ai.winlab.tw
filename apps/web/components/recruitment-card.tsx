@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { RecruitmentSummary } from "@/lib/supabase/types";
+import type { RecruitmentSummary } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { Pencil, Pin } from "lucide-react";
 import Image from "next/image";

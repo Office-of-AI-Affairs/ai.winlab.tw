@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { SubButton } from "@/components/ui/sub-button";
 import { Textarea } from "@/components/ui/textarea";
 import { useProfileEditor, mergeAllLinks } from "@/hooks/use-profile-editor";
-import type { ExternalResult, Profile, Result } from "@/lib/supabase/types";
+import type { ExternalResult, Profile, Result } from "@winlab/db";
 import { VendorEventsSection } from "@/components/vendor-events-section";
 import { hasCustomImage, isExternalImage } from "@/lib/utils";
 import {

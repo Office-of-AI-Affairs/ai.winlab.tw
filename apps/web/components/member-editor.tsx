@@ -11,7 +11,7 @@ import {
 import { FloatingActionPill } from "@/components/floating-action-pill";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
-import type { PublicProfile } from "@/lib/supabase/types";
+import type { PublicProfile } from "@winlab/db";
 import { Check, Loader2, Plus, Search } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";

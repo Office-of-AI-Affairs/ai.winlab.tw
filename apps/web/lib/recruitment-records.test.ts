@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
 import { describe, test } from "node:test"
 
-import { composeRecruitment } from "@/lib/recruitment-records"
+import { composeRecruitment } from "@winlab/domain"
 import type {
   RecruitmentPrivateDetails,
   RecruitmentSummary,
-} from "@/lib/supabase/types"
+} from "@winlab/db"
 
 const summaryFixture: RecruitmentSummary = {
   id: "rec_1",

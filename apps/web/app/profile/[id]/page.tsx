@@ -1,8 +1,8 @@
 import { ProfilePageClient } from "./client";
-import { composeProfile } from "@/lib/profile-records";
+import { composeProfile } from "@winlab/domain";
 import { createPublicClient } from "@/lib/supabase/public";
 import { getViewer } from "@/lib/supabase/get-viewer";
-import type { ExternalResult, Profile, PublicProfile, Result } from "@/lib/supabase/types";
+import type { ExternalResult, Profile, PublicProfile, Result } from "@winlab/db";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 

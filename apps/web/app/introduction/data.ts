@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
-import type { Introduction, OrganizationMember } from "@/lib/supabase/types";
+import type { Introduction, OrganizationMember } from "@winlab/db";
 
 export const getIntroduction = unstable_cache(
   async (): Promise<Introduction | null> => {

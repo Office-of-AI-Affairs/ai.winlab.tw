@@ -1,7 +1,7 @@
 import { AppLink } from "@/components/app-link";
 import { ContactsEditButton } from "@/components/contacts-edit-button";
 import { getContacts } from "@/lib/home-data";
-import type { Contact } from "@/lib/supabase/types";
+import type { Contact } from "@winlab/db";
 import { Mail, Phone } from "lucide-react";
 
 const FALLBACK_CONTACT: Contact = {

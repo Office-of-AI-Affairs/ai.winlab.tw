@@ -1,4 +1,4 @@
-import type { ApplicationMethod, ApplicationMethodLink } from "@/lib/supabase/types";
+import type { ApplicationMethod, ApplicationMethodLink } from "@winlab/db";
 
 const LEGACY_APPLICATION_LINK_LABEL = "網站";
 

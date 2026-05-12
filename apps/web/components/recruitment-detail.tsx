@@ -5,7 +5,7 @@ import { getApplicationMethodLinks } from "@/lib/recruitment-application-method"
 import type {
   Recruitment,
   RecruitmentPositionType,
-} from "@/lib/supabase/types";
+} from "@winlab/db";
 import { isExternalImage, normalizeMultilineText } from "@/lib/utils";
 import {
   ArrowLeft,

@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
-import type { Announcement } from "@/lib/supabase/types";
+import type { Announcement } from "@winlab/db";
 
 // Only fetches published + global (event_id IS NULL). Admin-only drafts are
 // merged in on the client via useAuth so this cache stays visitor-safe.

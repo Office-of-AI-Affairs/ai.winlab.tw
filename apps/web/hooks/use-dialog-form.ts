@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import type { Database } from "@/lib/supabase/database.types";
+import type { Database } from "@winlab/db";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";

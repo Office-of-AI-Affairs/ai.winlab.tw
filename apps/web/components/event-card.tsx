@@ -2,7 +2,7 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Block } from "@/components/ui/block";
-import type { Event } from "@/lib/supabase/types";
+import type { Event } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { AspectRatio } from "@radix-ui/react-aspect-ratio";
 import Image from "next/image";

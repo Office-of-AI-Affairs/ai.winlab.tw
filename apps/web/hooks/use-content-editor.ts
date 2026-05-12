@@ -2,7 +2,7 @@
 
 import { useAutoSave } from "@/hooks/use-auto-save";
 import { createClient } from "@/lib/supabase/client";
-import type { Database } from "@/lib/supabase/database.types";
+import type { Database } from "@winlab/db";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";

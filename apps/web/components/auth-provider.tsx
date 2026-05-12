@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import type { Profile } from "@/lib/supabase/types";
+import type { Profile } from "@winlab/db";
 import type { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import {

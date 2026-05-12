@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import type { ExternalResult, Profile } from "@/lib/supabase/types";
+import type { ExternalResult, Profile } from "@winlab/db";
 import { uploadExternalResultImage, uploadResumePdf } from "@/lib/upload-image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";

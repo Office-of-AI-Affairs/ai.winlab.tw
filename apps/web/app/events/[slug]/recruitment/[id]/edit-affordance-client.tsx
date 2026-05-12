@@ -2,7 +2,7 @@
 
 import { EditModeToggle } from "@/components/edit-mode-toggle"
 import { RecruitmentDialog } from "@/components/recruitment-dialog"
-import type { Recruitment } from "@/lib/supabase/types"
+import type { Recruitment } from "@winlab/db"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 

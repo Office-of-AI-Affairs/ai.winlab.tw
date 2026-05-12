@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { revalidateContacts } from "@/app/contacts/actions";
 import { useCrudList } from "@/hooks/use-crud-list";
-import type { Contact } from "@/lib/supabase/types";
+import type { Contact } from "@winlab/db";
 import { ArrowLeft, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

@@ -5,7 +5,7 @@ import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { OrganizationMemberDialog } from "@/components/organization-member-dialog";
-import type { OrganizationMember, OrganizationMemberCategory } from "@/lib/supabase/types";
+import type { OrganizationMember, OrganizationMemberCategory } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { GraduationCap, Mail, Microscope, Plus } from "lucide-react";
 import Image from "next/image";

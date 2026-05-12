@@ -1,6 +1,6 @@
 import { CarouselPageClient } from "./client";
 import { requireAdminServer } from "@/lib/supabase/require-admin-server";
-import type { CarouselSlide } from "@/lib/supabase/types";
+import type { CarouselSlide } from "@winlab/db";
 
 export default async function CarouselPage() {
   const { supabase } = await requireAdminServer();

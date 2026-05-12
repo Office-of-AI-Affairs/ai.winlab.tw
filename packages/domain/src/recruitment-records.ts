@@ -2,7 +2,7 @@ import type {
   Recruitment,
   RecruitmentPrivateDetails,
   RecruitmentSummary,
-} from "@/lib/supabase/types";
+} from "@winlab/db";
 
 export function composeRecruitment(
   summary: RecruitmentSummary,
@@ -14,5 +14,5 @@ export function composeRecruitment(
     application_method: details?.application_method ?? null,
     contact: details?.contact ?? null,
     required_documents: details?.required_documents ?? null,
-  };
+  }
 }

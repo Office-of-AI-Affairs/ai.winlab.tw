@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/carousel";
 import { AppLink } from "@/components/app-link";
 import { useAuth } from "@/components/auth-provider";
-import type { CarouselSlide } from "@/lib/supabase/types";
+import type { CarouselSlide } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import Autoplay from "embla-carousel-autoplay";
 import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";

@@ -2,7 +2,7 @@ import { JsonLd } from "@/components/json-ld";
 import { PageShell } from "@/components/page-shell";
 import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
-import type { Introduction, OrganizationMember, OrganizationMemberCategory } from "@/lib/supabase/types";
+import type { Introduction, OrganizationMember, OrganizationMemberCategory } from "@winlab/db";
 import type { Metadata } from "next";
 import { IntroductionArticleClient } from "./article-client";
 import { OrganizationPageClient } from "./client";

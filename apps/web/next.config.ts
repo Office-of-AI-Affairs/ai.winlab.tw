@@ -4,6 +4,7 @@ import bundleAnalyzer from "@next/bundle-analyzer";
 const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
 
 const nextConfig: NextConfig = {
+  transpilePackages: ["@winlab/db", "@winlab/domain"],
   images: {
     // Serve AVIF first, WebP fallback, then the original. Shaves the LCP
     // hero on mobile by ~30 % versus WebP-only at the same visual quality.

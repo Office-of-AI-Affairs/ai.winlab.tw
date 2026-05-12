@@ -5,7 +5,7 @@ import {
   getApplicationMethodLinks,
   normalizeApplicationMethod,
 } from "@/lib/recruitment-application-method"
-import type { ApplicationMethod } from "@/lib/supabase/types"
+import type { ApplicationMethod } from "@winlab/db"
 
 describe("getApplicationMethodLinks", () => {
   test("returns sanitized named links from the new links array", () => {

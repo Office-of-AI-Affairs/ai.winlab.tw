@@ -1,7 +1,7 @@
 import type {
   ApplicationMethod,
   ApplicationMethodLink,
-} from "@/lib/supabase/types"
+} from "@winlab/db"
 
 const LEGACY_APPLICATION_LINK_LABEL = "網站"
 const LEGACY_RECRUITMENT_LINK_LABEL = "官方網站"

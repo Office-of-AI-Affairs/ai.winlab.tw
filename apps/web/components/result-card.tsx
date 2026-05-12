@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/date";
-import type { Result } from "@/lib/supabase/types";
+import type { Result } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { Pin, User } from "lucide-react";
 import Image from "next/image";

@@ -1,6 +1,6 @@
 import { OrganizationMemberEditClient } from "./client";
 import { requireAdminServer } from "@/lib/supabase/require-admin-server";
-import type { OrganizationMember } from "@/lib/supabase/types";
+import type { OrganizationMember } from "@winlab/db";
 import { redirect } from "next/navigation";
 
 export default async function OrganizationMemberEditPage({

@@ -1,5 +1,5 @@
 import { createPublicClient } from "@/lib/supabase/public";
-import { composeRecruitment } from "@/lib/recruitment-records";
+import { composeRecruitment } from "@winlab/domain";
 import type { ResultWithMeta } from "@/components/result-card";
 import type {
   Announcement,
@@ -7,7 +7,7 @@ import type {
   Recruitment,
   RecruitmentSummary,
   Result,
-} from "@/lib/supabase/types";
+} from "@winlab/db";
 
 export type EventMember = {
   id: string;

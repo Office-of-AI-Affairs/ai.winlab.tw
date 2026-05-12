@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
-import type { Event } from "@/lib/supabase/types";
+import type { Event } from "@winlab/db";
 
 // Published events only; admin drafts merged client-side via useAuth.
 export const getPublishedEvents = unstable_cache(

@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
-import type { CarouselSlide, Contact } from "@/lib/supabase/types";
+import type { CarouselSlide, Contact } from "@winlab/db";
 
 export const getCarouselSlides = unstable_cache(
   async (): Promise<CarouselSlide[]> => {

@@ -5,7 +5,7 @@ import { useAuth } from "@/components/auth-provider";
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import type { Announcement } from "@/lib/supabase/types";
+import type { Announcement } from "@winlab/db";
 import { Loader2, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
