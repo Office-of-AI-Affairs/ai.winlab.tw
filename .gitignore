@@ -24,3 +24,7 @@ scripts/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Audit screenshots + Playwright MCP runtime logs
+/audit-*.png
+.playwright-mcp/
