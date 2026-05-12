@@ -24,3 +24,15 @@ export function hasCustomImage(src: string | null | undefined): boolean {
 export function isExternalImage(src: string | null | undefined): boolean {
   return !!(src && (src.startsWith("http://") || src.startsWith("https://")));
 }
+
+// Defensive un-escape: some imports / MCP payloads store the two-character
+// sequence `\n` instead of an actual newline. Render layers using
+// `whitespace-pre-line` would otherwise display the literal backslash.
+export function normalizeMultilineText(text: string | null | undefined): string {
+  if (!text) return ""
+  return text
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\n")
+    .replace(/\\t/g, "\t")
+}

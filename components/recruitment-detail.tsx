@@ -6,7 +6,7 @@ import type {
   Recruitment,
   RecruitmentPositionType,
 } from "@/lib/supabase/types";
-import { isExternalImage } from "@/lib/utils";
+import { isExternalImage, normalizeMultilineText } from "@/lib/utils";
 import {
   ArrowLeft,
   Briefcase,
@@ -115,7 +115,7 @@ export function RecruitmentDetail({
       {recruitment.company_description && (
         <div className="mb-10">
           <p className="whitespace-pre-line text-base text-muted-foreground leading-relaxed">
-            {recruitment.company_description}
+            {normalizeMultilineText(recruitment.company_description)}
           </p>
         </div>
       )}
@@ -161,7 +161,7 @@ export function RecruitmentDetail({
                     工作內容
                   </h3>
                   <p className="whitespace-pre-line text-sm pl-4">
-                    {position.responsibilities}
+                    {normalizeMultilineText(position.responsibilities)}
                   </p>
                 </div>
               )}
@@ -173,7 +173,7 @@ export function RecruitmentDetail({
                     必備條件
                   </h3>
                   <p className="whitespace-pre-line text-sm pl-4">
-                    {position.requirements}
+                    {normalizeMultilineText(position.requirements)}
                   </p>
                 </div>
               )}
@@ -185,7 +185,7 @@ export function RecruitmentDetail({
                     加分條件
                   </h3>
                   <p className="whitespace-pre-line text-sm pl-4">
-                    {position.nice_to_have}
+                    {normalizeMultilineText(position.nice_to_have)}
                   </p>
                 </div>
               )}
@@ -239,8 +239,8 @@ export function RecruitmentDetail({
               </div>
             ))}
             {recruitment.application_method?.other && (
-              <p className="text-muted-foreground">
-                {recruitment.application_method.other}
+              <p className="whitespace-pre-line text-muted-foreground">
+                {normalizeMultilineText(recruitment.application_method.other)}
               </p>
             )}
           </div>
@@ -291,7 +291,7 @@ export function RecruitmentDetail({
         <div className="mt-8">
           <h2 className="text-lg font-semibold mb-3">應備文件</h2>
           <p className="whitespace-pre-line text-base text-muted-foreground">
-            {recruitment.required_documents}
+            {normalizeMultilineText(recruitment.required_documents)}
           </p>
         </div>
       )}
