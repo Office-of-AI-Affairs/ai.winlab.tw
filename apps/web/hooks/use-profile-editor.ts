@@ -75,7 +75,7 @@ export function useProfileEditor({
       const sb = supabaseRef.current;
       const { error: updateError } = await sb
         .from("profiles")
-        .update({ [field]: value || null })
+        .update({ [field]: value || null } as never)
         .eq("id", userId);
       if (updateError) { toast.error("儲存失敗"); setSavingField(null); return; }
       const { data } = await sb

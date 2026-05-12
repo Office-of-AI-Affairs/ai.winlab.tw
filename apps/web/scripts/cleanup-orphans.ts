@@ -46,7 +46,7 @@ async function signIn() {
   console.log(`✓ signed in as ${user?.email}`);
 }
 
-type OrphanRow = { name: string; bytes: number; created_at: string };
+type OrphanRow = { name: string; bytes: number; created_at: string | null };
 
 async function listOrphans(): Promise<OrphanRow[]> {
   const referenced = new Set<string>();
@@ -94,7 +94,7 @@ async function listOrphans(): Promise<OrphanRow[]> {
   console.log(`  referenced paths: ${directCount} direct + ${referenced.size - directCount} tiptap = ${referenced.size} total`);
 
   const prefixes = ["", "carousel", "results", "recruitment", "organization", "events", "external-results"];
-  const allObjects: { name: string; metadata: Record<string, unknown> | null; created_at: string }[] = [];
+  const allObjects: { name: string; metadata: Record<string, unknown> | null; created_at: string | null }[] = [];
   for (const prefix of prefixes) {
     let offset = 0;
     for (;;) {
@@ -145,7 +145,7 @@ async function main() {
 
   console.log("Largest 10:");
   for (const o of orphans.slice(0, 10)) {
-    console.log(`  ${(o.bytes / 1024).toFixed(0).padStart(6)} KB  ${o.created_at.slice(0, 10)}  ${o.name}`);
+    console.log(`  ${(o.bytes / 1024).toFixed(0).padStart(6)} KB  ${(o.created_at ?? "----------").slice(0, 10)}  ${o.name}`);
   }
 
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
