@@ -1,5 +1,5 @@
 {
-  "name": "mcp.ai.winlab.tw",
+  "name": "@winlab/mcp",
   "version": "0.1.0",
   "private": true,
   "scripts": {
