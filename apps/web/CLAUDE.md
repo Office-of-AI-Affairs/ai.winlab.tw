@@ -26,12 +26,11 @@
 
 ### Schema regen
 
-- `bun run gen:types` — regenerates `lib/supabase/database.types.ts`
+- `bun run gen:types` — regenerates `packages/db/src/database.types.ts`
   from the live project. Requires `SUPABASE_ACCESS_TOKEN` in
-  `.env.local` (grab from <https://supabase.com/dashboard/account/tokens>)
-- After regen, copy the file to `~/mcp.ai.winlab.tw/lib/supabase/` —
-  both repos share the same Supabase project
-  (`hwezfbhjcetpezfuvelf`) so types must stay byte-identical.
+  `apps/web/.env.local` (grab from <https://supabase.com/dashboard/account/tokens>).
+- Single source of truth lives in `packages/db` — both `apps/web` and
+  `apps/mcp` consume it via `@winlab/db`, no manual copy needed.
 
 ## Architecture
 
@@ -41,7 +40,9 @@
 - `NuqsAdapter` in root layout for URL search param state
 - Root layout fetches pinned events through the cached `getPinnedEvents()`
   helper (no cookies) so every downstream page can still ISR
-- Sibling MCP repo: `~/mcp.ai.winlab.tw`，變更 schema / RLS / admin workflow 後需同步
+- Sibling MCP app: `../mcp/` (same monorepo). Shared types/composers in
+  `packages/{db,domain}`. Schema / RLS / admin workflow 改了 → 兩個 app
+  自動跟著 `@winlab/db` + `@winlab/domain`，不用手動同步。
 
 ## ISR / SSG pattern
 

@@ -68,13 +68,11 @@ SUPABASE_ACCESS_TOKEN=    # for `bun run gen:types`
 - Validate all external input at the boundary, and return explicit JSON error responses for invalid auth, invalid payloads, and upstream Supabase failures.
 - Keep `AGENTS.md`, `rules/*.md`, and `README.md` aligned when project capabilities or operating assumptions change.
 - Follow `rules/git.md` for topic-based commits and push behavior.
-- Sibling app repo: `~/ai.winlab.tw`
-  (`Office-of-AI-Affairs/ai.winlab.tw`). Both repos share **one**
-  Supabase project, so `lib/supabase/database.types.ts` must stay
-  byte-identical across the two. When the main app changes Supabase
-  tables, RLS, content models, or admin workflows, regenerate types
-  and sanity-check every affected MCP tool — see
-  `rules/database-types.md` for the regen flow.
+- Sibling web app: `../web/` (same monorepo, `Office-of-AI-Affairs/ai.winlab.tw`).
+  Supabase types + domain composers come from `packages/{db,domain}` via
+  `@winlab/db` and `@winlab/domain` — they are the single source of truth.
+  Schema regen happens once in `packages/db/src/database.types.ts` and
+  both apps pick it up automatically.
 - CI (`.github/workflows/ci.yml`) runs lint + typecheck + unit tests
   on every push and PR. Keep `bun run check` green locally before
   pushing.
