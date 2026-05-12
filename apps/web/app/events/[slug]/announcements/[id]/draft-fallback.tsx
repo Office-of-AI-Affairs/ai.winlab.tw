@@ -34,11 +34,7 @@ export function EventAnnouncementDraftFallback({ slug, id }: { slug: string; id:
   const supabaseRef = useRef(createClient())
 
   useEffect(() => {
-    if (isLoading) return
-    if (!isAdmin) {
-      setState({ kind: "missing" })
-      return
-    }
+    if (isLoading || !isAdmin) return
     let cancelled = false
     void (async () => {
       const [announcementRes, eventRes] = await Promise.all([
@@ -81,7 +77,7 @@ export function EventAnnouncementDraftFallback({ slug, id }: { slug: string; id:
     }
   }, [id, isAdmin, isLoading, slug])
 
-  if (state.kind === "loading") {
+  if (isLoading || state.kind === "loading") {
     return (
       <div className="max-w-6xl mx-auto px-4 py-12 flex flex-col gap-6">
         <Skeleton className="h-5 w-24" />
@@ -92,7 +88,7 @@ export function EventAnnouncementDraftFallback({ slug, id }: { slug: string; id:
     )
   }
 
-  if (state.kind === "missing") {
+  if (!isAdmin || state.kind === "missing") {
     return (
       <div className="max-w-6xl mx-auto px-4 py-20">
         <div className="flex flex-col items-center gap-4">

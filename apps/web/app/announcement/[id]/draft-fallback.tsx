@@ -28,11 +28,7 @@ export function AnnouncementDraftFallback({ id }: { id: string }) {
   const supabaseRef = useRef(createClient())
 
   useEffect(() => {
-    if (isLoading) return
-    if (!isAdmin) {
-      setState({ kind: "missing" })
-      return
-    }
+    if (isLoading || !isAdmin) return
     let cancelled = false
     void (async () => {
       const { data } = await supabaseRef.current
@@ -59,7 +55,7 @@ export function AnnouncementDraftFallback({ id }: { id: string }) {
     return () => { cancelled = true }
   }, [id, isAdmin, isLoading])
 
-  if (state.kind === "loading") {
+  if (isLoading || state.kind === "loading") {
     return (
       <div className="max-w-6xl mx-auto px-4 py-12 flex flex-col gap-6">
         <Skeleton className="h-5 w-24" />
@@ -70,7 +66,7 @@ export function AnnouncementDraftFallback({ id }: { id: string }) {
     )
   }
 
-  if (state.kind === "missing") {
+  if (!isAdmin || state.kind === "missing") {
     return (
       <div className="max-w-6xl mx-auto px-4 py-20">
         <div className="flex flex-col items-center gap-4">

@@ -64,13 +64,13 @@ export function AnnouncementArticleClient({
   const router = useRouter()
   const { isAdmin } = useAuth()
   const { isEditing, setMode } = useEditMode({ enabled: isAdmin })
-  const [didApplyInitialMode, setDidApplyInitialMode] = useState(false)
+  const didApplyInitialMode = useRef(false)
 
   useEffect(() => {
-    if (didApplyInitialMode) return
+    if (didApplyInitialMode.current) return
     if (initialMode === "edit" && isAdmin) setMode("edit")
-    setDidApplyInitialMode(true)
-  }, [didApplyInitialMode, initialMode, isAdmin, setMode])
+    didApplyInitialMode.current = true
+  }, [initialMode, isAdmin, setMode])
 
   const {
     data: announcement,

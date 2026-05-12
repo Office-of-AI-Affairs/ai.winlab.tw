@@ -57,13 +57,13 @@ export function ResultArticleClient({
   const isAuthor = !!user && user.id === initialResult.author_id
   const canEdit = isAdmin || isAuthor
   const { isEditing, setMode } = useEditMode({ enabled: canEdit })
-  const [didApplyInitialMode, setDidApplyInitialMode] = useState(false)
+  const didApplyInitialMode = useRef(false)
 
   useEffect(() => {
-    if (didApplyInitialMode) return
+    if (didApplyInitialMode.current) return
     if (initialMode === "edit" && canEdit) setMode("edit")
-    setDidApplyInitialMode(true)
-  }, [didApplyInitialMode, initialMode, canEdit, setMode])
+    didApplyInitialMode.current = true
+  }, [initialMode, canEdit, setMode])
 
   const {
     data: result,

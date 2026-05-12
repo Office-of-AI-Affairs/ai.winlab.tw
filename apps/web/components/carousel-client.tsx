@@ -24,8 +24,9 @@ export function CarouselClient({
   slides: CarouselSlide[];
 }) {
   const { isAdmin } = useAuth();
-  const plugin = React.useRef(
-    Autoplay({ delay: 5000, stopOnInteraction: true })
+  const plugin = React.useMemo(
+    () => Autoplay({ delay: 5000, stopOnInteraction: true }),
+    [],
   );
 
   if (slides.length === 0) {
@@ -66,12 +67,12 @@ export function CarouselClient({
         </Link>
       )}
       <Carousel
-        plugins={[plugin.current]}
+        plugins={[plugin]}
         className="w-full relative group"
-        onMouseEnter={plugin.current.stop}
-        onMouseLeave={plugin.current.reset}
-        onFocus={plugin.current.stop}
-        onBlur={plugin.current.reset}
+        onMouseEnter={plugin.stop}
+        onMouseLeave={plugin.reset}
+        onFocus={plugin.stop}
+        onBlur={plugin.reset}
         opts={{ loop: true }}
       >
         <CarouselContent className="ml-0">

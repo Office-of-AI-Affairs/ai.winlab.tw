@@ -95,6 +95,10 @@ function Carousel({
 
   React.useEffect(() => {
     if (!api) return
+    // shadcn-vendored Carousel: onSelect calls setState synchronously by
+    // design (initial sync). React 19's react-hooks/set-state-in-effect
+    // flags it but the cascade is intentional — keeping the vendored shape.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     onSelect(api)
     api.on("reInit", onSelect)
     api.on("select", onSelect)
@@ -239,7 +243,10 @@ function CarouselIndicators({ className, ...props }: React.ComponentProps<"div">
   React.useEffect(() => {
     if (!api) return
 
+    // shadcn-vendored: sync setState here seeds the indicator on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCount(api.scrollSnapList().length)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrent(api.selectedScrollSnap())
 
     api.on("select", () => {

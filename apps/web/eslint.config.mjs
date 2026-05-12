@@ -7,6 +7,10 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Override default ignores of eslint-config-next.
   globalIgnores([
+    // Claude Code scratch directory — worktrees and skills live here,
+    // ESLint should never reach into them (worktrees have their own
+    // .git, skills are markdown).
+    ".claude/**",
     ".worktrees/**",
     // Default ignores of eslint-config-next:
     ".next/**",

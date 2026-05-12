@@ -36,11 +36,7 @@ export function ResultDraftFallback({ slug, id }: { slug: string; id: string }) 
   const supabaseRef = useRef(createClient())
 
   useEffect(() => {
-    if (isLoading) return
-    if (!user) {
-      setState({ kind: "missing" })
-      return
-    }
+    if (isLoading || !user) return
     let cancelled = false
     void (async () => {
       const { data: result } = await supabaseRef.current
@@ -116,7 +112,7 @@ export function ResultDraftFallback({ slug, id }: { slug: string; id: string }) 
     }
   }, [id, isLoading, slug, user])
 
-  if (state.kind === "loading") {
+  if (isLoading || state.kind === "loading") {
     return (
       <div className="max-w-6xl mx-auto px-4 py-12 flex flex-col gap-6">
         <Skeleton className="h-5 w-24" />
@@ -127,7 +123,7 @@ export function ResultDraftFallback({ slug, id }: { slug: string; id: string }) 
     )
   }
 
-  if (state.kind === "missing") {
+  if (!user || state.kind === "missing") {
     return (
       <div className="max-w-6xl mx-auto px-4 py-20">
         <div className="flex flex-col items-center gap-4">
