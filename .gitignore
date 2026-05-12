@@ -36,3 +36,6 @@ node_modules/
 
 # Maintenance scripts (force-added per file in apps/web)
 apps/web/scripts/
+
+# Loki's local superpowers planning notes — untracked workspace
+/docs/
