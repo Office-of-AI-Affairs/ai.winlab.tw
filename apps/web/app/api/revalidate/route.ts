@@ -45,6 +45,17 @@ export async function POST(req: Request) {
     );
   }
 
-  await doRevalidate(tag);
+  try {
+    await doRevalidate(tag);
+  } catch (e) {
+    return Response.json(
+      {
+        error: "revalidate failed",
+        message: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack?.split("\n").slice(0, 5) : undefined,
+      },
+      { status: 500 },
+    );
+  }
   return Response.json({ ok: true, tag });
 }
