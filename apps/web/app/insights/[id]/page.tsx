@@ -62,9 +62,9 @@ export default async function InsightDetailPage({
 
   return (
     <InsightArticleClient
-      article={article}
-      contentHtml={html}
-      toc={toc}
+      initialArticle={article}
+      initialContentHtml={html}
+      initialToc={toc}
       readingTimeMin={readingTimeMin}
     />
   );
