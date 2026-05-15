@@ -1,4 +1,4 @@
-import { revalidateTag } from "next/cache";
+import { doRevalidate } from "./_action";
 
 // Cache tags the web app actually owns. Reject everything else so a leaked
 // secret can't, say, flush an unrelated tag added later.
@@ -45,6 +45,6 @@ export async function POST(req: Request) {
     );
   }
 
-  revalidateTag(tag);
+  await doRevalidate(tag);
   return Response.json({ ok: true, tag });
 }
