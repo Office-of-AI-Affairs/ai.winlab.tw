@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { revalidate } from "@/lib/revalidate";
 
 function success(data: unknown) {
   return {
@@ -71,6 +72,7 @@ export function registerCarouselTools(
         return error(dbError.message);
       }
 
+      await revalidate("carousel-slides");
       return success(data);
     }
   );
@@ -110,6 +112,7 @@ export function registerCarouselTools(
         return error(dbError.message);
       }
 
+      await revalidate("carousel-slides");
       return success(data);
     }
   );

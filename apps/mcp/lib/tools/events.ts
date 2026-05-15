@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { revalidate } from "@/lib/revalidate";
 
 function success(data: unknown) {
   return {
@@ -124,6 +125,7 @@ export function registerEventTools(
         return error(dbError.message);
       }
 
+      await revalidate(["events-published", "pinned-events"]);
       return success(data);
     }
   );
@@ -287,6 +289,7 @@ export function registerEventTools(
         return error(dbError.message);
       }
 
+      await revalidate(["events-published", "pinned-events"]);
       return success(data);
     }
   );
