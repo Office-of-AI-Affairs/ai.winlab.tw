@@ -15,6 +15,9 @@ export type Introduction = Omit<Tables<"introduction">, "content"> & {
 export type Announcement = Omit<Tables<"announcements">, "content"> & {
   content: Record<string, unknown>;
 };
+export type Article = Omit<Tables<"articles">, "content"> & {
+  content: Record<string, unknown>;
+};
 export type Profile = Pick<
   Tables<"profiles">,
   | "id"

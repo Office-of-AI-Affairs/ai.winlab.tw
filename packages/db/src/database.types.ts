@@ -61,6 +61,45 @@ export type Database = {
           },
         ]
       }
+      articles: {
+        Row: {
+          author_id: string
+          content: Json
+          cover_image_url: string | null
+          created_at: string
+          id: string
+          published_at: string | null
+          status: string
+          summary: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content?: Json
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          status?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: Json
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          status?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       carousel_slides: {
         Row: {
           created_at: string
@@ -780,7 +819,7 @@ export type Database = {
         }
         Insert: {
           access_token?: string | null
-          category: string
+          category?: string
           expires_at?: string
           token: string
           used?: boolean
