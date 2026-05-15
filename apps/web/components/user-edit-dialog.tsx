@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
 
-export type ProfileRole = "admin" | "user" | "vendor";
+export type ProfileRole = "admin" | "user" | "vendor" | "member";
 
 export type UserRow = {
   id: string;
@@ -126,6 +126,7 @@ function UserEditForm({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="user">一般用戶</SelectItem>
+              <SelectItem value="member">成員</SelectItem>
               <SelectItem value="vendor">廠商</SelectItem>
               <SelectItem value="admin">管理員</SelectItem>
             </SelectContent>
@@ -133,6 +134,11 @@ function UserEditForm({
           {role === "vendor" && (
             <p className="text-xs text-muted-foreground">
               vendor 權限由 <strong>徵才編輯頁</strong> 的「擁有者」清單決定（不再綁活動）。
+            </p>
+          )}
+          {role === "member" && (
+            <p className="text-xs text-muted-foreground">
+              成員可在 <strong>觀點</strong> 頁面發布自己的文章。
             </p>
           )}
         </div>

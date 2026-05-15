@@ -46,7 +46,7 @@ export type UserRow = {
   id: string
   email: string
   display_name: string | null
-  role: "admin" | "user" | "vendor"
+  role: "admin" | "user" | "vendor" | "member"
   created_at: string
   tags: string[]
 }
@@ -61,6 +61,7 @@ const roleLabel: Record<string, string> = {
   admin: "管理員",
   user: "一般用戶",
   vendor: "廠商",
+  member: "成員",
 }
 
 function SortableHeader({

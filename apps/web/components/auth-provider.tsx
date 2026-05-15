@@ -18,6 +18,7 @@ type AuthContextType = {
   profile: Profile | null;
   isAdmin: boolean;
   isVendor: boolean;
+  isMember: boolean;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
@@ -163,6 +164,7 @@ export function AuthProvider({
         profile,
         isAdmin: profile?.role === "admin",
         isVendor: profile?.role === "vendor",
+        isMember: profile?.role === "member",
         isLoading,
         signIn,
         signOut,

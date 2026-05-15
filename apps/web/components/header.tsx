@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 const staticNavItems = [
   { href: "/introduction", label: "關於" },
   { href: "/announcement", label: "公告" },
+  { href: "/insights", label: "觀點" },
 ];
 
 export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: string }[] }) {
