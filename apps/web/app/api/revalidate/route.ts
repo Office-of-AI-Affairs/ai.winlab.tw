@@ -1,4 +1,4 @@
-import { doRevalidate } from "./_action";
+import { revalidateTag } from "next/cache";
 
 // Cache tags the web app actually owns. Reject everything else so a leaked
 // secret can't, say, flush an unrelated tag added later.
@@ -45,17 +45,11 @@ export async function POST(req: Request) {
     );
   }
 
-  try {
-    await doRevalidate(tag);
-  } catch (e) {
-    return Response.json(
-      {
-        error: "revalidate failed",
-        message: e instanceof Error ? e.message : String(e),
-        stack: e instanceof Error ? e.stack?.split("\n").slice(0, 5) : undefined,
-      },
-      { status: 500 },
-    );
-  }
+  // { expire: 0 } = immediate invalidation — Next 16's recommended profile for
+  // webhook-driven invalidation from external services (which is what MCP is).
+  // The deprecated single-arg form still half-works in Next 16 but TS rejects
+  // it; "max" gives stale-while-revalidate (visitors see stale until they hit
+  // a tagged page next), which is slower than what we want for fresh content.
+  revalidateTag(tag, { expire: 0 });
   return Response.json({ ok: true, tag });
 }
