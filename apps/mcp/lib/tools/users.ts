@@ -25,7 +25,7 @@ function error(message: string) {
   };
 }
 
-const roleSchema = z.enum(["admin", "user", "vendor"]);
+const roleSchema = z.enum(["admin", "user", "vendor", "member"]);
 
 export function registerUserTools(server: McpServer, supabase: SupabaseClient) {
   // --- list_users (admin only) ---

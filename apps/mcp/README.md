@@ -87,6 +87,7 @@ Uploads currently target the Supabase Storage bucket `announcement-images` and e
 The MCP server currently registers tools from these domains:
 
 - announcements
+- insights
 - results
 - recruitment
 - events
@@ -99,6 +100,7 @@ The MCP server currently registers tools from these domains:
 Representative capabilities include:
 
 - list, get, create, and update announcements
+- list, get, create, update, and delete insights (member-authored columns)
 - list, get, create, and update results
 - list, get, create, and update recruitments
 - list, get, create, and update events

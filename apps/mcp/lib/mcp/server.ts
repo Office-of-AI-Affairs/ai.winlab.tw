@@ -6,6 +6,7 @@ import { registerCarouselTools } from "@/lib/tools/carousel";
 import { registerContactTools } from "@/lib/tools/contacts";
 import { registerEventTools } from "@/lib/tools/events";
 import { registerImageTools } from "@/lib/tools/images";
+import { registerInsightTools } from "@/lib/tools/insights";
 import { registerIntroductionTools } from "@/lib/tools/introduction";
 import { registerProfileTools } from "@/lib/tools/profiles";
 import { registerRecruitmentTools } from "@/lib/tools/recruitment";
@@ -21,6 +22,7 @@ export function createMcpServer(supabase: SupabaseClient, userId: string, access
   // Register all tool groups
   registerImageTools(server, supabase, userId, accessToken);
   registerAnnouncementTools(server, supabase, userId);
+  registerInsightTools(server, supabase, userId);
   registerResultTools(server, supabase, userId);
   registerRecruitmentTools(server, supabase, userId);
   registerEventTools(server, supabase);
