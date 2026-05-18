@@ -5,7 +5,7 @@ description: Use BEFORE changing any RLS policy, writing a Supabase migration, a
 
 # Permissions Matrix — ai.winlab.tw
 
-Production snapshot reverse-engineered from `pg_policy` (last sync 2026-04-30). Treat as canonical contract: any RLS / storage policy change must update this skill first, get reviewed, THEN ship the migration. CI's `lib/security/rls-contracts.test.ts` runs assertions against `lib/security/rls-snapshot.json`; drift = red build.
+Production snapshot reverse-engineered from `pg_policy` (last sync 2026-05-18). Treat as canonical contract: any RLS / storage policy change must update this skill first, get reviewed, THEN ship the migration. CI's `lib/security/rls-contracts.test.ts` runs assertions against `lib/security/rls-snapshot.json`; drift = red build.
 
 ## Workflow
 
@@ -46,13 +46,13 @@ Role swap requires admin. Teams subsystem retired 2026-04-30.
 `introduction` (single row) — SELECT all. INSERT/UPDATE: admin. DELETE: ❌ no policy.
 `carousel_slides` / `contacts` / `organization_members` — SELECT all. CRUD: admin only.
 `privacy_policy` (versioned, append-only) — SELECT all. INSERT: admin. UPDATE/DELETE: ❌ no policy.
-`event_participants` — SELECT all public. INSERT/DELETE: admin only.
+`event_participants` — SELECT all public (user_id list only — no PII; PII reconstruction blocked at `profiles` layer 2026-05-18). INSERT/DELETE: admin only.
 `competitions` (recruitment public) — SELECT all public. INSERT: admin. UPDATE/DELETE: recruitment_owner of that recruitment, admin.
-`public_profiles` (view) — SELECT all. INSERT/UPDATE/DELETE: ❌ no policy (trigger-maintained).
+`public_profiles` (view-like table, trigger-maintained from `profiles`) — SELECT all. INSERT/UPDATE/DELETE: ❌ no policy. **Schema 2026-05-18**: now mirrors display fields (display_name, avatar_url, bio, linkedin, facebook, github, website, social_links, role, has_profile_data). `tags` NOT mirrored — admin-only label.
 
 ## Authenticated-only
 
-`profiles` (incl. phone / resume path) — SELECT: user reads all (incl. others' phone / social_links / bio) / admin all. INSERT: self. UPDATE: self (cannot change role) / admin all. DELETE: ❌ no policy. **Trade-off**: phone / social_links / bio public to logged-in users (commit `d3e6ca4`).
+`profiles` (incl. phone / resume path) — SELECT: **self / admin / recruitment_owner viewing their own recruitment's applicant rows**. INSERT: self. UPDATE: self (cannot change role) / admin all. DELETE: ❌ no policy. **Tightened 2026-05-18** from `using (true)` — phone + resume path are real PII. Display fields (bio / linkedin / facebook / github / website / social_links / role / avatar_url) live in `public_profiles` via the sync trigger so logged-in viewers can still render `/profile/[id]` cards. `tags` deliberately NOT mirrored.
 
 `competition_private_details` — SELECT: any logged-in user reads all (incl. salary / email / requirements). **Decision**: full job posting visible to logged-in is product intent (2026-04-30). INSERT/UPDATE/DELETE: recruitment_owner, admin.
 
@@ -60,9 +60,9 @@ Role swap requires admin. Teams subsystem retired 2026-04-30.
 
 `recruitment_interests` — SELECT: own applications / recruitment_owner sees own recruitment's applicants / admin all. INSERT: self. DELETE: own applications.
 
-`upload_tokens` — SELECT: ❌ service role only. INSERT: self.
+`upload_tokens` — SELECT: ❌ service role only. INSERT: self. **Schema 2026-05-18**: `access_token` column removed — `consume_upload_token` RPC now returns user_id + category only, upload route uses service-role storage upload on behalf of the recorded user_id (no JWT replay).
 
-`oauth_clients` — SELECT/INSERT: anon ✅ (with format check). **Cross-repo use**: MCP server (`~/mcp.ai.winlab.tw`) uses OAuth Dynamic Client Registration (RFC 7591). Don't touch from this repo.
+`oauth_clients` — INSERT: anon (with format check + **`redirect_uris` host allowlist enforced application-layer in `apps/mcp/lib/auth/oauth-clients.ts`** 2026-05-18). SELECT: ❌ anon read removed 2026-05-18 (was `using (true)`, was leaking client enumeration). **Cross-repo use**: MCP server (`~/mcp.ai.winlab.tw`) uses OAuth Dynamic Client Registration (RFC 7591). Don't touch from this repo.
 
 `oauth_auth_codes` — All ops ❌ (service role only).
 
@@ -82,7 +82,7 @@ Role swap requires admin. Teams subsystem retired 2026-04-30.
 
 UPDATE/DELETE: admin only across the whole bucket. **Trade-off**: `results/` prefix accepts any authenticated upload — path-time row ownership can't be verified because the URL is needed before the row exists. Mitigations: orphan cleanup script (`scripts/cleanup-orphans.ts`), random filename, `upsert: false`.
 
-`resumes` (private) — SELECT: user reads all (incl. others' PDFs) / admin all. INSERT/UPDATE/DELETE: own folder (`name` first segment = `auth.uid()`). **Trade-off**: any logged-in user can download any resume (commit `96cba86`). Gated via `/profile/[id]/resume` route handler.
+`resumes` (private) — SELECT: user reads all (incl. others' PDFs) / admin all. INSERT/UPDATE/DELETE: own folder (`name` first segment = `auth.uid()`). **Trade-off**: any logged-in user can download any resume (commit `96cba86`), but they can no longer obtain the path from `profiles` (RLS tightened 2026-05-18) — they must go through `/profile/[id]/resume` route handler, which itself joins via service-role + recruitment-owner check before streaming.
 
 ## Tooling
 

@@ -1,7 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { verifyMcpToken } from "@/lib/auth/jwt";
-import { createClientWithToken } from "@/lib/supabase/server";
-import { supabasePublishableKey, supabaseUrl } from "@/lib/supabase/config";
+import { createClientWithToken, createServiceClient } from "@/lib/supabase/server";
 
 const BUCKET = "announcement-images";
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
@@ -21,9 +19,18 @@ const CATEGORY_PREFIXES: Record<string, string> = {
   organization: "organization/",
 };
 
+const MIME_TO_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
+
+type ConsumedUploadToken = { user_id: string; category: string };
+
 interface UploadTokenRpcClient {
   rpc(functionName: "consume_upload_token", args: { p_token: string }): PromiseLike<{
-    data: { user_id: string; category: string; access_token: string | null } | null;
+    data: unknown;
     error: { message: string } | null;
   }>;
 }
@@ -31,7 +38,7 @@ interface UploadTokenRpcClient {
 export async function consumeUploadToken(
   token: string,
   client: UploadTokenRpcClient
-) {
+): Promise<ConsumedUploadToken | null> {
   const { data, error } = await client.rpc("consume_upload_token", {
     p_token: token,
   });
@@ -40,25 +47,37 @@ export async function consumeUploadToken(
     throw new Error(`Failed to consume upload token: ${error.message}`);
   }
 
-  return data;
+  if (!data || typeof data !== "object") return null;
+  const row = data as Partial<ConsumedUploadToken>;
+  if (typeof row.user_id !== "string" || typeof row.category !== "string") return null;
+  return { user_id: row.user_id, category: row.category };
 }
 
-async function authenticateRequest(request: Request) {
+type AuthResult =
+  | {
+      supabase: ReturnType<typeof createClientWithToken> | ReturnType<typeof createServiceClient>;
+      // category is bound to the upload-token flow; for direct Bearer auth the
+      // caller provides it on the form.
+      category?: string;
+    }
+  | { error: string };
+
+async function authenticateRequest(request: Request): Promise<AuthResult> {
   const url = new URL(request.url);
   const uploadToken = url.searchParams.get("token");
 
   // Method 1: One-time upload token (from MCP create_upload_url tool)
   if (uploadToken) {
-    const supabase = createClient(supabaseUrl, supabasePublishableKey);
-    const row = await consumeUploadToken(uploadToken, supabase);
+    // The token RPC is SECURITY DEFINER and accepts anon — that's fine, we're
+    // about to upload via service role on the token's recorded user_id. The
+    // JWT used to mint the token is no longer stored anywhere.
+    const supabaseAnon = createServiceClient();
+    const row = await consumeUploadToken(uploadToken, supabaseAnon);
 
     if (!row) return { error: "Invalid, expired, or already used upload token" };
-    if (!row.access_token) return { error: "Upload token missing credentials" };
 
-    // Use the stored access token to create an authenticated client
     return {
-      supabase: createClientWithToken(row.access_token),
-      userId: row.user_id,
+      supabase: createServiceClient(),
       category: row.category,
     };
   }
@@ -71,7 +90,7 @@ async function authenticateRequest(request: Request) {
   const claims = await verifyMcpToken(token);
   if (!claims) return { error: "Invalid or expired token" };
 
-  return { supabase: createClientWithToken(token), userId: claims.sub };
+  return { supabase: createClientWithToken(token) };
 }
 
 export async function POST(request: Request) {
@@ -84,8 +103,10 @@ export async function POST(request: Request) {
 
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
-  // Category from form data, or from upload token
-  const category = (formData.get("category") as string) || auth.category || "announcement";
+  // Category from form data, or from upload token. Token-bound category wins
+  // (it was committed at create_upload_url time and can't be swapped client-side).
+  const category =
+    auth.category ?? (formData.get("category") as string) ?? "announcement";
 
   if (!file) {
     return Response.json({ error: "Missing 'file' field" }, { status: 400 });
@@ -105,8 +126,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const ext = file.name.split(".").pop() || "jpg";
-  const prefix = CATEGORY_PREFIXES[category] || "";
+  // Extension is derived from the MIME map, not from file.name — caller-supplied
+  // filenames can carry path separators or fake extensions.
+  const ext = MIME_TO_EXT[file.type] ?? "jpg";
+  const prefix = CATEGORY_PREFIXES[category] ?? "";
   const path = `${prefix}${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
   const arrayBuffer = await file.arrayBuffer();

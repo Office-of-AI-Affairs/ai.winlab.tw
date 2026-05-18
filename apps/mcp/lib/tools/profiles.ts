@@ -169,17 +169,22 @@ export function registerProfileTools(
   );
 
   // --- list_profiles ---
+  // Reads from `public_profiles` rather than `profiles` because the latter's
+  // SELECT policy was tightened 2026-05-18 to self / admin / recruitment_owner
+  // and would otherwise return an empty list for any non-admin caller asking
+  // for a directory listing. `public_profiles` is trigger-maintained and
+  // mirrors display fields + role.
   server.tool(
     "list_profiles",
     {
-      role: z.enum(["admin", "user", "vendor"]).optional(),
+      role: z.enum(["admin", "user", "vendor", "member"]).optional(),
       limit: z.number().int().positive().optional(),
       offset: z.number().int().nonnegative().optional(),
     },
     async ({ role, limit, offset }) => {
       let query = supabase
-        .from("profiles")
-        .select("id, role, created_at")
+        .from("public_profiles")
+        .select("id, display_name, avatar_url, role, created_at")
         .order("created_at", { ascending: false })
         .range(offset ?? 0, (offset ?? 0) + (limit ?? 20) - 1);
 
@@ -193,34 +198,7 @@ export function registerProfileTools(
         return error(dbError.message);
       }
 
-      const rows = data ?? [];
-
-      if (rows.length === 0) {
-        return success([]);
-      }
-
-      const { data: publicProfiles, error: publicError } = await supabase
-        .from("public_profiles")
-        .select("id, display_name")
-        .in("id", rows.map((row) => row.id));
-
-      if (publicError) {
-        return error(publicError.message);
-      }
-
-      const publicMap = new Map(
-        ((publicProfiles as PublicProfile[] | null) ?? []).map((row) => [row.id, row])
-      );
-
-      return success(
-        rows.map((row) => ({
-          id: row.id,
-          display_name: publicMap.get(row.id)?.display_name ?? null,
-          avatar_url: null,
-          role: row.role,
-          created_at: row.created_at,
-        }))
-      );
+      return success(data ?? []);
     }
   );
 }

@@ -13,7 +13,6 @@ describe("consumeUploadToken", () => {
           data: {
             user_id: "user-123",
             category: "announcement",
-            access_token: "access-token",
           },
           error: null,
         };
@@ -24,8 +23,18 @@ describe("consumeUploadToken", () => {
     assert.deepStrictEqual(payload, {
       user_id: "user-123",
       category: "announcement",
-      access_token: "access-token",
     });
+  });
+
+  test("rejects payloads missing user_id or category", async () => {
+    const payload = await consumeUploadToken("upload-token", {
+      rpc: async () => ({
+        data: { user_id: "user-123" },
+        error: null,
+      }),
+    });
+
+    assert.equal(payload, null);
   });
 
   test("returns null for invalid or expired tokens", async () => {

@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   }
 
   const supabase = createClientWithToken(token);
-  const server = createMcpServer(supabase, claims.sub, token);
+  const server = createMcpServer(supabase, claims.sub);
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
   });

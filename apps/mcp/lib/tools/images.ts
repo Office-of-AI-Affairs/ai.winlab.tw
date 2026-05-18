@@ -4,6 +4,7 @@ import { z } from "zod";
 
 const BUCKET = "announcement-images";
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
+const FETCH_TIMEOUT_MS = 10_000;
 const ALLOWED_MIME_TYPES = [
   "image/jpeg",
   "image/png",
@@ -19,6 +20,48 @@ const CATEGORY_PREFIXES: Record<string, string> = {
   carousel: "carousel/",
   organization: "organization/",
 };
+
+// upload_image accepts a public URL — make sure it's actually public-internet,
+// not pointing at our own infra or cloud metadata endpoints (SSRF).
+function assertPublicHttpUrl(raw: string) {
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Error("invalid URL");
+  }
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    throw new Error(`unsupported scheme: ${parsed.protocol}`);
+  }
+  const host = parsed.hostname.toLowerCase();
+  if (
+    host === "localhost" ||
+    host.endsWith(".localhost") ||
+    host === "metadata.google.internal" ||
+    host.endsWith(".internal")
+  ) {
+    throw new Error(`refusing to fetch from internal host: ${host}`);
+  }
+  // crude IPv4 / IPv6 private range check — DNS rebinding still defeats this
+  // (the resolved A record can flip between check and fetch), but the obvious
+  // 169.254.169.254 / 10.x / 192.168.x / 127.x cases get caught.
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
+    const [a, b] = host.split(".").map((n) => Number.parseInt(n, 10));
+    if (
+      a === 10 ||
+      a === 127 ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      a === 0
+    ) {
+      throw new Error(`refusing to fetch from private IP: ${host}`);
+    }
+  }
+  if (host === "::1" || host.startsWith("fc") || host.startsWith("fd") || host.startsWith("fe80")) {
+    throw new Error(`refusing to fetch from private IPv6: ${host}`);
+  }
+}
 
 function success(data: unknown) {
   return {
@@ -74,7 +117,6 @@ export function registerImageTools(
   server: McpServer,
   supabase: SupabaseClient,
   userId: string,
-  accessToken: string,
 ) {
   // --- create_upload_url: for local file uploads ---
   server.tool(
@@ -99,11 +141,13 @@ The curl response JSON contains { "url": "<public_url>" } which you can use in o
     async ({ category }) => {
       const token = crypto.randomUUID();
 
+      // upload_tokens no longer stores the caller's JWT — the upload route
+      // resolves user_id + category from consume_upload_token (SECURITY DEFINER
+      // RPC) and uploads via service-role on behalf of that user.
       const { error: dbError } = await supabase.from("upload_tokens").insert({
         token,
         user_id: userId,
         category,
-        access_token: accessToken,
       });
 
       if (dbError) return error(`Failed to create upload token: ${dbError.message}`);
@@ -138,9 +182,25 @@ For LOCAL files on disk: use create_upload_url instead, then curl the file.`,
         .describe("Category determines storage path prefix"),
     },
     async ({ url, category }) => {
-      const response = await fetch(url);
+      try {
+        assertPublicHttpUrl(url);
+      } catch (e) {
+        return error(e instanceof Error ? e.message : "URL rejected");
+      }
+
+      let response: Response;
+      try {
+        response = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+      } catch (e) {
+        return error(`Failed to download image: ${e instanceof Error ? e.message : String(e)}`);
+      }
       if (!response.ok) {
         return error(`Failed to download image: ${response.status} ${response.statusText}`);
+      }
+
+      const declared = Number.parseInt(response.headers.get("content-length") ?? "0", 10);
+      if (declared > MAX_SIZE_BYTES) {
+        return error(`Image too large (declared ${(declared / 1024 / 1024).toFixed(1)}MB). Max: 5MB`);
       }
 
       const contentType = response.headers.get("content-type")?.split(";")[0] || "image/jpeg";
