@@ -1,6 +1,30 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/client";
+import { createServiceClient } from "@/lib/supabase/server";
+
+// Hosts that MCP clients are allowed to register as callbacks. Anything else
+// (especially attacker-controlled domains) is rejected at registration time so
+// the OAuth phishing path can't get off the ground. `.winlab.tw` is treated as
+// a suffix match so subdomains we add later don't need a code change.
+const REDIRECT_URI_HOST_ALLOWLIST = new Set([
+  "localhost",
+  "127.0.0.1",
+  "claude.ai",
+  "cursor.com",
+  "mcp.ai.winlab.tw",
+]);
+const REDIRECT_URI_HOST_SUFFIX_ALLOWLIST = [".winlab.tw"];
+
+function assertAllowedRedirectUri(uri: string) {
+  const parsed = new URL(uri);
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    throw new Error(`redirect_uri scheme not allowed: ${parsed.protocol}`);
+  }
+  const host = parsed.hostname;
+  if (REDIRECT_URI_HOST_ALLOWLIST.has(host)) return;
+  if (REDIRECT_URI_HOST_SUFFIX_ALLOWLIST.some((suffix) => host.endsWith(suffix))) return;
+  throw new Error(`redirect_uri host not allowed: ${host}`);
+}
 
 const oauthClientSchema = z.object({
   client_id: z.string(),
@@ -13,7 +37,22 @@ const oauthClientSchema = z.object({
 
 const registrationRequestSchema = z.object({
   client_name: z.string().min(1).default("MCP Client"),
-  redirect_uris: z.array(z.string().url()).min(1),
+  redirect_uris: z
+    .array(z.string().url())
+    .min(1)
+    .superRefine((uris, ctx) => {
+      for (const uri of uris) {
+        try {
+          assertAllowedRedirectUri(uri);
+        } catch (error) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: error instanceof Error ? error.message : "invalid redirect_uri",
+            path: [uris.indexOf(uri)],
+          });
+        }
+      }
+    }),
   grant_types: z
     .array(z.enum(["authorization_code", "refresh_token"]))
     .min(1)
@@ -75,7 +114,7 @@ export async function getRedirectUriMatch(
 function createDatabaseOAuthClientStore(): OAuthClientStore {
   return {
     async insert(row) {
-      const supabase = createClient();
+      const supabase = createServiceClient();
       const { error } = await supabase.from("oauth_clients").insert({
         client_id: row.client_id,
         client_name: row.client_name,
@@ -89,7 +128,9 @@ function createDatabaseOAuthClientStore(): OAuthClientStore {
       }
     },
     async selectById(clientId) {
-      const supabase = createClient();
+      // anon SELECT on oauth_clients was removed 2026-05-18 — only service-role
+      // reads remain. authorize page + token exchange call into here.
+      const supabase = createServiceClient();
       const { data, error } = await supabase
         .from("oauth_clients")
         .select("client_id, client_name, redirect_uris, grant_types, response_types, created_at")

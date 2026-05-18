@@ -13,14 +13,14 @@ import { registerRecruitmentTools } from "@/lib/tools/recruitment";
 import { registerResultTools } from "@/lib/tools/results";
 import { registerUserTools } from "@/lib/tools/users";
 
-export function createMcpServer(supabase: SupabaseClient, userId: string, accessToken: string) {
+export function createMcpServer(supabase: SupabaseClient, userId: string) {
   const server = new McpServer({
     name: "nycu-ai-office",
     version: "0.1.0",
   });
 
   // Register all tool groups
-  registerImageTools(server, supabase, userId, accessToken);
+  registerImageTools(server, supabase, userId);
   registerAnnouncementTools(server, supabase, userId);
   registerInsightTools(server, supabase, userId);
   registerResultTools(server, supabase, userId);
