@@ -50,6 +50,7 @@ describe("RLS — schema-level compliance", () => {
   test("every committed migration target table has RLS enabled", () => {
     const expected = [
       "public.announcements",
+      "public.articles",
       "public.carousel_slides",
       "public.competition_owners",
       "public.competition_private_details",
@@ -108,11 +109,24 @@ describe("RLS — critical SELECT contracts", () => {
     assert.equal(anonReader, undefined, "anon must not have a SELECT policy on profiles");
   });
 
-  test("authenticated profiles SELECT is the documented PII-vs-UX trade-off", () => {
+  test("authenticated profiles SELECT is tightened to self / admin / recruitment_owner-of-applicant", () => {
     const sel = find("public.profiles", "SELECT", hasAuthenticated);
     assert.equal(sel.length, 1);
-    assert.equal(sel[0].using_summary, "true");
-    assert.ok(sel[0].trade_off, "any change to authenticated profiles SELECT MUST update the trade_off note");
+    // Tightened 2026-05-18 from `using (true)` (audit finding I-3). Display
+    // fields now live on public_profiles via sync trigger; phone + resume path
+    // stay on profiles and require row access (self / admin / owner-of-applicant).
+    assert.equal(
+      sel[0].using_summary,
+      "id=auth.uid() OR is_admin OR is_recruitment_owner_of_applicant",
+      "profiles SELECT semantics must not silently widen back to `true`",
+    );
+  });
+
+  test("oauth_clients has no anon SELECT (client enumeration blocked)", () => {
+    const anonSel = snapshot.policies.find(
+      (p) => p.rel === "public.oauth_clients" && p.op === "SELECT" && hasAnon(p.roles),
+    );
+    assert.equal(anonSel, undefined, "anon SELECT on oauth_clients was tightened 2026-05-18 — must stay gone");
   });
 
   test("public.results SELECT distinguishes anon (published) from authenticated (own + published + admin)", () => {

@@ -1,9 +1,10 @@
 {
-  "generated_at": "2026-05-05",
+  "generated_at": "2026-05-18",
   "project_ref": "hwezfbhjcetpezfuvelf",
   "note": "Source-of-truth snapshot of all RLS policies in production. Refreshed manually via the SQL in scripts/refresh-rls-snapshot.md. Drift between this file and prod = git diff after running refresh, drift between this file and docs/permissions.md = test failure.",
   "tables_with_rls": [
     { "rel": "public.announcements", "policy_count": 5 },
+    { "rel": "public.articles", "policy_count": 4 },
     { "rel": "public.carousel_slides", "policy_count": 4 },
     { "rel": "public.competition_owners", "policy_count": 3 },
     { "rel": "public.competition_private_details", "policy_count": 4 },
@@ -14,7 +15,7 @@
     { "rel": "public.external_results", "policy_count": 4 },
     { "rel": "public.introduction", "policy_count": 3 },
     { "rel": "public.oauth_auth_codes", "policy_count": 0 },
-    { "rel": "public.oauth_clients", "policy_count": 2 },
+    { "rel": "public.oauth_clients", "policy_count": 1 },
     { "rel": "public.organization_members", "policy_count": 4 },
     { "rel": "public.privacy_policy", "policy_count": 2 },
     { "rel": "public.profiles", "policy_count": 3 },
@@ -33,6 +34,11 @@
     { "rel": "public.announcements", "polname": "Admin can update announcement", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "is_admin" },
     { "rel": "public.announcements", "polname": "Anon read published announcements", "op": "SELECT", "roles": ["anon"], "using_summary": "status='published'" },
     { "rel": "public.announcements", "polname": "Authenticated read published or admin announcements", "op": "SELECT", "roles": ["authenticated"], "using_summary": "status='published' OR is_admin" },
+
+    { "rel": "public.articles", "polname": "Admin or author member can delete article", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin OR (author_id=auth.uid() AND is_member)" },
+    { "rel": "public.articles", "polname": "Admin or author member can update article", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "is_admin OR (author_id=auth.uid() AND is_member)", "check_summary": "is_admin OR (author_id=auth.uid() AND is_member)" },
+    { "rel": "public.articles", "polname": "Admin or member can insert article", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin OR (author_id=auth.uid() AND is_member)" },
+    { "rel": "public.articles", "polname": "Read published or own draft or admin", "op": "SELECT", "roles": ["anon", "authenticated"], "using_summary": "status='published' OR author_id=auth.uid() OR is_admin" },
 
     { "rel": "public.carousel_slides", "polname": "Admin can delete carousel_slides", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin" },
     { "rel": "public.carousel_slides", "polname": "Admin can insert carousel_slides", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin" },
@@ -77,8 +83,7 @@
     { "rel": "public.introduction", "polname": "Admin can update introduction", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "is_admin" },
     { "rel": "public.introduction", "polname": "Anyone can read introduction", "op": "SELECT", "roles": ["public"], "using_summary": "true" },
 
-    { "rel": "public.oauth_clients", "polname": "anon can insert oauth clients", "op": "INSERT", "roles": ["anon"], "check_summary": "format_check_only", "note": "DCR registration for sibling MCP repo" },
-    { "rel": "public.oauth_clients", "polname": "anon can read oauth clients", "op": "SELECT", "roles": ["anon"], "using_summary": "true" },
+    { "rel": "public.oauth_clients", "polname": "anon can insert oauth clients", "op": "INSERT", "roles": ["anon"], "check_summary": "format_check_only", "note": "DCR registration for sibling MCP repo. redirect_uris host allowlist enforced application-layer in apps/mcp/lib/auth/oauth-clients.ts (2026-05-18)." },
 
     { "rel": "public.organization_members", "polname": "Admin can delete organization_members", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin" },
     { "rel": "public.organization_members", "polname": "Admin can insert organization_members", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin" },
@@ -89,7 +94,7 @@
     { "rel": "public.privacy_policy", "polname": "Anyone can read privacy policy", "op": "SELECT", "roles": ["public"], "using_summary": "true" },
 
     { "rel": "public.profiles", "polname": "Admin or owner can update profile", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "id=auth.uid() OR is_admin", "check_summary": "is_admin OR (id=auth.uid() AND role unchanged)" },
-    { "rel": "public.profiles", "polname": "Authenticated can read profiles", "op": "SELECT", "roles": ["authenticated"], "using_summary": "true", "trade_off": "phone/social_links 對所有登入者公開（PII vs UX trade-off, commit d3e6ca4）" },
+    { "rel": "public.profiles", "polname": "Self, admin, or recruitment_owner can read profiles", "op": "SELECT", "roles": ["authenticated"], "using_summary": "id=auth.uid() OR is_admin OR is_recruitment_owner_of_applicant", "note": "Tightened 2026-05-18 from `using (true)`. Display fields (bio/linkedin/facebook/github/website/social_links/role/avatar_url) mirrored to public_profiles via sync trigger so logged-in viewers can still render /profile/[id] cards. phone + resume path remain self/admin/owner-of-applicant only." },
     { "rel": "public.profiles", "polname": "Users can insert own profile", "op": "INSERT", "roles": ["public"], "check_summary": "id=auth.uid()" },
 
     { "rel": "public.public_profiles", "polname": "Anyone can read public_profiles", "op": "SELECT", "roles": ["public"], "using_summary": "true" },
