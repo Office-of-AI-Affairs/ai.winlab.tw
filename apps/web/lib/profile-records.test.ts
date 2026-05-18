@@ -11,6 +11,14 @@ const publicProfileFixture: PublicProfile = {
   display_name: "王小明",
   avatar_url: null,
   has_profile_data: false,
+  // Display fields mirrored from profiles via trigger (2026-05-18).
+  bio: null,
+  linkedin: null,
+  facebook: null,
+  github: null,
+  website: null,
+  social_links: null,
+  role: null,
 }
 
 const { has_profile_data: _omit, ...publicFixtureForProfile } = publicProfileFixture

@@ -46,17 +46,23 @@ export default async function ProfilePage({
   const canViewPrivateProfile = Boolean(user);
 
   const [publicProfileRes, privateProfileRes, resultsRes, externalResultsRes, coauthoredRes, participantsRes] = await Promise.all([
+    // public_profiles now mirrors display fields (bio / social links / role) so
+    // non-admin viewers can still see someone else's profile card without
+    // needing direct RLS access to the private profiles row.
     supabase
       .from("public_profiles")
-      .select("id, created_at, updated_at, display_name, avatar_url")
+      .select("id, created_at, updated_at, display_name, avatar_url, bio, linkedin, facebook, github, website, social_links, role")
       .eq("id", id)
       .single(),
+    // private profile only resolves for self / admin / recruitment_owner-of-applicant
+    // (RLS tightened 2026-05-18). For everyone else this falls through to null
+    // and composeProfile uses public_profiles for the card fields.
     canViewPrivateProfile
       ? supabase
           .from("profiles")
           .select("id, created_at, updated_at, display_name, avatar_url, role, bio, phone, linkedin, facebook, github, website, resume, social_links")
           .eq("id", id)
-          .single()
+          .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
     supabase
       .from("results")
