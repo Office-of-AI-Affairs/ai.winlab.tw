@@ -599,27 +599,48 @@ export type Database = {
       public_profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string
           display_name: string | null
+          facebook: string | null
+          github: string | null
           has_profile_data: boolean
           id: string
+          linkedin: string | null
+          role: string | null
+          social_links: string[] | null
           updated_at: string
+          website: string | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
+          facebook?: string | null
+          github?: string | null
           has_profile_data?: boolean
           id: string
+          linkedin?: string | null
+          role?: string | null
+          social_links?: string[] | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
+          facebook?: string | null
+          github?: string | null
           has_profile_data?: boolean
           id?: string
+          linkedin?: string | null
+          role?: string | null
+          social_links?: string[] | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: [
           {
@@ -810,7 +831,6 @@ export type Database = {
       }
       upload_tokens: {
         Row: {
-          access_token: string | null
           category: string
           expires_at: string
           token: string
@@ -818,7 +838,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          access_token?: string | null
           category?: string
           expires_at?: string
           token: string
@@ -826,7 +845,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          access_token?: string | null
           category?: string
           expires_at?: string
           token?: string
@@ -854,9 +872,14 @@ export type Database = {
         Args: { p_code: string; p_data: Json }
         Returns: undefined
       }
+      current_user_is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      current_user_owns_recruitment_with_applicant: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
       exchange_oauth_auth_code: { Args: { p_code: string }; Returns: Json }
       get_all_users: {
-        Args: never
+        Args: Record<PropertyKey, never>
         Returns: {
           created_at: string
           display_name: string
@@ -966,40 +989,6 @@ export type TablesUpdate<
       }
       ? U
       : never
-    : never
-
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
