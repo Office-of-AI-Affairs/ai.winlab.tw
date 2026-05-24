@@ -23,13 +23,25 @@ export async function generateMetadata({
   const description = data.event.description ?? `${data.event.name}活動專區｜公告、成果、徵才一次看。`;
   const ogImages = data.event.cover_image
     ? [{ url: data.event.cover_image, width: 1200, height: 630, alt: data.event.name }]
-    : [];
-  const twitterImages = ogImages.length ? ogImages.map((i) => i.url) : ["/og.png"];
+    : [{ url: "/og.png", width: 1200, height: 630, alt: data.event.name }];
+  const twitterImages = ogImages.map((i) => i.url);
   return {
     title,
     description,
     alternates: { canonical: `/events/${slug}` },
-    openGraph: { title, description, url: `/events/${slug}`, images: ogImages },
+    // Next.js App Router performs object-level replace (not deep merge) when a
+    // child segment exports openGraph. All required fields must be declared here
+    // explicitly; relying on layout.tsx inheritance silently drops og:type /
+    // og:site_name / og:locale.
+    openGraph: {
+      type: "website",
+      siteName: "國立陽明交通大學 人工智慧專責辦公室",
+      locale: "zh_TW",
+      title,
+      description,
+      url: `/events/${slug}`,
+      images: ogImages,
+    },
     twitter: { card: "summary_large_image", title, description, images: twitterImages },
   };
 }

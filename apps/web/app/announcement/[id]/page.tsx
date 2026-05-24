@@ -33,7 +33,14 @@ export async function generateMetadata({
     title: `${title}｜人工智慧專責辦公室`,
     description,
     alternates: { canonical: `/announcement/${id}` },
+    // Next.js App Router performs object-level replace (not deep merge) when a
+    // child segment exports openGraph. All required fields must be declared here
+    // explicitly; relying on layout.tsx inheritance silently drops og:type /
+    // og:site_name / og:locale.
     openGraph: {
+      type: "article",
+      siteName: "國立陽明交通大學 人工智慧專責辦公室",
+      locale: "zh_TW",
       title: `${title}｜人工智慧專責辦公室`,
       description,
       url: `/announcement/${id}`,
