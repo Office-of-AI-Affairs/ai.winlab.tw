@@ -15,11 +15,25 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  // Next.js App Router performs object-level replace (not deep merge) when a
+  // child segment exports openGraph. All required fields must be declared here
+  // explicitly; relying on layout.tsx inheritance silently drops og:image.
   openGraph: {
+    type: "website",
+    siteName: "國立陽明交通大學 人工智慧專責辦公室",
+    locale: "zh_TW",
+    url: "https://ai.winlab.tw",
     title: "國立陽明交通大學 人工智慧專責辦公室",
     description:
       "國立陽明交通大學人工智慧專責辦公室網站，提供辦公室介紹、組織成員、公告、活動專區、成果展示與徵才資訊。",
-    url: "/",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "國立陽明交通大學 人工智慧專責辦公室",
+      },
+    ],
   },
 };
 
