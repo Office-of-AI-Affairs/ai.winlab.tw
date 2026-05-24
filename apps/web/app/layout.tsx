@@ -3,7 +3,7 @@ import { AppLink } from "@/components/app-link";
 import { AuthProvider } from "@/components/auth-provider";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
-import { Toaster } from "@/components/ui/sonner";
+import { LazyToaster } from "@/components/lazy-toaster";
 import { getPinnedEvents } from "@/lib/supabase/get-pinned-events";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
@@ -96,7 +96,7 @@ export default async function RootLayout({
                 </main>
                 <Footer />
               </div>
-              <Toaster />
+              <LazyToaster />
             </AuthProvider>
           </NuqsAdapter>
         </ThemeProvider>
