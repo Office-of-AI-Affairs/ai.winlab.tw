@@ -25,12 +25,31 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical: `/profile/${id}` },
+    // Next.js App Router performs object-level replace (not deep merge) when a
+    // child segment exports openGraph. All required fields must be declared here
+    // explicitly; relying on layout.tsx inheritance silently drops og:image.
     openGraph: {
+      type: "profile",
+      siteName: "國立陽明交通大學 人工智慧專責辦公室",
+      locale: "zh_TW",
       title,
       description,
       url: `/profile/${id}`,
+      images: [
+        {
+          url: "/og.png",
+          width: 1200,
+          height: 630,
+          alt: name,
+        },
+      ],
     },
-    twitter: { card: "summary_large_image" },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/og.png"],
+    },
   };
 }
 
