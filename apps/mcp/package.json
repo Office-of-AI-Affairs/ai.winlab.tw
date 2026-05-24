@@ -13,7 +13,7 @@
     "gen:types": "bunx supabase gen types typescript --project-id hwezfbhjcetpezfuvelf > lib/supabase/database.types.ts"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "latest",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@supabase/supabase-js": "^2.91.0",
     "@winlab/db": "workspace:*",
     "@winlab/domain": "workspace:*",
