@@ -12,5 +12,10 @@
     "test": "bun run --filter '*' test",
     "lint": "bun run --filter '*' lint",
     "typecheck": "bun run --filter '*' typecheck"
+  },
+  "overrides": {
+    "qs": "^6.15.2",
+    "ws": "^8.21.0",
+    "postcss": "^8.5.15"
   }
 }
