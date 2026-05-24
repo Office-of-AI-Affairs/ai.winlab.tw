@@ -36,11 +36,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/privacy`, priority: 0.3 },
   ];
 
-  const eventRoutes: MetadataRoute.Sitemap = (eventsRes.data ?? []).map((e) => ({
-    url: `${BASE_URL}/events/${e.slug}`,
-    lastModified: e.updated_at ?? undefined,
-    priority: 0.7,
-  }));
+  const eventRoutes: MetadataRoute.Sitemap = (eventsRes.data ?? []).flatMap((e) => [
+    {
+      url: `${BASE_URL}/events/${e.slug}`,
+      lastModified: e.updated_at ?? undefined,
+      priority: 0.7,
+    },
+    // Tab listings — each gets its own URL after #1. /members intentionally
+    // omitted: auth-gated, no public content.
+    {
+      url: `${BASE_URL}/events/${e.slug}/announcements`,
+      lastModified: e.updated_at ?? undefined,
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/events/${e.slug}/results`,
+      lastModified: e.updated_at ?? undefined,
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/events/${e.slug}/recruitment`,
+      lastModified: e.updated_at ?? undefined,
+      priority: 0.7,
+    },
+  ]);
 
   const eventSlugMap = Object.fromEntries(
     (eventsRes.data ?? []).map((event) => [event.id, event.slug])

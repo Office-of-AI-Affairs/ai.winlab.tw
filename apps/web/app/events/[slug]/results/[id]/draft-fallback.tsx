@@ -130,7 +130,7 @@ export function ResultDraftFallback({ slug, id }: { slug: string; id: string }) 
           <h1 className="text-2xl font-bold">找不到這份成果</h1>
           <p className="text-muted-foreground">可能已被移除、尚未發布，或網址有誤。</p>
           <Button asChild variant="secondary">
-            <Link href={`/events/${slug}?tab=results`}>返回活動</Link>
+            <Link href={`/events/${slug}/results`}>返回活動</Link>
           </Button>
         </div>
       </div>
