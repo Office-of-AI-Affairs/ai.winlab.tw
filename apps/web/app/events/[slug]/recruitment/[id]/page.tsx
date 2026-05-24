@@ -84,9 +84,9 @@ export default async function EventRecruitmentDetailPage({
     .eq("id", id)
     .single();
 
-  if (error || !summary) redirect(`/events/${slug}?tab=recruitment`);
+  if (error || !summary) redirect(`/events/${slug}/recruitment`);
 
-  if (!summary.event_id) redirect(`/events/${slug}?tab=recruitment`);
+  if (!summary.event_id) redirect(`/events/${slug}/recruitment`);
 
   let details: RecruitmentPrivateDetails | null = null;
   if (user) {
@@ -251,7 +251,7 @@ export default async function EventRecruitmentDetailPage({
       <JsonLd data={breadcrumbJsonLd} />
       <RecruitmentDetail
         recruitment={recruitment as Recruitment}
-        backHref={`/events/${slug}?tab=recruitment`}
+        backHref={`/events/${slug}/recruitment`}
         backLabel="返回活動"
         canViewPrivateDetails={Boolean(user)}
       />

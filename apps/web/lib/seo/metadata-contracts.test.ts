@@ -19,6 +19,18 @@ const eventAnnouncementDetailPage = readFileSync(
   "utf8"
 )
 const eventPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/page.tsx"), "utf8")
+const eventAnnouncementsListingPage = readFileSync(
+  resolve(process.cwd(), "app/events/[slug]/announcements/page.tsx"),
+  "utf8"
+)
+const eventResultsListingPage = readFileSync(
+  resolve(process.cwd(), "app/events/[slug]/results/page.tsx"),
+  "utf8"
+)
+const eventRecruitmentListingPage = readFileSync(
+  resolve(process.cwd(), "app/events/[slug]/recruitment/page.tsx"),
+  "utf8"
+)
 const eventRecruitmentDetailPage = readFileSync(
   resolve(process.cwd(), "app/events/[slug]/recruitment/[id]/page.tsx"),
   "utf8"
@@ -63,6 +75,22 @@ describe("metadata contracts", () => {
     }
   })
 
+  test("event tab listing pages each carry their own canonical + openGraph (issue #1)", () => {
+    // Splitting /events/[slug] tabs into path-based routes means each
+    // listing has to ship its own metadata — that's the whole reason for
+    // the refactor.
+    for (const [content, suffix] of [
+      [eventAnnouncementsListingPage, "/announcements"],
+      [eventResultsListingPage, "/results"],
+      [eventRecruitmentListingPage, "/recruitment"],
+    ] as const) {
+      assert.ok(content.includes("alternates:"))
+      assert.ok(content.includes(`canonical: \`/events/\${slug}${suffix}\``))
+      assert.ok(content.includes("openGraph:"))
+      assert.ok(content.includes(`url: \`/events/\${slug}${suffix}\``))
+    }
+  })
+
   test("global recruitment route is removed from public metadata surfaces", () => {
     assert.ok(!existsSync(resolve(process.cwd(), "app/recruitment/page.tsx")))
     assert.ok(!existsSync(resolve(process.cwd(), "app/recruitment/[id]/page.tsx")))
@@ -76,7 +104,10 @@ describe("metadata contracts", () => {
     // NewsArticle JSON-LD lives in the announcement article client (the
     // detail page now hands off to the inline view+edit client).
     assert.ok(announcementDetailArticleClient.includes('"@type": "NewsArticle"'))
-    assert.ok(eventPage.includes('"@type": "Event"'))
+    // Event JSON-LD moved from /events/[slug]/page.tsx (now a redirect) to
+    // the parent layout so it's emitted on every tab listing (issue #1).
+    assert.ok(eventLayout.includes('"@type": "Event"'))
+    assert.ok(!eventPage.includes('"@type": "Event"'))
     assert.ok(eventRecruitmentDetailPage.includes('"@type": "JobPosting"'))
   })
 })

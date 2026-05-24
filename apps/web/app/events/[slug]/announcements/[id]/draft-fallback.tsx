@@ -95,7 +95,7 @@ export function EventAnnouncementDraftFallback({ slug, id }: { slug: string; id:
           <h1 className="text-2xl font-bold">找不到這則公告</h1>
           <p className="text-muted-foreground">可能已被移除、尚未發布，或網址有誤。</p>
           <Button asChild variant="secondary">
-            <Link href={`/events/${slug}?tab=announcements`}>返回活動</Link>
+            <Link href={`/events/${slug}/announcements`}>返回活動</Link>
           </Button>
         </div>
       </div>

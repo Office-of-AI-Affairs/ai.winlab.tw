@@ -19,7 +19,7 @@ export function EventAnnouncementArticleClient({ slug, eventName, ...rest }: Pro
   return (
     <SharedAnnouncementArticleClient
       {...rest}
-      backHref={`/events/${slug}?tab=announcements`}
+      backHref={`/events/${slug}/announcements`}
       backLabel="返回活動"
       sharePath={`/events/${slug}/announcements/${id}`}
       shareUrl={`https://ai.winlab.tw/events/${slug}/announcements/${id}`}

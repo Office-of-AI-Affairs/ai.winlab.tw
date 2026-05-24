@@ -80,7 +80,7 @@ export function ResultArticleClient({
     id: initialResult.id,
     initialData: initialResult,
     fields: ["title", "summary", "header_image", "content"],
-    redirectTo: `/events/${slug}?tab=results`,
+    redirectTo: `/events/${slug}/results`,
     onAfterSave: revalidateAllEventCaches,
     onAfterPublish: revalidateAllEventCaches,
     onAfterRemove: revalidateAllEventCaches,
@@ -214,7 +214,7 @@ export function ResultArticleClient({
 
       <div className="mb-10 flex items-center justify-between gap-4">
         <Link
-          href={`/events/${slug}?tab=results`}
+          href={`/events/${slug}/results`}
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -359,7 +359,7 @@ export function ResultArticleClient({
               size="sm"
               onClick={async () => {
                 await remove()
-                router.push(`/events/${slug}?tab=results`)
+                router.push(`/events/${slug}/results`)
               }}
               disabled={isSaving || isPublishing || isDeleting}
             >

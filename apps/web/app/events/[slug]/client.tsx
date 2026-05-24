@@ -30,7 +30,6 @@ import type { EventMember } from "./data";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Loader2, Pencil, Plus, Search, X } from "lucide-react";
 import Link from "next/link";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -63,17 +62,15 @@ function TabSummaryBar({
   );
 }
 
-type Tab = "announcements" | "results" | "recruitment" | "members";
+export type EventTab = "announcements" | "results" | "recruitment" | "members";
 
-const BASE_TABS: { value: Tab; label: string }[] = [
+const BASE_TABS: { value: EventTab; label: string }[] = [
   { value: "announcements", label: "公告" },
   { value: "results", label: "成果" },
   { value: "recruitment", label: "徵才" },
 ];
 
-const MEMBERS_TAB: { value: Tab; label: string } = { value: "members", label: "學員名單" };
-
-const tabParser = parseAsStringLiteral(["announcements", "results", "recruitment", "members"] as const).withDefault("results");
+const MEMBERS_TAB: { value: EventTab; label: string } = { value: "members", label: "學員名單" };
 
 function sortAnnouncements(list: Announcement[]): Announcement[] {
   return [...list].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
@@ -89,6 +86,7 @@ function sortResults<T extends { pinned: boolean; created_at: string }>(list: T[
 export function EventDetailClient({
   event,
   slug,
+  tab,
   publishedAnnouncements,
   publishedResults,
   publishedRecruitments,
@@ -96,6 +94,7 @@ export function EventDetailClient({
 }: {
   event: Event;
   slug: string;
+  tab: EventTab;
   publishedAnnouncements: Announcement[];
   publishedResults: ResultWithMeta[];
   publishedRecruitments: Recruitment[];
@@ -104,7 +103,6 @@ export function EventDetailClient({
   const { user, isAdmin } = useAuth();
   const userId = user?.id ?? null;
   const supabaseRef = useRef(createClient());
-  const [tab, setTab] = useQueryState("tab", tabParser);
   const {
     isCreatingAnnouncement,
     isCreatingResult,
@@ -420,11 +418,17 @@ export function EventDetailClient({
         {visibleTabs.map(({ value, label }) => (
           <Button
             key={value}
+            asChild
             variant={tab === value ? "default" : "ghost"}
             size="sm"
-            onClick={() => setTab(value)}
           >
-            {label}
+            <Link
+              href={`/events/${slug}/${value}`}
+              aria-current={tab === value ? "page" : undefined}
+              prefetch
+            >
+              {label}
+            </Link>
           </Button>
         ))}
       </div>

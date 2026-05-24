@@ -1,88 +1,43 @@
-import { EventDetailClient } from "./client";
+import { permanentRedirect, redirect } from "next/navigation";
 import { EventDetailNotFoundClient } from "./not-found-client";
 import { getEventPageData } from "./data";
-import { JsonLd } from "@/components/json-ld";
-import type { Metadata } from "next";
+import type { EventTab } from "./client";
 
 // MCP server writes directly to Supabase, bypassing Next.js Server Actions and
 // updateTag(). Force dynamic rendering so admin edits made through MCP show up
 // on the next visit instead of waiting for the 1h ISR fallback.
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
-  const { slug } = await params;
-  const data = await getEventPageData(slug);
-  if (!data) {
-    return { title: "活動｜人工智慧專責辦公室" };
-  }
-  const title = `${data.event.name}｜人工智慧專責辦公室`;
-  const description = data.event.description ?? `${data.event.name}活動專區｜公告、成果、徵才一次看。`;
-  const ogImages = data.event.cover_image
-    ? [{ url: data.event.cover_image, width: 1200, height: 630, alt: data.event.name }]
-    : [{ url: "/og.png", width: 1200, height: 630, alt: data.event.name }];
-  const twitterImages = ogImages.map((i) => i.url);
-  return {
-    title,
-    description,
-    alternates: { canonical: `/events/${slug}` },
-    // Next.js App Router performs object-level replace (not deep merge) when a
-    // child segment exports openGraph. All required fields must be declared here
-    // explicitly; relying on layout.tsx inheritance silently drops og:type /
-    // og:site_name / og:locale.
-    openGraph: {
-      type: "website",
-      siteName: "國立陽明交通大學 人工智慧專責辦公室",
-      locale: "zh_TW",
-      title,
-      description,
-      url: `/events/${slug}`,
-      images: ogImages,
-    },
-    twitter: { card: "summary_large_image", title, description, images: twitterImages },
-  };
-}
+const VALID_TABS: readonly EventTab[] = ["announcements", "results", "recruitment", "members"];
+const DEFAULT_TAB: EventTab = "results";
 
+// /events/[slug] is the legacy entry point for the four tabbed listings
+// (announcements / results / recruitment / members). It now redirects to the
+// default tab so each listing has its own URL + metadata for SEO (issue #1).
+//
+// Backward compat: the previous URL shape was /events/[slug]?tab=<tab>, so
+// we honor a ?tab query param to keep old inbound links working — a 307
+// rather than a permanent redirect because the query is the caller's
+// hint, not a canonical form.
 export default async function EventDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ tab?: string | string[] }>;
 }) {
   const { slug } = await params;
+  const { tab } = await searchParams;
   const data = await getEventPageData(slug);
 
   if (!data) {
     return <EventDetailNotFoundClient slug={slug} />;
   }
 
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "Event",
-    name: data.event.name,
-    description: data.event.description ?? `${data.event.name} 活動頁面`,
-    url: `https://ai.winlab.tw/events/${slug}`,
-    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    organizer: {
-      "@type": "Organization",
-      name: "國立陽明交通大學 人工智慧專責辦公室",
-      url: "https://ai.winlab.tw",
-    },
-  };
+  const rawTab = Array.isArray(tab) ? tab[0] : tab;
+  if (rawTab && (VALID_TABS as readonly string[]).includes(rawTab)) {
+    redirect(`/events/${slug}/${rawTab}`);
+  }
 
-  return (
-    <>
-      <JsonLd data={structuredData} />
-      <EventDetailClient
-        event={data.event}
-        slug={slug}
-        publishedAnnouncements={data.announcements}
-        publishedResults={data.results}
-        publishedRecruitments={data.recruitments}
-        initialMembers={data.members}
-      />
-    </>
-  );
+  permanentRedirect(`/events/${slug}/${DEFAULT_TAB}`);
 }
