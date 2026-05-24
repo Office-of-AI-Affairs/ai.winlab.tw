@@ -1,10 +1,20 @@
 "use client"
 
 import { EditModeToggle } from "@/components/edit-mode-toggle"
-import { RecruitmentDialog } from "@/components/recruitment-dialog"
 import type { Recruitment } from "@winlab/db"
+import dynamic from "next/dynamic"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+
+// Admin/owner-only editor. Lazy-load so the chunk (recruitment form +
+// upload-image deps) isn't paid until the pill is actually clicked.
+const RecruitmentDialog = dynamic(
+  () =>
+    import("@/components/recruitment-dialog").then((m) => ({
+      default: m.RecruitmentDialog,
+    })),
+  { ssr: false },
+)
 
 type Props = {
   recruitment: Recruitment
@@ -26,15 +36,17 @@ export function RecruitmentEditAffordance({ recruitment, eventId }: Props) {
   return (
     <>
       <EditModeToggle onClick={() => setOpen(true)} />
-      <RecruitmentDialog
-        open={open}
-        onOpenChange={(value) => {
-          setOpen(value)
-          if (!value) router.refresh()
-        }}
-        recruitment={recruitment}
-        eventId={eventId}
-      />
+      {open && (
+        <RecruitmentDialog
+          open={open}
+          onOpenChange={(value) => {
+            setOpen(value)
+            if (!value) router.refresh()
+          }}
+          recruitment={recruitment}
+          eventId={eventId}
+        />
+      )}
     </>
   )
 }

@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/client";
-import imageCompression from "browser-image-compression";
 
 const BUCKET = "announcement-images";
 
@@ -27,6 +26,11 @@ async function compressIfNeeded(file: File): Promise<File> {
   // GIF 動畫壓縮會丟幀，跳過
   if (file.type === GIF_MIME) return file;
   try {
+    // Lazy-load browser-image-compression (~50 KB / 19 KB gz). Only the
+    // admin upload path actually compresses, so we don't want this in the
+    // critical visitor bundle of any page that statically imports
+    // useImageUpload / upload-image (introduction, results, recruitment…).
+    const { default: imageCompression } = await import("browser-image-compression");
     const compressed = await imageCompression(file, COMPRESSION_OPTIONS);
     return compressed.size < file.size ? compressed : file;
   } catch (err) {
