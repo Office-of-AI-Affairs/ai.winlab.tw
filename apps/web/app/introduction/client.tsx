@@ -4,14 +4,24 @@ import { AppLink } from "@/components/app-link";
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { OrganizationMemberDialog } from "@/components/organization-member-dialog";
 import type { OrganizationMember, OrganizationMemberCategory } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { GraduationCap, Mail, Microscope, Plus } from "lucide-react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useState } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { OrgChart } from "./org-chart";
+
+// Admin-only dialog. Lazy-load so the visitor bundle never ships the
+// form deps (and the upload-image module they pull in).
+const OrganizationMemberDialog = dynamic(
+  () =>
+    import("@/components/organization-member-dialog").then((m) => ({
+      default: m.OrganizationMemberDialog,
+    })),
+  { ssr: false },
+);
 
 const TABS: { value: OrganizationMemberCategory; label: string }[] = [
   { value: "core", label: "核心成員" },

@@ -8,7 +8,6 @@ import {
 } from "@/components/floating-action-pill";
 import { AddMemberButton } from "@/components/member-editor";
 import { RecruitmentCard } from "@/components/recruitment-card";
-import { RecruitmentDialog } from "@/components/recruitment-dialog";
 import { ResultCard, type ResultWithMeta } from "@/components/result-card";
 import { PageShell } from "@/components/page-shell";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,11 +28,26 @@ import type {
 import type { EventMember } from "./data";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Loader2, Pencil, Plus, Search, X } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { EventEditDialog } from "./event-edit-dialog";
+// Admin-only dialogs. Lazy-load so the visitor critical path never ships
+// the recruitment/event editor forms (and the upload-image module they
+// pull in via useImageUpload).
+const RecruitmentDialog = dynamic(
+  () =>
+    import("@/components/recruitment-dialog").then((m) => ({
+      default: m.RecruitmentDialog,
+    })),
+  { ssr: false },
+);
+const EventEditDialog = dynamic(
+  () =>
+    import("./event-edit-dialog").then((m) => ({ default: m.EventEditDialog })),
+  { ssr: false },
+);
 
 function TabSummaryBar({
   countLabel,
@@ -565,7 +579,14 @@ export function EventDetailClient({
               )}
             </>
           )}
-          <RecruitmentDialog open={sheetOpen} onOpenChange={setSheetOpen} recruitment={editingRecruitment} eventId={event.id} />
+          {sheetOpen && (
+            <RecruitmentDialog
+              open={sheetOpen}
+              onOpenChange={setSheetOpen}
+              recruitment={editingRecruitment}
+              eventId={event.id}
+            />
+          )}
         </div>
       )}
 
@@ -735,7 +756,7 @@ export function EventDetailClient({
         )}
       </FloatingActionStack>
 
-      {isAdmin && (
+      {isAdmin && eventEditOpen && (
         <EventEditDialog
           open={eventEditOpen}
           onOpenChange={setEventEditOpen}
