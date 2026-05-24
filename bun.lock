@@ -9,7 +9,7 @@
       "name": "@winlab/mcp",
       "version": "0.1.0",
       "dependencies": {
-        "@modelcontextprotocol/sdk": "latest",
+        "@modelcontextprotocol/sdk": "^1.29.0",
         "@supabase/supabase-js": "^2.91.0",
         "@winlab/db": "workspace:*",
         "@winlab/domain": "workspace:*",
