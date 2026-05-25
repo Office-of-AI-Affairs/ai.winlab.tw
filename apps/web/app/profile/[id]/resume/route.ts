@@ -15,14 +15,21 @@ export async function GET(
     redirect(`/profile/${id}`);
   }
 
+  // Read the resume path from public_profiles, not profiles. profiles SELECT
+  // RLS is tightened to self / admin / recruitment_owner-of-applicant
+  // (20260518000001), so a viewer hitting another member's /resume route would
+  // otherwise always fall through to the redirect. public_profiles mirrors the
+  // path (20260525000002) precisely to keep this lookup readable; the actual
+  // PDF download below still runs as the viewer's session, gated by the
+  // resumes_select_authenticated storage policy.
   const { data: profile, error: profileError } = await supabase
-    .from("profiles")
+    .from("public_profiles")
     .select("resume, display_name")
     .eq("id", id)
     .single();
 
   if (profileError) {
-    console.error("Resume route: profile query failed:", profileError);
+    console.error("Resume route: public_profiles query failed:", profileError);
   }
 
   if (!profile?.resume) {

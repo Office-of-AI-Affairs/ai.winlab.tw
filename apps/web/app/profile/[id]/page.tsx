@@ -70,7 +70,7 @@ export default async function ProfilePage({
     // needing direct RLS access to the private profiles row.
     supabase
       .from("public_profiles")
-      .select("id, created_at, updated_at, display_name, avatar_url, bio, linkedin, facebook, github, website, social_links, role")
+      .select("id, created_at, updated_at, display_name, avatar_url, bio, linkedin, facebook, github, website, social_links, role, resume")
       .eq("id", id)
       .single(),
     // private profile only resolves for self / admin / recruitment_owner-of-applicant

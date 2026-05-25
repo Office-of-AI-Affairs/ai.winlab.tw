@@ -19,6 +19,7 @@ const publicProfileFixture: PublicProfile = {
   website: null,
   social_links: null,
   role: null,
+  resume: null,
 }
 
 const { has_profile_data: _omit, ...publicFixtureForProfile } = publicProfileFixture
@@ -57,6 +58,13 @@ describe("profile records", () => {
     const profile = composeProfile(publicProfileFixture, privateProfileFixture)
 
     assert.deepEqual(profile, privateProfileFixture)
+  })
+
+  test("falls back to public_profiles.resume when the viewer can't read the private profile", () => {
+    const publicWithResume = { ...publicProfileFixture, resume: "user_1/abc.pdf" }
+    const profile = composeProfile(publicWithResume)
+
+    assert.equal(profile.resume, "user_1/abc.pdf")
   })
 
   test("falls back to public avatar_url (gravatar) when private avatar_url is null", () => {

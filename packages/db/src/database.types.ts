@@ -607,6 +607,7 @@ export type Database = {
           has_profile_data: boolean
           id: string
           linkedin: string | null
+          resume: string | null
           role: string | null
           social_links: string[] | null
           updated_at: string
@@ -622,6 +623,7 @@ export type Database = {
           has_profile_data?: boolean
           id: string
           linkedin?: string | null
+          resume?: string | null
           role?: string | null
           social_links?: string[] | null
           updated_at?: string
@@ -637,6 +639,7 @@ export type Database = {
           has_profile_data?: boolean
           id?: string
           linkedin?: string | null
+          resume?: string | null
           role?: string | null
           social_links?: string[] | null
           updated_at?: string

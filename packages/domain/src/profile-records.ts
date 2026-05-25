@@ -21,7 +21,7 @@ export function composeProfile(
     facebook: privateProfile?.facebook ?? publicProfile.facebook ?? null,
     github: privateProfile?.github ?? publicProfile.github ?? null,
     website: privateProfile?.website ?? publicProfile.website ?? null,
-    resume: privateProfile?.resume ?? null,
+    resume: privateProfile?.resume ?? publicProfile.resume ?? null,
     social_links: privateProfile?.social_links ?? publicProfile.social_links ?? [],
   }
 }
