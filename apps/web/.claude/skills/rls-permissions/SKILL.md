@@ -5,12 +5,12 @@ description: Use BEFORE changing any RLS policy, writing a Supabase migration, a
 
 # Permissions Matrix — ai.winlab.tw
 
-Production snapshot reverse-engineered from `pg_policy` (last sync 2026-05-18). Treat as canonical contract: any RLS / storage policy change must update this skill first, get reviewed, THEN ship the migration. CI's `lib/security/rls-contracts.test.ts` runs assertions against `lib/security/rls-snapshot.json`; drift = red build.
+Production snapshot reverse-engineered from `pg_policy` (last sync 2026-05-18). Treat [`docs/permissions.md`](../../../docs/permissions.md) as the reviewable source document and this skill as the quick operational copy: any RLS / storage policy change must update the permissions document first, get reviewed, THEN ship the migration. CI's `lib/security/rls-contracts.test.ts` runs assertions against `lib/security/rls-snapshot.json`; drift = red build.
 
 ## Workflow
 
 1. Read the matrix to confirm current state.
-2. Update this skill to reflect intended new state.
+2. Update `docs/permissions.md` and this skill to reflect intended new state.
 3. Get reviewed before writing the migration.
 4. Write the migration in `supabase/migrations/` (timestamp prefix).
 5. Apply via Supabase SQL Editor (never via dashboard policy UI — CI catches drift).
@@ -54,7 +54,7 @@ Role swap requires admin. Teams subsystem retired 2026-04-30.
 
 `profiles` (incl. phone / resume path) — SELECT: **self / admin / recruitment_owner viewing their own recruitment's applicant rows**. INSERT: self. UPDATE: self (cannot change role) / admin all. DELETE: ❌ no policy. **Tightened 2026-05-18** from `using (true)` — phone + resume path are real PII. Display fields (bio / linkedin / facebook / github / website / social_links / role / avatar_url) live in `public_profiles` via the sync trigger so logged-in viewers can still render `/profile/[id]` cards. `tags` deliberately NOT mirrored.
 
-`competition_private_details` — SELECT: any logged-in user reads all (incl. salary / email / requirements). **Decision**: full job posting visible to logged-in is product intent (2026-04-30). INSERT/UPDATE/DELETE: recruitment_owner, admin.
+`competition_private_details` — SELECT: any logged-in user reads all (incl. salary / email / requirements). **Decision**: full job posting visible to logged-in is product intent, reconfirmed by Loki on 2026-05-30. INSERT/UPDATE/DELETE: recruitment_owner, admin.
 
 `competition_owners` — SELECT: own rows / admin all. INSERT/DELETE: admin only.
 
@@ -82,7 +82,7 @@ Role swap requires admin. Teams subsystem retired 2026-04-30.
 
 UPDATE/DELETE: admin only across the whole bucket. **Trade-off**: `results/` prefix accepts any authenticated upload — path-time row ownership can't be verified because the URL is needed before the row exists. Mitigations: orphan cleanup script (`scripts/cleanup-orphans.ts`), random filename, `upsert: false`.
 
-`resumes` (private) — SELECT: user reads all (incl. others' PDFs) / admin all. INSERT/UPDATE/DELETE: own folder (`name` first segment = `auth.uid()`). **Trade-off**: any logged-in user can download any resume (commit `96cba86`), but they can no longer obtain the path from `profiles` (RLS tightened 2026-05-18) — they must go through `/profile/[id]/resume` route handler, which itself joins via service-role + recruitment-owner check before streaming.
+`resumes` (private) — SELECT: any logged-in user can read objects in the bucket. INSERT/UPDATE/DELETE: own folder (`name` first segment = `auth.uid()`). **Decision**: bucket read is login-gated, not owner-gated, reconfirmed by Loki on 2026-05-30. `profiles` still gates the stored resume object path.
 
 ## Tooling
 
