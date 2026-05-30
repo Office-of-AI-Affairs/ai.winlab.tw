@@ -36,6 +36,7 @@ type Snapshot = {
 const snapshot = JSON.parse(
   readFileSync(resolve(process.cwd(), "lib/security/rls-snapshot.json"), "utf8"),
 ) as Snapshot;
+const permissionsDoc = readFileSync(resolve(process.cwd(), "docs/permissions.md"), "utf8");
 
 function find(rel: string, op: Snapshot["policies"][number]["op"], rolePredicate?: (r: string[]) => boolean) {
   return snapshot.policies.filter(
@@ -99,6 +100,12 @@ describe("RLS — schema-level compliance", () => {
   test("oauth_auth_codes is fully gated (no policies = service role only)", () => {
     const ent = snapshot.tables_with_rls.find((t) => t.rel === "public.oauth_auth_codes");
     assert.equal(ent?.policy_count, 0, "oauth_auth_codes must stay locked to service role only");
+  });
+
+  test("permissions document covers every RLS-enabled relation", () => {
+    for (const { rel } of snapshot.tables_with_rls) {
+      assert.ok(permissionsDoc.includes(`\`${rel}\``), `${rel} missing from docs/permissions.md`);
+    }
   });
 });
 
