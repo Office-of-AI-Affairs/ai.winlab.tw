@@ -48,11 +48,11 @@ Role swap requires admin. Teams subsystem retired 2026-04-30.
 `privacy_policy` (versioned, append-only) — SELECT all. INSERT: admin. UPDATE/DELETE: ❌ no policy.
 `event_participants` — SELECT all public (user_id list only — no PII; PII reconstruction blocked at `profiles` layer 2026-05-18). INSERT/DELETE: admin only.
 `competitions` (recruitment public) — SELECT all public. INSERT: admin. UPDATE/DELETE: recruitment_owner of that recruitment, admin.
-`public_profiles` (view-like table, trigger-maintained from `profiles`) — SELECT all. INSERT/UPDATE/DELETE: ❌ no policy. **Schema 2026-05-18**: now mirrors display fields (display_name, avatar_url, bio, linkedin, facebook, github, website, social_links, role, has_profile_data). `tags` NOT mirrored — admin-only label.
+`public_profiles` (view-like table, trigger-maintained from `profiles`) — SELECT all. INSERT/UPDATE/DELETE: ❌ no policy. **Schema 2026-05-18**: now mirrors display fields (display_name, avatar_url, bio, linkedin, facebook, github, website, social_links, role, has_profile_data). **Schema 2026-05-25**: also mirrors the resume object path (so logged-in viewers resolve another member's 查看履歷 link; PDF bytes stay login-gated). `tags` NOT mirrored — admin-only label.
 
 ## Authenticated-only
 
-`profiles` (incl. phone / resume path) — SELECT: **self / admin / recruitment_owner viewing their own recruitment's applicant rows**. INSERT: self. UPDATE: self (cannot change role) / admin all. DELETE: ❌ no policy. **Tightened 2026-05-18** from `using (true)` — phone + resume path are real PII. Display fields (bio / linkedin / facebook / github / website / social_links / role / avatar_url) live in `public_profiles` via the sync trigger so logged-in viewers can still render `/profile/[id]` cards. `tags` deliberately NOT mirrored.
+`profiles` (incl. phone / resume path) — SELECT: **self / admin / recruitment_owner viewing their own recruitment's applicant rows**. INSERT: self. UPDATE: self (cannot change role) / admin all. DELETE: ❌ no policy. **Tightened 2026-05-18** from `using (true)` — phone is real PII and stays here. Display fields (bio / linkedin / facebook / github / website / social_links / role / avatar_url) live in `public_profiles` via the sync trigger so logged-in viewers can still render `/profile/[id]` cards; the resume object **path** is mirrored there too (opaque pointer; PDF bytes stay login-gated by storage RLS + the route handler). `tags` deliberately NOT mirrored.
 
 `competition_private_details` — SELECT: any logged-in user reads all (incl. salary / email / requirements). **Decision**: full job posting visible to logged-in is product intent, reconfirmed by Loki on 2026-05-30. INSERT/UPDATE/DELETE: recruitment_owner, admin.
 
