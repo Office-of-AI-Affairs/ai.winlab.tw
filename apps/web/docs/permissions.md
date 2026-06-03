@@ -54,7 +54,7 @@ contains an RLS-enabled relation that is not documented here.
 
 | Relation | Read | Write |
 | --- | --- | --- |
-| `public.public_profiles` | Public read. Trigger-maintained display projection of `profiles`: display name, avatar, bio/social fields, role, and `has_profile_data`. Tags are intentionally not mirrored. | No client write policy. |
+| `public.public_profiles` | Public read. Trigger-maintained display projection of `profiles`: display name, avatar, bio/social fields, role, `has_profile_data`, and the resume object path (mirrored since 2026-05-25 so logged-in viewers can resolve another member's 查看履歷 link; the PDF bytes stay login-gated by storage RLS + the route handler). Tags are intentionally not mirrored. | No client write policy. |
 | `public.profiles` | Authenticated self, admin, or recruitment owner viewing an applicant for their owned recruitment. This table includes private fields such as phone and resume object path. | User can insert own profile. User can update own profile except role. Admin can update any profile. No delete policy. |
 
 ## OAuth And Upload Internals
@@ -77,7 +77,10 @@ contains an RLS-enabled relation that is not documented here.
 - `competition_private_details` and storage `resumes` have authenticated-wide
   read by design. Do not mark them as accidental exposures unless the product
   decision changes.
-- `profiles` remains the PII boundary for phone numbers and resume object paths;
-  public rendering must use `public_profiles`.
+- `profiles` remains the PII boundary for phone numbers. The resume object path
+  is additionally mirrored into `public_profiles` (anon-readable) so the 查看履歷
+  link resolves — safe because the path is opaque and the PDF bytes stay
+  login-gated by storage RLS + the route handler. All other public rendering of
+  profile fields must use `public_profiles`.
 - The teams subsystem was removed on 2026-04-30. New policy work must not
   reintroduce `teams`, `team_members`, `team_invitations`, or `public_teams`.
