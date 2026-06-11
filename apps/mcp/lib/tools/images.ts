@@ -63,6 +63,63 @@ function assertPublicHttpUrl(raw: string) {
   }
 }
 
+export const MAX_REDIRECTS = 5;
+
+// Fetch following redirects MANUALLY, re-validating every hop against the SSRF
+// allowlist. The default `fetch` auto-follows redirects without re-checking the
+// target, so an attacker-controlled public URL could 302 us to 169.254.169.254
+// or an internal host. `redirect: "manual"` lets us inspect each Location.
+export async function fetchPublicImage(initialUrl: string): Promise<Response> {
+  let url = initialUrl;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
+    assertPublicHttpUrl(url);
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      redirect: "manual",
+    });
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      if (!location) return response;
+      url = new URL(location, url).toString();
+      continue;
+    }
+    return response;
+  }
+  throw new Error("too many redirects");
+}
+
+// Read the body with a hard byte cap, aborting mid-stream once exceeded. A
+// server can omit/understate content-length and stream gigabytes; buffering the
+// whole response before checking size would OOM us, so cap as we read.
+export async function readBodyCapped(response: Response, maxBytes: number): Promise<Uint8Array> {
+  const reader = response.body?.getReader();
+  if (!reader) {
+    const buf = new Uint8Array(await response.arrayBuffer());
+    if (buf.byteLength > maxBytes) throw new Error("image exceeds size limit");
+    return buf;
+  }
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      throw new Error("image exceeds size limit");
+    }
+    chunks.push(value);
+  }
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return out;
+}
+
 function success(data: unknown) {
   return {
     content: [{ type: "text" as const, text: JSON.stringify({ success: true, data }) }],
@@ -182,17 +239,12 @@ For LOCAL files on disk: use create_upload_url instead, then curl the file.`,
         .describe("Category determines storage path prefix"),
     },
     async ({ url, category }) => {
-      try {
-        assertPublicHttpUrl(url);
-      } catch (e) {
-        return error(e instanceof Error ? e.message : "URL rejected");
-      }
-
       let response: Response;
       try {
-        response = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+        // assertPublicHttpUrl runs on the initial URL and on every redirect hop
+        response = await fetchPublicImage(url);
       } catch (e) {
-        return error(`Failed to download image: ${e instanceof Error ? e.message : String(e)}`);
+        return error(e instanceof Error ? e.message : "URL rejected");
       }
       if (!response.ok) {
         return error(`Failed to download image: ${response.status} ${response.statusText}`);
@@ -208,15 +260,17 @@ For LOCAL files on disk: use create_upload_url instead, then curl the file.`,
         return error(`Unsupported image type: ${contentType}. Allowed: ${ALLOWED_MIME_TYPES.join(", ")}`);
       }
 
-      const arrayBuffer = await response.arrayBuffer();
-      if (arrayBuffer.byteLength > MAX_SIZE_BYTES) {
-        return error(`Image too large: ${(arrayBuffer.byteLength / 1024 / 1024).toFixed(1)}MB. Max: 5MB`);
+      let bytes: Uint8Array;
+      try {
+        bytes = await readBodyCapped(response, MAX_SIZE_BYTES);
+      } catch {
+        return error("Image too large. Max: 5MB");
       }
 
       const ext = getExtFromMime(contentType);
       const path = generatePath(category, ext);
 
-      return uploadToStorage(supabase, path, new Uint8Array(arrayBuffer), contentType);
+      return uploadToStorage(supabase, path, bytes, contentType);
     },
   );
 }

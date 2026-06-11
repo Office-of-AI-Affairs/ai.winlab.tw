@@ -35,11 +35,18 @@ const oauthClientSchema = z.object({
   created_at: z.string().optional(),
 });
 
+// Bound the registration payload so an open /oauth/register can't be used to
+// bloat the oauth_clients table (DoS). These are generous vs. any real client.
+const MAX_CLIENT_NAME_LEN = 200;
+const MAX_REDIRECT_URIS = 10;
+const MAX_REDIRECT_URI_LEN = 2048;
+
 const registrationRequestSchema = z.object({
-  client_name: z.string().min(1).default("MCP Client"),
+  client_name: z.string().min(1).max(MAX_CLIENT_NAME_LEN).default("MCP Client"),
   redirect_uris: z
-    .array(z.string().url())
+    .array(z.string().url().max(MAX_REDIRECT_URI_LEN))
     .min(1)
+    .max(MAX_REDIRECT_URIS)
     .superRefine((uris, ctx) => {
       for (const uri of uris) {
         try {
