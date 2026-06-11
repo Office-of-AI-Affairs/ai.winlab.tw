@@ -79,7 +79,11 @@ function parseUsersCsv(text: string): ParsedUser[] {
 }
 
 function escapeCsvCell(value: string) {
-  return `"${value.replace(/"/g, '""')}"`
+  // Neutralize CSV formula injection: spreadsheet apps execute cells that
+  // start with = + - @ (or a leading Tab/CR), and quoting alone does not
+  // disarm them. Prefix a single quote so the value is treated as text.
+  const guarded = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value
+  return `"${guarded.replace(/"/g, '""')}"`
 }
 
 function buildUsersCsv(users: ExportUser[], now = new Date()) {

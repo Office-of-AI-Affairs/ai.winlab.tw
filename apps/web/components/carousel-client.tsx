@@ -12,6 +12,7 @@ import { AppLink } from "@/components/app-link";
 import { useAuth } from "@/components/auth-provider";
 import type { CarouselSlide } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
+import { safeHref } from "@/lib/safe-href";
 import Autoplay from "embla-carousel-autoplay";
 import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import Image from "next/image";
@@ -108,9 +109,9 @@ export function CarouselClient({
             );
             return (
               <CarouselItem key={slide.id} className="pl-0">
-                {slide.link ? (
+                {safeHref(slide.link ?? "") ? (
                   <AppLink
-                    href={slide.link}
+                    href={safeHref(slide.link ?? "")!}
                     className="relative block w-full aspect-video min-h-[200px] cursor-pointer"
                   >
                     {slideContent}

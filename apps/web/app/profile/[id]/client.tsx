@@ -22,6 +22,7 @@ import { useProfileEditor, mergeAllLinks } from "@/hooks/use-profile-editor";
 import type { ExternalResult, Profile, Result } from "@winlab/db";
 import { VendorEventsSection } from "@/components/vendor-events-section";
 import { hasCustomImage, isExternalImage } from "@/lib/utils";
+import { safeHref } from "@/lib/safe-href";
 import {
   ArrowLeftIcon,
   CalendarDays,
@@ -41,11 +42,6 @@ import { useMemo, useRef, useState } from "react";
 type ProfileItem =
   | { kind: "result"; data: Result }
   | { kind: "external"; data: ExternalResult };
-
-function safeHref(url: string): string | null {
-  const trimmed = url.trim();
-  return /^https?:\/\//i.test(trimmed) ? trimmed : null;
-}
 
 function displayLinkLabel(url: string): string {
   try {
@@ -644,8 +640,9 @@ export function ProfilePageClient({
                     );
                   }
 
-                  return ext.link ? (
-                    <AppLink key={ext.id} href={ext.link} className="block">{card}</AppLink>
+                  const extHref = ext.link ? safeHref(ext.link) : null;
+                  return extHref ? (
+                    <AppLink key={ext.id} href={extHref} className="block">{card}</AppLink>
                   ) : (
                     <div key={ext.id}>{card}</div>
                   );

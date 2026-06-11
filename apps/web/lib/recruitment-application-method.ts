@@ -3,6 +3,8 @@ import type {
   ApplicationMethodLink,
 } from "@winlab/db"
 
+import { safeHref } from "@/lib/safe-href"
+
 const LEGACY_APPLICATION_LINK_LABEL = "網站"
 const LEGACY_RECRUITMENT_LINK_LABEL = "官方網站"
 
@@ -56,8 +58,10 @@ export function normalizeApplicationMethod(
 }
 
 function sanitizeLink(link: ApplicationMethodLink): ApplicationMethodLink {
+  // Drop non-http(s) URLs (javascript:, data:, …) to "" so the downstream
+  // `link.label && link.url` filter removes them before they reach an href.
   return {
     label: link.label.trim(),
-    url: link.url.trim(),
+    url: safeHref(link.url) ?? "",
   }
 }
