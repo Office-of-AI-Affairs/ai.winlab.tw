@@ -62,7 +62,19 @@ export function registerUserTools(server: McpServer, supabase: SupabaseClient) {
         return error(dbError.message);
       }
 
-      return success({ id: data as string, email, display_name: name ?? null, role: role ?? "user" });
+      // Report what the database actually persisted instead of echoing the
+      // inputs — echoing once masked admin_create_user dropping p_name/p_role.
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, display_name, role")
+        .eq("id", data as string)
+        .single();
+
+      if (profileError) {
+        return error(profileError.message);
+      }
+
+      return success({ ...profile, email });
     }
   );
 
@@ -109,10 +121,10 @@ export function registerUserTools(server: McpServer, supabase: SupabaseClient) {
   );
 
   // --- update_user_display_name (admin only) ---
-  // admin_create_user RPC is known to drop p_name on the floor — this fills
-  // the gap so freshly-created accounts can actually get a name. Also covers
-  // the case where a vendor company rebrands. Writes both profiles and
-  // public_profiles since they're separate tables with their own RLS.
+  // Covers vendor renames and accounts created before admin_create_user
+  // persisted p_name. Writes profiles only — public_profiles is a
+  // trigger-maintained projection with no client write policy, so writing
+  // it directly is at best a silent no-op.
   server.tool(
     "update_user_display_name",
     {
@@ -120,25 +132,18 @@ export function registerUserTools(server: McpServer, supabase: SupabaseClient) {
       display_name: z.string(),
     },
     async ({ user_id, display_name }) => {
-      const { error: privateError } = await supabase
+      const { data, error: dbError } = await supabase
         .from("profiles")
         .update({ display_name })
-        .eq("id", user_id);
+        .eq("id", user_id)
+        .select("id, display_name")
+        .single();
 
-      if (privateError) {
-        return error(privateError.message);
+      if (dbError) {
+        return error(dbError.message);
       }
 
-      const { error: publicError } = await supabase
-        .from("public_profiles")
-        .update({ display_name })
-        .eq("id", user_id);
-
-      if (publicError) {
-        return error(publicError.message);
-      }
-
-      return success({ id: user_id, display_name });
+      return success(data);
     }
   );
 
