@@ -1,4 +1,14 @@
 import { revalidateTag } from "next/cache";
+import { timingSafeEqual } from "node:crypto";
+
+// Constant-time comparison so the Bearer secret can't be recovered by timing
+// a byte-by-byte `!==`. Different lengths short-circuit (length isn't secret).
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ab.length !== bb.length) return false;
+  return timingSafeEqual(ab, bb);
+}
 
 // Cache tags the web app actually owns. Reject everything else so a leaked
 // secret can't, say, flush an unrelated tag added later.
@@ -26,7 +36,7 @@ export async function POST(req: Request) {
   }
 
   const auth = req.headers.get("authorization");
-  if (auth !== `Bearer ${expected}`) {
+  if (!auth || !safeEqual(auth, `Bearer ${expected}`)) {
     return Response.json({ error: "unauthorized" }, { status: 401 });
   }
 

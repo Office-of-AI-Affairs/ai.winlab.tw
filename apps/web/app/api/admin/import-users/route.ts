@@ -33,8 +33,15 @@ export async function POST(request: Request) {
       { status: 500 }
     );
 
-  const body = await request.json();
-  const rows: { name: string; email: string }[] = body.users ?? [];
+  const body = await request.json().catch(() => null);
+  const rawRows = Array.isArray((body as { users?: unknown } | null)?.users)
+    ? ((body as { users: unknown[] }).users)
+    : [];
+  // Keep only well-formed rows; a non-string email would otherwise throw on .trim().
+  const rows = rawRows.filter(
+    (r): r is { name?: string; email: string } =>
+      !!r && typeof r === "object" && typeof (r as { email?: unknown }).email === "string",
+  );
 
   const adminClient = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
