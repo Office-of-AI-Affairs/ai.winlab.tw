@@ -180,4 +180,38 @@ describe("validateOAuthClientRequest", () => {
       /resource/,
     );
   });
+
+  test("rejects a stored redirect URI whose host is not on the allowlist", async () => {
+    // Simulates a rogue oauth_clients row (e.g. inserted by a direct PostgREST
+    // write that bypassed the registration host allowlist). Even though the
+    // requested redirect_uri is "registered" (present in redirect_uris), the
+    // use-time allowlist check must reject the off-allowlist host so the OAuth
+    // code can never be redirected to an attacker domain.
+    const store = createOAuthClientStore({
+      insert: async () => {},
+      selectById: async () => ({
+        client_id: "rogue-1",
+        client_name: "Rogue",
+        redirect_uris: ["https://attacker.example.com/cb"],
+        grant_types: ["authorization_code", "refresh_token"],
+        response_types: ["code"],
+        created_at: new Date().toISOString(),
+      }),
+    });
+
+    await assert.rejects(
+      () =>
+        validateOAuthClientRequest(
+          {
+            clientId: "rogue-1",
+            redirectUri: "https://attacker.example.com/cb",
+          },
+          {
+            expectedResource: "https://mcp.ai.winlab.tw/mcp",
+            store,
+          },
+        ),
+      /redirect_uri host not allowed/,
+    );
+  });
 });

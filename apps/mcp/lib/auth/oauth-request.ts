@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { getOAuthClient, type OAuthClientStore } from "@/lib/auth/oauth-clients";
+import {
+  assertAllowedRedirectUri,
+  getOAuthClient,
+  type OAuthClientStore,
+} from "@/lib/auth/oauth-clients";
 
 const authorizeRequestSchema = z.object({
   client_id: z.string().min(1),
@@ -75,6 +79,13 @@ export async function validateOAuthClientRequest(
   if (!client.redirect_uris.includes(input.redirectUri)) {
     throw new Error("Invalid redirect_uri");
   }
+
+  // Re-run the host allowlist at use-time, not just at registration. A client
+  // row could carry an attacker-controlled redirect_uri (e.g. inserted via a
+  // direct PostgREST write that bypasses the registration endpoint), so we must
+  // never trust the stored value — otherwise the OAuth code can be redirected
+  // to an attacker domain and the victim's session stolen.
+  assertAllowedRedirectUri(input.redirectUri);
 
   if (input.resource && input.resource !== options.expectedResource) {
     throw new Error("Invalid resource");

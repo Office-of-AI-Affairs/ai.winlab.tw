@@ -15,7 +15,7 @@ const REDIRECT_URI_HOST_ALLOWLIST = new Set([
 ]);
 const REDIRECT_URI_HOST_SUFFIX_ALLOWLIST = [".winlab.tw"];
 
-function assertAllowedRedirectUri(uri: string) {
+export function assertAllowedRedirectUri(uri: string) {
   const parsed = new URL(uri);
   if (!["http:", "https:"].includes(parsed.protocol)) {
     throw new Error(`redirect_uri scheme not allowed: ${parsed.protocol}`);
