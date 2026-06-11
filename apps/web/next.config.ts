@@ -3,6 +3,22 @@ import bundleAnalyzer from "@next/bundle-analyzer";
 
 const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
 
+// Lock the image optimizer to OUR Supabase project rather than any *.supabase.co
+// host, so it can't be used as an open image proxy for arbitrary projects.
+const supabaseImageHost = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+  : "*.supabase.co";
+
+// Conservative, non-breaking baseline (no full CSP — this app is cookieless /
+// middleware-free, so a script-src policy would need nonce wiring first; that's
+// a tracked follow-up). frame-ancestors + X-Frame-Options block clickjacking.
+const securityHeaders = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+];
+
 const nextConfig: NextConfig = {
   transpilePackages: ["@winlab/db", "@winlab/domain"],
   images: {
@@ -12,14 +28,18 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "*.supabase.co",
+        hostname: supabaseImageHost,
         pathname: "/storage/v1/object/public/**",
       },
       {
         protocol: "https",
         hostname: "cdn.winlab.tw",
+        pathname: "/announcement-images/**",
       },
     ],
+  },
+  async headers() {
+    return [{ source: "/:path*", headers: securityHeaders }];
   },
   async redirects() {
     return [
