@@ -69,6 +69,32 @@ describe("registerOAuthClient", () => {
       /redirect_uris/,
     );
   });
+
+  test("bounds the registration payload to prevent table-bloat DoS", async () => {
+    const store = createOAuthClientStore({
+      insert: async () => {},
+      selectById: async () => null,
+    });
+
+    // over-long client_name rejected
+    await assert.rejects(() =>
+      registerOAuthClient(
+        { client_name: "x".repeat(201), redirect_uris: ["https://claude.ai/cb"] },
+        store,
+      ),
+    );
+
+    // too many redirect_uris rejected
+    await assert.rejects(() =>
+      registerOAuthClient(
+        {
+          client_name: "Codex",
+          redirect_uris: Array.from({ length: 11 }, (_, i) => `https://claude.ai/cb${i}`),
+        },
+        store,
+      ),
+    );
+  });
 });
 
 describe("getRedirectUriMatch", () => {

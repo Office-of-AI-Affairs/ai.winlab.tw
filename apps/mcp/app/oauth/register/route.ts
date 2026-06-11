@@ -16,10 +16,12 @@ export async function POST(request: Request) {
       );
     }
 
+    // Don't leak the inner error (Postgres/PostgREST text) to the caller.
+    console.error("oauth client registration failed:", error);
     return Response.json(
       {
         error: "server_error",
-        error_description: error instanceof Error ? error.message : "Failed to register client",
+        error_description: "Failed to register client",
       },
       { status: 500 },
     );
