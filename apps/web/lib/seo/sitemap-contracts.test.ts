@@ -7,6 +7,7 @@ const sitemapFile = readFileSync(resolve(process.cwd(), "app/sitemap.ts"), "utf8
 const homePage = readFileSync(resolve(process.cwd(), "app/page.tsx"), "utf8")
 const announcementPage = readFileSync(resolve(process.cwd(), "app/announcement/page.tsx"), "utf8")
 const eventsPage = readFileSync(resolve(process.cwd(), "app/events/page.tsx"), "utf8")
+const insightsPage = readFileSync(resolve(process.cwd(), "app/insights/page.tsx"), "utf8")
 const introductionPage = readFileSync(resolve(process.cwd(), "app/introduction/page.tsx"), "utf8")
 const organizationPage = readFileSync(resolve(process.cwd(), "app/introduction/page.tsx"), "utf8")
 const profileLayout = readFileSync(resolve(process.cwd(), "app/profile/[id]/layout.tsx"), "utf8")
@@ -33,6 +34,14 @@ describe("sitemap contracts", () => {
     assert.ok(!sitemapFile.includes('url: `${BASE_URL}/recruitment`'))
     assert.ok(!sitemapFile.includes('url: `${BASE_URL}/team/${team.id}`'))
   })
+
+  test("sitemap includes published insight listing and detail routes", () => {
+    assert.ok(sitemapFile.includes('url: `${BASE_URL}/insights`'))
+    assert.ok(sitemapFile.includes('.from("articles")'))
+    assert.ok(sitemapFile.includes('.eq("status", "published")'))
+    assert.ok(sitemapFile.includes('url: `${BASE_URL}/insights/${article.id}`'))
+    assert.ok(sitemapFile.includes('article.published_at ?? article.updated_at ?? article.created_at'))
+  })
 })
 
 describe("metadata contracts", () => {
@@ -40,6 +49,7 @@ describe("metadata contracts", () => {
     assert.ok(homePage.includes("export const metadata"))
     assert.ok(announcementPage.includes("export const metadata"))
     assert.ok(eventsPage.includes("export const metadata"))
+    assert.ok(insightsPage.includes("export const metadata"))
     assert.ok(introductionPage.includes("export const metadata"))
     assert.ok(organizationPage.includes("export const metadata"))
   })

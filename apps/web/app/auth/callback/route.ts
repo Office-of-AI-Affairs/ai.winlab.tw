@@ -1,19 +1,5 @@
 import { NextResponse } from "next/server";
-
-// Resolve the user-supplied `next` against our own origin and keep only the
-// path/query/hash. Anything that resolves to a different origin (//evil.com,
-// @evil.com, https://evil.com, /\evil.com, …) is rejected back to "/", so this
-// route can never be used as an open redirect that smuggles the OAuth code to
-// an attacker domain.
-export function safeNextPath(rawNext: string, origin: string): string {
-  try {
-    const resolved = new URL(rawNext, origin);
-    if (resolved.origin !== origin) return "/";
-    return `${resolved.pathname}${resolved.search}${resolved.hash}`;
-  } catch {
-    return "/";
-  }
-}
+import { safeNextPath } from "@/lib/auth/safe-next-path";
 
 // Pass-through: Supabase redirects here after verifying the email token.
 // We forward to the target page so the browser-side Supabase client

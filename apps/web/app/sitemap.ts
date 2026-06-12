@@ -6,7 +6,14 @@ const BASE_URL = "https://ai.winlab.tw";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createPublicClient();
 
-  const [announcementsRes, eventsRes, resultsRes, profilesRes, recruitmentRes] = await Promise.all([
+  const [
+    announcementsRes,
+    eventsRes,
+    resultsRes,
+    profilesRes,
+    recruitmentRes,
+    articlesRes,
+  ] = await Promise.all([
     supabase
       .from("announcements")
       .select("id, date, event_id")
@@ -26,6 +33,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .from("competitions")
       .select("id, event_id")
       .not("event_id", "is", null),
+    supabase
+      .from("articles")
+      .select("id, published_at, updated_at, created_at")
+      .eq("status", "published"),
   ]);
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -33,6 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/introduction`, priority: 0.8 },
     { url: `${BASE_URL}/announcement`, priority: 0.8 },
     { url: `${BASE_URL}/events`, priority: 0.8 },
+    { url: `${BASE_URL}/insights`, priority: 0.8 },
     { url: `${BASE_URL}/privacy`, priority: 0.3 },
   ];
 
@@ -94,6 +106,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     }));
 
+  const articleRoutes: MetadataRoute.Sitemap = (articlesRes.data ?? []).map((article) => ({
+    url: `${BASE_URL}/insights/${article.id}`,
+    lastModified: article.published_at ?? article.updated_at ?? article.created_at ?? undefined,
+    priority: 0.6,
+  }));
+
   return [
     ...staticRoutes,
     ...announcementRoutes,
@@ -101,5 +119,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...resultRoutes,
     ...profileRoutes,
     ...recruitmentRoutes,
+    ...articleRoutes,
   ];
 }

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { describe, test } from "node:test"
 
-import { safeNextPath } from "./route"
+import { safeNextPath } from "@/lib/auth/safe-next-path"
 
 const ORIGIN = "https://ai.winlab.tw"
 
