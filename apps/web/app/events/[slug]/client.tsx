@@ -749,7 +749,12 @@ export function EventDetailClient({
             onMemberAdded={(profile) =>
               setCurrentMembers((prev) => [
                 ...prev,
-                { id: profile.id, display_name: profile.display_name, avatar_url: profile.avatar_url, hasProfileData: false },
+                {
+                  id: profile.id,
+                  display_name: profile.display_name,
+                  avatar_url: profile.avatar_url,
+                  hasProfileData: profile.has_profile_data,
+                },
               ])
             }
           />

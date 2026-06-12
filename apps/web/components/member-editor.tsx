@@ -36,7 +36,7 @@ export function AddMemberButton({ eventId, memberIds, onMemberAdded, inline }: P
     setLoadingUsers(true);
     const { data } = await supabaseRef.current
       .from("public_profiles")
-      .select("id, created_at, updated_at, display_name, avatar_url")
+      .select("id, created_at, updated_at, display_name, avatar_url, has_profile_data")
       .order("display_name");
     setAllUsers((data as PublicProfile[]) ?? []);
     setLoadingUsers(false);
