@@ -117,31 +117,31 @@ Representative capabilities include:
 Install dependencies:
 
 ```bash
-bun install
+bun install --frozen-lockfile
 ```
 
 Run the dev server:
 
 ```bash
-bun dev
+bun run --filter @winlab/mcp dev
 ```
 
 Build for production:
 
 ```bash
-bun build
+bun run --filter @winlab/mcp build
 ```
 
 Start the production server:
 
 ```bash
-bun start
+bun run --filter @winlab/mcp start
 ```
 
 Run lint:
 
 ```bash
-bun lint
+bun run --filter @winlab/mcp lint
 ```
 
 ## Environment Variables

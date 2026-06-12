@@ -7,22 +7,23 @@ This file is the entry point for coding agents working in this repository. Follo
 - Product: `mcp.ai.winlab.tw`
 - Purpose: a stateless MCP server for AI agents, exposed over Streamable HTTP at `/mcp`
 - Stack: Next.js 16 App Router, React 19, TypeScript, Supabase, Zod
-- Package manager: use `bun`
+- Package manager: use `bun` from the monorepo root
 - Runtime shape: route handlers in `app/`, implementation logic in `lib/`
 
 ## Setup Commands
 
-- Install dependencies: `bun install`
-- Start dev server: `bun dev`
-- Build production bundle: `bun build`
-- Start production server: `bun start`
-- Run lint: `bun lint`
-- Run unit tests: `bun run test`
-- Run typecheck: `bun run typecheck`
-- Run the full pre-push check (mirrors CI): `bun run check`
+- Install dependencies from the repo root: `bun install --frozen-lockfile`
+- Start dev server from the repo root: `bun run --filter @winlab/mcp dev`
+- Build production bundle from the repo root: `bun run --filter @winlab/mcp build`
+- Start production server from the repo root: `bun run --filter @winlab/mcp start`
+- Run lint from the repo root: `bun run --filter @winlab/mcp lint`
+- Run unit tests from the repo root: `bun run --filter @winlab/mcp test`
+- Run typecheck from the repo root: `bun run --filter @winlab/mcp typecheck`
+- Run the full pre-push check from the repo root (mirrors CI):
+  `bun run --filter @winlab/mcp check`
 - Regenerate `lib/supabase/database.types.ts` from the live schema:
-  `bun run gen:types` (requires `SUPABASE_ACCESS_TOKEN` — see
-  `rules/database-types.md`)
+  `bun run --filter @winlab/mcp gen:types` (requires
+  `SUPABASE_ACCESS_TOKEN` — see `rules/database-types.md`)
 
 ## Environment Variables
 
@@ -38,7 +39,7 @@ NEXT_PUBLIC_BASE_URL=
 Tooling-only (not needed at runtime):
 
 ```bash
-SUPABASE_ACCESS_TOKEN=    # for `bun run gen:types`
+SUPABASE_ACCESS_TOKEN=    # for `bun run --filter @winlab/mcp gen:types`
 ```
 
 `NEXT_PUBLIC_SUPABASE_ANON_KEY` remains supported as a fallback for older deployments, but new deployments should prefer `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
@@ -74,8 +75,8 @@ SUPABASE_ACCESS_TOKEN=    # for `bun run gen:types`
   Schema regen happens once in `packages/db/src/database.types.ts` and
   both apps pick it up automatically.
 - CI (`.github/workflows/ci.yml`) runs lint + typecheck + unit tests
-  on every push and PR. Keep `bun run check` green locally before
-  pushing.
+  from the monorepo root on every push and PR. Keep
+  `bun run --filter @winlab/mcp check` green locally before pushing.
 
 ## Maintenance Note
 
