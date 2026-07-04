@@ -64,15 +64,32 @@ export default async function ProfilePage({
   const isOwner = user?.id === id;
   const canViewPrivateProfile = Boolean(user);
 
-  const [publicProfileRes, privateProfileRes, resultsRes, externalResultsRes, coauthoredRes, participantsRes] = await Promise.all([
+  const [publicProfileRes, publicProfileResumeRes, privateProfileRes, resultsRes, externalResultsRes, coauthoredRes, participantsRes] = await Promise.all([
     // public_profiles now mirrors display fields (bio / social links / role) so
     // non-admin viewers can still see someone else's profile card without
     // needing direct RLS access to the private profiles row.
+    //
+    // `resume` is intentionally excluded here: this query also runs for
+    // anonymous visitors, and public_profiles is anon-readable (RLS
+    // `using(true)`). Selecting resume unconditionally would let anon
+    // enumerate every member's résumé storage path. Signed-in viewers still
+    // get it — see publicProfileResumeRes below and profiles.resume above.
     supabase
       .from("public_profiles")
-      .select("id, created_at, updated_at, display_name, avatar_url, bio, linkedin, facebook, github, website, social_links, role, resume")
+      .select("id, created_at, updated_at, display_name, avatar_url, bio, linkedin, facebook, github, website, social_links, role")
       .eq("id", id)
       .single(),
+    // Resume fallback for signed-in viewers who can't read the target's
+    // `profiles` row directly (not self/admin/recruitment_owner) but should
+    // still see the résumé link per product behavior. Only runs when a user
+    // is signed in, so this never touches public_profiles.resume as anon.
+    canViewPrivateProfile
+      ? supabase
+          .from("public_profiles")
+          .select("resume")
+          .eq("id", id)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
     // private profile only resolves for self / admin / recruitment_owner-of-applicant
     // (RLS tightened 2026-05-18). For everyone else this falls through to null
     // and composeProfile uses public_profiles for the card fields.
@@ -165,8 +182,12 @@ export default async function ProfilePage({
 
   const results = isOwner ? rawResults : rawResults.filter((r) => r.status === "published");
   const externalResults = (externalResultsRes.data as ExternalResult[]) || [];
+  const publicProfileWithResume: PublicProfile = {
+    ...(publicProfileRes.data as PublicProfile),
+    resume: publicProfileResumeRes.data?.resume ?? null,
+  };
   const visibleProfile = composeProfile(
-    publicProfileRes.data as PublicProfile,
+    publicProfileWithResume,
     privateProfileRes.data as Partial<Profile> | null
   );
 
