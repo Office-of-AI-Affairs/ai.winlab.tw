@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
-// Conservative CSP, not a strict nonce-based policy: this app has no
-// middleware/proxy, so wiring per-request nonces without breaking Next's
+// Conservative CSP, not a strict nonce-based policy: proxy.ts only exists
+// for OTel client-attribution (see its docstring), it doesn't inject
+// nonces — wiring those into every inline script without breaking Next's
 // hydration bootstrap on the /oauth/authorize login form is a separate,
 // tracked follow-up. This app serves no rich text and no third-party
 // scripts/images/fonts (next/font self-hosts Noto Sans at build time), so

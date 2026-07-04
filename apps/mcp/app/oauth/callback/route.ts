@@ -5,6 +5,7 @@ import { validateOAuthClientRequest } from "@/lib/auth/oauth-request";
 import { supabasePublishableKey, supabaseUrl } from "@/lib/supabase/config";
 import { getMcpResourceUrl } from "@/lib/auth/urls";
 import { createRateLimiter, getClientIp, normalizeEmail } from "@/lib/auth/rate-limit";
+import { getClientAttributionAttributes } from "@/lib/otel/attribution";
 import { emitOtelLog } from "@/lib/otel/log";
 
 const callbackBodySchema = z.object({
@@ -86,6 +87,9 @@ export async function POST(request: Request) {
 
     // Attack-visibility signal: someone is hammering login. `ip`/`email` are
     // the rate-limit dimensions, not secrets — never log `body.password`.
+    // The `client.address`/`geo.*` attributes are the Sensorium attribution
+    // contract (see lib/otel/attribution.ts) — same IP as `ip` above, plus
+    // Vercel's geo headers where available.
     emitOtelLog({
       severity: "WARN",
       message: "oauth/callback rate limited",
@@ -93,6 +97,7 @@ export async function POST(request: Request) {
         reason: "rate_limited",
         ip: clientIp,
         email: normalizedEmail,
+        ...getClientAttributionAttributes(request.headers),
       },
     });
 
@@ -110,7 +115,7 @@ export async function POST(request: Request) {
     emailRateLimiter.recordFailure(normalizedEmail);
 
     // Attack-visibility signal: failed credential attempt. Only the email
-    // and client IP are logged — never `body.password` or the Supabase
+    // and client IP/geo are logged — never `body.password` or the Supabase
     // session/token data.
     emitOtelLog({
       severity: "WARN",
@@ -119,6 +124,7 @@ export async function POST(request: Request) {
         reason: "auth_failed",
         ip: clientIp,
         email: normalizedEmail,
+        ...getClientAttributionAttributes(request.headers),
       },
     });
 
