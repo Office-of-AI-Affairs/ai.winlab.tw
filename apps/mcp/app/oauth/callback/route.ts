@@ -4,6 +4,7 @@ import { createAuthCode } from "@/lib/auth/auth-codes";
 import { validateOAuthClientRequest } from "@/lib/auth/oauth-request";
 import { supabasePublishableKey, supabaseUrl } from "@/lib/supabase/config";
 import { getMcpResourceUrl } from "@/lib/auth/urls";
+import { createRateLimiter, getClientIp, normalizeEmail } from "@/lib/auth/rate-limit";
 
 const callbackBodySchema = z.object({
   email: z.string().email(),
@@ -14,6 +15,29 @@ const callbackBodySchema = z.object({
   resource: z.string().url().optional(),
   state: z.string().optional(),
 });
+
+// Best-effort in-memory brute-force / credential-stuffing throttle. See
+// lib/auth/rate-limit.ts for the multi-instance caveat — this is a first
+// line of defense, not a strong guarantee.
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const IP_MAX_FAILURES = 10;
+const EMAIL_MAX_FAILURES = 5;
+
+const ipRateLimiter = createRateLimiter(RATE_LIMIT_WINDOW_MS, IP_MAX_FAILURES);
+const emailRateLimiter = createRateLimiter(RATE_LIMIT_WINDOW_MS, EMAIL_MAX_FAILURES);
+
+function tooManyRequestsResponse(retryAfterSeconds: number) {
+  return Response.json(
+    {
+      error: "too_many_requests",
+      error_description: "Too many failed login attempts. Please try again later.",
+    },
+    {
+      status: 429,
+      headers: { "Retry-After": String(Math.max(1, retryAfterSeconds)) },
+    },
+  );
+}
 
 export async function POST(request: Request) {
   let body: z.infer<typeof callbackBodySchema>;
@@ -50,6 +74,17 @@ export async function POST(request: Request) {
     );
   }
 
+  const clientIp = getClientIp(request);
+  const normalizedEmail = normalizeEmail(body.email);
+
+  if (ipRateLimiter.isLimited(clientIp) || emailRateLimiter.isLimited(normalizedEmail)) {
+    const retryAfterSeconds = Math.max(
+      ipRateLimiter.retryAfterSeconds(clientIp),
+      emailRateLimiter.retryAfterSeconds(normalizedEmail),
+    );
+    return tooManyRequestsResponse(retryAfterSeconds);
+  }
+
   const supabase = createClient(supabaseUrl, supabasePublishableKey);
   const { data, error } = await supabase.auth.signInWithPassword({
     email: body.email,
@@ -57,6 +92,9 @@ export async function POST(request: Request) {
   });
 
   if (error || !data.session) {
+    ipRateLimiter.recordFailure(clientIp);
+    emailRateLimiter.recordFailure(normalizedEmail);
+
     return Response.json(
       {
         error: "access_denied",
@@ -65,6 +103,8 @@ export async function POST(request: Request) {
       { status: 401 },
     );
   }
+
+  emailRateLimiter.reset(normalizedEmail);
 
   const code = await createAuthCode({
     accessToken: data.session.access_token,

@@ -7,6 +7,7 @@ import StarterKit from "@tiptap/starter-kit"
 import type { JSONContent } from "@tiptap/core"
 import { processArticle, type TocItem } from "./article"
 import { lowlight } from "./lowlight"
+import { sanitizeRichTextHtml } from "./rich-text-sanitize"
 
 export {
   richTextDocumentClassName,
@@ -55,7 +56,7 @@ export function renderRichTextHtml(content: JSONContent | Record<string, unknown
   }
   const { contentWithIds } = processArticle(content)
   if (!contentWithIds) return null
-  return generateHTML(contentWithIds, richTextHtmlExtensions)
+  return sanitizeRichTextHtml(generateHTML(contentWithIds, richTextHtmlExtensions))
 }
 
 export function renderArticle(
@@ -66,5 +67,5 @@ export function renderArticle(
   }
   const { contentWithIds, toc } = processArticle(content)
   if (!contentWithIds) return { html: null, toc }
-  return { html: generateHTML(contentWithIds, richTextHtmlExtensions), toc }
+  return { html: sanitizeRichTextHtml(generateHTML(contentWithIds, richTextHtmlExtensions)), toc }
 }
