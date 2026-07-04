@@ -9,11 +9,10 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseImageHost = supabaseUrl ? new URL(supabaseUrl).hostname : "*.supabase.co";
 const supabaseOrigin = supabaseUrl ? new URL(supabaseUrl).origin : "https://*.supabase.co";
 
-// Conservative CSP, not a strict nonce-based policy: proxy.ts only exists
-// for OTel client-attribution (see its docstring), it doesn't inject
-// nonces — wiring those into every inline script without breaking Next's
-// hydration bootstrap is a separate, tracked follow-up. This is
-// defense-in-depth on top of the server-side rich-text
+// Conservative CSP, not a strict nonce-based policy: this app has no
+// middleware/proxy, so wiring per-request nonces into every inline script
+// without breaking Next's hydration bootstrap is a separate, tracked
+// follow-up. This is defense-in-depth on top of the server-side rich-text
 // sanitizer (lib/ui/rich-text-sanitize.ts), which is the primary defense
 // against stored XSS in article content.
 //   - script-src/style-src need 'unsafe-inline' because there's no nonce
