@@ -1,6 +1,7 @@
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
 import { BatchLogRecordProcessor } from "@opentelemetry/sdk-logs";
 import { OTLPHttpJsonTraceExporter, registerOTel } from "@vercel/otel";
+import { getClientAttributionAttributes } from "@/lib/otel/attribution";
 import { emitErrorLog } from "@/lib/otel/log";
 
 /**
@@ -122,6 +123,7 @@ export async function onRequestError(
       "http.request.method": request.method,
       "next.router_kind": context.routerKind,
       "next.route_type": context.routeType,
+      ...getClientAttributionAttributes(request.headers),
     },
   });
 }
