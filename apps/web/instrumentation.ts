@@ -1,9 +1,13 @@
+import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
+import { BatchLogRecordProcessor } from "@opentelemetry/sdk-logs";
 import { OTLPHttpJsonTraceExporter, registerOTel } from "@vercel/otel";
+import { emitErrorLog } from "@/lib/otel/log";
 
 /**
- * OpenTelemetry bootstrap — first producer for the Sensorium observability
+ * OpenTelemetry bootstrap — producer for the Sensorium observability
  * platform (sensorium.zyx.tw). Sends request-span traces (4xx/5xx included)
- * over OTLP so agents (kilo/noir) can query them via Sensorium's MCP.
+ * plus explicit application log records (server-side render errors) over
+ * OTLP so agents (kilo/noir) can query them via Sensorium's MCP.
  *
  * Everything here is env-driven; no endpoint/token is hardcoded. See the
  * env table in the PR description for the full contract.
@@ -31,6 +35,20 @@ import { OTLPHttpJsonTraceExporter, registerOTel } from "@vercel/otel";
  * (ours). `spanProcessors: []` suppresses that auto processor so our
  * explicit JSON exporter is the *only* one registered — no duplicate
  * spans, no stray protobuf request hitting Sensorium's ingest.
+ *
+ * Logs follow the same "explicit, no auto-drain" shape, for a different
+ * reason: `@vercel/otel@2.1.3` has no "auto" resolution for
+ * `logRecordProcessors` (read the same compiled source — unlike
+ * `spanProcessors`, it only ever stands up a `LoggerProvider` when you pass
+ * `logRecordProcessors` yourself, so there's no double-export trap to guard
+ * against here). We still build the pipeline explicitly — a
+ * `BatchLogRecordProcessor` wrapping `@opentelemetry/exporter-logs-otlp-http`'s
+ * `OTLPLogExporter` — because that package's Node implementation hardcodes
+ * `JsonLogsSerializer` + `Content-Type: application/json` (verified by
+ * reading its compiled source), so JSON is a code-level guarantee the same
+ * way `OTLPHttpJsonTraceExporter` is for traces. Passing it via
+ * `logRecordProcessors` lets @vercel/otel share the same env-detected
+ * `resource` (service.namespace/service.name) between traces and logs.
  */
 export function register() {
   const endpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
@@ -40,6 +58,9 @@ export function register() {
   // against a phantom collector.
   if (!endpoint) return;
 
+  const trimmedEndpoint = endpoint.replace(/\/+$/, "");
+  const headers = parseOtlpHeaders(process.env.OTEL_EXPORTER_OTLP_HEADERS);
+
   registerOTel({
     // OTEL_RESOURCE_ATTRIBUTES (service.namespace / service.name) is read
     // automatically by @vercel/otel's default env resource detector; this
@@ -47,9 +68,61 @@ export function register() {
     serviceName: process.env.OTEL_SERVICE_NAME ?? "web",
     spanProcessors: [],
     traceExporter: new OTLPHttpJsonTraceExporter({
-      url: `${endpoint.replace(/\/+$/, "")}/v1/traces`,
-      headers: parseOtlpHeaders(process.env.OTEL_EXPORTER_OTLP_HEADERS),
+      url: `${trimmedEndpoint}/v1/traces`,
+      headers,
     }),
+    logRecordProcessors: [
+      new BatchLogRecordProcessor({
+        exporter: new OTLPLogExporter({
+          url: `${trimmedEndpoint}/v1/logs`,
+          headers,
+        }),
+      }),
+    ],
+  });
+}
+
+/**
+ * Next.js's server-side error-observability hook: fires whenever an error
+ * occurs on the server (Server Component render, Route Handlers, Server
+ * Actions) — including the same errors that then surface to
+ * `app/error.tsx` / `app/global-error.tsx`. Those two files are Client
+ * Components (`"use client"`, error boundaries run in the browser after
+ * hydration), so they have no access to the server-side OTel logger
+ * registered above; this hook is the actual bridge that gets those errors
+ * into Sensorium as log records, independent of the boundary UI.
+ *
+ * Reserved export name — Next.js calls this automatically if present, no
+ * wiring needed beyond exporting it. No-op (via `emitErrorLog`'s built-in
+ * no-op fallback) when OTel was never registered.
+ */
+export async function onRequestError(
+  error: unknown,
+  request: Readonly<{
+    path: string;
+    method: string;
+    headers: NodeJS.Dict<string | string[]>;
+  }>,
+  context: Readonly<{
+    routerKind: "Pages Router" | "App Router";
+    routePath: string;
+    routeType: "render" | "route" | "action" | "proxy";
+    renderSource?: "react-server-components" | "react-server-components-payload" | "server-rendering";
+    revalidateReason: "on-demand" | "stale" | undefined;
+  }>,
+) {
+  const message = error instanceof Error ? error.message : String(error);
+  const digest = error instanceof Error ? (error as Error & { digest?: string }).digest : undefined;
+
+  emitErrorLog({
+    message,
+    digest,
+    attributes: {
+      "http.route": request.path,
+      "http.request.method": request.method,
+      "next.router_kind": context.routerKind,
+      "next.route_type": context.routeType,
+    },
   });
 }
 

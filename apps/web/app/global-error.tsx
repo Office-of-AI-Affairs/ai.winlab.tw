@@ -5,6 +5,12 @@
 // wrapper — Next.js requires this file to ship its own document shell.
 // Keep it tiny, no Tailwind imports (globals.css may not be loaded),
 // no shadcn components (AuthProvider may not be mounted).
+//
+// This is a Client Component (error boundaries run in the browser), so it
+// has no access to the server-side OTel logger. Errors that originate
+// server-side (the common case — SSR/RSC render, data fetching) are already
+// reported to Sensorium as OTel log records via `onRequestError` in
+// ../instrumentation.ts, independent of this console.error.
 
 import { useEffect } from "react";
 

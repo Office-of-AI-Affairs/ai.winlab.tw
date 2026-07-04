@@ -5,6 +5,7 @@ import { validateOAuthClientRequest } from "@/lib/auth/oauth-request";
 import { supabasePublishableKey, supabaseUrl } from "@/lib/supabase/config";
 import { getMcpResourceUrl } from "@/lib/auth/urls";
 import { createRateLimiter, getClientIp, normalizeEmail } from "@/lib/auth/rate-limit";
+import { emitOtelLog } from "@/lib/otel/log";
 
 const callbackBodySchema = z.object({
   email: z.string().email(),
@@ -82,6 +83,19 @@ export async function POST(request: Request) {
       ipRateLimiter.retryAfterSeconds(clientIp),
       emailRateLimiter.retryAfterSeconds(normalizedEmail),
     );
+
+    // Attack-visibility signal: someone is hammering login. `ip`/`email` are
+    // the rate-limit dimensions, not secrets — never log `body.password`.
+    emitOtelLog({
+      severity: "WARN",
+      message: "oauth/callback rate limited",
+      attributes: {
+        reason: "rate_limited",
+        ip: clientIp,
+        email: normalizedEmail,
+      },
+    });
+
     return tooManyRequestsResponse(retryAfterSeconds);
   }
 
@@ -94,6 +108,19 @@ export async function POST(request: Request) {
   if (error || !data.session) {
     ipRateLimiter.recordFailure(clientIp);
     emailRateLimiter.recordFailure(normalizedEmail);
+
+    // Attack-visibility signal: failed credential attempt. Only the email
+    // and client IP are logged — never `body.password` or the Supabase
+    // session/token data.
+    emitOtelLog({
+      severity: "WARN",
+      message: "oauth/callback auth failed",
+      attributes: {
+        reason: "auth_failed",
+        ip: clientIp,
+        email: normalizedEmail,
+      },
+    });
 
     return Response.json(
       {
