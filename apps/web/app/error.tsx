@@ -3,6 +3,12 @@
 // Page-level error boundary. Next.js hands us any uncaught render or data
 // fetch error thrown inside a segment. We log it (so Vercel keeps a trail)
 // and show a friendly retry instead of the raw stack.
+//
+// This is a Client Component (error boundaries run in the browser), so it
+// has no access to the server-side OTel logger. Errors that originate
+// server-side (the common case — SSR/RSC render, data fetching) are already
+// reported to Sensorium as OTel log records via `onRequestError` in
+// ../instrumentation.ts, independent of this console.error.
 
 import { AppLink } from "@/components/app-link";
 import { PageShell } from "@/components/page-shell";
