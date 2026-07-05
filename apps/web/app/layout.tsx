@@ -87,7 +87,15 @@ export default async function RootLayout({
   // whichever request triggered it. `headers()` did not force this layout
   // to dynamic in a local build (Next 16.2.6), so ISR/SSG on those routes
   // is unaffected either way. Flagged for Sensorium data-quality awareness.
-  trace.getActiveSpan()?.setAttributes(getClientAttributionAttributes(await headers()));
+  // headers() throws DYNAMIC_SERVER_USAGE when called during ISR background
+  // revalidation on Vercel — OTel instrumentation keeps getActiveSpan() non-null
+  // even in that context, so the optional-chain doesn't short-circuit. Catch
+  // silently: attribution is a best-effort signal, not required for correctness.
+  try {
+    trace.getActiveSpan()?.setAttributes(getClientAttributionAttributes(await headers()));
+  } catch {
+    // static/ISR pre-render context — attribution unavailable
+  }
 
   return (
     <html lang="zh-TW" suppressHydrationWarning>

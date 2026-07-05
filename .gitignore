@@ -39,3 +39,4 @@ apps/web/scripts/
 
 # Loki's local superpowers planning notes — untracked workspace
 /docs/
+.vercel
