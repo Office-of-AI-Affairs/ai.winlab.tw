@@ -5,12 +5,9 @@ import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { LazyToaster } from "@/components/lazy-toaster";
 import { getPinnedEvents } from "@/lib/supabase/get-pinned-events";
-import { getClientAttributionAttributes } from "@/lib/otel/attribution";
-import { trace } from "@opentelemetry/api";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import { Instrument_Serif, Noto_Sans, Noto_Sans_Mono } from "next/font/google";
-import { headers } from "next/headers";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 const notoSans = Noto_Sans({
@@ -67,35 +64,6 @@ export default async function RootLayout({
   // No cookie reads here — layout stays cookieless so downstream pages
   // can SSG/ISR. Auth hydrates client-side inside <AuthProvider>.
   const pinnedEvents = await getPinnedEvents();
-
-  // Client attribution for Sensorium: middleware/proxy.ts can't see the
-  // exported request span on Vercel (it runs in the Edge sandbox, isolated
-  // from the Node.js OTel context `instrumentation.ts` registers — see
-  // lib/otel/attribution.ts's docstring for the fixed attribute-key
-  // contract). Root layout runs as a Node.js Server Component, so
-  // `trace.getActiveSpan()` here is the same span Sensorium receives.
-  //
-  // Caveat verified locally via `next build && next start`: this only
-  // fires on requests that actually invoke the render function. For the
-  // `ƒ` (Dynamic) routes under this layout that's every request; for the
-  // `○`/`●` (Static/ISR) public pages (`/`, `/introduction`, `/announcement`,
-  // `/events`, `/insights`, `/privacy`, `/design`, ...) Next.js keeps
-  // serving the cached HTML (`x-nextjs-cache: HIT` regardless of
-  // `x-forwarded-for`) without re-running this component, so those pages
-  // don't get per-visitor attribution — only the rare ISR background
-  // regeneration hits this line, tagging that one regen's span with
-  // whichever request triggered it. `headers()` did not force this layout
-  // to dynamic in a local build (Next 16.2.6), so ISR/SSG on those routes
-  // is unaffected either way. Flagged for Sensorium data-quality awareness.
-  // headers() throws DYNAMIC_SERVER_USAGE when called during ISR background
-  // revalidation on Vercel — OTel instrumentation keeps getActiveSpan() non-null
-  // even in that context, so the optional-chain doesn't short-circuit. Catch
-  // silently: attribution is a best-effort signal, not required for correctness.
-  try {
-    trace.getActiveSpan()?.setAttributes(getClientAttributionAttributes(await headers()));
-  } catch {
-    // static/ISR pre-render context — attribution unavailable
-  }
 
   return (
     <html lang="zh-TW" suppressHydrationWarning>
