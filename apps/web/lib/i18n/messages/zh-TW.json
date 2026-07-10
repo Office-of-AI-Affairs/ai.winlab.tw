@@ -1,6 +1,8 @@
 {
   "common": {
-    "skipToContent": "跳至主要內容"
+    "skipToContent": "跳至主要內容",
+    "untitled": "(無標題)",
+    "noDescription": "（無描述）"
   },
   "nav": {
     "about": "關於",

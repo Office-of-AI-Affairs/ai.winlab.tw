@@ -2,6 +2,7 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Block } from "@/components/ui/block";
+import { useT } from "@/lib/i18n/locale-provider";
 import type { Event } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { AspectRatio } from "@radix-ui/react-aspect-ratio";
@@ -16,6 +17,7 @@ export function EventCard({
   compact?: boolean;
   priority?: boolean;
 }) {
+  const t = useT();
   const sizes = "(max-width: 1024px) 100vw, 576px";
   return (
     <Block className="overflow-hidden flex flex-col lg:grid lg:grid-cols-2 gap-4">
@@ -35,10 +37,10 @@ export function EventCard({
       </div>
       <div className="grid gap-2 lg:content-center">
         <h2 className={`${compact ? "text-lg" : "text-2xl"} font-bold line-clamp-2`}>
-          {item.name || "(無標題)"}
+          {item.name || t.common.untitled}
         </h2>
         <p className={`${compact ? "text-sm" : "text-base"} text-muted-foreground line-clamp-3`}>
-          {item.description || "（無描述）"}
+          {item.description || t.common.noDescription}
         </p>
       </div>
       <div className="hidden lg:block -my-6 -mr-6">
