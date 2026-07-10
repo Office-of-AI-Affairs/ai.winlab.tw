@@ -2,18 +2,16 @@
 
 import { AppLink } from "@/components/app-link";
 import { useAuth } from "@/components/auth-provider";
-import { type Locale } from "@/lib/i18n/config";
-import { useLocale, useT } from "@/lib/i18n/locale-provider";
-import { stripLocalePrefix, switchLocalePath } from "@/lib/i18n/routing";
-import { Loader2, Languages, TextAlignJustify } from "lucide-react";
-import Link from "next/link";
+import { LanguageToggle } from "@/components/language-toggle";
+import { useT } from "@/lib/i18n/locale-provider";
+import { stripLocalePrefix } from "@/lib/i18n/routing";
+import { Loader2, TextAlignJustify } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: string }[] }) {
   const { user, profile, isLoading, signOut, isAdmin } = useAuth();
   const t = useT();
-  const locale = useLocale();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -27,9 +25,6 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
   const barePath = stripLocalePrefix(pathname);
   const isActive = (href: string) =>
     barePath === href || (href !== "/" && barePath.startsWith(href));
-
-  const otherLocale: Locale = locale === "en" ? "zh-TW" : "en";
-  const switcherHref = switchLocalePath(pathname, otherLocale);
 
   const panelRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -152,14 +147,7 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
             </AppLink>
           )}
           {renderAuthSection()}
-          <Link
-            href={switcherHref}
-            aria-label={t.nav.switchLanguageLabel}
-            className="interactive-scale nav-bracket inline-flex items-center gap-1"
-          >
-            <Languages className="w-4 h-4" aria-hidden />
-            {t.nav.switchLanguage}
-          </Link>
+          <LanguageToggle />
         </nav>
 
         <button
@@ -220,15 +208,7 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
               </AppLink>
             )}
             {renderAuthSection(true)}
-            <Link
-              href={switcherHref}
-              aria-label={t.nav.switchLanguageLabel}
-              className="interactive-scale rounded-lg px-3 py-2 hover:bg-black/10 inline-flex items-center gap-2"
-              onClick={() => setOpen(false)}
-            >
-              <Languages className="w-4 h-4" aria-hidden />
-              {t.nav.switchLanguage}
-            </Link>
+            <LanguageToggle onNavigate={() => setOpen(false)} className="mt-3 self-start" />
           </div>
         </div>
       </div>

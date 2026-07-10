@@ -1,6 +1,8 @@
 {
   "common": {
-    "skipToContent": "Skip to main content"
+    "skipToContent": "Skip to main content",
+    "untitled": "(Untitled)",
+    "noDescription": "(No description)"
   },
   "nav": {
     "about": "About",

@@ -134,6 +134,10 @@
     background-color: var(--nycu);
   }
 
+  .text-nycu {
+    color: var(--nycu);
+  }
+
   .interactive-scale {
     @apply transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 disabled:active:scale-100;
   }
