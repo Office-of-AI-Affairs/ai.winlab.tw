@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/date";
-import type { ArticleListItem } from "@/app/insights/data";
+import type { ArticleListItem } from "@/app/[locale]/insights/data";
 
 type Props = {
   article: ArticleListItem;

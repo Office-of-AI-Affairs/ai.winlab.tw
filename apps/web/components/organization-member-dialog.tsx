@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import Image from "next/image";
 import { ImagePlus, Loader2, Trash2 } from "lucide-react";
 
-import { revalidateOrganizationMembers } from "@/app/introduction/actions";
+import { revalidateOrganizationMembers } from "@/app/[locale]/introduction/actions";
 import { useDialogForm } from "@/hooks/use-dialog-form";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { uploadOrganizationImage } from "@/lib/upload-image";

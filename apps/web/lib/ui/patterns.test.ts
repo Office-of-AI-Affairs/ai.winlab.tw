@@ -12,7 +12,7 @@ const homeIntroduction = readFileSync(resolve(process.cwd(), "components/home-in
 const recruitmentDialog = readFileSync(resolve(process.cwd(), "components/recruitment-dialog.tsx"), "utf8")
 const organizationMemberDialog = readFileSync(resolve(process.cwd(), "components/organization-member-dialog.tsx"), "utf8")
 const tiptapEditor = readFileSync(resolve(process.cwd(), "components/tiptap-editor.tsx"), "utf8")
-const profileClient = readFileSync(resolve(process.cwd(), "app/profile/[id]/client.tsx"), "utf8")
+const profileClient = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/client.tsx"), "utf8")
 const resultTagSidebar = readFileSync(resolve(process.cwd(), "components/result-tag-sidebar.tsx"), "utf8")
 const tiptapDesktopBubbleMenu = readFileSync(resolve(process.cwd(), "components/tiptap-desktop-bubble-menu.tsx"), "utf8")
 const tiptapDesktopFloatingMenu = readFileSync(resolve(process.cwd(), "components/tiptap-desktop-floating-menu.tsx"), "utf8")
@@ -20,11 +20,11 @@ const tiptapMobileToolbar = readFileSync(resolve(process.cwd(), "components/tipt
 const carouselClient = readFileSync(resolve(process.cwd(), "components/carousel-client.tsx"), "utf8")
 const contactsEditButton = readFileSync(resolve(process.cwd(), "components/contacts-edit-button.tsx"), "utf8")
 const eventsCreateButton = readFileSync(resolve(process.cwd(), "components/events-create-button.tsx"), "utf8")
-const eventDetailClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/client.tsx"), "utf8")
+const eventDetailClient = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/client.tsx"), "utf8")
 const richTextContract = readFileSync(resolve(process.cwd(), "lib/ui/rich-text.ts"), "utf8")
 const richTextClasses = readFileSync(resolve(process.cwd(), "lib/ui/rich-text-classes.ts"), "utf8")
 const announcementArticleClient = readFileSync(resolve(process.cwd(), "components/announcement-article-client.tsx"), "utf8")
-const resultArticleClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/article-client.tsx"), "utf8")
+const resultArticleClient = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/results/[id]/article-client.tsx"), "utf8")
 const richTextSurface = readFileSync(resolve(process.cwd(), "components/rich-text-surface.tsx"), "utf8")
 
 function collectProjectFiles(directory: string): string[] {

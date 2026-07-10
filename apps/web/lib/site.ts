@@ -24,3 +24,9 @@ export const SITE_NAME_EN = "NYCU Office of AI Affairs";
 /** Bilingual site identity for `<title>`, OG `siteName`, image `alt`,
  *  and JSON-LD. */
 export const SITE_NAME = `${SITE_NAME_ZH}｜${SITE_NAME_EN}`;
+
+/** Default site description, per locale (root layout fallback + home). */
+export const SITE_DESCRIPTION_ZH =
+  "國立陽明交通大學人工智慧專責辦公室網站，提供辦公室介紹、組織成員、公告、活動、成果與徵才資訊。";
+export const SITE_DESCRIPTION_EN =
+  "The website of NYCU's Office of AI Affairs — office introduction, team members, announcements, events, results, and recruitment.";

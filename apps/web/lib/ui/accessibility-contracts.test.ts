@@ -3,35 +3,35 @@ import { existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { describe, test } from "node:test"
 
-const rootLayout = readFileSync(resolve(process.cwd(), "app/layout.tsx"), "utf8")
-const organizationClient = readFileSync(resolve(process.cwd(), "app/introduction/client.tsx"), "utf8")
+const rootLayout = readFileSync(resolve(process.cwd(), "app/[locale]/layout.tsx"), "utf8")
+const organizationClient = readFileSync(resolve(process.cwd(), "app/[locale]/introduction/client.tsx"), "utf8")
 const announcementTable = readFileSync(resolve(process.cwd(), "components/announcement-table.tsx"), "utf8")
-const announcementClient = readFileSync(resolve(process.cwd(), "app/announcement/client.tsx"), "utf8")
+const announcementClient = readFileSync(resolve(process.cwd(), "app/[locale]/announcement/client.tsx"), "utf8")
 const homeAnnouncementTable = readFileSync(resolve(process.cwd(), "components/home-announcement-table.tsx"), "utf8")
 const resultCard = readFileSync(resolve(process.cwd(), "components/result-card.tsx"), "utf8")
-const eventClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/client.tsx"), "utf8")
+const eventClient = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/client.tsx"), "utf8")
 const recruitmentCard = readFileSync(resolve(process.cwd(), "components/recruitment-card.tsx"), "utf8")
 const recruitmentDialog = readFileSync(resolve(process.cwd(), "components/recruitment-dialog.tsx"), "utf8")
 const tiptapEditor = readFileSync(resolve(process.cwd(), "components/tiptap-editor.tsx"), "utf8")
 const tiptapEditorShared = readFileSync(resolve(process.cwd(), "components/tiptap-editor-shared.tsx"), "utf8")
-const loginPage = readFileSync(resolve(process.cwd(), "app/login/page.tsx"), "utf8")
-const forgotPasswordPage = readFileSync(resolve(process.cwd(), "app/forgot-password/page.tsx"), "utf8")
-const resetPasswordPage = readFileSync(resolve(process.cwd(), "app/reset-password/page.tsx"), "utf8")
+const loginPage = readFileSync(resolve(process.cwd(), "app/[locale]/login/page.tsx"), "utf8")
+const forgotPasswordPage = readFileSync(resolve(process.cwd(), "app/[locale]/forgot-password/page.tsx"), "utf8")
+const resetPasswordPage = readFileSync(resolve(process.cwd(), "app/[locale]/reset-password/page.tsx"), "utf8")
 const usersTable = readFileSync(resolve(process.cwd(), "components/users-table.tsx"), "utf8")
 const homeEvents = readFileSync(resolve(process.cwd(), "components/home-events.tsx"), "utf8")
 const homeAnnouncement = readFileSync(resolve(process.cwd(), "components/home-announcement.tsx"), "utf8")
 const homeIntroduction = readFileSync(resolve(process.cwd(), "components/home-introduction.tsx"), "utf8")
 const homeOrganization = readFileSync(resolve(process.cwd(), "components/home-organization.tsx"), "utf8")
-const teamPagePath = resolve(process.cwd(), "app/team/[id]/page.tsx")
+const teamPagePath = resolve(process.cwd(), "app/[locale]/team/[id]/page.tsx")
 const eventResultPage = readFileSync(
-  resolve(process.cwd(), "app/events/[slug]/results/[id]/page.tsx"),
+  resolve(process.cwd(), "app/[locale]/events/[slug]/results/[id]/page.tsx"),
   "utf8"
 )
-const profileClient = readFileSync(resolve(process.cwd(), "app/profile/[id]/client.tsx"), "utf8")
+const profileClient = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/client.tsx"), "utf8")
 const organizationMemberDialog = readFileSync(resolve(process.cwd(), "components/organization-member-dialog.tsx"), "utf8")
-const carouselEditClient = readFileSync(resolve(process.cwd(), "app/carousel/[id]/edit/client.tsx"), "utf8")
-const contactEditClient = readFileSync(resolve(process.cwd(), "app/contacts/[id]/edit/client.tsx"), "utf8")
-const organizationEditClient = readFileSync(resolve(process.cwd(), "app/introduction/[id]/edit/client.tsx"), "utf8")
+const carouselEditClient = readFileSync(resolve(process.cwd(), "app/[locale]/carousel/[id]/edit/client.tsx"), "utf8")
+const contactEditClient = readFileSync(resolve(process.cwd(), "app/[locale]/contacts/[id]/edit/client.tsx"), "utf8")
+const organizationEditClient = readFileSync(resolve(process.cwd(), "app/[locale]/introduction/[id]/edit/client.tsx"), "utf8")
 
 describe("accessibility contracts", () => {
   test("root layout provides a skip link and a main landmark", () => {
@@ -57,8 +57,8 @@ describe("accessibility contracts", () => {
   test("recruitment cards own their navigation semantics", () => {
     assert.ok(recruitmentCard.includes("href: string"))
     assert.ok(recruitmentCard.includes("<AppLink"))
-    assert.ok(!existsSync(resolve(process.cwd(), "app/recruitment/page.tsx")))
-    assert.ok(!existsSync(resolve(process.cwd(), "app/recruitment/client.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/recruitment/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/recruitment/client.tsx")))
     assert.ok(eventClient.includes("href={`/events/${slug}/recruitment/${item.id}`}"))
     assert.ok(!eventClient.includes("<Link href={`/events/${slug}/recruitment/${item.id}`}"))
   })

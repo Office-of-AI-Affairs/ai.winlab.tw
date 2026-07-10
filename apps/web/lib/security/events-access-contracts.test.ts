@@ -3,12 +3,12 @@ import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { describe, test } from "node:test"
 
-const eventsPage = readFileSync(resolve(process.cwd(), "app/events/page.tsx"), "utf8")
-const eventsData = readFileSync(resolve(process.cwd(), "app/events/data.ts"), "utf8")
-const eventsClient = readFileSync(resolve(process.cwd(), "app/events/client.tsx"), "utf8")
-const eventDetailPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/page.tsx"), "utf8")
-const eventDetailData = readFileSync(resolve(process.cwd(), "app/events/[slug]/data.ts"), "utf8")
-const eventDetailClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/client.tsx"), "utf8")
+const eventsPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/page.tsx"), "utf8")
+const eventsData = readFileSync(resolve(process.cwd(), "app/[locale]/events/data.ts"), "utf8")
+const eventsClient = readFileSync(resolve(process.cwd(), "app/[locale]/events/client.tsx"), "utf8")
+const eventDetailPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/page.tsx"), "utf8")
+const eventDetailData = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/data.ts"), "utf8")
+const eventDetailClient = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/client.tsx"), "utf8")
 const memberEditor = readFileSync(resolve(process.cwd(), "components/member-editor.tsx"), "utf8")
 
 describe("events access contracts", () => {

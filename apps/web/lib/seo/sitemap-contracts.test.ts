@@ -4,16 +4,16 @@ import { resolve } from "node:path"
 import { describe, test } from "node:test"
 
 const sitemapFile = readFileSync(resolve(process.cwd(), "app/sitemap.ts"), "utf8")
-const homePage = readFileSync(resolve(process.cwd(), "app/page.tsx"), "utf8")
-const announcementPage = readFileSync(resolve(process.cwd(), "app/announcement/page.tsx"), "utf8")
-const eventsPage = readFileSync(resolve(process.cwd(), "app/events/page.tsx"), "utf8")
-const insightsPage = readFileSync(resolve(process.cwd(), "app/insights/page.tsx"), "utf8")
-const introductionPage = readFileSync(resolve(process.cwd(), "app/introduction/page.tsx"), "utf8")
-const organizationPage = readFileSync(resolve(process.cwd(), "app/introduction/page.tsx"), "utf8")
-const profileLayout = readFileSync(resolve(process.cwd(), "app/profile/[id]/layout.tsx"), "utf8")
-const eventLayout = readFileSync(resolve(process.cwd(), "app/events/[slug]/layout.tsx"), "utf8")
+const homePage = readFileSync(resolve(process.cwd(), "app/[locale]/page.tsx"), "utf8")
+const announcementPage = readFileSync(resolve(process.cwd(), "app/[locale]/announcement/page.tsx"), "utf8")
+const eventsPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/page.tsx"), "utf8")
+const insightsPage = readFileSync(resolve(process.cwd(), "app/[locale]/insights/page.tsx"), "utf8")
+const introductionPage = readFileSync(resolve(process.cwd(), "app/[locale]/introduction/page.tsx"), "utf8")
+const organizationPage = readFileSync(resolve(process.cwd(), "app/[locale]/introduction/page.tsx"), "utf8")
+const profileLayout = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/layout.tsx"), "utf8")
+const eventLayout = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/layout.tsx"), "utf8")
 const eventResultPage = readFileSync(
-  resolve(process.cwd(), "app/events/[slug]/results/[id]/page.tsx"),
+  resolve(process.cwd(), "app/[locale]/events/[slug]/results/[id]/page.tsx"),
   "utf8"
 )
 
@@ -46,7 +46,7 @@ describe("sitemap contracts", () => {
 
 describe("metadata contracts", () => {
   test("major public pages define metadata", () => {
-    assert.ok(homePage.includes("export const metadata"))
+    assert.ok(homePage.includes("export const metadata") || homePage.includes("generateMetadata"))
     assert.ok(announcementPage.includes("export const metadata"))
     assert.ok(eventsPage.includes("export const metadata"))
     assert.ok(insightsPage.includes("export const metadata"))

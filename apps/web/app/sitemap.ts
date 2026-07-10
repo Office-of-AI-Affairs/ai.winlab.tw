@@ -3,6 +3,11 @@ import type { MetadataRoute } from "next";
 
 const BASE_URL = "https://ai.winlab.tw";
 
+/** English (`/en`) variant of a zh-TW (bare) URL. */
+function enUrl(url: string): string {
+  return url === BASE_URL ? `${BASE_URL}/en` : url.replace(BASE_URL, `${BASE_URL}/en`);
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createPublicClient();
 
@@ -112,7 +117,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [
+  const all: MetadataRoute.Sitemap = [
     ...staticRoutes,
     ...announcementRoutes,
     ...eventRoutes,
@@ -121,4 +126,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...recruitmentRoutes,
     ...articleRoutes,
   ];
+
+  // Every public page also exists at `/en/*`; advertise the alternate so
+  // crawlers pick up the English version (chrome is localized, article bodies
+  // stay as authored). The zh-TW (bare) URL remains the primary entry.
+  return all.map((entry) => ({
+    ...entry,
+    alternates: {
+      languages: {
+        "zh-TW": entry.url,
+        en: enUrl(entry.url),
+      },
+    },
+  }));
 }

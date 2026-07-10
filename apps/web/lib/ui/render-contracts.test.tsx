@@ -3,8 +3,8 @@ import { existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { describe, test } from "node:test"
 
-import SettingsLoading from "@/app/settings/loading"
-import SettingsUsersLoading from "@/app/settings/users/loading"
+import SettingsLoading from "@/app/[locale]/settings/loading"
+import SettingsUsersLoading from "@/app/[locale]/settings/users/loading"
 import { renderToStaticMarkup } from "react-dom/server"
 
 import { AnnouncementTableSkeleton } from "@/components/announcement-table"

@@ -2,6 +2,9 @@ import { AppLink } from "@/components/app-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/date";
+import { type Locale } from "@/lib/i18n/config";
+import type { Dictionary } from "@/lib/i18n/dictionary";
+import { localizedPath } from "@/lib/i18n/routing";
 import { createPublicClient } from "@/lib/supabase/public";
 import Link from "next/link";
 
@@ -15,12 +18,6 @@ type ActivityItem = {
   authorName?: string | null;
 };
 
-const KIND_LABEL: Record<ActivityItem["kind"], string> = {
-  announcement: "公告",
-  result: "成果",
-  recruitment: "徵才",
-};
-
 function buildHref(item: ActivityItem): string {
   switch (item.kind) {
     case "announcement":
@@ -32,7 +29,15 @@ function buildHref(item: ActivityItem): string {
   }
 }
 
-export async function HomeActivity() {
+export async function HomeActivity({
+  t,
+  kindLabels,
+  locale,
+}: {
+  t: Dictionary["home"];
+  kindLabels: Dictionary["activityKind"];
+  locale: Locale;
+}) {
   const supabase = createPublicClient();
 
   const { data: events } = await supabase
@@ -140,9 +145,9 @@ export async function HomeActivity() {
 
   return (
     <div className="container max-w-6xl mx-auto py-16 px-4 flex flex-col gap-8">
-      <h2 className="text-2xl font-bold border-l-4 border-primary pl-3">最新動態</h2>
+      <h2 className="text-2xl font-bold border-l-4 border-primary pl-3">{t.activityHeading}</h2>
       {top.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">目前沒有動態</div>
+        <div className="text-center py-8 text-muted-foreground">{t.activityEmpty}</div>
       ) : (
         <ul className="flex flex-col gap-2">
           {top.map((item) => (
@@ -152,7 +157,7 @@ export async function HomeActivity() {
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors duration-200"
               >
                 <Badge variant="secondary" className="shrink-0">
-                  {KIND_LABEL[item.kind]}
+                  {kindLabels[item.kind]}
                 </Badge>
                 <span className="flex-1 line-clamp-1 text-sm sm:text-base">
                   {item.title}
@@ -166,7 +171,7 @@ export async function HomeActivity() {
                   </span>
                 )}
                 <span className="shrink-0 text-xs text-muted-foreground">
-                  {formatDate(item.createdAt)}
+                  {formatDate(item.createdAt, "short", locale)}
                 </span>
               </AppLink>
             </li>
@@ -175,7 +180,7 @@ export async function HomeActivity() {
       )}
       <div className="flex justify-center">
         <Button asChild variant="secondary" className="px-12 text-lg">
-          <Link href={ctaHref}>探索更多</Link>
+          <Link href={localizedPath(ctaHref, locale)}>{t.explore}</Link>
         </Button>
       </div>
     </div>
