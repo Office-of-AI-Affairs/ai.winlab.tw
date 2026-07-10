@@ -6,10 +6,11 @@ import { HomeEvents } from "@/components/home-events";
 import { HomeIntroduction } from "@/components/home-introduction";
 import { Reveal } from "@/components/reveal";
 import { JsonLd } from "@/components/json-ld";
+import { SITE_NAME, SITE_NAME_EN, SITE_NAME_ZH } from "@/lib/site";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "國立陽明交通大學 人工智慧專責辦公室",
+  title: SITE_NAME,
   description:
     "國立陽明交通大學人工智慧專責辦公室網站，提供辦公室介紹、組織成員、公告、活動專區、成果展示與徵才資訊。",
   alternates: {
@@ -20,10 +21,10 @@ export const metadata: Metadata = {
   // explicitly; relying on layout.tsx inheritance silently drops og:image.
   openGraph: {
     type: "website",
-    siteName: "國立陽明交通大學 人工智慧專責辦公室",
+    siteName: SITE_NAME,
     locale: "zh_TW",
     url: "https://ai.winlab.tw",
-    title: "國立陽明交通大學 人工智慧專責辦公室",
+    title: SITE_NAME,
     description:
       "國立陽明交通大學人工智慧專責辦公室網站，提供辦公室介紹、組織成員、公告、活動專區、成果展示與徵才資訊。",
     images: [
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "國立陽明交通大學 人工智慧專責辦公室",
+        alt: SITE_NAME,
       },
     ],
   },
@@ -41,7 +42,8 @@ export default async function Home() {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "國立陽明交通大學 人工智慧專責辦公室",
+    name: SITE_NAME_ZH,
+    alternateName: SITE_NAME_EN,
     url: "https://ai.winlab.tw",
     description:
       "國立陽明交通大學人工智慧專責辦公室網站，提供辦公室介紹、組織成員、公告、活動專區、成果展示與徵才資訊。",

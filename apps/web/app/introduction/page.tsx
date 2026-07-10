@@ -4,6 +4,7 @@ import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
 import type { Introduction, OrganizationMember, OrganizationMemberCategory } from "@winlab/db";
 import type { Metadata } from "next";
+import { SITE_NAME } from "@/lib/site";
 import { IntroductionArticleClient } from "./article-client";
 import { OrganizationPageClient } from "./client";
 import { getIntroduction, getOrganizationMembers } from "./data";
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
   // explicitly; relying on layout.tsx inheritance silently drops og:image.
   openGraph: {
     type: "website",
-    siteName: "國立陽明交通大學 人工智慧專責辦公室",
+    siteName: SITE_NAME,
     locale: "zh_TW",
     title: "組織｜人工智慧專責辦公室",
     description: "認識國立陽明交通大學人工智慧專責辦公室的定位、任務與組織成員。",

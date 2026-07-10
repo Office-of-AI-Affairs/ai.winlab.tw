@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OFFICE_NAME_EN, UNIVERSITY_NAME_EN } from "@/lib/site";
 
 const FOOTER_LINKS: { href: string; label: string; external?: boolean }[] = [
   { href: "/introduction", label: "組織" },
@@ -12,7 +13,7 @@ export function Footer() {
   return (
     <footer className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 py-8 w-full">
       <p className="text-sm text-muted-foreground">
-        &copy; {new Date().getFullYear()} Office of AI Affairs.
+        &copy; {new Date().getFullYear()} {UNIVERSITY_NAME_EN} &middot; {OFFICE_NAME_EN}
       </p>
       {FOOTER_LINKS.map(({ href, label, external }) =>
         external ? (

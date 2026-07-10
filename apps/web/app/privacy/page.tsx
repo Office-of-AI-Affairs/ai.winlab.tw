@@ -2,6 +2,7 @@ import { JsonLd } from "@/components/json-ld"
 import { estimateReadingTime } from "@/lib/ui/reading-time"
 import { renderArticle } from "@/lib/ui/rich-text"
 import type { Metadata } from "next"
+import { SITE_NAME } from "@/lib/site"
 import { PrivacyClient } from "./client"
 import { getCurrentPrivacyPolicy } from "./data"
 
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
   // explicitly; relying on layout.tsx inheritance silently drops og:image.
   openGraph: {
     type: "website",
-    siteName: "國立陽明交通大學 人工智慧專責辦公室",
+    siteName: SITE_NAME,
     locale: "zh_TW",
     title: "隱私權政策｜人工智慧專責辦公室",
     description: "國立陽明交通大學人工智慧專責辦公室網站的隱私權政策與資料使用說明。",

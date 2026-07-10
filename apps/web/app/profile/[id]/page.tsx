@@ -4,6 +4,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { getViewer } from "@/lib/supabase/get-viewer";
 import type { ExternalResult, Profile, PublicProfile, Result } from "@winlab/db";
 import type { Metadata } from "next";
+import { SITE_NAME } from "@/lib/site";
 import { redirect } from "next/navigation";
 
 export async function generateMetadata({
@@ -30,7 +31,7 @@ export async function generateMetadata({
     // explicitly; relying on layout.tsx inheritance silently drops og:image.
     openGraph: {
       type: "profile",
-      siteName: "國立陽明交通大學 人工智慧專責辦公室",
+      siteName: SITE_NAME,
       locale: "zh_TW",
       title,
       description,
