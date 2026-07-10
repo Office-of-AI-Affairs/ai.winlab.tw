@@ -2,7 +2,46 @@
   "common": {
     "skipToContent": "Skip to main content",
     "untitled": "(Untitled)",
-    "noDescription": "(No description)"
+    "noDescription": "(No description)",
+    "orgNameZh": "Office of AI Affairs",
+    "draft": "Draft",
+    "linkCopied": "Link copied",
+    "copyFailed": "Copy failed — please copy the URL from the address bar manually",
+    "shareLink": "Share link",
+    "unknownUser": "Unknown user",
+    "date": "Date",
+    "category": "Category",
+    "title": "Title",
+    "status": "Status",
+    "published": "Published",
+    "creating": "Creating…",
+    "unsavedConfirm": "You have unsaved changes. Are you sure you want to leave?",
+    "coverImage": "Cover image",
+    "uploading": "Uploading…",
+    "imageUploadHint": "JPEG / PNG / GIF / WebP, max 5MB",
+    "home": "Home",
+    "loginFirst": "Please sign in first",
+    "updated": "Updated",
+    "created": "Created",
+    "deleted": "Deleted",
+    "name": "Name",
+    "fullName": "Name",
+    "phone": "Phone",
+    "confirmDeleteTitle": "Delete this item?",
+    "deleteIrreversible": "This action cannot be undone.",
+    "actionFailedRetry": "Something went wrong. Please try again later.",
+    "user": "User",
+    "anonymousUser": "Anonymous user",
+    "actionFailed": "Action failed",
+    "titleSuffix": " | Office of AI Affairs",
+    "createFailed": "Failed to create",
+    "sortOrderHint": "Order (lower numbers appear first)",
+    "orderLabel": "Order {n}",
+    "lastUpdated": "Last updated:",
+    "loading": "Loading…",
+    "description": "Description",
+    "link": "Link",
+    "email": "Email"
   },
   "nav": {
     "about": "About",
@@ -15,7 +54,9 @@
     "openMenu": "Open menu",
     "menu": "Menu",
     "switchLanguage": "中文",
-    "switchLanguageLabel": "Switch language"
+    "switchLanguageLabel": "Switch language",
+    "brandAriaLabel": "Office of AI Affairs",
+    "languageLabel": "Language"
   },
   "footer": {
     "organization": "Organization",
@@ -45,7 +86,12 @@
     "body": "The page ran into a problem while loading. Try again — if it keeps failing, head back to the home page.",
     "code": "Error code",
     "retry": "Try again",
-    "home": "Back to home"
+    "home": "Back to home",
+    "imageFormatUnsupported": "Unsupported image format. Please use JPEG, PNG, GIF, or WebP.",
+    "imageTooLarge": "Image must not exceed 10MB.",
+    "pdfOnly": "Only PDF files are supported.",
+    "fileTooLarge": "File must not exceed 10MB.",
+    "resumeLoginRequired": "You must be signed in to upload a resume."
   },
   "notFound": {
     "code": "404",
@@ -53,5 +99,625 @@
     "body": "It may have been removed, isn't published yet, or the address is wrong.",
     "home": "Back to home",
     "browseEvents": "Browse events"
+  },
+  "events": {
+    "meta": {
+      "listTitle": "Events | AI Affairs Office",
+      "listDescription": "Browse events, showcases, and related content from the AI Affairs Office at National Yang Ming Chiao Tung University.",
+      "fallbackName": "Event",
+      "titleSuffix": " | AI Affairs Office",
+      "fallbackDescription": "{name} — AI Affairs Office, National Yang Ming Chiao Tung University",
+      "recruitmentFallbackTitle": "Recruitment | AI Affairs Office",
+      "recruitmentTitle": "{name} Recruitment | AI Affairs Office",
+      "recruitmentDescription": "AI talent openings from {name} partner companies — AI Affairs Office, National Yang Ming Chiao Tung University.",
+      "announcementsFallbackTitle": "Announcements | AI Affairs Office",
+      "announcementsTitle": "{name} Announcements | AI Affairs Office",
+      "announcementsDescription": "Announcement list for {name} — AI Affairs Office, National Yang Ming Chiao Tung University.",
+      "resultsFallbackTitle": "Results | AI Affairs Office",
+      "resultsTitle": "{name} Results | AI Affairs Office",
+      "resultsDescription": "Result showcase for {name} — AI Affairs Office, National Yang Ming Chiao Tung University.",
+      "membersFallbackTitle": "Members | AI Affairs Office",
+      "membersTitle": "{name} Members | AI Affairs Office"
+    },
+    "tabs": {
+      "announcements": "Announcements",
+      "results": "Results",
+      "recruitment": "Recruitment",
+      "members": "Members"
+    },
+    "members": {
+      "otherStrokeBucket": "Other",
+      "strokeBucket": "{stroke} strokes",
+      "removeError": "Unable to remove member",
+      "removeAriaFallback": "member",
+      "removeAria": "Remove {name}",
+      "noProfileHeading": "No profile yet"
+    },
+    "empty": {
+      "announcements": "No announcements yet",
+      "results": "No results yet",
+      "recruitment": "No recruitment listings yet",
+      "members": "No members yet"
+    },
+    "count": {
+      "announcements": "{count} announcements",
+      "results": "{count} results",
+      "recruitment": "{count} recruitment listings",
+      "members": "{total} members · {withProfile} with profiles"
+    },
+    "search": {
+      "announcements": "Search announcements…",
+      "noAnnouncements": "No announcements match your search",
+      "results": "Search results or authors…",
+      "noResults": "No results match your search",
+      "recruitment": "Search companies or positions…",
+      "noRecruitment": "No recruitment listings match your search",
+      "members": "Search members…",
+      "noMembers": "No members match your search"
+    },
+    "actions": {
+      "editEvent": "Edit event",
+      "newAnnouncement": "New announcement",
+      "newResult": "New result",
+      "newRecruitment": "New recruitment"
+    },
+    "edit": {
+      "slugTaken": "This slug is already in use. Please choose another.",
+      "dialogTitle": "Manage event",
+      "nameLabel": "Event name",
+      "namePlaceholder": "e.g. AI Rising Star",
+      "slugLabel": "Slug (URL path)",
+      "descriptionLabel": "Event description",
+      "descriptionPlaceholder": "Short event description (optional)",
+      "pinnedLabel": "Show in navigation bar",
+      "pinnedOn": "Pinned (shown in header)",
+      "pinnedOff": "Not pinned",
+      "sortOrderLabel": "Sort order (lower number shows first)",
+      "delete": "Delete event"
+    },
+    "backToEvent": "Back to event",
+    "list": {
+      "heading": "Events",
+      "countSummary": "{count} events in total",
+      "empty": "No events yet"
+    },
+    "notFound": {
+      "title": "Event not found",
+      "description": "It may have been removed, is not yet published, or the URL is incorrect.",
+      "backToList": "Back to events",
+      "viewEvent": "View event"
+    },
+    "addMemberError": "Could not add member",
+    "memberAdded": "Added {name}",
+    "addMember": "Add member",
+    "searchUserPlaceholder": "Search by user name…",
+    "noMatchingUser": "No matching users found",
+    "noUsers": "No users yet"
+  },
+  "actions": {
+    "backHome": "Back to home",
+    "changeCover": "Change cover",
+    "exitEdit": "Exit editing",
+    "save": "Save",
+    "unpublish": "Unpublish",
+    "publish": "Publish",
+    "uploadImage": "Upload image",
+    "removeImage": "Remove image",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "confirmDelete": "Delete",
+    "create": "Create",
+    "unpin": "Unpin",
+    "pin": "Pin",
+    "edit": "Edit",
+    "backToList": "Back to list",
+    "back": "Back",
+    "add": "Add"
+  },
+  "recruitment": {
+    "meta": {
+      "fallbackTitle": "Recruitment",
+      "fallbackDescription": "{title} | Event recruitment, AI Affairs Office, National Yang Ming Chiao Tung University"
+    },
+    "positionType": {
+      "fullTime": "Full-time",
+      "internship": "Internship",
+      "partTime": "Part-time",
+      "remote": "Remote"
+    },
+    "dialog": {
+      "titleRequired": "Please enter a title",
+      "editTitle": "Edit recruitment",
+      "createTitle": "New recruitment",
+      "editDescription": "Edit the recruitment details",
+      "createDescription": "Create a new recruitment listing",
+      "titlePlaceholder": "Company / organization name",
+      "companyDescLabel": "Company description",
+      "companyDescPlaceholder": "Briefly describe the company or organization (max 300 characters)",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "positions": "Positions",
+      "newPosition": "New position",
+      "deletePositionAria": "Delete position {n}",
+      "positionName": "Position title",
+      "positionNamePlaceholder": "e.g. Frontend Engineer",
+      "location": "Location",
+      "locationPlaceholder": "e.g. Taipei City",
+      "type": "Type",
+      "count": "Headcount",
+      "salary": "Salary",
+      "salaryPlaceholder": "e.g. 40,000-60,000 NTD/month",
+      "responsibilities": "Responsibilities",
+      "requirements": "Requirements",
+      "niceToHave": "Nice to have",
+      "addPosition": "Add position",
+      "applicationMethod": "How to apply",
+      "otherLabel": "Other",
+      "otherPlaceholder": "Other method",
+      "namedLinks": "Named links",
+      "addLink": "Add link",
+      "linkLabelPlaceholder": "e.g. 104",
+      "linkUrl": "URL",
+      "deleteLinkAria": "Delete link {n}",
+      "linksHint": "Add multiple site links such as 104, Instagram, Facebook, or an official site.",
+      "contactInfo": "Contact information",
+      "contactNamePlaceholder": "Contact person's name",
+      "requiredDocs": "Required documents",
+      "requiredDocsPlaceholder": "e.g. resume, portfolio, transcript…",
+      "ownersLabel": "Owners",
+      "ownersHint": "Owners can edit this listing and view applicants. Only admins can manage this list."
+    },
+    "detail": {
+      "deadlineTbd": "Deadline TBD",
+      "closed": "Closed",
+      "positionCount": "{count} positions",
+      "noPositions": "No positions yet",
+      "positionOpenings": "{count} openings",
+      "salaryRange": "Salary range: ",
+      "responsibilities": "Responsibilities",
+      "requirements": "Requirements",
+      "niceToHave": "Nice to have",
+      "gateTitle": "Sign in to view full internship details",
+      "gateDescription": "Position details, how to apply, required documents, and contacts are in the members-only area, visible only to partner companies and members after signing in.",
+      "gateCta": "Go to sign in",
+      "applicationMethod": "How to apply",
+      "contact": "Contact",
+      "requiredDocs": "Required documents"
+    },
+    "card": {
+      "startOnward": " onward"
+    },
+    "interest": {
+      "needResumeToast": "Please upload your resume on your profile page first",
+      "interested": "Interested",
+      "express": "I'm interested",
+      "count": "{count} interested",
+      "needResumeHint": "Upload your resume on your profile page so companies can view it",
+      "empty": "No one has expressed interest yet",
+      "viewResume": "View resume"
+    },
+    "owner": {
+      "loadOwnersError": "Failed to load owners",
+      "loadUsersError": "Failed to load user data",
+      "unknownEmail": "(Unknown)",
+      "empty": "No owners yet (only admins can edit this listing)",
+      "removeAria": "Remove owner {email}",
+      "add": "Add owner",
+      "searchPlaceholder": "Search by email or name…",
+      "noUsers": "No users found"
+    }
+  },
+  "results": {
+    "meta": {
+      "fallbackTitle": "Result",
+      "fallbackDescription": "{title} | Result showcase, AI Affairs Office, National Yang Ming Chiao Tung University"
+    },
+    "edit": {
+      "manageTitle": "Manage result",
+      "summaryLabel": "Summary",
+      "summaryPlaceholder": "Shown on the list card",
+      "delete": "Delete result"
+    },
+    "card": {
+      "anonymousAuthor": "Anonymous",
+      "noSummary": "(No summary)"
+    },
+    "notFound": {
+      "title": "Result not found"
+    }
+  },
+  "editor": {
+    "status": {
+      "deleting": "Deleting…",
+      "unpublishing": "Unpublishing…",
+      "publishing": "Publishing…",
+      "saving": "Saving…",
+      "unsaved": "Unsaved",
+      "saved": "Saved",
+      "error": "Save failed"
+    },
+    "titlePlaceholder": "Enter a title…",
+    "emptyContent": "(No content)",
+    "manageAnnouncement": "Manage announcement",
+    "manageArticle": "Manage article",
+    "summaryLabel": "Summary",
+    "summaryPlaceholder": "Introduce this article in a sentence…",
+    "coverLabel": "Cover image URL",
+    "coverPlaceholder": "https://… (leave empty to use the first image in the article)",
+    "deleteArticle": "Delete article",
+    "categoryPlaceholder": "Enter a category",
+    "deleteAnnouncement": "Delete announcement",
+    "toolbar": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "strike": "Strikethrough",
+      "heading1": "Heading 1",
+      "heading2": "Heading 2",
+      "heading3": "Heading 3",
+      "heading4": "Heading 4",
+      "bulletList": "Bullet list",
+      "orderedList": "Numbered list",
+      "alignLeft": "Align left",
+      "alignCenter": "Align center",
+      "alignRight": "Align right",
+      "undo": "Undo",
+      "redo": "Redo",
+      "insertImage": "Insert image",
+      "insertYoutube": "Insert YouTube video"
+    },
+    "youtubePrompt": "Enter the YouTube video URL",
+    "pill": {
+      "expandAria": "Expand editing tools"
+    }
+  },
+  "article": {
+    "readingTime": "{min} min read"
+  },
+  "announcement": {
+    "meta": {
+      "fallbackTitle": "Announcement",
+      "categoryDescription": "{category} announcement: {title}",
+      "fallbackDescription": "{title} | Event announcement",
+      "title": "Announcements | Office of AI Affairs",
+      "description": "Browse the latest announcements, admissions notices, and system updates from the NYCU Office of AI Affairs.",
+      "detailDescription": "{category} announcement: {title}",
+      "detailDescriptionFallback": "{title} | Announcement, NYCU Office of AI Affairs"
+    },
+    "edit": {
+      "manageTitle": "Manage event announcement"
+    },
+    "notFound": {
+      "title": "Announcement not found"
+    },
+    "notFoundTitle": "Announcement not found",
+    "backToList": "Back to announcements",
+    "newTitle": "New announcement",
+    "defaultCategory": "General",
+    "heading": "Latest announcements",
+    "create": "New announcement",
+    "empty": "No announcements yet",
+    "layoutMeta": {
+      "title": "Latest announcements | Office of AI Affairs",
+      "description": "Latest announcements and news from the NYCU Office of AI Affairs."
+    }
+  },
+  "tags": {
+    "filterHeading": "Filter by tag",
+    "addParentTitle": "Add parent tag",
+    "parentPlaceholder": "Parent tag name…",
+    "all": "All",
+    "addChildTitle": "Add child tag",
+    "childPlaceholder": "Child tag name…",
+    "confirmDelete": "Delete this tag? (including all child tags)"
+  },
+  "coauthor": {
+    "addError": "Unable to add coauthor",
+    "addSuccess": "Added {name} as a coauthor",
+    "removeError": "Unable to remove coauthor",
+    "removeSuccess": "Coauthor removed",
+    "label": "Coauthors",
+    "searchPlaceholder": "Search by user name…",
+    "noResults": "No matching users found",
+    "searchPrompt": "Type a name to search…"
+  },
+  "insights": {
+    "meta": {
+      "title": "Insights | Office of AI Affairs",
+      "description": "Observations, notes, and reflections from our office members — at least one a week.",
+      "fallbackTitle": "Insights",
+      "detailDescriptionFallback": "{title} | Insights from the NYCU Office of AI Affairs"
+    },
+    "heading": "Insights",
+    "subtitle": "Observations, notes, and reflections from our office members.",
+    "create": "New article",
+    "empty": "No articles yet",
+    "newTitle": "New article",
+    "notFoundTitle": "Article not found",
+    "backToList": "Back to insights"
+  },
+  "introduction": {
+    "fallbackTitle": "NYCU Office of Artificial Intelligence",
+    "meta": {
+      "title": "Organization | Office of Artificial Intelligence",
+      "description": "Learn about the mission, role, and members of NYCU's Office of Artificial Intelligence."
+    },
+    "category": {
+      "core": "Core Members",
+      "legalEntity": "Legal Entity",
+      "industry": "Industry"
+    },
+    "membersPending": "To be updated",
+    "manageTitle": "Manage organization page",
+    "orgChart": {
+      "heading": "Organization Chart",
+      "alliance": "Alliance",
+      "director": "Director",
+      "deputyDirector": "Deputy Director",
+      "jointExpert": "Joint-appointment Expert",
+      "trainingTeam": "Training Team",
+      "applicationTeam": "Application Team",
+      "directorName": "Prof. Chien-Chao Tseng",
+      "deputyLeftName": "Associate Dean Chun-Lung Huang",
+      "deputyRightName": "Director Chien-Chih Chen",
+      "jointExpertName": "Prof. Huai-Chung Hsu",
+      "collegeCS": "College of Computer Science",
+      "collegeGreenEnergy": "College of Smart Green Energy",
+      "jointExpertSub": "Director, Feng Chia University AI Center",
+      "trainingSub": "(Information Technology Center)",
+      "applicationSub": "(Faculty & Labs)"
+    }
+  },
+  "admin": {
+    "member": {
+      "namePlaceholder": "Member name",
+      "summaryLabel": "Summary",
+      "summaryPlaceholder": "Brief introduction",
+      "imageLabel": "Image",
+      "linkLabel": "Link (optional)",
+      "roleLabel": "Title (optional)",
+      "rolePlaceholder": "e.g. Director, Deputy Director, Joint-appointment Expert",
+      "schoolLabel": "Highest degree (optional)",
+      "schoolPlaceholder": "e.g. National Taiwan University (PhD, EE)",
+      "researchLabel": "Research areas (optional)",
+      "researchPlaceholder": "Research areas (separate with commas or line breaks)",
+      "emailLabel": "Email (optional)",
+      "websiteLabel": "Website (optional)",
+      "nameRequired": "Please enter a name",
+      "editTitle": "Edit member",
+      "createTitle": "Add member",
+      "editDesc": "Update member details",
+      "createDesc": "Create a new organization member",
+      "photoLabel": "Photo",
+      "photoAlt": "Member photo",
+      "uploadPhoto": "Upload photo",
+      "removePhoto": "Remove photo",
+      "rolePlaceholderShort": "e.g. Director, Deputy Director",
+      "schoolPlaceholderAlt": "e.g. Southern Methodist University, USA (PhD, CS)"
+    },
+    "settings": {
+      "title": "Settings",
+      "carousel": {
+        "label": "Home Banner",
+        "description": "Manage home carousel images, titles and links"
+      },
+      "users": {
+        "label": "User Management",
+        "description": "View all registered users and their roles"
+      },
+      "privacy": {
+        "label": "Privacy Policy",
+        "description": "Edit the privacy policy content with version history"
+      },
+      "metaTitle": "Settings | Office of AI Affairs"
+    },
+    "users": {
+      "toast": {
+        "addTagFailed": "Failed to add tag",
+        "removeTagFailed": "Failed to remove tag",
+        "deleted": "Deleted {name}",
+        "deleteFailed": "Delete failed",
+        "csvInvalid": "Invalid CSV format or no valid data. Make sure the header includes name and email columns.",
+        "importFailed": "Import failed"
+      },
+      "deleteDialog": {
+        "title": "Confirm user deletion",
+        "description": "Are you sure you want to delete {name}? This action cannot be undone.",
+        "deleting": "Deleting…"
+      },
+      "roles": {
+        "admin": "Administrator",
+        "user": "User",
+        "vendor": "Vendor",
+        "member": "Member"
+      },
+      "tagInputPlaceholder": "Add tag…",
+      "columns": {
+        "role": "Role",
+        "tags": "Tags",
+        "joined": "Joined"
+      },
+      "editUser": "Edit user",
+      "deleteAria": "Delete user",
+      "title": "User Management",
+      "exportCsv": "Export CSV",
+      "importing": "Importing…",
+      "importCsv": "Import CSV",
+      "createUser": "Add User",
+      "importResult": {
+        "summary": "Import complete: {created} created, {skipped} duplicate users skipped",
+        "passwordHint": "New users must set their own password via \"Forgot password\" before they can sign in."
+      },
+      "searchPlaceholder": "Search by name, email, role, or tag…",
+      "empty": {
+        "noMatch": "No users match your search",
+        "none": "No users yet"
+      },
+      "count": {
+        "filtered": "Showing {shown} of {total} users",
+        "total": "{total} users total"
+      },
+      "csvHelp": {
+        "title": "CSV import format",
+        "sampleRows": "Jane,jane@example.com",
+        "body": "Only the name and email columns are required. Duplicate emails are skipped automatically; new users default to the User role and must set a password via \"Forgot password\"."
+      },
+      "create": {
+        "toast": {
+          "emailRequired": "Please enter an email address",
+          "success": "User created. They must set a password via \"Forgot password\"."
+        },
+        "namePlaceholder": "Display name"
+      },
+      "field": {
+        "role": "Role"
+      },
+      "edit": {
+        "vendorNote": "Vendor access is determined by the \"Owners\" list on the recruitment editor page (no longer tied to an event).",
+        "memberNote": "Members can publish their own articles on the Perspectives page."
+      }
+    }
+  },
+  "contacts": {
+    "heading": "Contacts",
+    "subtitle": "Manage the contacts, titles, phone numbers, and emails shown in the home page 'Contact Us' section",
+    "defaultName": "New contact",
+    "addContact": "Add contact",
+    "empty": "No contacts yet",
+    "unnamed": "(Unnamed)",
+    "positionLabel": "Title",
+    "namePlaceholder": "Contact name",
+    "positionPlaceholder": "e.g. Administrative Assistant / Project Manager",
+    "phonePlaceholder": "e.g. 03-5131867#54832",
+    "emailLabel": "Email"
+  },
+  "privacy": {
+    "meta": {
+      "title": "Privacy Policy | Office of Artificial Intelligence",
+      "description": "Privacy policy and data-use statement for the NYCU Office of Artificial Intelligence website."
+    },
+    "unpublished": "Unpublished changes",
+    "versionLabel": "Version {n}",
+    "noVersion": "No version yet",
+    "loadVersionsError": "Failed to load version history",
+    "publishError": "Publish failed",
+    "publishedToast": "Published version {n}",
+    "restoreToast": "Loaded content from version {n}; remember to publish a new version",
+    "unpublishedLeaveConfirm": "You have unpublished changes. Are you sure you want to leave?",
+    "heading": "Privacy Policy",
+    "versionParen": "(version {n})",
+    "emptyContent": "The privacy policy has not been set up yet.",
+    "manageTitle": "Manage privacy policy",
+    "versionNote": "Version note",
+    "versionNotePlaceholder": "Key changes in this revision (optional)",
+    "publishNew": "Publish new version",
+    "versionHistory": "Version history",
+    "noVersionHistory": "No version history yet",
+    "noNote": "No note",
+    "current": "Current",
+    "restore": "Restore"
+  },
+  "carousel": {
+    "untitled": "(Untitled)",
+    "heading": "Home Banner",
+    "subtitle": "Manage the home page carousel images, with title, description, and link",
+    "addSlide": "Add banner",
+    "empty": "No banners yet",
+    "titlePlaceholder": "Banner headline",
+    "descriptionPlaceholder": "Subtitle or descriptive text",
+    "imageLabel": "Banner image",
+    "imageHint": "Recommended 16:9 ratio; JPEG/PNG/WebP/GIF, up to 5 MB"
+  },
+  "auth": {
+    "login": {
+      "metaTitle": "Sign In | Office of AI Affairs",
+      "title": "Sign In",
+      "subtitle": "Office of AI Affairs admin console",
+      "invalidCredentials": "Incorrect email or password",
+      "submit": "Sign In"
+    },
+    "passwordLabel": "Password",
+    "forgotPasswordLink": "Forgot password?",
+    "forgotPassword": {
+      "metaTitle": "Forgot Password | Office of AI Affairs",
+      "sendFailed": "Failed to send. Please try again later.",
+      "rateLimited": "Too many requests. Please try again later.",
+      "otpLengthError": "Please enter the {length}-digit verification code.",
+      "otpInvalid": "The verification code is incorrect or has expired. Please re-enter it or request a new code.",
+      "updateFailed": "Failed to update password. Please request a new verification code.",
+      "title": "Forgot Password",
+      "emailStepSubtitle": "Enter your email and we'll send you a verification code",
+      "codeStepSubtitle": "Enter the {length}-digit code from the email and your new password",
+      "sendCode": "Send Verification Code",
+      "otpLabel": "Verification Code",
+      "resent": "Verification code resent",
+      "changeEmail": "Use a different email",
+      "resendCooldown": "Resend in {seconds}s",
+      "resend": "Didn't get it? Resend code"
+    },
+    "password": {
+      "mismatch": "The passwords do not match.",
+      "requirements": "Password must be at least 6 characters and include uppercase and lowercase letters and a special character.",
+      "updated": "Password updated",
+      "loginWithNew": "Please sign in again with your new password."
+    },
+    "backToLogin": "Back to sign in",
+    "newPasswordLabel": "New Password",
+    "newPasswordPlaceholder": "At least 6 characters, with upper/lowercase and a special character",
+    "confirmPasswordLabel": "Confirm New Password",
+    "confirmPasswordPlaceholder": "Re-enter your new password",
+    "updatePassword": "Update Password",
+    "goToLogin": "Go to sign in",
+    "resetPassword": {
+      "metaTitle": "Reset Password | Office of AI Affairs",
+      "updateFailed": "Failed to update password. Please request a new reset link.",
+      "verifying": "Verifying…",
+      "invalidLinkTitle": "This link is invalid or has expired",
+      "invalidLinkDescription": "Please request a new password reset link.",
+      "reapply": "Request a new link",
+      "loading": "Loading…",
+      "title": "Reset Password",
+      "subtitle": "Set your new password"
+    }
+  },
+  "profile": {
+    "unknownUser": "Unknown user",
+    "addResult": "Add work",
+    "eventResultTab": "Event work",
+    "externalResultTab": "External work",
+    "noJoinedEvents": "You haven't joined any events yet",
+    "titleLabel": "Title *",
+    "titlePlaceholder": "Work title",
+    "descriptionPlaceholder": "Brief description…",
+    "coverImageLabel": "Cover image",
+    "uploadImage": "Upload image",
+    "imageUploadHint": "JPEG, PNG, GIF, WebP, up to 5MB",
+    "editExternalResult": "Edit external work",
+    "doneEditing": "Done",
+    "editProfile": "Edit profile",
+    "gravatarSetAvatar": "Set your avatar on Gravatar",
+    "namePlaceholder": "Enter your name",
+    "bioLabel": "Bio",
+    "bioPlaceholder": "Tell us a bit about yourself…",
+    "signInToSeeMore": "The rest of this profile is visible only after you sign in.",
+    "resumeLabel": "Resume",
+    "removeResume": "Remove resume",
+    "noResumeUploaded": "No resume uploaded yet",
+    "uploadResume": "Upload PDF resume",
+    "viewResume": "View resume",
+    "linksLabel": "Links",
+    "linkAriaLabel": "Link {n}",
+    "deleteLinkAria": "Delete link {n}",
+    "noLinks": "No links added yet",
+    "noResults": "No work yet",
+    "externalBadge": "External",
+    "metaNameFallback": "Member",
+    "metaTitleSuffix": "{name} | Office of AI Affairs",
+    "metaDescription": "{name}'s profile — a member of the NYCU Office of AI Affairs, with research work.",
+    "metaNameFallbackGeneric": "Profile",
+    "layoutMetaDescription": "{name}'s public profile, showcasing work, external projects, and related links.",
+    "orgName": "NYCU Office of AI Affairs"
+  },
+  "i18nNotice": {
+    "untranslated": "This section is currently available in Chinese only."
   }
 }

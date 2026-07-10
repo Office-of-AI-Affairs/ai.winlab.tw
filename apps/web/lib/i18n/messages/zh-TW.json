@@ -2,7 +2,46 @@
   "common": {
     "skipToContent": "跳至主要內容",
     "untitled": "(無標題)",
-    "noDescription": "（無描述）"
+    "noDescription": "（無描述）",
+    "orgNameZh": "人工智慧專責辦公室",
+    "draft": "草稿",
+    "linkCopied": "已複製連結",
+    "copyFailed": "複製失敗，請手動複製網址列",
+    "shareLink": "分享連結",
+    "unknownUser": "未知使用者",
+    "date": "公告日期",
+    "category": "類別",
+    "title": "標題",
+    "status": "狀態",
+    "published": "已發布",
+    "creating": "建立中…",
+    "unsavedConfirm": "你有尚未儲存的變更，確定要離開嗎？",
+    "coverImage": "封面圖片",
+    "uploading": "上傳中…",
+    "imageUploadHint": "JPEG / PNG / GIF / WebP，最大 5MB",
+    "home": "首頁",
+    "loginFirst": "請先登入",
+    "updated": "已更新",
+    "created": "已建立",
+    "deleted": "已刪除",
+    "name": "名稱",
+    "fullName": "姓名",
+    "phone": "電話",
+    "confirmDeleteTitle": "確定要刪除？",
+    "deleteIrreversible": "此操作無法復原",
+    "actionFailedRetry": "操作失敗，請稍後再試",
+    "user": "使用者",
+    "anonymousUser": "匿名使用者",
+    "actionFailed": "操作失敗",
+    "titleSuffix": "｜人工智慧專責辦公室",
+    "createFailed": "建立失敗",
+    "sortOrderHint": "排序（數字越小越前面）",
+    "orderLabel": "順序 {n}",
+    "lastUpdated": "最後更新：",
+    "loading": "載入中…",
+    "description": "描述",
+    "link": "連結",
+    "email": "電子信箱"
   },
   "nav": {
     "about": "關於",
@@ -15,7 +54,9 @@
     "openMenu": "開啟選單",
     "menu": "選單",
     "switchLanguage": "English",
-    "switchLanguageLabel": "切換語言"
+    "switchLanguageLabel": "切換語言",
+    "brandAriaLabel": "人工智慧專責辦公室 — Office of AI Affairs",
+    "languageLabel": "語言 / Language"
   },
   "footer": {
     "organization": "組織",
@@ -45,7 +86,12 @@
     "body": "頁面載入時出了點問題。重試一次看看；如果還是不行，或許可以先回首頁繼續瀏覽。",
     "code": "錯誤代碼",
     "retry": "重試",
-    "home": "返回首頁"
+    "home": "返回首頁",
+    "imageFormatUnsupported": "不支援的圖片格式，請使用 JPEG、PNG、GIF 或 WebP",
+    "imageTooLarge": "圖片大小不可超過 10MB",
+    "pdfOnly": "僅支援 PDF 格式",
+    "fileTooLarge": "檔案大小不可超過 10MB",
+    "resumeLoginRequired": "尚未登入，無法上傳履歷"
   },
   "notFound": {
     "code": "404",
@@ -53,5 +99,625 @@
     "body": "可能已被移除、尚未發布，或網址有誤。",
     "home": "返回首頁",
     "browseEvents": "瀏覽活動"
+  },
+  "events": {
+    "meta": {
+      "listTitle": "活動專區｜人工智慧專責辦公室",
+      "listDescription": "瀏覽國立陽明交通大學人工智慧專責辦公室的活動專區、成果展示與相關內容。",
+      "fallbackName": "活動",
+      "titleSuffix": "｜人工智慧專責辦公室",
+      "fallbackDescription": "{name} — 國立陽明交通大學人工智慧專責辦公室",
+      "recruitmentFallbackTitle": "徵才｜人工智慧專責辦公室",
+      "recruitmentTitle": "{name} 徵才｜人工智慧專責辦公室",
+      "recruitmentDescription": "{name} 合作企業招募中的 AI 人才職缺 — 國立陽明交通大學人工智慧專責辦公室。",
+      "announcementsFallbackTitle": "公告｜人工智慧專責辦公室",
+      "announcementsTitle": "{name} 公告｜人工智慧專責辦公室",
+      "announcementsDescription": "{name} 活動公告列表 — 國立陽明交通大學人工智慧專責辦公室。",
+      "resultsFallbackTitle": "成果｜人工智慧專責辦公室",
+      "resultsTitle": "{name} 成果｜人工智慧專責辦公室",
+      "resultsDescription": "{name} 活動成果展示 — 國立陽明交通大學人工智慧專責辦公室。",
+      "membersFallbackTitle": "學員名單｜人工智慧專責辦公室",
+      "membersTitle": "{name} 學員名單｜人工智慧專責辦公室"
+    },
+    "tabs": {
+      "announcements": "公告",
+      "results": "成果",
+      "recruitment": "徵才",
+      "members": "學員名單"
+    },
+    "members": {
+      "otherStrokeBucket": "其他",
+      "strokeBucket": "{stroke} 畫",
+      "removeError": "無法移除成員",
+      "removeAriaFallback": "成員",
+      "removeAria": "移除 {name}",
+      "noProfileHeading": "尚未建立個人檔案"
+    },
+    "empty": {
+      "announcements": "尚無公告",
+      "results": "尚無成果",
+      "recruitment": "尚無徵才資訊",
+      "members": "尚無成員"
+    },
+    "count": {
+      "announcements": "共 {count} 則公告",
+      "results": "共 {count} 個成果",
+      "recruitment": "共 {count} 筆徵才",
+      "members": "共 {total} 位學員 · {withProfile} 位已建檔"
+    },
+    "search": {
+      "announcements": "搜尋公告⋯",
+      "noAnnouncements": "沒有符合搜尋的公告",
+      "results": "搜尋成果或作者⋯",
+      "noResults": "沒有符合搜尋的成果",
+      "recruitment": "搜尋企業或職缺⋯",
+      "noRecruitment": "沒有符合搜尋的徵才",
+      "members": "搜尋學員⋯",
+      "noMembers": "沒有符合搜尋的學員"
+    },
+    "actions": {
+      "editEvent": "編輯活動",
+      "newAnnouncement": "新增公告",
+      "newResult": "新增成果",
+      "newRecruitment": "新增徵才"
+    },
+    "edit": {
+      "slugTaken": "此 slug 已被使用，請選擇其他名稱",
+      "dialogTitle": "管理活動",
+      "nameLabel": "活動名稱",
+      "namePlaceholder": "例：AI新秀",
+      "slugLabel": "Slug（URL 路徑）",
+      "descriptionLabel": "活動簡介",
+      "descriptionPlaceholder": "活動簡短介紹（選填）",
+      "pinnedLabel": "顯示於導覽列",
+      "pinnedOn": "已釘選（顯示於 Header）",
+      "pinnedOff": "未釘選",
+      "sortOrderLabel": "排列順序（數字越小越前）",
+      "delete": "刪除活動"
+    },
+    "backToEvent": "返回活動",
+    "list": {
+      "heading": "活動專區",
+      "countSummary": "當前共有 {count} 場活動",
+      "empty": "目前沒有活動"
+    },
+    "notFound": {
+      "title": "找不到這個活動",
+      "description": "可能已被移除、尚未發布，或網址有誤。",
+      "backToList": "返回活動列表",
+      "viewEvent": "查看活動"
+    },
+    "addMemberError": "無法新增成員",
+    "memberAdded": "已新增 {name}",
+    "addMember": "新增成員",
+    "searchUserPlaceholder": "搜尋使用者名稱…",
+    "noMatchingUser": "找不到符合的使用者",
+    "noUsers": "尚無使用者"
+  },
+  "actions": {
+    "backHome": "返回首頁",
+    "changeCover": "更換封面",
+    "exitEdit": "退出編輯",
+    "save": "儲存",
+    "unpublish": "取消發布",
+    "publish": "發布",
+    "uploadImage": "上傳圖片",
+    "removeImage": "移除圖片",
+    "delete": "刪除",
+    "cancel": "取消",
+    "confirmDelete": "確定刪除",
+    "create": "建立",
+    "unpin": "取消釘選",
+    "pin": "釘選",
+    "edit": "編輯",
+    "backToList": "返回列表",
+    "back": "返回",
+    "add": "新增"
+  },
+  "recruitment": {
+    "meta": {
+      "fallbackTitle": "徵才資訊",
+      "fallbackDescription": "{title}｜國立陽明交通大學人工智慧專責辦公室活動徵才資訊"
+    },
+    "positionType": {
+      "fullTime": "全職",
+      "internship": "實習",
+      "partTime": "兼職",
+      "remote": "遠端"
+    },
+    "dialog": {
+      "titleRequired": "請輸入標題",
+      "editTitle": "編輯徵才",
+      "createTitle": "新增徵才",
+      "editDescription": "修改徵才資訊",
+      "createDescription": "建立新的徵才項目",
+      "titlePlaceholder": "公司 / 組織名稱",
+      "companyDescLabel": "公司簡介",
+      "companyDescPlaceholder": "簡短描述公司或組織（最多 300 字）",
+      "startDate": "開始日期",
+      "endDate": "結束日期",
+      "positions": "職缺",
+      "newPosition": "新職缺",
+      "deletePositionAria": "刪除職缺 {n}",
+      "positionName": "職缺名稱",
+      "positionNamePlaceholder": "例：前端工程師",
+      "location": "地點",
+      "locationPlaceholder": "例：台北市",
+      "type": "類型",
+      "count": "人數",
+      "salary": "薪資",
+      "salaryPlaceholder": "例：40,000-60,000 NTD/月",
+      "responsibilities": "工作內容",
+      "requirements": "必要條件",
+      "niceToHave": "加分條件",
+      "addPosition": "新增職缺",
+      "applicationMethod": "應徵方式",
+      "otherLabel": "其他",
+      "otherPlaceholder": "其他方式",
+      "namedLinks": "具名連結",
+      "addLink": "新增連結",
+      "linkLabelPlaceholder": "例：104",
+      "linkUrl": "網址",
+      "deleteLinkAria": "刪除連結 {n}",
+      "linksHint": "可新增 104、Instagram、Facebook、Official site 等多個網站連結。",
+      "contactInfo": "聯絡資訊",
+      "contactNamePlaceholder": "聯絡人姓名",
+      "requiredDocs": "應備文件",
+      "requiredDocsPlaceholder": "例：履歷、作品集、成績單…",
+      "ownersLabel": "擁有者",
+      "ownersHint": "擁有者可編輯此徵才資訊、查看應徵者名單。僅 admin 能管理此清單。"
+    },
+    "detail": {
+      "deadlineTbd": "截止日未定",
+      "closed": "已截止",
+      "positionCount": "{count} 個職缺",
+      "noPositions": "暫無職缺",
+      "positionOpenings": "{count} 名",
+      "salaryRange": "薪資範圍：",
+      "responsibilities": "工作內容",
+      "requirements": "必備條件",
+      "niceToHave": "加分條件",
+      "gateTitle": "登入後可查看完整實習職缺資訊",
+      "gateDescription": "實習職缺細節、應徵方式、應備文件與聯絡窗口皆放置於登入後專區，僅限合作企業與學員登入後查看。",
+      "gateCta": "前往登入",
+      "applicationMethod": "應徵方式",
+      "contact": "聯絡窗口",
+      "requiredDocs": "應備文件"
+    },
+    "card": {
+      "startOnward": " 起"
+    },
+    "interest": {
+      "needResumeToast": "請先到個人頁面上傳履歷",
+      "interested": "已感興趣",
+      "express": "我感興趣",
+      "count": "{count} 人感興趣",
+      "needResumeHint": "請先到個人頁面上傳履歷，以便廠商查看",
+      "empty": "目前尚無人表達感興趣",
+      "viewResume": "查看履歷"
+    },
+    "owner": {
+      "loadOwnersError": "載入擁有者失敗",
+      "loadUsersError": "載入使用者資料失敗",
+      "unknownEmail": "(未知)",
+      "empty": "尚無擁有者（只有 admin 能編輯此徵才）",
+      "removeAria": "移除擁有者 {email}",
+      "add": "新增擁有者",
+      "searchPlaceholder": "搜尋 email 或姓名…",
+      "noUsers": "找不到使用者"
+    }
+  },
+  "results": {
+    "meta": {
+      "fallbackTitle": "成果",
+      "fallbackDescription": "{title}｜國立陽明交通大學人工智慧專責辦公室成果展示"
+    },
+    "edit": {
+      "manageTitle": "管理成果",
+      "summaryLabel": "摘要",
+      "summaryPlaceholder": "顯示於列表卡片",
+      "delete": "刪除成果"
+    },
+    "card": {
+      "anonymousAuthor": "匿名",
+      "noSummary": "（無摘要）"
+    },
+    "notFound": {
+      "title": "找不到這份成果"
+    }
+  },
+  "editor": {
+    "status": {
+      "deleting": "刪除中…",
+      "unpublishing": "取消發布中…",
+      "publishing": "發布中…",
+      "saving": "儲存中…",
+      "unsaved": "尚未儲存",
+      "saved": "已儲存",
+      "error": "儲存失敗"
+    },
+    "titlePlaceholder": "輸入標題…",
+    "emptyContent": "（無內容）",
+    "manageAnnouncement": "管理公告",
+    "manageArticle": "管理文章",
+    "summaryLabel": "摘要",
+    "summaryPlaceholder": "一段話介紹這篇文章…",
+    "coverLabel": "封面圖 URL",
+    "coverPlaceholder": "https://…（留空時自動取文章內第一張圖）",
+    "deleteArticle": "刪除文章",
+    "categoryPlaceholder": "請輸入類別",
+    "deleteAnnouncement": "刪除公告",
+    "toolbar": {
+      "bold": "粗體",
+      "italic": "斜體",
+      "strike": "刪除線",
+      "heading1": "標題 1",
+      "heading2": "標題 2",
+      "heading3": "標題 3",
+      "heading4": "標題 4",
+      "bulletList": "項目清單",
+      "orderedList": "編號清單",
+      "alignLeft": "靠左對齊",
+      "alignCenter": "置中對齊",
+      "alignRight": "靠右對齊",
+      "undo": "復原",
+      "redo": "重做",
+      "insertImage": "插入圖片",
+      "insertYoutube": "插入 YouTube"
+    },
+    "youtubePrompt": "請輸入 YouTube 影片網址",
+    "pill": {
+      "expandAria": "展開編輯工具"
+    }
+  },
+  "article": {
+    "readingTime": "閱讀 {min} 分鐘"
+  },
+  "announcement": {
+    "meta": {
+      "fallbackTitle": "公告",
+      "categoryDescription": "{category}公告：{title}",
+      "fallbackDescription": "{title}｜活動公告",
+      "title": "公告｜人工智慧專責辦公室",
+      "description": "查看國立陽明交通大學人工智慧專責辦公室的最新公告、招生資訊與系統公告。",
+      "detailDescription": "{category}公告：{title}",
+      "detailDescriptionFallback": "{title}｜國立陽明交通大學人工智慧專責辦公室公告"
+    },
+    "edit": {
+      "manageTitle": "管理活動公告"
+    },
+    "notFound": {
+      "title": "找不到這則公告"
+    },
+    "notFoundTitle": "找不到這則公告",
+    "backToList": "返回公告列表",
+    "newTitle": "新公告",
+    "defaultCategory": "一般",
+    "heading": "最新公告",
+    "create": "新增公告",
+    "empty": "尚無公告",
+    "layoutMeta": {
+      "title": "最新公告｜人工智慧專責辦公室",
+      "description": "國立陽明交通大學人工智慧專責辦公室最新公告與消息。"
+    }
+  },
+  "tags": {
+    "filterHeading": "標籤篩選",
+    "addParentTitle": "新增大標",
+    "parentPlaceholder": "大標名稱…",
+    "all": "全部",
+    "addChildTitle": "新增小標",
+    "childPlaceholder": "小標名稱…",
+    "confirmDelete": "確定要刪除此標籤？（包含所有子標籤）"
+  },
+  "coauthor": {
+    "addError": "無法新增共同作者",
+    "addSuccess": "已新增 {name} 為共同作者",
+    "removeError": "無法移除共同作者",
+    "removeSuccess": "已移除共同作者",
+    "label": "共同作者",
+    "searchPlaceholder": "搜尋使用者名稱…",
+    "noResults": "找不到符合的使用者",
+    "searchPrompt": "輸入名稱搜尋…"
+  },
+  "insights": {
+    "meta": {
+      "title": "觀點｜人工智慧專責辦公室",
+      "description": "辦公室成員的觀察、筆記與分享 — 一週至少一篇。",
+      "fallbackTitle": "觀點",
+      "detailDescriptionFallback": "{title}｜國立陽明交通大學人工智慧專責辦公室觀點分享"
+    },
+    "heading": "觀點",
+    "subtitle": "辦公室成員的觀察、筆記與分享。",
+    "create": "新增文章",
+    "empty": "尚無文章",
+    "newTitle": "新文章",
+    "notFoundTitle": "找不到這篇文章",
+    "backToList": "返回觀點列表"
+  },
+  "introduction": {
+    "fallbackTitle": "國立陽明交通大學 人工智慧專責辦公室",
+    "meta": {
+      "title": "組織｜人工智慧專責辦公室",
+      "description": "認識國立陽明交通大學人工智慧專責辦公室的定位、任務與組織成員。"
+    },
+    "category": {
+      "core": "核心成員",
+      "legalEntity": "法人",
+      "industry": "產業"
+    },
+    "membersPending": "待更新",
+    "manageTitle": "管理組織頁",
+    "orgChart": {
+      "heading": "組織架構",
+      "alliance": "聯盟",
+      "director": "主任",
+      "deputyDirector": "副主任",
+      "jointExpert": "合聘專家",
+      "trainingTeam": "培訓團隊",
+      "applicationTeam": "應用團隊",
+      "directorName": "曾建超教授",
+      "deputyLeftName": "黃俊龍副院長",
+      "deputyRightName": "陳建志所長",
+      "jointExpertName": "許懷中教授",
+      "collegeCS": "資訊學院",
+      "collegeGreenEnergy": "智慧綠能學院",
+      "jointExpertSub": "逢甲AI中心主任",
+      "trainingSub": "（資訊技術中心）",
+      "applicationSub": "（教授與實驗室）"
+    }
+  },
+  "admin": {
+    "member": {
+      "namePlaceholder": "成員姓名",
+      "summaryLabel": "簡介",
+      "summaryPlaceholder": "簡短介紹",
+      "imageLabel": "圖片",
+      "linkLabel": "連結（選填）",
+      "roleLabel": "職稱（選填）",
+      "rolePlaceholder": "例：主任、副主任、合聘專家",
+      "schoolLabel": "最高學歷（選填）",
+      "schoolPlaceholder": "例：國立台灣大學（電機博士）",
+      "researchLabel": "研究領域（選填）",
+      "researchPlaceholder": "研究領域（以頓號或換行分隔）",
+      "emailLabel": "Email（選填）",
+      "websiteLabel": "個人網頁（選填）",
+      "nameRequired": "請輸入名稱",
+      "editTitle": "編輯成員",
+      "createTitle": "新增成員",
+      "editDesc": "修改成員資訊",
+      "createDesc": "建立新的組織成員",
+      "photoLabel": "照片",
+      "photoAlt": "成員照片",
+      "uploadPhoto": "上傳照片",
+      "removePhoto": "移除照片",
+      "rolePlaceholderShort": "例：主任、副主任",
+      "schoolPlaceholderAlt": "例：美國南美以美大學（資工博士）"
+    },
+    "settings": {
+      "title": "系統設定",
+      "carousel": {
+        "label": "首頁橫幅",
+        "description": "管理首頁輪播圖片、標題與連結"
+      },
+      "users": {
+        "label": "用戶管理",
+        "description": "查看所有已註冊用戶及其角色"
+      },
+      "privacy": {
+        "label": "隱私權政策",
+        "description": "編輯隱私權政策內容，支援版本紀錄"
+      },
+      "metaTitle": "系統設定｜人工智慧專責辦公室"
+    },
+    "users": {
+      "toast": {
+        "addTagFailed": "標籤新增失敗",
+        "removeTagFailed": "標籤移除失敗",
+        "deleted": "已刪除 {name}",
+        "deleteFailed": "刪除失敗",
+        "csvInvalid": "CSV 格式錯誤或無有效資料。請確認標頭包含 name 和 email 欄位。",
+        "importFailed": "匯入失敗"
+      },
+      "deleteDialog": {
+        "title": "確認刪除使用者",
+        "description": "確定要刪除 {name}？此操作無法還原。",
+        "deleting": "刪除中…"
+      },
+      "roles": {
+        "admin": "管理員",
+        "user": "一般用戶",
+        "vendor": "廠商",
+        "member": "成員"
+      },
+      "tagInputPlaceholder": "新增標籤…",
+      "columns": {
+        "role": "角色",
+        "tags": "標籤",
+        "joined": "加入時間"
+      },
+      "editUser": "編輯使用者",
+      "deleteAria": "刪除使用者",
+      "title": "用戶管理",
+      "exportCsv": "匯出 CSV",
+      "importing": "匯入中…",
+      "importCsv": "匯入 CSV",
+      "createUser": "新增使用者",
+      "importResult": {
+        "summary": "匯入完成：成功建立 {created} 位，跳過 {skipped} 位重複用戶",
+        "passwordHint": "新用戶需透過「忘記密碼」設定自己的密碼後才能登入。"
+      },
+      "searchPlaceholder": "搜尋姓名、信箱、角色、標籤…",
+      "empty": {
+        "noMatch": "找不到符合條件的用戶",
+        "none": "尚無用戶資料"
+      },
+      "count": {
+        "filtered": "顯示 {shown} / {total} 位用戶",
+        "total": "共 {total} 位用戶"
+      },
+      "csvHelp": {
+        "title": "CSV 匯入格式",
+        "sampleRows": "張三,zhang3@example.com",
+        "body": "僅需 name 與 email 欄位。重複 email 自動跳過，新用戶預設為一般用戶，需透過「忘記密碼」設定密碼。"
+      },
+      "create": {
+        "toast": {
+          "emailRequired": "請填寫電子信箱",
+          "success": "使用者已建立，需透過「忘記密碼」設定密碼"
+        },
+        "namePlaceholder": "顯示名稱"
+      },
+      "field": {
+        "role": "角色"
+      },
+      "edit": {
+        "vendorNote": "vendor 權限由 徵才編輯頁 的「擁有者」清單決定（不再綁活動）。",
+        "memberNote": "成員可在 觀點 頁面發布自己的文章。"
+      }
+    }
+  },
+  "contacts": {
+    "heading": "聯絡資訊",
+    "subtitle": "管理首頁「聯絡我們」區塊的聯絡人、職位、電話與信箱",
+    "defaultName": "新聯絡人",
+    "addContact": "新增聯絡人",
+    "empty": "尚無聯絡人",
+    "unnamed": "(未命名)",
+    "positionLabel": "職位（新增）",
+    "namePlaceholder": "聯絡人姓名",
+    "positionPlaceholder": "例如：行政助理 / 專案經理",
+    "phonePlaceholder": "例如：03-5131867#54832",
+    "emailLabel": "信箱"
+  },
+  "privacy": {
+    "meta": {
+      "title": "隱私權政策｜人工智慧專責辦公室",
+      "description": "國立陽明交通大學人工智慧專責辦公室網站的隱私權政策與資料使用說明。"
+    },
+    "unpublished": "尚未發布",
+    "versionLabel": "第 {n} 版",
+    "noVersion": "尚無版本",
+    "loadVersionsError": "載入版本紀錄失敗",
+    "publishError": "發布失敗",
+    "publishedToast": "已發布第 {n} 版",
+    "restoreToast": "已載入第 {n} 版內容，記得發布新版本",
+    "unpublishedLeaveConfirm": "你有尚未發布的變更，確定要離開嗎？",
+    "heading": "隱私權政策",
+    "versionParen": "（第 {n} 版）",
+    "emptyContent": "隱私權政策尚未設定。",
+    "manageTitle": "管理隱私權政策",
+    "versionNote": "版本備註",
+    "versionNotePlaceholder": "本次修訂重點（選填）",
+    "publishNew": "發布新版本",
+    "versionHistory": "版本紀錄",
+    "noVersionHistory": "尚無版本紀錄",
+    "noNote": "尚無備註",
+    "current": "目前",
+    "restore": "載入"
+  },
+  "carousel": {
+    "untitled": "(無標題)",
+    "heading": "首頁橫幅",
+    "subtitle": "管理首頁輪播圖片，可設定標題、描述與連結",
+    "addSlide": "新增橫幅",
+    "empty": "尚無橫幅",
+    "titlePlaceholder": "橫幅主標題",
+    "descriptionPlaceholder": "副標或說明文字",
+    "imageLabel": "橫幅圖片",
+    "imageHint": "建議比例 16:9，JPEG/PNG/WebP/GIF，最大 5MB"
+  },
+  "auth": {
+    "login": {
+      "metaTitle": "登入｜人工智慧專責辦公室",
+      "title": "登入",
+      "subtitle": "人工智慧專責辦公室管理後台",
+      "invalidCredentials": "錯誤的帳號或密碼",
+      "submit": "登入"
+    },
+    "passwordLabel": "密碼",
+    "forgotPasswordLink": "忘記密碼？",
+    "forgotPassword": {
+      "metaTitle": "忘記密碼｜人工智慧專責辦公室",
+      "sendFailed": "發送失敗，請稍後再試。",
+      "rateLimited": "寄送太頻繁，請稍後再試。",
+      "otpLengthError": "請輸入 ${OTP_LENGTH} 位數驗證碼。",
+      "otpInvalid": "驗證碼錯誤或已過期，請重新輸入或申請新的驗證碼。",
+      "updateFailed": "密碼更新失敗，請重新申請驗證碼。",
+      "title": "忘記密碼",
+      "emailStepSubtitle": "輸入電子信箱，我們會寄送驗證碼",
+      "codeStepSubtitle": "輸入信中的 ${OTP_LENGTH} 位數驗證碼與新密碼",
+      "sendCode": "發送驗證碼",
+      "otpLabel": "驗證碼",
+      "resent": "已重新寄出驗證碼",
+      "changeEmail": "換個信箱",
+      "resendCooldown": "${cooldown} 秒後可重寄",
+      "resend": "沒收到？重寄驗證碼"
+    },
+    "password": {
+      "mismatch": "兩次輸入的密碼不一致。",
+      "requirements": "密碼須至少 6 個字元，且包含大寫、小寫字母與特殊符號。",
+      "updated": "密碼已更新",
+      "loginWithNew": "請使用新密碼重新登入。"
+    },
+    "backToLogin": "返回登入",
+    "newPasswordLabel": "新密碼",
+    "newPasswordPlaceholder": "至少 6 字元，含大小寫與特殊符號",
+    "confirmPasswordLabel": "確認新密碼",
+    "confirmPasswordPlaceholder": "再次輸入新密碼",
+    "updatePassword": "更新密碼",
+    "goToLogin": "前往登入",
+    "resetPassword": {
+      "metaTitle": "重設密碼｜人工智慧專責辦公室",
+      "updateFailed": "密碼更新失敗，請重新申請重設連結。",
+      "verifying": "驗證中…",
+      "invalidLinkTitle": "連結無效或已過期",
+      "invalidLinkDescription": "請重新申請密碼重設連結。",
+      "reapply": "重新申請",
+      "loading": "載入中…",
+      "title": "重設密碼",
+      "subtitle": "設定您的新密碼"
+    }
+  },
+  "profile": {
+    "unknownUser": "未知使用者",
+    "addResult": "新增成果",
+    "eventResultTab": "活動成果",
+    "externalResultTab": "外部成果",
+    "noJoinedEvents": "尚未加入任何活動",
+    "titleLabel": "標題 *",
+    "titlePlaceholder": "成果名稱",
+    "descriptionPlaceholder": "簡短說明…",
+    "coverImageLabel": "封面圖片",
+    "uploadImage": "上傳圖片",
+    "imageUploadHint": "JPEG、PNG、GIF、WebP，最大 5MB",
+    "editExternalResult": "編輯外部成果",
+    "doneEditing": "完成編輯",
+    "editProfile": "編輯資料",
+    "gravatarSetAvatar": "前往 Gravatar 設定頭像",
+    "namePlaceholder": "請輸入姓名",
+    "bioLabel": "個人簡介",
+    "bioPlaceholder": "簡單介紹一下自己…",
+    "signInToSeeMore": "其餘個人資訊僅限登入後查看。",
+    "resumeLabel": "履歷",
+    "removeResume": "移除履歷",
+    "noResumeUploaded": "尚未上傳履歷",
+    "uploadResume": "上傳 PDF 履歷",
+    "viewResume": "查看履歷",
+    "linksLabel": "連結",
+    "linkAriaLabel": "連結 {n}",
+    "deleteLinkAria": "刪除連結 {n}",
+    "noLinks": "尚未新增連結",
+    "noResults": "尚無成果紀錄",
+    "externalBadge": "外部",
+    "metaNameFallback": "成員",
+    "metaTitleSuffix": "{name}｜人工智慧專責辦公室",
+    "metaDescription": "{name} 的個人頁面 — 國立陽明交通大學人工智慧專責辦公室成員與研究成果。",
+    "metaNameFallbackGeneric": "個人頁面",
+    "layoutMetaDescription": "{name} 的公開個人頁面，收錄成果展示、外部作品與相關連結。",
+    "orgName": "國立陽明交通大學 人工智慧專責辦公室"
+  },
+  "i18nNotice": {
+    "untranslated": "此區塊目前僅提供中文內容。"
   }
 }
