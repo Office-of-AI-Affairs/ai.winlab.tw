@@ -5,6 +5,7 @@ import {
   AnnouncementArticleClient as SharedAnnouncementArticleClient,
   type AnnouncementArticleClientProps,
 } from "@/components/announcement-article-client"
+import { useT } from "@/lib/i18n/locale-provider"
 
 export function AnnouncementArticleClient(
   props: Omit<
@@ -12,21 +13,22 @@ export function AnnouncementArticleClient(
     "backHref" | "shareUrl" | "sharePath" | "onCacheInvalidate" | "breadcrumb"
   >,
 ) {
+  const t = useT()
   const id = props.initialAnnouncement.id
   return (
     <SharedAnnouncementArticleClient
       {...props}
       backHref="/announcement"
-      backLabel="返回列表"
+      backLabel={t.actions.backToList}
       sharePath={`/announcement/${id}`}
       shareUrl={`https://ai.winlab.tw/announcement/${id}`}
       breadcrumb={[
-        { name: "首頁", path: "/" },
-        { name: "公告", path: "/announcement" },
+        { name: t.common.home, path: "/" },
+        { name: t.nav.announcement, path: "/announcement" },
         { name: props.initialAnnouncement.title, path: `/announcement/${id}` },
       ]}
       onCacheInvalidate={revalidateAnnouncements}
-      manageTitle="管理公告"
+      manageTitle={t.editor.manageAnnouncement}
     />
   )
 }

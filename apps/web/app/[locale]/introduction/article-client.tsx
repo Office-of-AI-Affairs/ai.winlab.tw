@@ -9,6 +9,7 @@ import { Toc } from "@/components/toc"
 import { Button } from "@/components/ui/button"
 import { useContentEditor } from "@/hooks/use-content-editor"
 import { useEditMode } from "@/hooks/use-edit-mode"
+import { useLocale, useT } from "@/lib/i18n/locale-provider"
 import type { TocItem } from "@/lib/ui/article"
 import type { Introduction } from "@winlab/db"
 import { LogOut } from "lucide-react"
@@ -28,6 +29,8 @@ export function IntroductionArticleClient({
   initialToc,
   readingTimeMin,
 }: Props) {
+  const t = useT()
+  const locale = useLocale()
   const { isAdmin } = useAuth()
   const { isEditing, setMode } = useEditMode({ enabled: isAdmin })
 
@@ -78,10 +81,10 @@ export function IntroductionArticleClient({
   }, [hasChanges, introduction.content])
 
   const exitEdit = useCallback(() => {
-    if (hasChanges && !window.confirm("你有尚未儲存的變更，確定要離開嗎？")) return
+    if (hasChanges && !window.confirm(t.common.unsavedConfirm)) return
     setActionsOpen(false)
     setMode("view")
-  }, [hasChanges, setMode])
+  }, [hasChanges, setMode, t])
 
   useEffect(() => {
     if (!isEditing) return
@@ -105,7 +108,11 @@ export function IntroductionArticleClient({
   }, [isEditing, hasChanges])
 
   const status: EditStatus = isSaving ? "saving" : hasChanges ? "dirty" : "saved"
-  const statusLabel = isSaving ? "儲存中…" : hasChanges ? "尚未儲存" : "已儲存"
+  const statusLabel = isSaving
+    ? t.editor.status.saving
+    : hasChanges
+      ? t.editor.status.unsaved
+      : t.editor.status.saved
 
   const titleClass =
     "text-4xl font-extrabold tracking-tight text-balance"
@@ -120,24 +127,30 @@ export function IntroductionArticleClient({
               onChange={(event) =>
                 setIntroduction((prev) => ({ ...prev, title: event.target.value }))
               }
-              placeholder="輸入標題…"
-              aria-label="標題"
+              placeholder={t.editor.titlePlaceholder}
+              aria-label={t.common.title}
               className={`${titleClass} w-full border-0 bg-transparent p-0 outline-none focus:outline-none placeholder:text-muted-foreground/60`}
             />
           ) : (
             <h1 className={titleClass}>
-              {introduction.title || "國立陽明交通大學 人工智慧專責辦公室"}
+              {introduction.title || t.introduction.fallbackTitle}
             </h1>
           )}
           {readingTimeMin ? (
-            <p className="text-sm text-muted-foreground">閱讀 {readingTimeMin} 分鐘</p>
+            <p className="text-sm text-muted-foreground">
+              {t.article.readingTime.replace("{min}", String(readingTimeMin))}
+            </p>
           ) : null}
         </div>
-        <ShareButtons url="/introduction" title="組織｜人工智慧專責辦公室" />
+        <ShareButtons url="/introduction" title={t.introduction.meta.title} />
       </div>
 
+      {locale === "en" && (
+        <p className="text-sm text-muted-foreground mb-4">{t.i18nNotice.untranslated}</p>
+      )}
+
       <div className="max-w-6xl lg:flex lg:items-start lg:gap-8">
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1" lang="zh-Hant">
           <RichTextSurface
             content={introduction.content as Record<string, unknown> | null}
             contentHtml={renderedHtml}
@@ -145,7 +158,7 @@ export function IntroductionArticleClient({
             onChange={(content) =>
               setIntroduction((prev) => ({ ...prev, content }))
             }
-            emptyText="（無內容）"
+            emptyText={t.editor.emptyContent}
           />
         </div>
         <Toc items={toc} className="hidden lg:block" />
@@ -157,7 +170,7 @@ export function IntroductionArticleClient({
         <EditActionsPill
           status={status}
           statusLabel={statusLabel}
-          title="管理組織頁"
+          title={t.introduction.manageTitle}
           open={actionsOpen}
           onOpenChange={setActionsOpen}
         >
@@ -170,7 +183,7 @@ export function IntroductionArticleClient({
               disabled={isSaving}
             >
               <LogOut className="size-4" />
-              退出編輯
+              {t.actions.exitEdit}
             </Button>
           </div>
         </EditActionsPill>

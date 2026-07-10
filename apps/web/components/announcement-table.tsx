@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDate } from "@/lib/date";
+import { useT } from "@/lib/i18n/locale-provider";
 import type { Announcement } from "@winlab/db";
 
 export function AnnouncementTable({
@@ -23,18 +24,19 @@ export function AnnouncementTable({
   getHref: (item: Announcement) => string;
   showStatus?: boolean;
 }) {
+  const t = useT();
   return (
     <div className="rounded-xl border border-border overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted h-12">
             <TableHead className="py-3 text-base font-bold">
-              公告日期
+              {t.common.date}
             </TableHead>
-            <TableHead className="py-3 text-base font-bold">類別</TableHead>
-            <TableHead className="py-3 text-base font-bold whitespace-normal">標題</TableHead>
+            <TableHead className="py-3 text-base font-bold">{t.common.category}</TableHead>
+            <TableHead className="py-3 text-base font-bold whitespace-normal">{t.common.title}</TableHead>
             {showStatus && (
-              <TableHead className="py-3 text-base font-bold">狀態</TableHead>
+              <TableHead className="py-3 text-base font-bold">{t.common.status}</TableHead>
             )}
           </TableRow>
         </TableHeader>
@@ -65,7 +67,7 @@ export function AnnouncementTable({
                   href={getHref(item)}
                   className="flex min-h-12 w-full items-center px-4 py-3 whitespace-normal"
                 >
-                  {item.title || "(無標題)"}
+                  {item.title || t.common.untitled}
                 </AppLink>
               </TableCell>
               {showStatus && (
@@ -75,7 +77,7 @@ export function AnnouncementTable({
                     className="flex min-h-12 w-full items-center px-4 py-3"
                   >
                     <Badge variant={item.status === "published" ? "default" : "secondary"}>
-                      {item.status === "published" ? "已發布" : "草稿"}
+                      {item.status === "published" ? t.common.published : t.common.draft}
                     </Badge>
                   </AppLink>
                 </TableCell>

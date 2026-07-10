@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { locales, type Locale } from "@/lib/i18n/config";
-import { useLocale } from "@/lib/i18n/locale-provider";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
 import { switchLocalePath } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
 
@@ -31,12 +31,13 @@ export function LanguageToggle({
   className?: string;
 }) {
   const active = useLocale();
+  const t = useT();
   const pathname = usePathname();
 
   return (
     <div
       role="group"
-      aria-label="語言 / Language"
+      aria-label={t.nav.languageLabel}
       className={cn(
         "inline-flex items-center gap-0.5 rounded-full border border-white/25 bg-white/5 p-0.5",
         className
@@ -50,6 +51,7 @@ export function LanguageToggle({
             key={l}
             href={switchLocalePath(pathname, l)}
             hrefLang={l}
+            lang={l}
             aria-current={isActive ? "true" : undefined}
             onClick={onNavigate}
             className={cn(

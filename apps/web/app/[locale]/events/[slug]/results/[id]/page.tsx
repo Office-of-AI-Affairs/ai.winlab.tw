@@ -4,31 +4,38 @@ import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
 import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/site";
+import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { localeAlternates } from "@/lib/i18n/seo";
 import { ResultArticleClient, type ResultPublisher } from "./article-client";
 import { ResultDraftFallback } from "./draft-fallback";
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string; id: string }>;
+  params: Promise<{ slug: string; id: string; locale: string }>;
 }): Promise<Metadata> {
-  const { slug, id } = await params;
+  const { slug, id, locale: raw } = await params;
+  const locale: Locale = isLocale(raw) ? raw : defaultLocale;
+  const dict = await getDictionary(locale);
   const supabase = createPublicClient();
   const { data } = await supabase
     .from("results")
     .select("title, summary, header_image")
     .eq("id", id)
     .maybeSingle();
-  const title = data?.title ?? "成果";
-  const description = data?.summary ?? `${title}｜國立陽明交通大學人工智慧專責辦公室成果展示`;
+  const title = data?.title ?? dict.results.meta.fallbackTitle;
+  const description =
+    data?.summary ?? dict.results.meta.fallbackDescription.replace("{title}", title);
   const ogImages = data?.header_image
     ? [{ url: data.header_image, width: 1200, height: 630, alt: title }]
     : [{ url: "/og.png", width: 1200, height: 630, alt: title }];
   const twitterImages = ogImages.map((i) => i.url);
+  const a = localeAlternates(`/events/${slug}/results/${id}`, locale);
   return {
     title: `${title}｜人工智慧專責辦公室`,
     description,
-    alternates: { canonical: `/events/${slug}/results/${id}` },
+    alternates: { canonical: a.canonical, languages: a.languages },
     // Next.js App Router performs object-level replace (not deep merge) when a
     // child segment exports openGraph. All required fields must be declared here
     // explicitly; relying on layout.tsx inheritance silently drops og:type /
@@ -54,9 +61,11 @@ export async function generateMetadata({
 export default async function EventResultDetailPage({
   params,
 }: {
-  params: Promise<{ slug: string; id: string }>;
+  params: Promise<{ slug: string; id: string; locale: string }>;
 }) {
-  const { slug, id } = await params;
+  const { slug, id, locale: raw } = await params;
+  const locale: Locale = isLocale(raw) ? raw : defaultLocale;
+  const dict = await getDictionary(locale);
   const supabase = createPublicClient();
 
   const { data: published } = await supabase
@@ -99,7 +108,7 @@ export default async function EventResultDetailPage({
   }
 
   const publisher: ResultPublisher = publisherRow
-    ? { id: publisherRow.id, name: publisherRow.display_name || "未知使用者" }
+    ? { id: publisherRow.id, name: publisherRow.display_name || dict.common.unknownUser }
     : null;
 
   const { html, toc } = renderArticle(result.content);
@@ -108,7 +117,7 @@ export default async function EventResultDetailPage({
   return (
     <ResultArticleClient
       slug={slug}
-      eventName={eventRow?.name ?? "活動"}
+      eventName={eventRow?.name ?? dict.events.meta.fallbackName}
       initialResult={result}
       initialContentHtml={html}
       initialToc={toc}

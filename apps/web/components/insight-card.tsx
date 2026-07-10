@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/date";
+import { useT } from "@/lib/i18n/locale-provider";
 import type { ArticleListItem } from "@/app/[locale]/insights/data";
 
 type Props = {
@@ -14,20 +15,21 @@ type Props = {
 };
 
 export function InsightCard({ article, href, showDraftBadge = false }: Props) {
+  const t = useT();
   return (
     <AppLink
       href={href}
       className="interactive-scale group flex"
-      aria-label={article.title || "(無標題)"}
+      aria-label={article.title || t.common.untitled}
     >
       <Card className="flex flex-1 flex-col gap-3 py-5 transition-[border-color,box-shadow] duration-200 hover:border-foreground/30 hover:shadow-md">
         <CardHeader className="px-5">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="line-clamp-2 text-lg font-semibold">
-              {article.title || "(無標題)"}
+              {article.title || t.common.untitled}
             </CardTitle>
             {showDraftBadge && article.status === "draft" && (
-              <Badge variant="secondary" className="shrink-0">草稿</Badge>
+              <Badge variant="secondary" className="shrink-0">{t.common.draft}</Badge>
             )}
           </div>
         </CardHeader>

@@ -3,31 +3,51 @@ import { InsightsPageClient } from "./client";
 import { getPublishedArticles } from "./data";
 import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/site";
+import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { localeAlternates, ogAlternateLocales, ogLocale } from "@/lib/i18n/seo";
 
-export const metadata: Metadata = {
-  title: "觀點｜人工智慧專責辦公室",
-  description: "辦公室成員的觀察、筆記與分享 — 一週至少一篇。",
-  alternates: { canonical: "/insights" },
-  // Next.js App Router performs object-level replace (not deep merge) when a
-  // child segment exports openGraph. All required fields must be declared here
-  // explicitly; relying on layout.tsx inheritance silently drops og:image.
-  openGraph: {
-    type: "website",
-    siteName: SITE_NAME,
-    locale: "zh_TW",
-    title: "觀點｜人工智慧專責辦公室",
-    description: "辦公室成員的觀察、筆記與分享 — 一週至少一篇。",
-    url: "/insights",
-    images: [
-      {
-        url: "/og.png",
-        width: 1200,
-        height: 630,
-        alt: "觀點｜人工智慧專責辦公室",
-      },
-    ],
-  },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale: raw } = await params;
+  const locale: Locale = isLocale(raw) ? raw : defaultLocale;
+  const dict = await getDictionary(locale);
+  const title = dict.insights.meta.title;
+  const description = dict.insights.meta.description;
+  const alternates = localeAlternates("/insights", locale);
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: alternates.canonical,
+      languages: alternates.languages,
+    },
+    // Next.js App Router performs object-level replace (not deep merge) when a
+    // child segment exports openGraph. All required fields must be declared here
+    // explicitly; relying on layout.tsx inheritance silently drops og:image.
+    openGraph: {
+      type: "website",
+      siteName: SITE_NAME,
+      locale: ogLocale(locale),
+      alternateLocale: ogAlternateLocales(locale),
+      title,
+      description,
+      url: alternates.canonical,
+      images: [
+        {
+          url: "/og.png",
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+  };
+}
 
 export default async function InsightsPage() {
   const published = await getPublishedArticles();

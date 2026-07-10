@@ -2,6 +2,7 @@
 
 import { AppLink } from "@/components/app-link";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n/locale-provider";
 import { ChevronDown, ChevronUp, FileText } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -24,6 +25,7 @@ export function RecruitmentInterestList({
   count,
 }: RecruitmentInterestListProps) {
   const [expanded, setExpanded] = useState(false);
+  const t = useT();
 
   return (
     <div className="mt-8 space-y-3">
@@ -34,14 +36,14 @@ export function RecruitmentInterestList({
         className="gap-2"
       >
         {expanded ? <ChevronUp /> : <ChevronDown />}
-        {count} 人感興趣
+        {t.recruitment.interest.count.replace("{count}", String(count))}
       </Button>
 
       {expanded && (
         <div className="divide-y rounded-lg border">
           {applicants.length === 0 ? (
             <p className="px-4 py-6 text-sm text-muted-foreground">
-              目前尚無人表達感興趣
+              {t.recruitment.interest.empty}
             </p>
           ) : (
             applicants.map((applicant) => (
@@ -57,7 +59,7 @@ export function RecruitmentInterestList({
                   {applicant.avatar_url ? (
                     <Image
                       src={applicant.avatar_url}
-                      alt={applicant.display_name ?? "使用者"}
+                      alt={applicant.display_name ?? t.common.user}
                       width={40}
                       height={40}
                       className="rounded-full object-cover interactive-scale duration-200"
@@ -74,7 +76,7 @@ export function RecruitmentInterestList({
                     href={`/profile/${applicant.id}`}
                     className="font-medium text-foreground hover:underline"
                   >
-                    {applicant.display_name ?? "匿名使用者"}
+                    {applicant.display_name ?? t.common.anonymousUser}
                   </AppLink>
                   {applicant.bio && (
                     <p className="line-clamp-2 text-sm text-muted-foreground">
@@ -87,7 +89,7 @@ export function RecruitmentInterestList({
                       className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:underline"
                     >
                       <FileText className="size-3.5" />
-                      查看履歷
+                      {t.recruitment.interest.viewResume}
                     </AppLink>
                   )}
                 </div>

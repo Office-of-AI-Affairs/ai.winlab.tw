@@ -7,6 +7,7 @@ import type {
   RecruitmentPositionType,
 } from "@winlab/db";
 import { isExternalImage, normalizeMultilineText } from "@/lib/utils";
+import type { Dictionary } from "@/lib/i18n/dictionary";
 import {
   ArrowLeft,
   Briefcase,
@@ -26,13 +27,7 @@ type RecruitmentDetailProps = {
   backHref: string;
   backLabel: string;
   canViewPrivateDetails: boolean;
-};
-
-const POSITION_TYPE_LABELS: Record<RecruitmentPositionType, string> = {
-  full_time: "全職",
-  internship: "實習",
-  part_time: "兼職",
-  remote: "遠端",
+  t: Dictionary["recruitment"];
 };
 
 export function RecruitmentDetail({
@@ -40,7 +35,14 @@ export function RecruitmentDetail({
   backHref,
   backLabel,
   canViewPrivateDetails,
+  t,
 }: RecruitmentDetailProps) {
+  const positionTypeLabels: Record<RecruitmentPositionType, string> = {
+    full_time: t.positionType.fullTime,
+    internship: t.positionType.internship,
+    part_time: t.positionType.partTime,
+    remote: t.positionType.remote,
+  };
   const isExpired =
     recruitment.end_date && new Date(recruitment.end_date) < new Date();
 
@@ -97,13 +99,15 @@ export function RecruitmentDetail({
             ))}
             <span className="inline-flex items-center gap-1.5">
               <Calendar className="w-4 h-4" />
-              {recruitment.start_date} ~ {recruitment.end_date ?? "截止日未定"}
+              {recruitment.start_date} ~ {recruitment.end_date ?? t.detail.deadlineTbd}
             </span>
-            {isExpired && <Badge variant="destructive">已截止</Badge>}
+            {isExpired && <Badge variant="destructive">{t.detail.closed}</Badge>}
             {canViewPrivateDetails && (
               <span className="inline-flex items-center gap-1.5">
                 <Briefcase className="w-4 h-4" />
-                {positionCount > 0 ? `${positionCount} 個職缺` : "暫無職缺"}
+                {positionCount > 0
+                  ? t.detail.positionCount.replace("{count}", String(positionCount))
+                  : t.detail.noPositions}
               </span>
             )}
           </div>
@@ -133,10 +137,10 @@ export function RecruitmentDetail({
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className="font-semibold text-lg">{position.name}</span>
                 <span className="px-2 py-0.5 text-xs font-medium rounded bg-muted text-muted-foreground">
-                  {POSITION_TYPE_LABELS[position.type]}
+                  {positionTypeLabels[position.type]}
                 </span>
                 <span className="text-sm text-muted-foreground">
-                  {position.count} 名
+                  {t.detail.positionOpenings.replace("{count}", String(position.count))}
                 </span>
                 {position.location && (
                   <span className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -150,7 +154,7 @@ export function RecruitmentDetail({
               {position.salary && (
                 <div className="flex items-center gap-1.5 text-sm">
                   <Wallet className="w-4 h-4 text-muted-foreground" />
-                  <span><strong>薪資範圍：</strong>{position.salary}</span>
+                  <span><strong>{t.detail.salaryRange}</strong>{position.salary}</span>
                 </div>
               )}
 
@@ -158,7 +162,7 @@ export function RecruitmentDetail({
               {position.responsibilities && (
                 <div className="space-y-1.5 pt-2">
                   <h3 className="text-base font-bold pb-4">
-                    工作內容
+                    {t.detail.responsibilities}
                   </h3>
                   <p className="whitespace-pre-line text-sm pl-4">
                     {normalizeMultilineText(position.responsibilities)}
@@ -170,7 +174,7 @@ export function RecruitmentDetail({
               {position.requirements && (
                 <div className="space-y-1.5 pt-2">
                   <h3 className="text-base font-bold pb-4">
-                    必備條件
+                    {t.detail.requirements}
                   </h3>
                   <p className="whitespace-pre-line text-sm pl-4">
                     {normalizeMultilineText(position.requirements)}
@@ -182,7 +186,7 @@ export function RecruitmentDetail({
               {position.nice_to_have && (
                 <div className="space-y-1.5 pt-2">
                   <h3 className="text-base font-bold pb-4">
-                    加分條件
+                    {t.detail.niceToHave}
                   </h3>
                   <p className="whitespace-pre-line text-sm pl-4">
                     {normalizeMultilineText(position.nice_to_have)}
@@ -197,9 +201,9 @@ export function RecruitmentDetail({
       {!canViewPrivateDetails && (
         <Card className="mt-8 border-dashed">
           <CardHeader className="gap-3">
-            <CardTitle className="text-xl">登入後可查看完整實習職缺資訊</CardTitle>
+            <CardTitle className="text-xl">{t.detail.gateTitle}</CardTitle>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              實習職缺細節、應徵方式、應備文件與聯絡窗口皆放置於登入後專區，僅限合作企業與學員登入後查看。
+              {t.detail.gateDescription}
             </p>
           </CardHeader>
           <CardContent>
@@ -207,7 +211,7 @@ export function RecruitmentDetail({
               href="/login"
               className="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-medium"
             >
-              前往登入
+              {t.detail.gateCta}
             </AppLink>
           </CardContent>
         </Card>
@@ -215,7 +219,7 @@ export function RecruitmentDetail({
 
       {canViewPrivateDetails && hasApplicationMethod && (
         <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-3">應徵方式</h2>
+          <h2 className="text-lg font-semibold mb-3">{t.detail.applicationMethod}</h2>
           <div className="space-y-2 text-sm">
             {recruitment.application_method?.email && (
               <div className="flex items-center gap-1.5">
@@ -253,7 +257,7 @@ export function RecruitmentDetail({
           recruitment.contact.email ||
           recruitment.contact.phone) && (
           <div className="mt-8">
-            <h2 className="text-lg font-semibold mb-3">聯絡窗口</h2>
+            <h2 className="text-lg font-semibold mb-3">{t.detail.contact}</h2>
             <div className="space-y-2 text-sm">
               {recruitment.contact.name && (
                 <div className="flex items-center gap-1.5">
@@ -289,7 +293,7 @@ export function RecruitmentDetail({
 
       {canViewPrivateDetails && recruitment.required_documents && (
         <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-3">應備文件</h2>
+          <h2 className="text-lg font-semibold mb-3">{t.detail.requiredDocs}</h2>
           <p className="whitespace-pre-line text-base text-muted-foreground">
             {normalizeMultilineText(recruitment.required_documents)}
           </p>

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useContentEditor } from "@/hooks/use-content-editor"
 import { useEditMode } from "@/hooks/use-edit-mode"
+import { useLocale, useT } from "@/lib/i18n/locale-provider"
 import { formatDate } from "@/lib/date"
 import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb"
 import type { TocItem } from "@/lib/ui/article"
@@ -53,16 +54,20 @@ export function AnnouncementArticleClient({
   readingTimeMin,
   initialMode,
   backHref,
-  backLabel = "返回",
+  backLabel,
   shareUrl,
   sharePath,
   shareTitle,
   onCacheInvalidate,
   breadcrumb,
-  manageTitle = "管理公告",
+  manageTitle,
 }: AnnouncementArticleClientProps) {
   const router = useRouter()
+  const t = useT()
+  const locale = useLocale()
   const { isAdmin } = useAuth()
+  const resolvedBackLabel = backLabel ?? t.actions.back
+  const resolvedManageTitle = manageTitle ?? t.editor.manageAnnouncement
   const { isEditing, setMode } = useEditMode({ enabled: isAdmin })
   const didApplyInitialMode = useRef(false)
 
@@ -125,10 +130,10 @@ export function AnnouncementArticleClient({
   }, [hasChanges, announcement.content])
 
   const exitEdit = useCallback(() => {
-    if (hasChanges && !window.confirm("你有尚未儲存的變更，確定要離開嗎？")) return
+    if (hasChanges && !window.confirm(t.common.unsavedConfirm)) return
     setActionsOpen(false)
     setMode("view")
-  }, [hasChanges, setMode])
+  }, [hasChanges, setMode, t])
 
   // ⌘S forces an immediate save (skip the 3s debounce).
   useEffect(() => {
@@ -159,18 +164,18 @@ export function AnnouncementArticleClient({
         ? "dirty"
         : "saved"
   const statusLabel = isDeleting
-    ? "刪除中…"
+    ? t.editor.status.deleting
     : isPublishing
       ? announcement.status === "published"
-        ? "取消發布中…"
-        : "發布中…"
+        ? t.editor.status.unpublishing
+        : t.editor.status.publishing
       : isSaving
-        ? "儲存中…"
+        ? t.editor.status.saving
         : hasChanges
-          ? "尚未儲存"
+          ? t.editor.status.unsaved
           : announcement.status === "published"
-            ? "已發布"
-            : "草稿"
+            ? t.common.published
+            : t.common.draft
 
   const titleClass = "text-4xl font-extrabold tracking-tight text-balance mb-4"
 
@@ -202,7 +207,7 @@ export function AnnouncementArticleClient({
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
         >
           <ArrowLeft className="w-4 h-4" />
-          {backLabel}
+          {resolvedBackLabel}
         </Link>
         <ShareButtons url={sharePath} title={shareTitle ?? announcement.title} />
       </div>
@@ -214,8 +219,8 @@ export function AnnouncementArticleClient({
             onChange={(event) =>
               setAnnouncement((prev) => ({ ...prev, title: event.target.value }))
             }
-            placeholder="輸入標題…"
-            aria-label="標題"
+            placeholder={t.editor.titlePlaceholder}
+            aria-label={t.common.title}
             className={`${titleClass} w-full border-0 bg-transparent p-0 outline-none focus:outline-none placeholder:text-muted-foreground/60`}
           />
         ) : (
@@ -230,7 +235,7 @@ export function AnnouncementArticleClient({
           {readingTimeMin ? (
             <>
               <span aria-hidden className="opacity-30">·</span>
-              <span>閱讀 {readingTimeMin} 分鐘</span>
+              <span>{t.article.readingTime.replace("{min}", String(readingTimeMin))}</span>
             </>
           ) : null}
         </div>
@@ -238,8 +243,12 @@ export function AnnouncementArticleClient({
 
       <hr className="mb-8" />
 
+      {locale === "en" && (
+        <p className="text-sm text-muted-foreground mb-4">{t.i18nNotice.untranslated}</p>
+      )}
+
       <div className="max-w-6xl lg:flex lg:items-start lg:gap-8">
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1" lang="zh-Hant">
           <RichTextSurface
             content={announcement.content as Record<string, unknown> | null}
             contentHtml={renderedHtml}
@@ -247,7 +256,7 @@ export function AnnouncementArticleClient({
             onChange={(content) =>
               setAnnouncement((prev) => ({ ...prev, content }))
             }
-            emptyText="（無內容）"
+            emptyText={t.editor.emptyContent}
           />
         </div>
         <Toc items={toc} className="hidden lg:block" />
@@ -259,12 +268,12 @@ export function AnnouncementArticleClient({
         <EditActionsPill
           status={status}
           statusLabel={statusLabel}
-          title={manageTitle}
+          title={resolvedManageTitle}
           open={actionsOpen}
           onOpenChange={setActionsOpen}
         >
           <div className="flex flex-col gap-2">
-            <Label htmlFor="announcement-date" className="text-sm">公告日期</Label>
+            <Label htmlFor="announcement-date" className="text-sm">{t.common.date}</Label>
             <Input
               id="announcement-date"
               type="date"
@@ -277,14 +286,14 @@ export function AnnouncementArticleClient({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="announcement-category" className="text-sm">類別</Label>
+            <Label htmlFor="announcement-category" className="text-sm">{t.common.category}</Label>
             <Input
               id="announcement-category"
               value={announcement.category}
               onChange={(event) =>
                 setAnnouncement((prev) => ({ ...prev, category: event.target.value }))
               }
-              placeholder="請輸入類別"
+              placeholder={t.editor.categoryPlaceholder}
               disabled={isSaving || isPublishing || isDeleting}
             />
           </div>
@@ -305,7 +314,7 @@ export function AnnouncementArticleClient({
               ) : (
                 <Trash2 className="size-4" />
               )}
-              刪除公告
+              {t.editor.deleteAnnouncement}
             </Button>
             <div className="flex flex-wrap items-center gap-2">
               <Button
@@ -316,7 +325,7 @@ export function AnnouncementArticleClient({
                 disabled={isSaving || isPublishing || isDeleting}
               >
                 <LogOut className="size-4" />
-                退出編輯
+                {t.actions.exitEdit}
               </Button>
               <Button
                 type="button"
@@ -330,7 +339,7 @@ export function AnnouncementArticleClient({
                 ) : (
                   <Send className="size-4" />
                 )}
-                {announcement.status === "published" ? "取消發布" : "發布"}
+                {announcement.status === "published" ? t.actions.unpublish : t.actions.publish}
               </Button>
             </div>
           </div>

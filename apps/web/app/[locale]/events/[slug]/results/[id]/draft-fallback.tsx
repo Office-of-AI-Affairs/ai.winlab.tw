@@ -3,6 +3,7 @@
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useT } from "@/lib/i18n/locale-provider"
 import { createClient } from "@/lib/supabase/client"
 import type { TocItem } from "@/lib/ui/article"
 import type { PublicProfile, Result } from "@winlab/db"
@@ -32,6 +33,7 @@ type State =
  */
 export function ResultDraftFallback({ slug, id }: { slug: string; id: string }) {
   const { user, isLoading } = useAuth()
+  const t = useT()
   const [state, setState] = useState<State>({ kind: "loading" })
   const supabaseRef = useRef(createClient())
 
@@ -94,11 +96,11 @@ export function ResultDraftFallback({ slug, id }: { slug: string; id: string }) 
       setState({
         kind: "draft",
         result: typedResult,
-        eventName: eventRow?.name ?? "活動",
+        eventName: eventRow?.name ?? t.events.meta.fallbackName,
         publisher: publisherRow
           ? {
               id: publisherRow.id,
-              name: publisherRow.display_name || "未知使用者",
+              name: publisherRow.display_name || t.common.unknownUser,
             }
           : null,
         coauthors,
@@ -110,7 +112,7 @@ export function ResultDraftFallback({ slug, id }: { slug: string; id: string }) 
     return () => {
       cancelled = true
     }
-  }, [id, isLoading, slug, user])
+  }, [id, isLoading, slug, user, t])
 
   if (isLoading || state.kind === "loading") {
     return (
@@ -127,10 +129,10 @@ export function ResultDraftFallback({ slug, id }: { slug: string; id: string }) 
     return (
       <div className="max-w-6xl mx-auto px-4 py-20">
         <div className="flex flex-col items-center gap-4">
-          <h1 className="text-2xl font-bold">找不到這份成果</h1>
-          <p className="text-muted-foreground">可能已被移除、尚未發布，或網址有誤。</p>
+          <h1 className="text-2xl font-bold">{t.results.notFound.title}</h1>
+          <p className="text-muted-foreground">{t.events.notFound.description}</p>
           <Button asChild variant="secondary">
-            <Link href={`/events/${slug}/results`}>返回活動</Link>
+            <Link href={`/events/${slug}/results`}>{t.events.backToEvent}</Link>
           </Button>
         </div>
       </div>

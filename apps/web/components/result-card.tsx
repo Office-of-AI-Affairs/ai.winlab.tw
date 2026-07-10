@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/date";
+import { useT } from "@/lib/i18n/locale-provider";
 import type { Result } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { Pin, User } from "lucide-react";
@@ -38,7 +39,8 @@ export function ResultCard({
   showStatus?: boolean;
   onPinToggle?: (id: string, pinned: boolean) => void;
 }) {
-  const primaryName = item.author_name || "匿名";
+  const t = useT();
+  const primaryName = item.author_name || t.results.card.anonymousAuthor;
 
   return (
     <Card className="relative interactive-scale py-0 md:h-full flex flex-col gap-4 overflow-hidden">
@@ -56,13 +58,13 @@ export function ResultCard({
               variant={item.status === "published" ? "default" : "secondary"}
               className="absolute top-2 left-2 z-20"
             >
-              {item.status === "published" ? "已發布" : "草稿"}
+              {item.status === "published" ? t.common.published : t.common.draft}
             </Badge>
           )}
           {isAdmin ? (
             <button
               type="button"
-              aria-label={item.pinned ? "取消釘選" : "釘選"}
+              aria-label={item.pinned ? t.actions.unpin : t.actions.pin}
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPinToggle?.(item.id, !item.pinned); }}
               className={`absolute top-2 right-2 z-20 rounded-full p-1.5 interactive-opacity text-white ${item.pinned
                 ? "bg-black/50 opacity-100"
@@ -82,19 +84,19 @@ export function ResultCard({
         </div>
         <CardHeader className="shrink-0 pb-0">
           <CardTitle className="text-xl font-bold line-clamp-2">
-            {item.title || "(無標題)"}
+            {item.title || t.common.untitled}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex-1 pt-1">
           <p className="line-clamp-3 text-muted-foreground text-sm">
-            {item.summary || "（無摘要）"}
+            {item.summary || t.results.card.noSummary}
           </p>
         </CardContent>
       </div>
       <AppLink
         href={href}
         className="absolute inset-0 z-10"
-        aria-label={item.title || "(無標題)"}
+        aria-label={item.title || t.common.untitled}
         interactive={false}
       />
       <CardFooter className="relative z-20 pt-0 pb-4">

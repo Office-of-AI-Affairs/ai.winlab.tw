@@ -4,6 +4,7 @@ import { AnnouncementTable } from "@/components/announcement-table";
 import { useAuth } from "@/components/auth-provider";
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n/locale-provider";
 import { createClient } from "@/lib/supabase/client";
 import type { Announcement } from "@winlab/db";
 import { Loader2, Plus } from "lucide-react";
@@ -16,6 +17,7 @@ export function AnnouncementPageClient({
 }: {
   publishedAnnouncements: Announcement[];
 }) {
+  const t = useT();
   const router = useRouter();
   const { user, isAdmin } = useAuth();
   const supabaseRef = useRef(createClient());
@@ -52,27 +54,27 @@ export function AnnouncementPageClient({
     setIsCreating(true);
     const { data, error } = await supabaseRef.current
       .from("announcements")
-      .insert({ title: "新公告", category: "一般", content: {}, status: "draft", author_id: user.id, event_id: null })
+      .insert({ title: t.announcement.newTitle, category: t.announcement.defaultCategory, content: {}, status: "draft", author_id: user.id, event_id: null })
       .select()
       .single();
-    if (error) { toast.error("建立失敗"); setIsCreating(false); return; }
+    if (error) { toast.error(t.common.createFailed); setIsCreating(false); return; }
     router.push(`/announcement/${data.id}?mode=edit`);
   };
 
   return (
     <PageShell>
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold">最新公告</h1>
+        <h1 className="text-3xl font-bold">{t.announcement.heading}</h1>
         {isAdmin && (
           <Button variant="secondary" onClick={handleCreate} disabled={isCreating}>
             {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-            新增公告
+            {t.announcement.create}
           </Button>
         )}
       </div>
 
       {announcements.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">尚無公告</div>
+        <div className="text-center py-12 text-muted-foreground">{t.announcement.empty}</div>
       ) : (
         <AnnouncementTable
           announcements={announcements}

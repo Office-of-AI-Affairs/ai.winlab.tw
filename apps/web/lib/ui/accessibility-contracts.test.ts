@@ -112,18 +112,20 @@ describe("accessibility contracts", () => {
   })
 
   test("profile edit mode does not rely on placeholders as the only field labels", () => {
-    assert.ok(profileClient.includes('aria-label="姓名"'))
-    assert.ok(profileClient.includes('aria-label="個人簡介"'))
-    assert.ok(profileClient.includes('aria-label={`連結 ${idx + 1}`}'))
-    assert.ok(profileClient.includes('aria-label={`刪除連結 ${idx + 1}`}'))
-    assert.ok(!profileClient.includes("<input\n                        aria-label=\"姓名\""))
-    assert.ok(!profileClient.includes("<textarea\n                        aria-label=\"個人簡介\""))
+    // Field labels are now dictionary-driven (i18n); the contract is that every
+    // edit field still carries an aria-label rather than relying on placeholders.
+    assert.ok(profileClient.includes('aria-label={t.common.fullName}'))
+    assert.ok(profileClient.includes('aria-label={t.profile.bioLabel}'))
+    assert.ok(profileClient.includes('aria-label={t.profile.linkAriaLabel.replace("{n}", String(idx + 1))}'))
+    assert.ok(profileClient.includes('aria-label={t.profile.deleteLinkAria.replace("{n}", String(idx + 1))}'))
+    assert.ok(!profileClient.includes("<input\n                        aria-label={t.common.fullName}"))
+    assert.ok(!profileClient.includes("<textarea\n                        aria-label={t.profile.bioLabel}"))
     assert.ok(profileClient.includes("<Input"))
     assert.ok(profileClient.includes("<Textarea"))
   })
 
   test("icon-only destructive controls expose aria labels", () => {
-    assert.ok(recruitmentDialog.includes('aria-label={`刪除職缺 ${index + 1}`}'))
+    assert.ok(recruitmentDialog.includes("aria-label={t.recruitment.dialog.deletePositionAria.replace("))
     assert.ok(recruitmentDialog.includes("onClick={() => removePosition(index)}"))
     assert.ok(!recruitmentDialog.includes("onClick={(e) => {\n                            e.stopPropagation();"))
     assert.ok(organizationMemberDialog.includes('aria-label="移除照片"'))

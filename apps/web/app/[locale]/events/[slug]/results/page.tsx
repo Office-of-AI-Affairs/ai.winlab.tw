@@ -3,6 +3,9 @@ import { EventDetailNotFoundClient } from "../not-found-client";
 import { getEventPageData } from "../data";
 import { JsonLd } from "@/components/json-ld";
 import type { Metadata } from "next";
+import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { localeAlternates } from "@/lib/i18n/seo";
 
 // Tab-as-route: /events/[slug]/results. See issue #1.
 export const dynamic = "force-dynamic";
@@ -10,23 +13,25 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; locale: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug, locale: raw } = await params;
+  const locale: Locale = isLocale(raw) ? raw : defaultLocale;
+  const dict = await getDictionary(locale);
   const data = await getEventPageData(slug);
-  if (!data) return { title: "成果｜人工智慧專責辦公室" };
-  const title = `${data.event.name} 成果｜人工智慧專責辦公室`;
-  const description =
-    `${data.event.name} 活動成果展示 — 國立陽明交通大學人工智慧專責辦公室。`;
+  if (!data) return { title: dict.events.meta.resultsFallbackTitle };
+  const title = dict.events.meta.resultsTitle.replace("{name}", data.event.name);
+  const description = dict.events.meta.resultsDescription.replace("{name}", data.event.name);
   const ogImages = data.event.cover_image
     ? [{ url: data.event.cover_image, width: 1200, height: 630, alt: data.event.name }]
     : [];
   const twitterImages = ogImages.length ? ogImages.map((i) => i.url) : ["/og.png"];
+  const a = localeAlternates(`/events/${slug}/results`, locale);
   return {
     title,
     description,
-    alternates: { canonical: `/events/${slug}/results` },
-    openGraph: { title, description, url: `/events/${slug}/results`, images: ogImages },
+    alternates: { canonical: a.canonical, languages: a.languages },
+    openGraph: { title, description, url: a.canonical, images: ogImages },
     twitter: { card: "summary_large_image", title, description, images: twitterImages },
   };
 }

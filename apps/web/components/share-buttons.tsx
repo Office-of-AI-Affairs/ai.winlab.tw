@@ -3,6 +3,7 @@
 import { Check, Link2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useT } from "@/lib/i18n/locale-provider";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -15,6 +16,7 @@ type Props = {
 const SITE_BASE = "https://ai.winlab.tw";
 
 export function ShareButtons({ url, title, className }: Props) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   const fullUrl = url.startsWith("http") ? url : `${SITE_BASE}${url.startsWith("/") ? url : `/${url}`}`;
 
@@ -36,10 +38,10 @@ export function ShareButtons({ url, title, className }: Props) {
     try {
       await navigator.clipboard.writeText(fullUrl);
       setCopied(true);
-      toast.success("已複製連結");
+      toast.success(t.common.linkCopied);
       setTimeout(() => setCopied(false), 1800);
     } catch {
-      toast.error("複製失敗，請手動複製網址列");
+      toast.error(t.common.copyFailed);
     }
   }
 
@@ -47,7 +49,7 @@ export function ShareButtons({ url, title, className }: Props) {
     <button
       type="button"
       onClick={handleShare}
-      aria-label={copied ? "已複製連結" : "分享連結"}
+      aria-label={copied ? t.common.linkCopied : t.common.shareLink}
       className={cn(
         "inline-flex items-center justify-center size-8 rounded-full border border-border text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className,

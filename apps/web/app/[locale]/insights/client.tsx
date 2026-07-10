@@ -4,6 +4,7 @@ import { useAuth } from "@/components/auth-provider";
 import { InsightCard } from "@/components/insight-card";
 import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n/locale-provider";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -17,6 +18,7 @@ export function InsightsPageClient({
   publishedArticles: ArticleListItem[];
 }) {
   const router = useRouter();
+  const t = useT();
   const { user, profile, isAdmin, isMember } = useAuth();
   const supabaseRef = useRef(createClient());
   const [isCreating, setIsCreating] = useState(false);
@@ -64,14 +66,14 @@ export function InsightsPageClient({
       .from("articles")
       .insert({
         author_id: user.id,
-        title: "新文章",
+        title: t.insights.newTitle,
         content: {},
         status: "draft",
       })
       .select()
       .single();
     if (error) {
-      toast.error("建立失敗");
+      toast.error(t.common.createFailed);
       setIsCreating(false);
       return;
     }
@@ -82,21 +84,21 @@ export function InsightsPageClient({
     <PageShell>
       <div className="flex items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-bold">觀點</h1>
+          <h1 className="text-3xl font-bold">{t.insights.heading}</h1>
           <p className="text-sm text-muted-foreground">
-            辦公室成員的觀察、筆記與分享。
+            {t.insights.subtitle}
           </p>
         </div>
         {canWrite && (
           <Button variant="secondary" onClick={handleCreate} disabled={isCreating}>
             {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-            新增文章
+            {t.insights.create}
           </Button>
         )}
       </div>
 
       {articles.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">尚無文章</div>
+        <div className="text-center py-12 text-muted-foreground">{t.insights.empty}</div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {articles.map((item) => (

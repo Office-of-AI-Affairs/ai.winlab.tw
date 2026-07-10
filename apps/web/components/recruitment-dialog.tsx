@@ -21,6 +21,7 @@ import { uploadRecruitmentImage } from "@/lib/upload-image";
 import { isExternalImage } from "@/lib/utils";
 import { useDialogForm } from "@/hooks/use-dialog-form";
 import { useImageUpload } from "@/hooks/use-image-upload";
+import { useT } from "@/lib/i18n/locale-provider";
 import type {
   ApplicationMethod,
   ApplicationMethodLink,
@@ -66,16 +67,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-const POSITION_TYPES: { value: RecruitmentPositionType; label: string }[] = [
-  { value: "full_time", label: "全職" },
-  { value: "internship", label: "實習" },
-  { value: "part_time", label: "兼職" },
-  { value: "remote", label: "遠端" },
+const POSITION_TYPE_VALUES: RecruitmentPositionType[] = [
+  "full_time",
+  "internship",
+  "part_time",
+  "remote",
 ];
-
-function getPositionTypeLabel(type: RecruitmentPositionType): string {
-  return POSITION_TYPES.find((t) => t.value === type)?.label ?? type;
-}
 
 type FormData = {
   title: string;
@@ -131,7 +128,23 @@ export function RecruitmentDialog({
   eventId,
 }: RecruitmentDialogProps) {
   const router = useRouter();
+  const t = useT();
   const { user, isAdmin } = useAuth();
+
+  function getPositionTypeLabel(type: RecruitmentPositionType): string {
+    switch (type) {
+      case "full_time":
+        return t.recruitment.positionType.fullTime;
+      case "internship":
+        return t.recruitment.positionType.internship;
+      case "part_time":
+        return t.recruitment.positionType.partTime;
+      case "remote":
+        return t.recruitment.positionType.remote;
+      default:
+        return type;
+    }
+  }
   const { formData, setFormData, updateField, resetForm } = useDialogForm<FormData>({
     table: "competitions",
     editingId: recruitment?.id ?? null,
@@ -259,7 +272,7 @@ export function RecruitmentDialog({
 
   async function handleSave() {
     if (!formData.title.trim()) {
-      toast.error("請輸入標題");
+      toast.error(t.recruitment.dialog.titleRequired);
       return;
     }
 
@@ -320,7 +333,7 @@ export function RecruitmentDialog({
       }
     } else {
       if (!user) {
-        toast.error("請先登入");
+        toast.error(t.common.loginFirst);
         setSaving(false);
         return;
       }
@@ -346,7 +359,7 @@ export function RecruitmentDialog({
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success(recruitment ? "已更新" : "已建立");
+      toast.success(recruitment ? t.common.updated : t.common.created);
       onOpenChange(false);
       await revalidateAllEventCaches();
       router.refresh();
@@ -365,7 +378,7 @@ export function RecruitmentDialog({
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("已刪除");
+      toast.success(t.common.deleted);
       onOpenChange(false);
       await revalidateAllEventCaches();
       router.refresh();
@@ -380,21 +393,27 @@ export function RecruitmentDialog({
         className="sm:!max-w-6xl max-h-[90vh] flex flex-col p-0"
       >
         <DialogHeader className="px-8 pt-8 pb-0">
-          <DialogTitle>{isEditMode ? "編輯徵才" : "新增徵才"}</DialogTitle>
+          <DialogTitle>
+            {isEditMode
+              ? t.recruitment.dialog.editTitle
+              : t.recruitment.dialog.createTitle}
+          </DialogTitle>
           <DialogDescription>
-            {isEditMode ? "修改徵才資訊" : "建立新的徵才項目"}
+            {isEditMode
+              ? t.recruitment.dialog.editDescription
+              : t.recruitment.dialog.createDescription}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
           <div className="space-y-3">
-            <Label>封面圖片</Label>
+            <Label>{t.common.coverImage}</Label>
             <div className="flex items-center gap-6">
               {formData.image ? (
                 <div className="relative w-40 aspect-video rounded-md overflow-hidden border">
                   <Image
                     src={formData.image}
-                    alt="封面圖片"
+                    alt={t.common.coverImage}
                     fill
                     className="object-cover"
                     unoptimized={isExternalImage(formData.image)}
@@ -416,10 +435,10 @@ export function RecruitmentDialog({
                   {uploading ? (
                     <>
                       <Loader2 className="size-4 animate-spin mr-1" />
-                      上傳中…
+                      {t.common.uploading}
                     </>
                   ) : (
-                    "上傳圖片"
+                    t.actions.uploadImage
                   )}
                 </Button>
                 {formData.image && (
@@ -429,7 +448,7 @@ export function RecruitmentDialog({
                     size="sm"
                     onClick={() => updateField("image", null)}
                   >
-                    移除圖片
+                    {t.actions.removeImage}
                   </Button>
                 )}
               </div>
@@ -444,17 +463,19 @@ export function RecruitmentDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="title">標題</Label>
+            <Label htmlFor="title">{t.common.title}</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => updateField("title", e.target.value)}
-              placeholder="公司 / 組織名稱"
+              placeholder={t.recruitment.dialog.titlePlaceholder}
             />
           </div>
 
           <div className="space-y-3">
-            <Label htmlFor="company_description">公司簡介</Label>
+            <Label htmlFor="company_description">
+              {t.recruitment.dialog.companyDescLabel}
+            </Label>
             <Textarea
               id="company_description"
               value={formData.company_description ?? ""}
@@ -462,7 +483,7 @@ export function RecruitmentDialog({
                 updateField("company_description", e.target.value || null)
               }
               maxLength={300}
-              placeholder="簡短描述公司或組織（最多 300 字）"
+              placeholder={t.recruitment.dialog.companyDescPlaceholder}
               rows={3}
             />
             <p className="text-xs text-muted-foreground text-right">
@@ -472,7 +493,9 @@ export function RecruitmentDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="start_date">開始日期</Label>
+              <Label htmlFor="start_date">
+                {t.recruitment.dialog.startDate}
+              </Label>
               <Input
                 id="start_date"
                 type="date"
@@ -481,7 +504,7 @@ export function RecruitmentDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="end_date">結束日期</Label>
+              <Label htmlFor="end_date">{t.recruitment.dialog.endDate}</Label>
               <Input
                 id="end_date"
                 type="date"
@@ -494,7 +517,7 @@ export function RecruitmentDialog({
           </div>
 
           <div className="space-y-4">
-            <Label>職缺</Label>
+            <Label>{t.recruitment.dialog.positions}</Label>
             {formData.positions.map((pos, index) => (
               <Collapsible key={index} defaultOpen={!pos.name}>
                 <div className="border rounded-md">
@@ -506,7 +529,7 @@ export function RecruitmentDialog({
                       >
                         <div className="flex min-w-0 items-center gap-2">
                           <span className="truncate font-medium">
-                            {pos.name || "新職缺"}
+                            {pos.name || t.recruitment.dialog.newPosition}
                           </span>
                           <span className="rounded bg-muted px-1.5 py-0.5 text-xs">
                             {getPositionTypeLabel(pos.type)}
@@ -517,7 +540,10 @@ export function RecruitmentDialog({
                     </CollapsibleTrigger>
                     <button
                       type="button"
-                      aria-label={`刪除職缺 ${index + 1}`}
+                      aria-label={t.recruitment.dialog.deletePositionAria.replace(
+                        "{n}",
+                        String(index + 1),
+                      )}
                       className="rounded p-1 hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => removePosition(index)}
                     >
@@ -528,17 +554,23 @@ export function RecruitmentDialog({
                     <div className="px-4 pb-4 pt-2 space-y-4 border-t">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <Label className="text-xs">職缺名稱</Label>
+                          <Label className="text-xs">
+                            {t.recruitment.dialog.positionName}
+                          </Label>
                           <Input
                             value={pos.name}
                             onChange={(e) =>
                               updatePosition(index, "name", e.target.value)
                             }
-                            placeholder="例：前端工程師"
+                            placeholder={
+                              t.recruitment.dialog.positionNamePlaceholder
+                            }
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">地點</Label>
+                          <Label className="text-xs">
+                            {t.recruitment.dialog.location}
+                          </Label>
                           <Input
                             value={pos.location ?? ""}
                             onChange={(e) =>
@@ -548,13 +580,17 @@ export function RecruitmentDialog({
                                 e.target.value || null,
                               )
                             }
-                            placeholder="例：台北市"
+                            placeholder={
+                              t.recruitment.dialog.locationPlaceholder
+                            }
                           />
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         <div className="space-y-1">
-                          <Label className="text-xs">類型</Label>
+                          <Label className="text-xs">
+                            {t.recruitment.dialog.type}
+                          </Label>
                           <Select
                             value={pos.type}
                             onValueChange={(v) =>
@@ -569,16 +605,18 @@ export function RecruitmentDialog({
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {POSITION_TYPES.map((t) => (
-                                <SelectItem key={t.value} value={t.value}>
-                                  {t.label}
+                              {POSITION_TYPE_VALUES.map((value) => (
+                                <SelectItem key={value} value={value}>
+                                  {getPositionTypeLabel(value)}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">人數</Label>
+                          <Label className="text-xs">
+                            {t.recruitment.dialog.count}
+                          </Label>
                           <Input
                             type="number"
                             min={1}
@@ -593,7 +631,9 @@ export function RecruitmentDialog({
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">薪資</Label>
+                          <Label className="text-xs">
+                            {t.recruitment.dialog.salary}
+                          </Label>
                           <Input
                             value={pos.salary ?? ""}
                             onChange={(e) =>
@@ -603,12 +643,14 @@ export function RecruitmentDialog({
                                 e.target.value || null,
                               )
                             }
-                            placeholder="例：40,000-60,000 NTD/月"
+                            placeholder={t.recruitment.dialog.salaryPlaceholder}
                           />
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">工作內容</Label>
+                        <Label className="text-xs">
+                          {t.recruitment.dialog.responsibilities}
+                        </Label>
                         <Textarea
                           value={pos.responsibilities ?? ""}
                           onChange={(e) =>
@@ -622,7 +664,9 @@ export function RecruitmentDialog({
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">必要條件</Label>
+                        <Label className="text-xs">
+                          {t.recruitment.dialog.requirements}
+                        </Label>
                         <Textarea
                           value={pos.requirements ?? ""}
                           onChange={(e) =>
@@ -636,7 +680,9 @@ export function RecruitmentDialog({
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">加分條件</Label>
+                        <Label className="text-xs">
+                          {t.recruitment.dialog.niceToHave}
+                        </Label>
                         <Textarea
                           value={pos.nice_to_have ?? ""}
                           onChange={(e) =>
@@ -662,12 +708,12 @@ export function RecruitmentDialog({
               onClick={addPosition}
             >
               <Plus className="size-4 mr-1" />
-              新增職缺
+              {t.recruitment.dialog.addPosition}
             </Button>
           </div>
 
           <div className="space-y-3">
-            <Label>應徵方式</Label>
+            <Label>{t.recruitment.dialog.applicationMethod}</Label>
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
@@ -682,19 +728,23 @@ export function RecruitmentDialog({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">其他</Label>
+                  <Label className="text-xs">
+                    {t.recruitment.dialog.otherLabel}
+                  </Label>
                   <Input
                     value={formData.application_method?.other ?? ""}
                     onChange={(e) =>
                       updateApplicationMethod("other", e.target.value)
                     }
-                    placeholder="其他方式"
+                    placeholder={t.recruitment.dialog.otherPlaceholder}
                   />
                 </div>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
-                  <Label className="text-xs">具名連結</Label>
+                  <Label className="text-xs">
+                    {t.recruitment.dialog.namedLinks}
+                  </Label>
                   <Button
                     type="button"
                     variant="outline"
@@ -702,7 +752,7 @@ export function RecruitmentDialog({
                     onClick={addApplicationMethodLink}
                   >
                     <Plus className="size-4 mr-1" />
-                    新增連結
+                    {t.recruitment.dialog.addLink}
                   </Button>
                 </div>
                 {(formData.application_method?.links ?? []).length > 0 ? (
@@ -714,7 +764,7 @@ export function RecruitmentDialog({
                           className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] gap-3 items-end"
                         >
                           <div className="space-y-1">
-                            <Label className="text-xs">名稱</Label>
+                            <Label className="text-xs">{t.common.name}</Label>
                             <Input
                               value={link.label}
                               onChange={(e) =>
@@ -724,11 +774,15 @@ export function RecruitmentDialog({
                                   e.target.value,
                                 )
                               }
-                              placeholder="例：104"
+                              placeholder={
+                                t.recruitment.dialog.linkLabelPlaceholder
+                              }
                             />
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-xs">網址</Label>
+                            <Label className="text-xs">
+                              {t.recruitment.dialog.linkUrl}
+                            </Label>
                             <Input
                               type="url"
                               value={link.url}
@@ -746,7 +800,10 @@ export function RecruitmentDialog({
                             type="button"
                             variant="ghost"
                             size="icon"
-                            aria-label={`刪除連結 ${index + 1}`}
+                            aria-label={t.recruitment.dialog.deleteLinkAria.replace(
+                              "{n}",
+                              String(index + 1),
+                            )}
                             onClick={() => removeApplicationMethodLink(index)}
                           >
                             <Trash2 className="size-4" />
@@ -757,7 +814,7 @@ export function RecruitmentDialog({
                   </div>
                 ) : (
                   <p className="text-xs text-muted-foreground">
-                    可新增 104、Instagram、Facebook、Official site 等多個網站連結。
+                    {t.recruitment.dialog.linksHint}
                   </p>
                 )}
               </div>
@@ -765,14 +822,14 @@ export function RecruitmentDialog({
           </div>
 
           <div className="space-y-3">
-            <Label>聯絡資訊</Label>
+            <Label>{t.recruitment.dialog.contactInfo}</Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div className="space-y-1">
-                <Label className="text-xs">姓名</Label>
+                <Label className="text-xs">{t.common.fullName}</Label>
                 <Input
                   value={formData.contact?.name ?? ""}
                   onChange={(e) => updateContact("name", e.target.value)}
-                  placeholder="聯絡人姓名"
+                  placeholder={t.recruitment.dialog.contactNamePlaceholder}
                 />
               </div>
               <div className="space-y-1">
@@ -785,7 +842,7 @@ export function RecruitmentDialog({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">電話</Label>
+                <Label className="text-xs">{t.common.phone}</Label>
                 <Input
                   type="tel"
                   value={formData.contact?.phone ?? ""}
@@ -797,14 +854,16 @@ export function RecruitmentDialog({
           </div>
 
           <div className="space-y-3">
-            <Label htmlFor="required_documents">應備文件</Label>
+            <Label htmlFor="required_documents">
+              {t.recruitment.dialog.requiredDocs}
+            </Label>
             <Textarea
               id="required_documents"
               value={formData.required_documents ?? ""}
               onChange={(e) =>
                 updateField("required_documents", e.target.value || null)
               }
-              placeholder="例：履歷、作品集、成績單…"
+              placeholder={t.recruitment.dialog.requiredDocsPlaceholder}
               rows={2}
             />
           </div>
@@ -812,9 +871,9 @@ export function RecruitmentDialog({
           {isAdmin && isEditMode && recruitment && (
             <div className="space-y-3">
               <div>
-                <Label>擁有者</Label>
+                <Label>{t.recruitment.dialog.ownersLabel}</Label>
                 <p className="text-xs text-muted-foreground mt-1">
-                  擁有者可編輯此徵才資訊、查看應徵者名單。僅 admin 能管理此清單。
+                  {t.recruitment.dialog.ownersHint}
                 </p>
               </div>
               <RecruitmentOwnerPicker competitionId={recruitment.id} />
@@ -832,20 +891,22 @@ export function RecruitmentDialog({
                   ) : (
                     <Trash2 className="size-4 mr-1" />
                   )}
-                  刪除
+                  {t.actions.delete}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>確定要刪除？</AlertDialogTitle>
+                  <AlertDialogTitle>
+                    {t.common.confirmDeleteTitle}
+                  </AlertDialogTitle>
                   <AlertDialogDescription>
-                    此操作無法復原
+                    {t.common.deleteIrreversible}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>取消</AlertDialogCancel>
+                  <AlertDialogCancel>{t.actions.cancel}</AlertDialogCancel>
                   <AlertDialogAction onClick={handleDelete}>
-                    確定刪除
+                    {t.actions.confirmDelete}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -853,7 +914,7 @@ export function RecruitmentDialog({
           )}
           <Button onClick={handleSave} disabled={saving} className="ml-auto">
             {saving && <Loader2 className="size-4 animate-spin mr-1" />}
-            {isEditMode ? "儲存" : "建立"}
+            {isEditMode ? t.actions.save : t.actions.create}
           </Button>
         </DialogFooter>
       </DialogContent>

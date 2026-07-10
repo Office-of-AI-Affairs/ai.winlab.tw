@@ -3,6 +3,7 @@
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useT } from "@/lib/i18n/locale-provider"
 import { createClient } from "@/lib/supabase/client"
 import type { TocItem } from "@/lib/ui/article"
 import type { Announcement } from "@winlab/db"
@@ -29,6 +30,7 @@ type State =
  * draft. Non-admins get a 404 surface.
  */
 export function EventAnnouncementDraftFallback({ slug, id }: { slug: string; id: string }) {
+  const t = useT()
   const { isAdmin, isLoading } = useAuth()
   const [state, setState] = useState<State>({ kind: "loading" })
   const supabaseRef = useRef(createClient())
@@ -66,7 +68,7 @@ export function EventAnnouncementDraftFallback({ slug, id }: { slug: string; id:
       setState({
         kind: "draft",
         announcement,
-        eventName: eventRes.data?.name ?? "活動",
+        eventName: eventRes.data?.name ?? t.events.meta.fallbackName,
         html,
         toc,
         readingTimeMin: minutes,
@@ -75,7 +77,7 @@ export function EventAnnouncementDraftFallback({ slug, id }: { slug: string; id:
     return () => {
       cancelled = true
     }
-  }, [id, isAdmin, isLoading, slug])
+  }, [id, isAdmin, isLoading, slug, t.events.meta.fallbackName])
 
   if (isLoading || state.kind === "loading") {
     return (
@@ -92,10 +94,10 @@ export function EventAnnouncementDraftFallback({ slug, id }: { slug: string; id:
     return (
       <div className="max-w-6xl mx-auto px-4 py-20">
         <div className="flex flex-col items-center gap-4">
-          <h1 className="text-2xl font-bold">找不到這則公告</h1>
-          <p className="text-muted-foreground">可能已被移除、尚未發布，或網址有誤。</p>
+          <h1 className="text-2xl font-bold">{t.announcement.notFound.title}</h1>
+          <p className="text-muted-foreground">{t.events.notFound.description}</p>
           <Button asChild variant="secondary">
-            <Link href={`/events/${slug}/announcements`}>返回活動</Link>
+            <Link href={`/events/${slug}/announcements`}>{t.events.backToEvent}</Link>
           </Button>
         </div>
       </div>

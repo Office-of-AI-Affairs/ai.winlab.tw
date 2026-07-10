@@ -3,6 +3,7 @@
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useT } from "@/lib/i18n/locale-provider"
 import { createClient } from "@/lib/supabase/client"
 import type { TocItem } from "@/lib/ui/article"
 import type { Announcement } from "@winlab/db"
@@ -23,6 +24,7 @@ type State =
  * admins looking at a truly missing id) get a 404 surface.
  */
 export function AnnouncementDraftFallback({ id }: { id: string }) {
+  const t = useT()
   const { isAdmin, isLoading } = useAuth()
   const [state, setState] = useState<State>({ kind: "loading" })
   const supabaseRef = useRef(createClient())
@@ -70,10 +72,10 @@ export function AnnouncementDraftFallback({ id }: { id: string }) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-20">
         <div className="flex flex-col items-center gap-4">
-          <h1 className="text-2xl font-bold">找不到這則公告</h1>
-          <p className="text-muted-foreground">可能已被移除、尚未發布，或網址有誤。</p>
+          <h1 className="text-2xl font-bold">{t.announcement.notFoundTitle}</h1>
+          <p className="text-muted-foreground">{t.notFound.body}</p>
           <Button asChild variant="secondary">
-            <Link href="/announcement">返回公告列表</Link>
+            <Link href="/announcement">{t.announcement.backToList}</Link>
           </Button>
         </div>
       </div>

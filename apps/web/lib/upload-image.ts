@@ -1,6 +1,25 @@
 import { createClient } from "@/lib/supabase/client";
+import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
+import type { Dictionary } from "@/lib/i18n/dictionary";
 
 const BUCKET = "announcement-images";
+
+// 這個模組不是 React component，拿不到 useT / getDictionary（後者是 server-only）。
+// 上傳一律在瀏覽器觸發，locale 就是 URL 第一段（預設 zh-TW 無前綴），據此 lazy-load
+// 對應語系的錯誤訊息，避免把兩份 messages 都打進靜態 bundle。
+function currentLocale(): Locale {
+  if (typeof window === "undefined") return defaultLocale;
+  const seg = window.location.pathname.split("/")[1];
+  return isLocale(seg) ? seg : defaultLocale;
+}
+
+async function loadErrors(): Promise<Dictionary["errors"]> {
+  const messages =
+    currentLocale() === "en"
+      ? await import("@/lib/i18n/messages/en.json")
+      : await import("@/lib/i18n/messages/zh-TW.json");
+  return (messages.default as Dictionary).errors;
+}
 
 const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB input
@@ -43,11 +62,12 @@ export async function uploadImage(
   file: File,
   prefix: string = "",
 ): Promise<{ url: string } | { error: string }> {
+  const errors = await loadErrors();
   if (!isImageFile(file)) {
-    return { error: "不支援的圖片格式，請使用 JPEG、PNG、GIF 或 WebP" };
+    return { error: errors.imageFormatUnsupported };
   }
   if (!isWithinSizeLimit(file)) {
-    return { error: "圖片大小不可超過 10MB" };
+    return { error: errors.imageTooLarge };
   }
 
   const processed = await compressIfNeeded(file);
@@ -91,14 +111,15 @@ export async function uploadResumePdf(
   file: File,
   userId: string,
 ): Promise<{ path: string } | { error: string }> {
+  const errors = await loadErrors();
   if (file.type !== "application/pdf") {
-    return { error: "僅支援 PDF 格式" };
+    return { error: errors.pdfOnly };
   }
   if (file.size > PDF_MAX_SIZE_BYTES) {
-    return { error: "檔案大小不可超過 10MB" };
+    return { error: errors.fileTooLarge };
   }
   if (!userId) {
-    return { error: "尚未登入，無法上傳履歷" };
+    return { error: errors.resumeLoginRequired };
   }
 
   const supabase = createClient();

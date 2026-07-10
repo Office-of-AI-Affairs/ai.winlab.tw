@@ -5,6 +5,7 @@ import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/locale-provider";
 import type { Article } from "@winlab/db";
 import type { TocItem } from "@/lib/ui/article";
 import Link from "next/link";
@@ -30,6 +31,7 @@ type State =
  */
 export function InsightDraftFallback({ id }: { id: string }) {
   const { user, isAdmin, isMember, isLoading } = useAuth();
+  const t = useT();
   const [state, setState] = useState<State>({ kind: "loading" });
   const supabaseRef = useRef(createClient());
 
@@ -90,10 +92,10 @@ export function InsightDraftFallback({ id }: { id: string }) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-20">
         <div className="flex flex-col items-center gap-4">
-          <h1 className="text-2xl font-bold">找不到這篇文章</h1>
-          <p className="text-muted-foreground">可能已被移除、尚未發布，或網址有誤。</p>
+          <h1 className="text-2xl font-bold">{t.insights.notFoundTitle}</h1>
+          <p className="text-muted-foreground">{t.notFound.body}</p>
           <Button asChild variant="secondary">
-            <Link href="/insights">返回觀點列表</Link>
+            <Link href="/insights">{t.insights.backToList}</Link>
           </Button>
         </div>
       </div>
@@ -115,10 +117,10 @@ export function InsightDraftFallback({ id }: { id: string }) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-20">
         <div className="flex flex-col items-center gap-4">
-          <h1 className="text-2xl font-bold">找不到這篇文章</h1>
-          <p className="text-muted-foreground">可能已被移除、尚未發布，或網址有誤。</p>
+          <h1 className="text-2xl font-bold">{t.insights.notFoundTitle}</h1>
+          <p className="text-muted-foreground">{t.notFound.body}</p>
           <Button asChild variant="secondary">
-            <Link href="/insights">返回觀點列表</Link>
+            <Link href="/insights">{t.insights.backToList}</Link>
           </Button>
         </div>
       </div>

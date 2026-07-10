@@ -3,6 +3,7 @@ import { OFFICE_NAME_EN, UNIVERSITY_NAME_EN } from "@/lib/site";
 import { type Locale } from "@/lib/i18n/config";
 import { localizedPath } from "@/lib/i18n/routing";
 import type { Dictionary } from "@/lib/i18n/dictionary";
+import { FooterLanguageSwitch } from "@/components/footer-language-switch";
 
 export function Footer({ t, locale }: { t: Dictionary["footer"]; locale: Locale }) {
   const links: { href: string; label: string; external?: boolean }[] = [
@@ -39,6 +40,7 @@ export function Footer({ t, locale }: { t: Dictionary["footer"]; locale: Locale 
           </Link>
         )
       )}
+      <FooterLanguageSwitch />
     </footer>
   );
 }
