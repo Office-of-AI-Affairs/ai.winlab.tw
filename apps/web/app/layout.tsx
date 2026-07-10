@@ -6,6 +6,7 @@ import { Header } from "@/components/header";
 import { LazyToaster } from "@/components/lazy-toaster";
 import { getPinnedEvents } from "@/lib/supabase/get-pinned-events";
 import { getClientAttributionAttributes } from "@/lib/otel/attribution";
+import { SITE_NAME } from "@/lib/site";
 import { trace } from "@opentelemetry/api";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
@@ -31,13 +32,13 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://ai.winlab.tw"),
-  title: "國立陽明交通大學 人工智慧專責辦公室",
+  title: SITE_NAME,
   description: "國立陽明交通大學人工智慧專責辦公室網站，提供辦公室介紹、組織成員、公告、活動、成果與徵才資訊。",
   openGraph: {
     type: "website",
-    siteName: "國立陽明交通大學 人工智慧專責辦公室",
+    siteName: SITE_NAME,
     locale: "zh_TW",
-    title: "國立陽明交通大學 人工智慧專責辦公室",
+    title: SITE_NAME,
     description:
       "國立陽明交通大學人工智慧專責辦公室網站，提供辦公室介紹、組織成員、公告、活動、成果與徵才資訊。",
     url: "https://ai.winlab.tw",
@@ -46,7 +47,7 @@ export const metadata: Metadata = {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "國立陽明交通大學 人工智慧專責辦公室",
+        alt: SITE_NAME,
       },
     ],
   },

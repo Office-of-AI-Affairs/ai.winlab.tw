@@ -3,6 +3,7 @@ import { extractFirstImage } from "@/lib/ui/article";
 import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
 import type { Metadata } from "next";
+import { SITE_NAME } from "@/lib/site";
 import { InsightArticleClient } from "./article-client";
 import { InsightDraftFallback } from "./draft-fallback";
 
@@ -36,7 +37,7 @@ export async function generateMetadata({
     // og:site_name / og:locale.
     openGraph: {
       type: "article",
-      siteName: "國立陽明交通大學 人工智慧專責辦公室",
+      siteName: SITE_NAME,
       locale: "zh_TW",
       title: `${title}｜人工智慧專責辦公室`,
       description,

@@ -104,8 +104,18 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
   return (
     <header className="sticky top-0 z-50 bg-nycu text-white">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-6 text-xl font-bold">
-        <AppLink href="/" className="inline-block text-2xl tracking-widest">
-          人工智慧專責辦公室
+        <AppLink
+          href="/"
+          aria-label="人工智慧專責辦公室 — Office of AI Affairs"
+          className="inline-flex flex-col justify-center leading-none"
+        >
+          <span className="text-xl sm:text-2xl tracking-widest">人工智慧專責辦公室</span>
+          <span
+            className="mt-1.5 text-xs sm:text-sm font-normal tracking-[0.1em] text-white/70"
+            style={{ fontFamily: "var(--font-instrument-serif)" }}
+          >
+            Office of AI Affairs
+          </span>
         </AppLink>
 
         <nav className="hidden min-[1152px]:flex items-center gap-8 text-lg">

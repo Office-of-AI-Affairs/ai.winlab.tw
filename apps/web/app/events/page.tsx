@@ -2,6 +2,7 @@ import { JsonLd } from "@/components/json-ld";
 import { EventsPageClient } from "./client";
 import { getPublishedEvents } from "./data";
 import type { Metadata } from "next";
+import { SITE_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "活動專區｜人工智慧專責辦公室",
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
   // explicitly; relying on layout.tsx inheritance silently drops og:image.
   openGraph: {
     type: "website",
-    siteName: "國立陽明交通大學 人工智慧專責辦公室",
+    siteName: SITE_NAME,
     locale: "zh_TW",
     title: "活動專區｜人工智慧專責辦公室",
     description: "瀏覽國立陽明交通大學人工智慧專責辦公室的活動專區、成果展示與相關內容。",
