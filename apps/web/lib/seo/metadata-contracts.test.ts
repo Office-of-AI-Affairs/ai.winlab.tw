@@ -3,40 +3,40 @@ import { existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { describe, test } from "node:test"
 
-const rootLayout = readFileSync(resolve(process.cwd(), "app/layout.tsx"), "utf8")
-const homePage = readFileSync(resolve(process.cwd(), "app/page.tsx"), "utf8")
-const announcementPage = readFileSync(resolve(process.cwd(), "app/announcement/page.tsx"), "utf8")
-const eventsPage = readFileSync(resolve(process.cwd(), "app/events/page.tsx"), "utf8")
-const introductionPage = readFileSync(resolve(process.cwd(), "app/introduction/page.tsx"), "utf8")
-const organizationPage = readFileSync(resolve(process.cwd(), "app/introduction/page.tsx"), "utf8")
-const privacyPage = readFileSync(resolve(process.cwd(), "app/privacy/page.tsx"), "utf8")
-const eventLayout = readFileSync(resolve(process.cwd(), "app/events/[slug]/layout.tsx"), "utf8")
-const profileLayout = readFileSync(resolve(process.cwd(), "app/profile/[id]/layout.tsx"), "utf8")
-const announcementDetailPage = readFileSync(resolve(process.cwd(), "app/announcement/[id]/page.tsx"), "utf8")
+const rootLayout = readFileSync(resolve(process.cwd(), "app/[locale]/layout.tsx"), "utf8")
+const homePage = readFileSync(resolve(process.cwd(), "app/[locale]/page.tsx"), "utf8")
+const announcementPage = readFileSync(resolve(process.cwd(), "app/[locale]/announcement/page.tsx"), "utf8")
+const eventsPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/page.tsx"), "utf8")
+const introductionPage = readFileSync(resolve(process.cwd(), "app/[locale]/introduction/page.tsx"), "utf8")
+const organizationPage = readFileSync(resolve(process.cwd(), "app/[locale]/introduction/page.tsx"), "utf8")
+const privacyPage = readFileSync(resolve(process.cwd(), "app/[locale]/privacy/page.tsx"), "utf8")
+const eventLayout = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/layout.tsx"), "utf8")
+const profileLayout = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/layout.tsx"), "utf8")
+const announcementDetailPage = readFileSync(resolve(process.cwd(), "app/[locale]/announcement/[id]/page.tsx"), "utf8")
 const announcementDetailArticleClient = readFileSync(resolve(process.cwd(), "components/announcement-article-client.tsx"), "utf8")
 const eventAnnouncementDetailPage = readFileSync(
-  resolve(process.cwd(), "app/events/[slug]/announcements/[id]/page.tsx"),
+  resolve(process.cwd(), "app/[locale]/events/[slug]/announcements/[id]/page.tsx"),
   "utf8"
 )
-const eventPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/page.tsx"), "utf8")
+const eventPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/page.tsx"), "utf8")
 const eventAnnouncementsListingPage = readFileSync(
-  resolve(process.cwd(), "app/events/[slug]/announcements/page.tsx"),
+  resolve(process.cwd(), "app/[locale]/events/[slug]/announcements/page.tsx"),
   "utf8"
 )
 const eventResultsListingPage = readFileSync(
-  resolve(process.cwd(), "app/events/[slug]/results/page.tsx"),
+  resolve(process.cwd(), "app/[locale]/events/[slug]/results/page.tsx"),
   "utf8"
 )
 const eventRecruitmentListingPage = readFileSync(
-  resolve(process.cwd(), "app/events/[slug]/recruitment/page.tsx"),
+  resolve(process.cwd(), "app/[locale]/events/[slug]/recruitment/page.tsx"),
   "utf8"
 )
 const eventRecruitmentDetailPage = readFileSync(
-  resolve(process.cwd(), "app/events/[slug]/recruitment/[id]/page.tsx"),
+  resolve(process.cwd(), "app/[locale]/events/[slug]/recruitment/[id]/page.tsx"),
   "utf8"
 )
 const eventResultDetailPage = readFileSync(
-  resolve(process.cwd(), "app/events/[slug]/results/[id]/page.tsx"),
+  resolve(process.cwd(), "app/[locale]/events/[slug]/results/[id]/page.tsx"),
   "utf8"
 )
 
@@ -92,8 +92,8 @@ describe("metadata contracts", () => {
   })
 
   test("global recruitment route is removed from public metadata surfaces", () => {
-    assert.ok(!existsSync(resolve(process.cwd(), "app/recruitment/page.tsx")))
-    assert.ok(!existsSync(resolve(process.cwd(), "app/recruitment/[id]/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/recruitment/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/recruitment/[id]/page.tsx")))
   })
 
   test("public pages render the expected structured data types", () => {

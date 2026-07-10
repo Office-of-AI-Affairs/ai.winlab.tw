@@ -1,4 +1,4 @@
-import { getOrganizationMembers } from "@/app/introduction/data";
+import { getOrganizationMembers } from "@/app/[locale]/introduction/data";
 import { Button } from "@/components/ui/button";
 import {
   Card,

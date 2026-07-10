@@ -3,38 +3,38 @@ import { existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { describe, test } from "node:test"
 
-const carouselPage = readFileSync(resolve(process.cwd(), "app/carousel/page.tsx"), "utf8")
-const contactsPage = readFileSync(resolve(process.cwd(), "app/contacts/page.tsx"), "utf8")
-const settingsUsersPage = readFileSync(resolve(process.cwd(), "app/settings/users/page.tsx"), "utf8")
+const carouselPage = readFileSync(resolve(process.cwd(), "app/[locale]/carousel/page.tsx"), "utf8")
+const contactsPage = readFileSync(resolve(process.cwd(), "app/[locale]/contacts/page.tsx"), "utf8")
+const settingsUsersPage = readFileSync(resolve(process.cwd(), "app/[locale]/settings/users/page.tsx"), "utf8")
 const homeOrganization = readFileSync(resolve(process.cwd(), "components/home-organization.tsx"), "utf8")
-const announcementPage = readFileSync(resolve(process.cwd(), "app/announcement/page.tsx"), "utf8")
-const eventsPage = readFileSync(resolve(process.cwd(), "app/events/page.tsx"), "utf8")
-const eventDetailPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/page.tsx"), "utf8")
-const organizationPage = readFileSync(resolve(process.cwd(), "app/introduction/page.tsx"), "utf8")
-const settingsPage = readFileSync(resolve(process.cwd(), "app/settings/page.tsx"), "utf8")
-const announcementDetailPage = readFileSync(resolve(process.cwd(), "app/announcement/[id]/page.tsx"), "utf8")
-const announcementArticleClient = readFileSync(resolve(process.cwd(), "app/announcement/[id]/article-client.tsx"), "utf8")
-const eventEditDialog = readFileSync(resolve(process.cwd(), "app/events/[slug]/event-edit-dialog.tsx"), "utf8")
-const eventDetailClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/client.tsx"), "utf8")
-const contactEditPage = readFileSync(resolve(process.cwd(), "app/contacts/[id]/edit/page.tsx"), "utf8")
-const privacyPage = readFileSync(resolve(process.cwd(), "app/privacy/page.tsx"), "utf8")
-const privacyClient = readFileSync(resolve(process.cwd(), "app/privacy/client.tsx"), "utf8")
-const introductionPage = readFileSync(resolve(process.cwd(), "app/introduction/page.tsx"), "utf8")
-const introductionArticleClient = readFileSync(resolve(process.cwd(), "app/introduction/article-client.tsx"), "utf8")
-const carouselEditPage = readFileSync(resolve(process.cwd(), "app/carousel/[id]/edit/page.tsx"), "utf8")
-const organizationEditPage = readFileSync(resolve(process.cwd(), "app/introduction/[id]/edit/page.tsx"), "utf8")
-const eventAnnouncementDetailPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/page.tsx"), "utf8")
-const eventAnnouncementArticleClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/article-client.tsx"), "utf8")
-const eventResultDetailPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/page.tsx"), "utf8")
-const eventResultArticleClient = readFileSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/article-client.tsx"), "utf8")
-const rootLayout = readFileSync(resolve(process.cwd(), "app/layout.tsx"), "utf8")
-const homePage = readFileSync(resolve(process.cwd(), "app/page.tsx"), "utf8")
+const announcementPage = readFileSync(resolve(process.cwd(), "app/[locale]/announcement/page.tsx"), "utf8")
+const eventsPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/page.tsx"), "utf8")
+const eventDetailPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/page.tsx"), "utf8")
+const organizationPage = readFileSync(resolve(process.cwd(), "app/[locale]/introduction/page.tsx"), "utf8")
+const settingsPage = readFileSync(resolve(process.cwd(), "app/[locale]/settings/page.tsx"), "utf8")
+const announcementDetailPage = readFileSync(resolve(process.cwd(), "app/[locale]/announcement/[id]/page.tsx"), "utf8")
+const announcementArticleClient = readFileSync(resolve(process.cwd(), "app/[locale]/announcement/[id]/article-client.tsx"), "utf8")
+const eventEditDialog = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/event-edit-dialog.tsx"), "utf8")
+const eventDetailClient = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/client.tsx"), "utf8")
+const contactEditPage = readFileSync(resolve(process.cwd(), "app/[locale]/contacts/[id]/edit/page.tsx"), "utf8")
+const privacyPage = readFileSync(resolve(process.cwd(), "app/[locale]/privacy/page.tsx"), "utf8")
+const privacyClient = readFileSync(resolve(process.cwd(), "app/[locale]/privacy/client.tsx"), "utf8")
+const introductionPage = readFileSync(resolve(process.cwd(), "app/[locale]/introduction/page.tsx"), "utf8")
+const introductionArticleClient = readFileSync(resolve(process.cwd(), "app/[locale]/introduction/article-client.tsx"), "utf8")
+const carouselEditPage = readFileSync(resolve(process.cwd(), "app/[locale]/carousel/[id]/edit/page.tsx"), "utf8")
+const organizationEditPage = readFileSync(resolve(process.cwd(), "app/[locale]/introduction/[id]/edit/page.tsx"), "utf8")
+const eventAnnouncementDetailPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/announcements/[id]/page.tsx"), "utf8")
+const eventAnnouncementArticleClient = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/announcements/[id]/article-client.tsx"), "utf8")
+const eventResultDetailPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/results/[id]/page.tsx"), "utf8")
+const eventResultArticleClient = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/results/[id]/article-client.tsx"), "utf8")
+const rootLayout = readFileSync(resolve(process.cwd(), "app/[locale]/layout.tsx"), "utf8")
+const homePage = readFileSync(resolve(process.cwd(), "app/[locale]/page.tsx"), "utf8")
 const homeCarousel = readFileSync(resolve(process.cwd(), "components/home-carousel.tsx"), "utf8")
 const homeContacts = readFileSync(resolve(process.cwd(), "components/home-contacts.tsx"), "utf8")
 const authProvider = readFileSync(resolve(process.cwd(), "components/auth-provider.tsx"), "utf8")
-const contactEditClient = readFileSync(resolve(process.cwd(), "app/contacts/[id]/edit/client.tsx"), "utf8")
-const carouselEditClient = readFileSync(resolve(process.cwd(), "app/carousel/[id]/edit/client.tsx"), "utf8")
-const organizationEditClient = readFileSync(resolve(process.cwd(), "app/introduction/[id]/edit/client.tsx"), "utf8")
+const contactEditClient = readFileSync(resolve(process.cwd(), "app/[locale]/contacts/[id]/edit/client.tsx"), "utf8")
+const carouselEditClient = readFileSync(resolve(process.cwd(), "app/[locale]/carousel/[id]/edit/client.tsx"), "utf8")
+const organizationEditClient = readFileSync(resolve(process.cwd(), "app/[locale]/introduction/[id]/edit/client.tsx"), "utf8")
 
 describe("server admin page contracts", () => {
   test("carousel, contacts, and settings users pages are server-gated", () => {
@@ -46,9 +46,9 @@ describe("server admin page contracts", () => {
 
   test("dedicated admin guard helper and client components exist", () => {
     assert.ok(existsSync(resolve(process.cwd(), "lib/supabase/require-admin-server.ts")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/carousel/client.tsx")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/contacts/client.tsx")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/settings/users/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/carousel/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/contacts/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/settings/users/client.tsx")))
   })
 
   test("home organization section is server-renderable through the cached fetcher", () => {
@@ -63,8 +63,8 @@ describe("server admin page contracts", () => {
   })
 
   test("global recruitment route is removed in favor of event-scoped recruitment", () => {
-    assert.ok(!existsSync(resolve(process.cwd(), "app/recruitment/page.tsx")))
-    assert.ok(!existsSync(resolve(process.cwd(), "app/recruitment/client.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/recruitment/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/recruitment/client.tsx")))
   })
 
   test("shared viewer helper exists and is used by server pages that branch on role", () => {
@@ -95,7 +95,7 @@ describe("server admin page contracts", () => {
       assert.ok(!page.includes("getViewer("))
       assert.ok(page.includes('from "./data"'))
 
-      const data = readFileSync(resolve(process.cwd(), `app/${route}/data.ts`), "utf8")
+      const data = readFileSync(resolve(process.cwd(), `app/[locale]/${route}/data.ts`), "utf8")
       assert.ok(data.includes('from "next/cache"'))
       assert.ok(data.includes("unstable_cache"))
       assert.ok(data.includes('from "@/lib/supabase/public"'))
@@ -110,9 +110,9 @@ describe("server admin page contracts", () => {
     // FloatingActionStack on /events/[slug], which opens EventEditDialog
     // (slug uniqueness check + cover image + status toggle + delete all
     // live in the dialog body).
-    assert.ok(!existsSync(resolve(process.cwd(), "app/events/[slug]/edit/page.tsx")))
-    assert.ok(!existsSync(resolve(process.cwd(), "app/events/[slug]/edit/client.tsx")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/event-edit-dialog.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/events/[slug]/edit/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/events/[slug]/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/events/[slug]/event-edit-dialog.tsx")))
     assert.ok(eventDetailClient.includes("EventEditDialog"))
     assert.ok(eventDetailClient.includes("FloatingActionStack"))
     assert.ok(eventEditDialog.includes("useContentEditor("))
@@ -120,10 +120,10 @@ describe("server admin page contracts", () => {
   })
 
   test("announcement detail hosts both view and edit on a single SSG-friendly route", () => {
-    assert.ok(!existsSync(resolve(process.cwd(), "app/announcement/[id]/edit/page.tsx")))
-    assert.ok(!existsSync(resolve(process.cwd(), "app/announcement/[id]/edit/client.tsx")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/announcement/[id]/article-client.tsx")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/announcement/[id]/draft-fallback.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/announcement/[id]/edit/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/announcement/[id]/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/announcement/[id]/article-client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/announcement/[id]/draft-fallback.tsx")))
     assert.ok(announcementDetailPage.includes("AnnouncementArticleClient"))
     assert.ok(announcementDetailPage.includes("AnnouncementDraftFallback"))
     // Shared inline-edit client lives in components/; route-level wrappers
@@ -151,16 +151,16 @@ describe("server admin page contracts", () => {
       assert.ok(!content.includes("useAuth("))
       assert.ok(!content.includes("useEffect("))
     }
-    assert.ok(existsSync(resolve(process.cwd(), "app/contacts/[id]/edit/client.tsx")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/carousel/[id]/edit/client.tsx")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/introduction/[id]/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/contacts/[id]/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/carousel/[id]/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/introduction/[id]/edit/client.tsx")))
   })
 
   test("event announcement detail hosts both view and edit on a single route", () => {
-    assert.ok(!existsSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/page.tsx")))
-    assert.ok(!existsSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/edit/client.tsx")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/article-client.tsx")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/announcements/[id]/draft-fallback.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/events/[slug]/announcements/[id]/edit/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/events/[slug]/announcements/[id]/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/events/[slug]/announcements/[id]/article-client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/events/[slug]/announcements/[id]/draft-fallback.tsx")))
     assert.ok(eventAnnouncementDetailPage.includes("EventAnnouncementArticleClient"))
     assert.ok(eventAnnouncementDetailPage.includes("EventAnnouncementDraftFallback"))
     assert.ok(eventAnnouncementArticleClient.includes("SharedAnnouncementArticleClient"))
@@ -168,9 +168,9 @@ describe("server admin page contracts", () => {
   })
 
   test("introduction page hosts both view and edit on a single ISR-friendly route", () => {
-    assert.ok(!existsSync(resolve(process.cwd(), "app/introduction/edit/page.tsx")))
-    assert.ok(!existsSync(resolve(process.cwd(), "app/introduction/edit/client.tsx")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/introduction/article-client.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/introduction/edit/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/introduction/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/introduction/article-client.tsx")))
     assert.ok(introductionPage.includes("IntroductionArticleClient"))
     assert.ok(introductionArticleClient.includes('"use client"'))
     assert.ok(introductionArticleClient.includes("useAuth("))
@@ -185,11 +185,11 @@ describe("server admin page contracts", () => {
     // the same URL and visual layout, gated by useEditMode + useAuth in
     // app/privacy/client.tsx. Catches accidental reintroduction of a
     // dedicated edit subroute.
-    assert.ok(!existsSync(resolve(process.cwd(), "app/privacy/edit/page.tsx")))
-    assert.ok(!existsSync(resolve(process.cwd(), "app/privacy/edit/client.tsx")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/privacy/data.ts")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/privacy/actions.ts")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/privacy/client.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/privacy/edit/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/privacy/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/privacy/data.ts")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/privacy/actions.ts")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/privacy/client.tsx")))
     assert.ok(privacyPage.includes('from "./data"'))
     assert.ok(privacyPage.includes('from "./client"'))
     assert.ok(privacyClient.includes('"use client"'))
@@ -205,10 +205,10 @@ describe("server admin page contracts", () => {
   })
 
   test("event result detail hosts both view and edit on a single route", () => {
-    assert.ok(!existsSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/page.tsx")))
-    assert.ok(!existsSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/edit/client.tsx")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/article-client.tsx")))
-    assert.ok(existsSync(resolve(process.cwd(), "app/events/[slug]/results/[id]/draft-fallback.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/events/[slug]/results/[id]/edit/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/events/[slug]/results/[id]/edit/client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/events/[slug]/results/[id]/article-client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/events/[slug]/results/[id]/draft-fallback.tsx")))
     assert.ok(eventResultDetailPage.includes("ResultArticleClient"))
     assert.ok(eventResultDetailPage.includes("ResultDraftFallback"))
     assert.ok(eventResultArticleClient.includes("useAuth("))

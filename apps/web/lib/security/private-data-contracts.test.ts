@@ -10,16 +10,16 @@ const migration = readFileSync(
   ),
   "utf8"
 )
-const profilePage = readFileSync(resolve(process.cwd(), "app/profile/[id]/page.tsx"), "utf8")
-const profileLayout = readFileSync(resolve(process.cwd(), "app/profile/[id]/layout.tsx"), "utf8")
-const eventPage = readFileSync(resolve(process.cwd(), "app/events/[slug]/page.tsx"), "utf8")
-const eventData = readFileSync(resolve(process.cwd(), "app/events/[slug]/data.ts"), "utf8")
+const profilePage = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/page.tsx"), "utf8")
+const profileLayout = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/layout.tsx"), "utf8")
+const eventPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/page.tsx"), "utf8")
+const eventData = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/data.ts"), "utf8")
 const eventResultPage = readFileSync(
-  resolve(process.cwd(), "app/events/[slug]/results/[id]/page.tsx"),
+  resolve(process.cwd(), "app/[locale]/events/[slug]/results/[id]/page.tsx"),
   "utf8"
 )
 const eventRecruitmentDetailPage = readFileSync(
-  resolve(process.cwd(), "app/events/[slug]/recruitment/[id]/page.tsx"),
+  resolve(process.cwd(), "app/[locale]/events/[slug]/recruitment/[id]/page.tsx"),
   "utf8"
 )
 const recruitmentDialog = readFileSync(resolve(process.cwd(), "components/recruitment-dialog.tsx"), "utf8")
@@ -62,8 +62,8 @@ describe("private data contracts", () => {
   })
 
   test("recruitment pages fetch summary rows separately from private details", () => {
-    assert.ok(!existsSync(resolve(process.cwd(), "app/recruitment/page.tsx")))
-    assert.ok(!existsSync(resolve(process.cwd(), "app/recruitment/[id]/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/recruitment/page.tsx")))
+    assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/recruitment/[id]/page.tsx")))
     assert.ok(eventRecruitmentDetailPage.includes('.from("competition_private_details")'))
     assert.ok(recruitmentDialog.includes('.from("competition_private_details")'))
   })

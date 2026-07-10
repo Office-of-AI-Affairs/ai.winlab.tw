@@ -1,0 +1,55 @@
+{
+  "common": {
+    "skipToContent": "跳至主要內容"
+  },
+  "nav": {
+    "about": "關於",
+    "announcement": "公告",
+    "events": "活動",
+    "settings": "設定",
+    "login": "登入",
+    "logout": "登出",
+    "account": "帳號",
+    "openMenu": "開啟選單",
+    "menu": "選單",
+    "switchLanguage": "English",
+    "switchLanguageLabel": "切換語言"
+  },
+  "footer": {
+    "organization": "組織",
+    "announcement": "公告",
+    "events": "活動",
+    "privacy": "隱私權"
+  },
+  "home": {
+    "activityHeading": "最新動態",
+    "activityEmpty": "目前沒有動態",
+    "announcementHeading": "最新公告",
+    "announcementEmpty": "目前沒有公告",
+    "eventsHeading": "活動專區",
+    "eventsEmpty": "目前沒有活動",
+    "contactsHeading": "聯絡我們",
+    "organizationHeading": "組織人員",
+    "explore": "探索更多",
+    "introFallbackTitle": "國立陽明交通大學人工智慧專責辦公室"
+  },
+  "activityKind": {
+    "announcement": "公告",
+    "result": "成果",
+    "recruitment": "徵才"
+  },
+  "errors": {
+    "title": "發生錯誤",
+    "body": "頁面載入時出了點問題。重試一次看看；如果還是不行，或許可以先回首頁繼續瀏覽。",
+    "code": "錯誤代碼",
+    "retry": "重試",
+    "home": "返回首頁"
+  },
+  "notFound": {
+    "code": "404",
+    "title": "找不到這個頁面",
+    "body": "可能已被移除、尚未發布，或網址有誤。",
+    "home": "返回首頁",
+    "browseEvents": "瀏覽活動"
+  }
+}

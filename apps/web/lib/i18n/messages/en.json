@@ -1,0 +1,55 @@
+{
+  "common": {
+    "skipToContent": "Skip to main content"
+  },
+  "nav": {
+    "about": "About",
+    "announcement": "Announcements",
+    "events": "Events",
+    "settings": "Settings",
+    "login": "Sign in",
+    "logout": "Sign out",
+    "account": "Account",
+    "openMenu": "Open menu",
+    "menu": "Menu",
+    "switchLanguage": "中文",
+    "switchLanguageLabel": "Switch language"
+  },
+  "footer": {
+    "organization": "Organization",
+    "announcement": "Announcements",
+    "events": "Events",
+    "privacy": "Privacy"
+  },
+  "home": {
+    "activityHeading": "Latest updates",
+    "activityEmpty": "No updates yet",
+    "announcementHeading": "Latest announcements",
+    "announcementEmpty": "No announcements yet",
+    "eventsHeading": "Events",
+    "eventsEmpty": "No events yet",
+    "contactsHeading": "Contact us",
+    "organizationHeading": "Our team",
+    "explore": "Explore more",
+    "introFallbackTitle": "NYCU Office of AI Affairs"
+  },
+  "activityKind": {
+    "announcement": "Announcement",
+    "result": "Result",
+    "recruitment": "Recruiting"
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "body": "The page ran into a problem while loading. Try again — if it keeps failing, head back to the home page.",
+    "code": "Error code",
+    "retry": "Try again",
+    "home": "Back to home"
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Page not found",
+    "body": "It may have been removed, isn't published yet, or the address is wrong.",
+    "home": "Back to home",
+    "browseEvents": "Browse events"
+  }
+}

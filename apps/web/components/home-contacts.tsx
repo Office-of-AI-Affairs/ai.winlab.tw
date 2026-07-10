@@ -1,6 +1,7 @@
 import { AppLink } from "@/components/app-link";
 import { ContactsEditButton } from "@/components/contacts-edit-button";
 import { getContacts } from "@/lib/home-data";
+import type { Dictionary } from "@/lib/i18n/dictionary";
 import type { Contact } from "@winlab/db";
 import { Mail, Phone } from "lucide-react";
 
@@ -15,7 +16,7 @@ const FALLBACK_CONTACT: Contact = {
   sort_order: 0,
 };
 
-export async function HomeContacts() {
+export async function HomeContacts({ t }: { t: Dictionary["home"] }) {
   const data = await getContacts();
   const rows = data.length > 0 ? data : [FALLBACK_CONTACT];
 
@@ -24,7 +25,7 @@ export async function HomeContacts() {
       <div className="flex flex-col lg:flex-row gap-12 items-center lg:items-start justify-between">
         <div className="flex flex-col gap-3 w-full lg:w-auto">
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold border-l-4 border-primary pl-3">聯絡我們</h2>
+            <h2 className="text-2xl font-bold border-l-4 border-primary pl-3">{t.contactsHeading}</h2>
             <ContactsEditButton />
           </div>
         </div>

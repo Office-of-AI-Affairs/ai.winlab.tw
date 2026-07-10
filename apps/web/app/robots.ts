@@ -1,5 +1,18 @@
 import type { MetadataRoute } from "next";
 
+// Admin / auth / user-only paths, blocked in both locales. English lives under
+// `/en/*`, so each admin path needs an `/en`-prefixed variant too.
+const ADMIN_PATHS = [
+  "/login",
+  "/forgot-password",
+  "/reset-password",
+  "/account",
+  "/settings",
+  "/carousel",
+  "/contacts",
+  "/design",
+];
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
@@ -8,14 +21,8 @@ export default function robots(): MetadataRoute.Robots {
       disallow: [
         "/api/",
         "/auth/",
-        "/login",
-        "/forgot-password",
-        "/reset-password",
-        "/account",
-        "/settings",
-        "/carousel",
-        "/contacts",
-        "/design",
+        ...ADMIN_PATHS,
+        ...ADMIN_PATHS.map((p) => `/en${p}`),
         "/*/edit",
         "/*/edit/",
       ],

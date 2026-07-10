@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { revalidateAllEventCaches } from "@/app/events/actions";
+import { revalidateAllEventCaches } from "@/app/[locale]/events/actions";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth-provider";
 import { RecruitmentOwnerPicker } from "@/components/recruitment-owner-picker";

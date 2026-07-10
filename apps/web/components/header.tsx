@@ -2,21 +2,35 @@
 
 import { AppLink } from "@/components/app-link";
 import { useAuth } from "@/components/auth-provider";
-import { Loader2, TextAlignJustify } from "lucide-react";
+import { type Locale } from "@/lib/i18n/config";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
+import { stripLocalePrefix, switchLocalePath } from "@/lib/i18n/routing";
+import { Loader2, Languages, TextAlignJustify } from "lucide-react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-const staticNavItems = [
-  { href: "/introduction", label: "關於" },
-  { href: "/announcement", label: "公告" },
-];
-
 export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: string }[] }) {
   const { user, profile, isLoading, signOut, isAdmin } = useAuth();
+  const t = useT();
+  const locale = useLocale();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href));
+  const staticNavItems = [
+    { href: "/introduction", label: t.nav.about },
+    { href: "/announcement", label: t.nav.announcement },
+  ];
+
+  // pathname is the browser path (bare for zh, `/en/...` for English); compare
+  // against bare hrefs after stripping the locale prefix.
+  const barePath = stripLocalePrefix(pathname);
+  const isActive = (href: string) =>
+    barePath === href || (href !== "/" && barePath.startsWith(href));
+
+  const otherLocale: Locale = locale === "en" ? "zh-TW" : "en";
+  const switcherHref = switchLocalePath(pathname, otherLocale);
+
   const panelRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -57,7 +71,7 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
       : "interactive-scale nav-bracket inline-block cursor-pointer";
 
     if (user) {
-      const displayLabel = profile?.display_name || user.email || "帳號";
+      const displayLabel = profile?.display_name || user.email || t.nav.account;
       return (
         <div
           className={
@@ -83,7 +97,7 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              "登出"
+              t.nav.logout
             )}
           </button>
         </div>
@@ -96,7 +110,7 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
         className={btnClass}
         onClick={isMobile ? () => setOpen(false) : undefined}
       >
-        登入
+        {t.nav.login}
       </AppLink>
     );
   };
@@ -111,7 +125,7 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
         >
           <span className="text-xl sm:text-2xl tracking-widest">人工智慧專責辦公室</span>
           <span
-            className="mt-1.5 text-xs sm:text-sm font-normal tracking-[0.1em] text-white/70"
+            className="mt-1 text-sm sm:text-base font-normal tracking-[0.08em] text-white/75"
             style={{ fontFamily: "var(--font-instrument-serif)" }}
           >
             Office of AI Affairs
@@ -125,7 +139,7 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
             </AppLink>
           ))}
           <AppLink href="/events" className={`nav-bracket inline-block ${isActive("/events") ? "nav-bracket-active" : ""}`}>
-            活動
+            {t.nav.events}
           </AppLink>
           {pinnedEvents.map((event) => (
             <AppLink key={event.slug} href={`/events/${event.slug}`} className={`nav-bracket inline-block ${isActive(`/events/${event.slug}`) ? "nav-bracket-active" : ""}`}>
@@ -134,22 +148,30 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
           ))}
           {isAdmin && (
             <AppLink href="/settings" className={`nav-bracket inline-block ${isActive("/settings") ? "nav-bracket-active" : ""}`}>
-              設定
+              {t.nav.settings}
             </AppLink>
           )}
           {renderAuthSection()}
+          <Link
+            href={switcherHref}
+            aria-label={t.nav.switchLanguageLabel}
+            className="interactive-scale nav-bracket inline-flex items-center gap-1"
+          >
+            <Languages className="w-4 h-4" aria-hidden />
+            {t.nav.switchLanguage}
+          </Link>
         </nav>
 
         <button
           ref={buttonRef}
           type="button"
           className="interactive-scale min-[1152px]:hidden inline-flex items-center justify-center rounded-lg p-2 hover:bg-black/10"
-          aria-label="開啟選單"
+          aria-label={t.nav.openMenu}
           aria-expanded={open}
           aria-controls="mobile-menu"
           onClick={() => setOpen((v) => !v)}
         >
-          <span className="sr-only">Menu</span>
+          <span className="sr-only">{t.nav.menu}</span>
           <TextAlignJustify />
         </button>
       </div>
@@ -176,7 +198,7 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
               className={`rounded-lg px-3 py-2 hover:bg-black/10 ${isActive("/events") ? "bg-black/15" : ""}`}
               onClick={() => setOpen(false)}
             >
-              活動
+              {t.nav.events}
             </AppLink>
             {pinnedEvents.map((event) => (
               <AppLink
@@ -194,10 +216,19 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
                 className={`rounded-lg px-3 py-2 hover:bg-black/10 ${isActive("/settings") ? "bg-black/15" : ""}`}
                 onClick={() => setOpen(false)}
               >
-                設定
+                {t.nav.settings}
               </AppLink>
             )}
             {renderAuthSection(true)}
+            <Link
+              href={switcherHref}
+              aria-label={t.nav.switchLanguageLabel}
+              className="interactive-scale rounded-lg px-3 py-2 hover:bg-black/10 inline-flex items-center gap-2"
+              onClick={() => setOpen(false)}
+            >
+              <Languages className="w-4 h-4" aria-hidden />
+              {t.nav.switchLanguage}
+            </Link>
           </div>
         </div>
       </div>
