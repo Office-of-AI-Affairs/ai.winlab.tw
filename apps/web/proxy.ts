@@ -2,12 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { defaultLocale, locales } from "@/lib/i18n/config";
 
-// Default-locale rewrite. Chinese (`zh-TW`) is served at the un-prefixed URL
-// (`/announcement`), English lives under `/en/*`. This is the ONLY middleware
-// in the app and is deliberately minimal: no cookies, no `Accept-Language`
-// detection — purely structural, so static output stays CDN-cacheable and the
-// cookieless/ISR guarantees hold. `next.config` `redirects` run before this,
-// so the legacy/edit redirects still compose.
+// Default-locale rewrite (Next.js 16 `proxy`, formerly `middleware`; runs on
+// the nodejs runtime). Chinese (`zh-TW`) is served at the un-prefixed URL
+// (`/announcement`), English lives under `/en/*`. Deliberately minimal: no
+// cookies, no `Accept-Language` detection — purely structural, so static
+// output stays CDN-cacheable and the cookieless/ISR guarantees hold.
+// `next.config` `redirects` run before this, so the legacy/edit redirects
+// still compose.
 
 // Root-level route handlers served OUTSIDE the [locale] segment.
 const ROOT_ROUTE_PREFIXES = ["/api", "/auth"];
@@ -17,7 +18,7 @@ const ROOT_METADATA = new Set(["/sitemap.xml", "/robots.txt"]);
 // excluded so route handlers like /announcement/rss.xml get rewritten.
 const STATIC_FILE = /\.(?:png|jpe?g|gif|svg|ico|webp|avif|txt|woff2?|ttf|otf|css|js|map|json|pdf)$/i;
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Already carries a non-default locale prefix (`/en`, `/en/...`) → serve as-is.
