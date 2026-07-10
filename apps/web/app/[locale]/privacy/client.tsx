@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { useEditMode } from "@/hooks/use-edit-mode"
+import { useT } from "@/lib/i18n/locale-provider"
 import { formatDate } from "@/lib/date"
 import { createClient } from "@/lib/supabase/client"
 import type { TocItem } from "@/lib/ui/article"
@@ -45,6 +46,7 @@ export function PrivacyClient({
   currentUpdatedAt,
   readingTimeMin,
 }: Props) {
+  const t = useT()
   const { user, isAdmin } = useAuth()
   const { isEditing, setMode } = useEditMode({ enabled: isAdmin })
 
@@ -68,12 +70,12 @@ export function PrivacyClient({
 
   const status: EditStatus = isPublishing ? "saving" : hasChanges ? "dirty" : "saved"
   const statusLabel = isPublishing
-    ? "發布中…"
+    ? t.editor.status.publishing
     : hasChanges
-      ? "尚未發布"
+      ? t.privacy.unpublished
       : latestVersion > 0
-        ? `第 ${latestVersion} 版`
-        : "尚無版本"
+        ? t.privacy.versionLabel.replace("{n}", String(latestVersion))
+        : t.privacy.noVersion
 
   const loadVersions = useCallback(
     async (force = false) => {
@@ -83,13 +85,13 @@ export function PrivacyClient({
         .select("id, version, content, note, created_at, profiles!created_by(display_name)")
         .order("version", { ascending: false })
       if (error) {
-        toast.error("載入版本紀錄失敗")
+        toast.error(t.privacy.loadVersionsError)
         return
       }
       setVersions((data ?? []) as unknown as VersionRecord[])
       setVersionsLoaded(true)
     },
-    [versionsLoaded],
+    [versionsLoaded, t],
   )
 
   const publish = useCallback(async () => {
@@ -107,7 +109,7 @@ export function PrivacyClient({
       .select("id, version, content, created_at")
       .single()
     if (error || !data) {
-      toast.error("發布失敗")
+      toast.error(t.privacy.publishError)
       setIsPublishing(false)
       return
     }
@@ -126,21 +128,24 @@ export function PrivacyClient({
     setNote("")
     setVersionsLoaded(false)
     await revalidatePrivacy()
-    toast.success(`已發布第 ${data.version} 版`)
+    toast.success(t.privacy.publishedToast.replace("{n}", String(data.version)))
     setIsPublishing(false)
     setActionsOpen(false)
-  }, [content, hasChanges, isPublishing, latestVersion, note, user])
+  }, [content, hasChanges, isPublishing, latestVersion, note, user, t])
 
-  const restoreVersion = useCallback((version: VersionRecord) => {
-    setContent(version.content)
-    toast.message(`已載入第 ${version.version} 版內容，記得發布新版本`)
-  }, [])
+  const restoreVersion = useCallback(
+    (version: VersionRecord) => {
+      setContent(version.content)
+      toast.message(t.privacy.restoreToast.replace("{n}", String(version.version)))
+    },
+    [t],
+  )
 
   const exitEdit = useCallback(() => {
-    if (hasChanges && !window.confirm("你有尚未發布的變更，確定要離開嗎？")) return
+    if (hasChanges && !window.confirm(t.privacy.unpublishedLeaveConfirm)) return
     setActionsOpen(false)
     setMode("view")
-  }, [hasChanges, setMode])
+  }, [hasChanges, setMode, t])
 
   // ⌘S to publish while editing.
   useEffect(() => {
@@ -168,20 +173,21 @@ export function PrivacyClient({
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
       <div className="mb-2 flex items-start justify-between gap-4">
-        <h1 className="text-3xl font-bold">隱私權政策</h1>
-        <ShareButtons url="/privacy" title="隱私權政策｜人工智慧專責辦公室" />
+        <h1 className="text-3xl font-bold">{t.privacy.heading}</h1>
+        <ShareButtons url="/privacy" title={t.privacy.meta.title} />
       </div>
       <p className="mb-10 text-sm text-muted-foreground">
         {latestUpdatedAt && (
           <>
-            最後更新：{formatDate(latestUpdatedAt, "long")}
-            {latestVersion ? `（第 ${latestVersion} 版）` : ""}
+            {t.common.lastUpdated}
+            {formatDate(latestUpdatedAt, "long")}
+            {latestVersion ? t.privacy.versionParen.replace("{n}", String(latestVersion)) : ""}
           </>
         )}
         {readingTimeMin ? (
           <>
             {latestUpdatedAt ? <span className="mx-2 opacity-30">·</span> : null}
-            閱讀 {readingTimeMin} 分鐘
+            {t.article.readingTime.replace("{min}", String(readingTimeMin))}
           </>
         ) : null}
       </p>
@@ -193,7 +199,7 @@ export function PrivacyClient({
             contentHtml={renderedHtml}
             editing={isEditing}
             onChange={setContent}
-            emptyText="隱私權政策尚未設定。"
+            emptyText={t.privacy.emptyContent}
           />
         </div>
         <Toc items={toc} className="hidden lg:block" />
@@ -205,7 +211,7 @@ export function PrivacyClient({
         <EditActionsPill
           status={status}
           statusLabel={statusLabel}
-          title="管理隱私權政策"
+          title={t.privacy.manageTitle}
           open={actionsOpen}
           onOpenChange={(open) => {
             setActionsOpen(open)
@@ -214,13 +220,13 @@ export function PrivacyClient({
         >
           <div className="flex flex-col gap-2">
             <Label htmlFor="privacy-note" className="text-sm">
-              版本備註
+              {t.privacy.versionNote}
             </Label>
             <Input
               id="privacy-note"
               value={note}
               onChange={(event) => setNote(event.target.value)}
-              placeholder="本次修訂重點（選填）"
+              placeholder={t.privacy.versionNotePlaceholder}
               disabled={isPublishing}
             />
           </div>
@@ -234,7 +240,7 @@ export function PrivacyClient({
               disabled={isPublishing}
             >
               <LogOut className="size-4" />
-              退出編輯
+              {t.actions.exitEdit}
             </Button>
             <Button
               type="button"
@@ -243,14 +249,14 @@ export function PrivacyClient({
               size="sm"
             >
               <Send className="size-4" />
-              發布新版本
+              {t.privacy.publishNew}
             </Button>
           </div>
 
           <Separator />
 
           <div className="flex flex-col gap-3">
-            <h3 className="text-sm font-semibold">版本紀錄</h3>
+            <h3 className="text-sm font-semibold">{t.privacy.versionHistory}</h3>
             <VersionHistoryTable
               versions={versions}
               latestVersion={latestVersion}
@@ -275,11 +281,12 @@ function VersionHistoryTable({
   onRestore: (version: VersionRecord) => void
   loaded: boolean
 }) {
+  const t = useT()
   if (!loaded) {
-    return <p className="py-6 text-center text-sm text-muted-foreground">載入中…</p>
+    return <p className="py-6 text-center text-sm text-muted-foreground">{t.common.loading}</p>
   }
   if (versions.length === 0) {
-    return <p className="py-6 text-center text-sm text-muted-foreground">尚無版本紀錄</p>
+    return <p className="py-6 text-center text-sm text-muted-foreground">{t.privacy.noVersionHistory}</p>
   }
   return (
     <ul className="max-h-72 divide-y overflow-auto">
@@ -304,7 +311,7 @@ function VersionHistoryTable({
               </div>
               <p className="mt-1 text-sm">
                 {version.note || (
-                  <span className="text-muted-foreground">尚無備註</span>
+                  <span className="text-muted-foreground">{t.privacy.noNote}</span>
                 )}
               </p>
             </div>
@@ -318,7 +325,7 @@ function VersionHistoryTable({
                 className="pointer-events-none shrink-0 self-center"
               >
                 <Check className="size-3.5" />
-                目前
+                {t.privacy.current}
               </Button>
             ) : (
               <Button
@@ -329,7 +336,7 @@ function VersionHistoryTable({
                 onClick={() => onRestore(version)}
               >
                 <RotateCcw className="size-3.5" />
-                載入
+                {t.privacy.restore}
               </Button>
             )}
           </li>

@@ -6,6 +6,7 @@ import { useAuth } from "@/components/auth-provider";
 import { PageShell } from "@/components/page-shell";
 import { Block } from "@/components/ui/block";
 import { SubButton } from "@/components/ui/sub-button";
+import { useT } from "@/lib/i18n/locale-provider";
 import { createClient } from "@/lib/supabase/client";
 import type { Event } from "@winlab/db";
 import { ArrowLeftIcon } from "lucide-react";
@@ -17,6 +18,7 @@ export function EventsPageClient({
 }: {
   publishedEvents: Event[];
 }) {
+  const t = useT();
   const { isAdmin } = useAuth();
   const supabaseRef = useRef(createClient());
   const [drafts, setDrafts] = useState<Event[]>([]);
@@ -50,21 +52,21 @@ export function EventsPageClient({
     <PageShell tone="dashboard">
       <Block variant="ghost" className="flex items-center">
         <SubButton href="/">
-          <ArrowLeftIcon className="size-4" /> 返回首頁
+          <ArrowLeftIcon className="size-4" /> {t.actions.backHome}
         </SubButton>
       </Block>
 
       <div className="w-full grid lg:grid-cols-3 gap-4">
         <div className="col-span-1">
           <Block className="flex flex-col gap-4">
-            <h1 className="text-2xl text-foreground font-bold">活動專區</h1>
-            <p className="text-muted-foreground">當前共有 {events.length} 場活動</p>
+            <h1 className="text-2xl text-foreground font-bold">{t.events.list.heading}</h1>
+            <p className="text-muted-foreground">{t.events.list.countSummary.replace("{count}", String(events.length))}</p>
           </Block>
         </div>
 
         <div className="col-span-1 lg:col-span-2">
           {events.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">目前沒有活動</div>
+            <div className="text-center py-12 text-muted-foreground">{t.events.list.empty}</div>
           ) : (
             <div className="grid gap-4">
               {events.map((item, index) => (

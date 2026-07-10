@@ -1,13 +1,18 @@
 import { JsonLd } from "@/components/json-ld";
 import { createClient } from "@/lib/supabase/server";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { defaultLocale, isLocale } from "@/lib/i18n/config";
+import { localeAlternates } from "@/lib/i18n/seo";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ locale: string; id: string }>;
 }): Promise<Metadata> {
-  const { id } = await params;
+  const { locale: rawLocale, id } = await params;
+  const locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
+  const dict = await getDictionary(locale);
   const supabase = await createClient();
   const { data: publicProfile } = await supabase
     .from("public_profiles")
@@ -15,19 +20,21 @@ export async function generateMetadata({
     .eq("id", id)
     .single();
 
-  const name = publicProfile?.display_name ?? "個人頁面";
-  const description = `${name} 的公開個人頁面，收錄成果展示、外部作品與相關連結。`;
+  const name = publicProfile?.display_name ?? dict.profile.metaNameFallbackGeneric;
+  const description = dict.profile.layoutMetaDescription.replace("{name}", name);
   const ogImages = publicProfile?.avatar_url
     ? [{ url: publicProfile.avatar_url, width: 400, height: 400, alt: name }]
     : [];
+  const a = localeAlternates(`/profile/${id}`, locale);
   return {
-    title: `${name}｜人工智慧專責辦公室`,
+    title: `${name}${dict.common.titleSuffix}`,
     description,
     alternates: {
-      canonical: `/profile/${id}`,
+      canonical: a.canonical,
+      languages: a.languages,
     },
     openGraph: {
-      title: `${name}｜人工智慧專責辦公室`,
+      title: `${name}${dict.common.titleSuffix}`,
       description,
       url: `/profile/${id}`,
       images: ogImages,
@@ -40,16 +47,18 @@ export default async function Layout({
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ id: string }>;
+  params: Promise<{ locale: string; id: string }>;
 }) {
-  const { id } = await params;
+  const { locale: rawLocale, id } = await params;
+  const locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
+  const dict = await getDictionary(locale);
   const supabase = await createClient();
   const { data } = await supabase
     .from("public_profiles")
     .select("display_name")
     .eq("id", id)
     .single();
-  const name = data?.display_name ?? "個人頁面";
+  const name = data?.display_name ?? dict.profile.metaNameFallbackGeneric;
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Person",
@@ -58,7 +67,7 @@ export default async function Layout({
     mainEntityOfPage: `https://ai.winlab.tw/profile/${id}`,
     worksFor: {
       "@type": "Organization",
-      name: "國立陽明交通大學 人工智慧專責辦公室",
+      name: dict.profile.orgName,
       url: "https://ai.winlab.tw",
     },
   };

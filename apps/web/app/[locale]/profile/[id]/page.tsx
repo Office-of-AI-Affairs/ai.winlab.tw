@@ -5,27 +5,33 @@ import { getViewer } from "@/lib/supabase/get-viewer";
 import type { ExternalResult, Profile, PublicProfile, Result } from "@winlab/db";
 import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/site";
+import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { localeAlternates } from "@/lib/i18n/seo";
 import { redirect } from "next/navigation";
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ locale: string; id: string }>;
 }): Promise<Metadata> {
-  const { id } = await params;
+  const { locale: raw, id } = await params;
+  const locale: Locale = isLocale(raw) ? raw : defaultLocale;
+  const dict = await getDictionary(locale);
   const supabase = createPublicClient();
   const { data } = await supabase
     .from("public_profiles")
     .select("display_name")
     .eq("id", id)
     .maybeSingle();
-  const name = data?.display_name?.trim() || "成員";
-  const title = `${name}｜人工智慧專責辦公室`;
-  const description = `${name} 的個人頁面 — 國立陽明交通大學人工智慧專責辦公室成員與研究成果。`;
+  const name = data?.display_name?.trim() || dict.profile.metaNameFallback;
+  const title = dict.profile.metaTitleSuffix.replace("{name}", name);
+  const description = dict.profile.metaDescription.replace("{name}", name);
+  const a = localeAlternates(`/profile/${id}`, locale);
   return {
     title,
     description,
-    alternates: { canonical: `/profile/${id}` },
+    alternates: { canonical: a.canonical, languages: a.languages },
     // Next.js App Router performs object-level replace (not deep merge) when a
     // child segment exports openGraph. All required fields must be declared here
     // explicitly; relying on layout.tsx inheritance silently drops og:image.

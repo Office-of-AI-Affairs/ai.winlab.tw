@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { useContentEditor } from "@/hooks/use-content-editor"
 import { useEditMode } from "@/hooks/use-edit-mode"
 import { useImageUpload } from "@/hooks/use-image-upload"
+import { useLocale, useT } from "@/lib/i18n/locale-provider"
 import { formatDate } from "@/lib/date"
 import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb"
 import type { TocItem } from "@/lib/ui/article"
@@ -53,6 +54,8 @@ export function ResultArticleClient({
   initialMode,
 }: Props) {
   const router = useRouter()
+  const t = useT()
+  const locale = useLocale()
   const { user, isAdmin } = useAuth()
   const isAuthor = !!user && user.id === initialResult.author_id
   const canEdit = isAdmin || isAuthor
@@ -126,10 +129,10 @@ export function ResultArticleClient({
   }, [hasChanges, result.content])
 
   const exitEdit = useCallback(() => {
-    if (hasChanges && !window.confirm("你有尚未儲存的變更，確定要離開嗎？")) return
+    if (hasChanges && !window.confirm(t.common.unsavedConfirm)) return
     setActionsOpen(false)
     setMode("view")
-  }, [hasChanges, setMode])
+  }, [hasChanges, setMode, t])
 
   useEffect(() => {
     if (!isEditing) return
@@ -159,18 +162,18 @@ export function ResultArticleClient({
         ? "dirty"
         : "saved"
   const statusLabel = isDeleting
-    ? "刪除中…"
+    ? t.editor.status.deleting
     : isPublishing
       ? result.status === "published"
-        ? "取消發布中…"
-        : "發布中…"
+        ? t.editor.status.unpublishing
+        : t.editor.status.publishing
       : isSaving
-        ? "儲存中…"
+        ? t.editor.status.saving
         : hasChanges
-          ? "尚未儲存"
+          ? t.editor.status.unsaved
           : result.status === "published"
-            ? "已發布"
-            : "草稿"
+            ? t.common.published
+            : t.common.draft
 
   const titleClass = "text-3xl font-bold tracking-tight mb-4"
 
@@ -195,7 +198,7 @@ export function ResultArticleClient({
               : []),
             ...coauthors.map((ca) => ({
               "@type": "Person",
-              name: ca.display_name || "未知使用者",
+              name: ca.display_name || t.common.unknownUser,
             })),
           ],
         }
@@ -218,7 +221,7 @@ export function ResultArticleClient({
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
         >
           <ArrowLeft className="w-4 h-4" />
-          返回活動
+          {t.events.backToEvent}
         </Link>
         <ShareButtons url={`/events/${slug}/results/${result.id}`} title={result.title} />
       </div>
@@ -230,8 +233,8 @@ export function ResultArticleClient({
             onChange={(event) =>
               setResult((prev) => ({ ...prev, title: event.target.value }))
             }
-            placeholder="輸入標題…"
-            aria-label="標題"
+            placeholder={t.editor.titlePlaceholder}
+            aria-label={t.common.title}
             className={`${titleClass} w-full border-0 bg-transparent p-0 outline-none focus:outline-none placeholder:text-muted-foreground/60`}
           />
         ) : (
@@ -253,7 +256,7 @@ export function ResultArticleClient({
               href={`/profile/${ca.id}`}
               className="underline underline-offset-4 hover:text-foreground transition-colors duration-200"
             >
-              {ca.display_name || "未知使用者"}
+              {ca.display_name || t.common.unknownUser}
             </Link>
           ))}
           <span aria-hidden className="opacity-30">·</span>
@@ -261,7 +264,7 @@ export function ResultArticleClient({
           {readingTimeMin ? (
             <>
               <span aria-hidden className="opacity-30">·</span>
-              <span>閱讀 {readingTimeMin} 分鐘</span>
+              <span>{t.article.readingTime.replace("{min}", String(readingTimeMin))}</span>
             </>
           ) : null}
         </div>
@@ -269,14 +272,18 @@ export function ResultArticleClient({
 
       <hr className="mb-8" />
 
+      {locale === "en" && (
+        <p className="text-sm text-muted-foreground mb-4">{t.i18nNotice.untranslated}</p>
+      )}
+
       <div className="max-w-6xl lg:flex lg:items-start lg:gap-8">
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1" lang="zh-Hant">
           <RichTextSurface
             content={result.content as Record<string, unknown> | null}
             contentHtml={renderedHtml}
             editing={isEditing}
             onChange={(content) => setResult((prev) => ({ ...prev, content }))}
-            emptyText="（無內容）"
+            emptyText={t.editor.emptyContent}
             uploadFn={uploadResultImage}
           />
         </div>
@@ -289,12 +296,12 @@ export function ResultArticleClient({
         <EditActionsPill
           status={status}
           statusLabel={statusLabel}
-          title="管理成果"
+          title={t.results.edit.manageTitle}
           open={actionsOpen}
           onOpenChange={setActionsOpen}
         >
           <div className="flex flex-col gap-2">
-            <Label className="text-sm">封面圖片</Label>
+            <Label className="text-sm">{t.common.coverImage}</Label>
             <div className="flex items-start gap-4">
               <div className="relative aspect-video w-40 shrink-0 overflow-hidden rounded-lg bg-muted">
                 <Image
@@ -325,22 +332,22 @@ export function ResultArticleClient({
                   ) : (
                     <ImagePlus className="size-4" />
                   )}
-                  {isUploadingImage ? "上傳中…" : "更換封面"}
+                  {isUploadingImage ? t.common.uploading : t.actions.changeCover}
                 </Button>
-                <p className="text-xs text-muted-foreground">JPEG / PNG / GIF / WebP，最大 5MB</p>
+                <p className="text-xs text-muted-foreground">{t.common.imageUploadHint}</p>
               </div>
             </div>
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="result-summary" className="text-sm">摘要</Label>
+            <Label htmlFor="result-summary" className="text-sm">{t.results.edit.summaryLabel}</Label>
             <Input
               id="result-summary"
               value={result.summary ?? ""}
               onChange={(event) =>
                 setResult((prev) => ({ ...prev, summary: event.target.value }))
               }
-              placeholder="顯示於列表卡片"
+              placeholder={t.results.edit.summaryPlaceholder}
               disabled={isSaving || isPublishing || isDeleting}
             />
           </div>
@@ -368,7 +375,7 @@ export function ResultArticleClient({
               ) : (
                 <Trash2 className="size-4" />
               )}
-              刪除成果
+              {t.results.edit.delete}
             </Button>
             <div className="flex flex-wrap items-center gap-2">
               <Button
@@ -379,7 +386,7 @@ export function ResultArticleClient({
                 disabled={isSaving || isPublishing || isDeleting}
               >
                 <LogOut className="size-4" />
-                退出編輯
+                {t.actions.exitEdit}
               </Button>
               <Button
                 type="button"
@@ -393,7 +400,7 @@ export function ResultArticleClient({
                 ) : (
                   <Send className="size-4" />
                 )}
-                {result.status === "published" ? "取消發布" : "發布"}
+                {result.status === "published" ? t.actions.unpublish : t.actions.publish}
               </Button>
             </div>
           </div>

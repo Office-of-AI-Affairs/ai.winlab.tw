@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n/locale-provider";
 import { createClient } from "@/lib/supabase/client";
 import { Heart } from "lucide-react";
 import { useState } from "react";
@@ -19,6 +20,7 @@ export function RecruitmentInterestButton({
   initialCount,
   hasResume,
 }: RecruitmentInterestButtonProps) {
+  const t = useT();
   const [interested, setInterested] = useState(initialInterested);
   const [count, setCount] = useState(initialCount);
   const [isPending, setIsPending] = useState(false);
@@ -27,7 +29,7 @@ export function RecruitmentInterestButton({
     if (isPending) return;
 
     if (!hasResume) {
-      toast.error("請先到個人頁面上傳履歷");
+      toast.error(t.recruitment.interest.needResumeToast);
       return;
     }
 
@@ -48,7 +50,7 @@ export function RecruitmentInterestButton({
       setInterested((prev) => !prev);
       setCount((prev) => nextInterested ? prev - 1 : prev + 1);
       setIsPending(false);
-      toast.error("請先登入");
+      toast.error(t.common.loginFirst);
       return;
     }
 
@@ -70,7 +72,7 @@ export function RecruitmentInterestButton({
       // Revert on error using functional updaters to avoid stale closure
       setInterested((prev) => !prev);
       setCount((prev) => nextInterested ? prev - 1 : prev + 1);
-      toast.error("操作失敗，請稍後再試");
+      toast.error(t.common.actionFailedRetry);
     }
 
     setIsPending(false);
@@ -86,14 +88,16 @@ export function RecruitmentInterestButton({
         className="gap-2"
       >
         <Heart className={interested ? "fill-current" : ""} />
-        {interested ? "已感興趣" : "我感興趣"}
+        {interested
+          ? t.recruitment.interest.interested
+          : t.recruitment.interest.express}
         <span className="ml-1 rounded-full bg-background/20 px-2 py-0.5 text-xs font-semibold tabular-nums">
-          {count} 人感興趣
+          {t.recruitment.interest.count.replace("{count}", String(count))}
         </span>
       </Button>
       {!hasResume && (
         <p className="text-sm text-muted-foreground">
-          請先到個人頁面上傳履歷，以便廠商查看
+          {t.recruitment.interest.needResumeHint}
         </p>
       )}
     </div>

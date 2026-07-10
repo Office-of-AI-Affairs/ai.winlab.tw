@@ -7,10 +7,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
+import type { Dictionary } from "@/lib/i18n/dictionary";
 import Image from "next/image";
 import Link from "next/link";
 
-export async function HomeOrganization() {
+export async function HomeOrganization({ t }: { t: Dictionary["home"] }) {
   const all = await getOrganizationMembers();
   const members = all.slice(0, 6);
   if (members.length === 0) {
@@ -20,7 +21,7 @@ export async function HomeOrganization() {
   return (
     <div className="bg-muted/40 py-16 px-4">
       <div className="max-w-6xl mx-auto flex flex-col gap-8">
-        <h2 className="text-2xl font-bold border-l-4 border-primary pl-3">組織人員</h2>
+        <h2 className="text-2xl font-bold border-l-4 border-primary pl-3">{t.organizationHeading}</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {members.map((member) => (
             <Link key={member.id} href="/introduction">
@@ -51,7 +52,7 @@ export async function HomeOrganization() {
         <div className="flex justify-center">
           <Button asChild variant="secondary" className="px-12 text-lg">
             <Link href="/introduction">
-              探索更多
+              {t.explore}
             </Link>
           </Button>
         </div>

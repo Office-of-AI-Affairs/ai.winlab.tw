@@ -15,13 +15,18 @@ import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/site";
 import { redirect } from "next/navigation";
 import { RecruitmentEditAffordance } from "./edit-affordance-client";
+import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { localeAlternates } from "@/lib/i18n/seo";
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string; id: string }>;
+  params: Promise<{ slug: string; id: string; locale: string }>;
 }): Promise<Metadata> {
-  const { slug, id } = await params;
+  const { slug, id, locale: raw } = await params;
+  const locale: Locale = isLocale(raw) ? raw : defaultLocale;
+  const dict = await getDictionary(locale);
   const supabase = await createClient();
   const [competitionRes, eventRes] = await Promise.all([
     supabase
@@ -31,20 +36,25 @@ export async function generateMetadata({
       .single(),
     supabase.from("events").select("cover_image").eq("slug", slug).single(),
   ]);
-  const title = competitionRes.data?.title ?? "徵才資訊";
+  const title = competitionRes.data?.title ?? dict.recruitment.meta.fallbackTitle;
   const description =
-    competitionRes.data?.company_description ?? `${title}｜國立陽明交通大學人工智慧專責辦公室活動徵才資訊`;
+    competitionRes.data?.company_description ??
+    dict.recruitment.meta.fallbackDescription.replace("{title}", title);
   const ogImageUrl = competitionRes.data?.image ?? eventRes.data?.cover_image ?? null;
   const ogImages = ogImageUrl
     ? [{ url: ogImageUrl, width: 1200, height: 630, alt: title }]
     : [{ url: "/og.png", width: 1200, height: 630, alt: title }];
   const twitterImages = ogImages.map((i) => i.url);
 
+  const metaTitle = `${title}${dict.events.meta.titleSuffix}`;
+  const a = localeAlternates(`/events/${slug}/recruitment/${id}`, locale);
+
   return {
-    title: `${title}｜人工智慧專責辦公室`,
+    title: metaTitle,
     description,
     alternates: {
-      canonical: `/events/${slug}/recruitment/${id}`,
+      canonical: a.canonical,
+      languages: a.languages,
     },
     // Next.js App Router performs object-level replace (not deep merge) when a
     // child segment exports openGraph. All required fields must be declared here
@@ -54,14 +64,14 @@ export async function generateMetadata({
       type: "article",
       siteName: SITE_NAME,
       locale: "zh_TW",
-      title: `${title}｜人工智慧專責辦公室`,
+      title: metaTitle,
       description,
-      url: `/events/${slug}/recruitment/${id}`,
+      url: a.canonical,
       images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
-      title: `${title}｜人工智慧專責辦公室`,
+      title: metaTitle,
       description,
       images: twitterImages,
     },
@@ -71,9 +81,11 @@ export async function generateMetadata({
 export default async function EventRecruitmentDetailPage({
   params,
 }: {
-  params: Promise<{ slug: string; id: string }>;
+  params: Promise<{ slug: string; id: string; locale: string }>;
 }) {
-  const { slug, id } = await params;
+  const { slug, id, locale: raw } = await params;
+  const locale: Locale = isLocale(raw) ? raw : defaultLocale;
+  const dict = await getDictionary(locale);
   const supabase = await createClient();
   const {
     data: { user },
@@ -238,7 +250,7 @@ export default async function EventRecruitmentDetailPage({
     .select("name")
     .eq("slug", slug)
     .maybeSingle();
-  const eventName = eventRow?.name ?? "活動";
+  const eventName = eventRow?.name ?? dict.events.meta.fallbackName;
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: "首頁", path: "/" },
     { name: "活動", path: "/events" },
@@ -253,8 +265,9 @@ export default async function EventRecruitmentDetailPage({
       <RecruitmentDetail
         recruitment={recruitment as Recruitment}
         backHref={`/events/${slug}/recruitment`}
-        backLabel="返回活動"
+        backLabel={dict.events.backToEvent}
         canViewPrivateDetails={Boolean(user)}
+        t={dict.recruitment}
       />
 
       {user && !canViewApplicants && (

@@ -84,10 +84,12 @@ describe("metadata contracts", () => {
       [eventResultsListingPage, "/results"],
       [eventRecruitmentListingPage, "/recruitment"],
     ] as const) {
+      // Each tab ships its own canonical + hreflang via localeAlternates(),
+      // fed the tab-specific bare path — that's what keeps issue #1 fixed.
       assert.ok(content.includes("alternates:"))
-      assert.ok(content.includes(`canonical: \`/events/\${slug}${suffix}\``))
+      assert.ok(content.includes(`localeAlternates(\`/events/\${slug}${suffix}\``))
       assert.ok(content.includes("openGraph:"))
-      assert.ok(content.includes(`url: \`/events/\${slug}${suffix}\``))
+      assert.ok(content.includes("url: a.canonical"))
     }
   })
 

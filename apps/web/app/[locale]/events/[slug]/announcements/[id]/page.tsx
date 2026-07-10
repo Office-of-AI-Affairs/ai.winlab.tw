@@ -5,24 +5,31 @@ import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
 import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/site";
+import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { localeAlternates } from "@/lib/i18n/seo";
 import { EventAnnouncementArticleClient } from "./article-client";
 import { EventAnnouncementDraftFallback } from "./draft-fallback";
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string; id: string }>;
+  params: Promise<{ locale: string; slug: string; id: string }>;
 }): Promise<Metadata> {
-  const { slug, id } = await params;
+  const { locale: raw, slug, id } = await params;
+  const locale: Locale = isLocale(raw) ? raw : defaultLocale;
+  const dict = await getDictionary(locale);
   const supabase = createPublicClient();
   const [announcementRes, eventRes] = await Promise.all([
     supabase.from("announcements").select("title, category, content").eq("id", id).maybeSingle(),
     supabase.from("events").select("cover_image, name").eq("slug", slug).maybeSingle(),
   ]);
-  const title = announcementRes.data?.title ?? "公告";
+  const title = announcementRes.data?.title ?? dict.announcement.meta.fallbackTitle;
   const description = announcementRes.data?.category
-    ? `${announcementRes.data.category}公告：${title}`
-    : `${title}｜活動公告`;
+    ? dict.announcement.meta.categoryDescription
+        .replace("{category}", announcementRes.data.category)
+        .replace("{title}", title)
+    : dict.announcement.meta.fallbackDescription.replace("{title}", title);
   const inlineImage = announcementRes.data
     ? extractFirstImage(
         announcementRes.data.content as Record<string, unknown> | null,
@@ -33,10 +40,11 @@ export async function generateMetadata({
     ? [{ url: ogImageUrl, width: 1200, height: 630, alt: title }]
     : [{ url: "/og.png", width: 1200, height: 630, alt: title }];
   const twitterImages = ogImages.map((i) => i.url);
+  const a = localeAlternates(`/events/${slug}/announcements/${id}`, locale);
   return {
     title: `${title}｜人工智慧專責辦公室`,
     description,
-    alternates: { canonical: `/events/${slug}/announcements/${id}` },
+    alternates: { canonical: a.canonical, languages: a.languages },
     // Next.js App Router performs object-level replace (not deep merge) when a
     // child segment exports openGraph. All required fields must be declared here
     // explicitly; relying on layout.tsx inheritance silently drops og:type /
@@ -62,9 +70,11 @@ export async function generateMetadata({
 export default async function EventAnnouncementDetailPage({
   params,
 }: {
-  params: Promise<{ slug: string; id: string }>;
+  params: Promise<{ locale: string; slug: string; id: string }>;
 }) {
-  const { slug, id } = await params;
+  const { locale: raw, slug, id } = await params;
+  const locale: Locale = isLocale(raw) ? raw : defaultLocale;
+  const dict = await getDictionary(locale);
   const supabase = createPublicClient();
 
   const [announcementRes, eventRes] = await Promise.all([
@@ -82,7 +92,7 @@ export default async function EventAnnouncementDetailPage({
   }
 
   const announcement = announcementRes.data as Announcement;
-  const eventName = eventRes.data?.name ?? "活動";
+  const eventName = eventRes.data?.name ?? dict.events.meta.fallbackName;
 
   const { html, toc } = renderArticle(announcement.content);
   const { minutes: readingTimeMin } = estimateReadingTime(announcement.content);

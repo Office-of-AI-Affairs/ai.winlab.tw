@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { SubButton } from "@/components/ui/sub-button";
 import { Textarea } from "@/components/ui/textarea";
 import { useProfileEditor, mergeAllLinks } from "@/hooks/use-profile-editor";
+import { useT } from "@/lib/i18n/locale-provider";
 import type { ExternalResult, Profile, Result } from "@winlab/db";
 import { VendorEventsSection } from "@/components/vendor-events-section";
 import { hasCustomImage, isExternalImage } from "@/lib/utils";
@@ -72,6 +73,7 @@ export function ProfilePageClient({
   initialExternalResults: ExternalResult[];
 }) {
   const router = useRouter();
+  const t = useT();
   const { user, isVendor, refreshProfile } = useAuth();
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -114,7 +116,7 @@ export function ProfilePageClient({
     );
   }, [results, externalResults]);
 
-  const displayNameValue = profile.display_name || "未知使用者";
+  const displayNameValue = profile.display_name || t.profile.unknownUser;
   const viewLinks = mergeAllLinks(profile).map((url) => ({
     href: safeHref(url),
     label: safeHref(url) ? displayLinkLabel(safeHref(url)!) : url,
@@ -127,11 +129,11 @@ export function ProfilePageClient({
 
           <Block variant="ghost" className="flex items-center justify-between">
             <SubButton onClick={() => router.back()}>
-              <ArrowLeftIcon className="size-4" /> 返回
+              <ArrowLeftIcon className="size-4" /> {t.actions.back}
             </SubButton>
             {isOwner && (
               <SubButton onClick={() => { setAddDialogTab("event"); setExForm({ title: "", description: "", link: "", image: "" }); setAddDialogOpen(true); }}>
-                <Plus className="size-4" /> 新增成果
+                <Plus className="size-4" /> {t.profile.addResult}
               </SubButton>
             )}
           </Block>
@@ -139,7 +141,7 @@ export function ProfilePageClient({
           <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
             <DialogContent className="max-h-[80vh] flex flex-col overflow-hidden">
               <DialogHeader>
-                <DialogTitle>新增成果</DialogTitle>
+                <DialogTitle>{t.profile.addResult}</DialogTitle>
               </DialogHeader>
               <div className="flex gap-2 border-b border-border pb-2 shrink-0">
                 <Button
@@ -148,7 +150,7 @@ export function ProfilePageClient({
                   onClick={() => setAddDialogTab("event")}
                 >
                   <CalendarDays className="size-4" />
-                  活動成果
+                  {t.profile.eventResultTab}
                 </Button>
                 <Button
                   variant={addDialogTab === "external" ? "default" : "ghost"}
@@ -156,13 +158,13 @@ export function ProfilePageClient({
                   onClick={() => setAddDialogTab("external")}
                 >
                   <ExternalLink className="size-4" />
-                  外部成果
+                  {t.profile.externalResultTab}
                 </Button>
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto">
                 {addDialogTab === "event" && (
                   participatedEvents.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-6">尚未加入任何活動</p>
+                    <p className="text-sm text-muted-foreground text-center py-6">{t.profile.noJoinedEvents}</p>
                   ) : (
                     <div className="grid gap-2">
                       {participatedEvents.map((event) => (
@@ -190,23 +192,23 @@ export function ProfilePageClient({
                 {addDialogTab === "external" && (
                   <div className="grid gap-4">
                     <div className="grid gap-2">
-                      <Label>標題 *</Label>
+                      <Label>{t.profile.titleLabel}</Label>
                       <Input
                         value={exForm.title}
                         onChange={(e) => setExForm((f) => ({ ...f, title: e.target.value }))}
-                        placeholder="成果名稱"
+                        placeholder={t.profile.titlePlaceholder}
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label>描述</Label>
+                      <Label>{t.common.description}</Label>
                       <Textarea
                         value={exForm.description}
                         onChange={(e) => setExForm((f) => ({ ...f, description: e.target.value }))}
-                        placeholder="簡短說明…"
+                        placeholder={t.profile.descriptionPlaceholder}
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label>連結</Label>
+                      <Label>{t.common.link}</Label>
                       <Input
                         value={exForm.link}
                         onChange={(e) => setExForm((f) => ({ ...f, link: e.target.value }))}
@@ -214,7 +216,7 @@ export function ProfilePageClient({
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label>封面圖片</Label>
+                      <Label>{t.profile.coverImageLabel}</Label>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
                           {exForm.image && (
@@ -236,9 +238,9 @@ export function ProfilePageClient({
                             onClick={() => exFileInputRef.current?.click()}
                           >
                             {exUploadingImage ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
-                            {exUploadingImage ? "上傳中…" : "上傳圖片"}
+                            {exUploadingImage ? t.common.uploading : t.profile.uploadImage}
                           </Button>
-                          <p className="text-xs text-muted-foreground">JPEG、PNG、GIF、WebP，最大 5MB</p>
+                          <p className="text-xs text-muted-foreground">{t.profile.imageUploadHint}</p>
                         </div>
                       </div>
                     </div>
@@ -248,7 +250,7 @@ export function ProfilePageClient({
                       disabled={exSaving || !exForm.title.trim()}
                     >
                       {exSaving && <Loader2 className="size-4 animate-spin" />}
-                      新增
+                      {t.actions.add}
                     </Button>
                   </div>
                 )}
@@ -259,27 +261,27 @@ export function ProfilePageClient({
           <Dialog open={exDialogOpen} onOpenChange={setExDialogOpen}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>編輯外部成果</DialogTitle>
+                <DialogTitle>{t.profile.editExternalResult}</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4">
                 <div className="grid gap-2">
-                  <Label>標題 *</Label>
+                  <Label>{t.profile.titleLabel}</Label>
                   <Input
                     value={exForm.title}
                     onChange={(e) => setExForm((f) => ({ ...f, title: e.target.value }))}
-                    placeholder="成果名稱"
+                    placeholder={t.profile.titlePlaceholder}
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label>描述</Label>
+                  <Label>{t.common.description}</Label>
                   <Textarea
                     value={exForm.description}
                     onChange={(e) => setExForm((f) => ({ ...f, description: e.target.value }))}
-                    placeholder="簡短說明…"
+                    placeholder={t.profile.descriptionPlaceholder}
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label>連結</Label>
+                  <Label>{t.common.link}</Label>
                   <Input
                     value={exForm.link}
                     onChange={(e) => setExForm((f) => ({ ...f, link: e.target.value }))}
@@ -287,7 +289,7 @@ export function ProfilePageClient({
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label>封面圖片</Label>
+                  <Label>{t.profile.coverImageLabel}</Label>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
                       {exForm.image && (
@@ -309,9 +311,9 @@ export function ProfilePageClient({
                         onClick={() => exFileInputRef.current?.click()}
                       >
                         {exUploadingImage ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
-                        {exUploadingImage ? "上傳中…" : "上傳圖片"}
+                        {exUploadingImage ? t.common.uploading : t.profile.uploadImage}
                       </Button>
-                      <p className="text-xs text-muted-foreground">JPEG、PNG、GIF、WebP，最大 5MB</p>
+                      <p className="text-xs text-muted-foreground">{t.profile.imageUploadHint}</p>
                     </div>
                   </div>
                 </div>
@@ -321,7 +323,7 @@ export function ProfilePageClient({
                       variant="destructive"
                       onClick={() => { deleteExternalResult(exEditingId); setExDialogOpen(false); }}
                     >
-                      <Trash2 className="size-4" /> 刪除
+                      <Trash2 className="size-4" /> {t.actions.delete}
                     </Button>
                   )}
                   <Button
@@ -330,7 +332,7 @@ export function ProfilePageClient({
                     disabled={exSaving || !exForm.title.trim()}
                   >
                     {exSaving && <Loader2 className="size-4 animate-spin" />}
-                    儲存
+                    {t.actions.save}
                   </Button>
                 </div>
               </div>
@@ -345,7 +347,7 @@ export function ProfilePageClient({
                   <div className="absolute top-6 right-6 z-10">
                     <SubButton onClick={() => setIsEditMode((v) => !v)}>
                       {isEditMode ? <EyeOff className="size-4" /> : <Pencil className="size-4" />}
-                      {isEditMode ? "完成編輯" : "編輯資料"}
+                      {isEditMode ? t.profile.doneEditing : t.profile.editProfile}
                     </SubButton>
                   </div>
                 )}
@@ -361,7 +363,7 @@ export function ProfilePageClient({
                         href="https://gravatar.com/profile"
                         className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        前往 Gravatar 設定頭像
+                        {t.profile.gravatarSetAvatar}
                       </AppLink>
                     )}
                   </div>
@@ -371,12 +373,12 @@ export function ProfilePageClient({
                   {isEditMode ? (
                     <div className="relative">
                       <Input
-                        aria-label="姓名"
+                        aria-label={t.common.fullName}
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
                         onBlur={() => saveField("display_name", displayName)}
                         className="h-auto w-full rounded-none border-x-0 border-t-0 border-border bg-transparent px-0 pb-0.5 text-xl text-foreground shadow-none focus-visible:border-foreground focus-visible:ring-0"
-                        placeholder="請輸入姓名"
+                        placeholder={t.profile.namePlaceholder}
                       />
                       {savingField === "display_name" && (
                         <Loader2 className="size-3 animate-spin absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -389,13 +391,13 @@ export function ProfilePageClient({
                   {isEditMode ? (
                     <div className="relative">
                       <Textarea
-                        aria-label="個人簡介"
+                        aria-label={t.profile.bioLabel}
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
                         onBlur={() => saveField("bio", bio)}
                         rows={3}
                         className="min-h-0 w-full rounded-none border-x-0 border-t-0 border-border bg-transparent px-0 pb-0.5 text-sm shadow-none focus-visible:border-foreground focus-visible:ring-0 resize-none"
-                        placeholder="簡單介紹一下自己…"
+                        placeholder={t.profile.bioPlaceholder}
                       />
                       {savingField === "bio" && (
                         <Loader2 className="size-3 animate-spin absolute right-0 top-0 text-muted-foreground" />
@@ -407,7 +409,7 @@ export function ProfilePageClient({
 
                   {!canViewPrivateProfile && (
                     <p className="text-sm text-muted-foreground">
-                      其餘個人資訊僅限登入後查看。
+                      {t.profile.signInToSeeMore}
                     </p>
                   )}
                 </div>
@@ -415,7 +417,7 @@ export function ProfilePageClient({
                 {isEditMode ? (
                   <div className="grid gap-1.5">
                     <span className="text-xs font-medium text-muted-foreground">
-                      履歷
+                      {t.profile.resumeLabel}
                       {(savingField === "resume" || uploadingResume) && (
                         <Loader2 className="size-3 animate-spin inline ml-1 text-muted-foreground" />
                       )}
@@ -437,11 +439,11 @@ export function ProfilePageClient({
                           disabled={savingField === "resume"}
                         >
                           <Trash2 className="size-4" />
-                          移除履歷
+                          {t.profile.removeResume}
                         </Button>
                       </div>
                     ) : (
-                      <p className="text-xs text-muted-foreground">尚未上傳履歷</p>
+                      <p className="text-xs text-muted-foreground">{t.profile.noResumeUploaded}</p>
                     )}
                     <input
                       ref={resumeFileInputRef}
@@ -459,17 +461,17 @@ export function ProfilePageClient({
                       className="w-fit"
                     >
                       {uploadingResume ? <Loader2 className="size-4 animate-spin" /> : <FileUp className="size-4" />}
-                      {uploadingResume ? "上傳中…" : "上傳 PDF 履歷"}
+                      {uploadingResume ? t.common.uploading : t.profile.uploadResume}
                     </Button>
                   </div>
                 ) : canViewPrivateProfile && profile.resume ? (
                   <div className="grid gap-1.5">
-                    <span className="text-xs font-medium text-muted-foreground">履歷</span>
+                    <span className="text-xs font-medium text-muted-foreground">{t.profile.resumeLabel}</span>
                     <AppLink
                       href={`/profile/${profile.id}/resume?v=${profile.resume.split("/").pop() ?? ""}`}
                       className="text-sm text-foreground underline"
                     >
-                      查看履歷
+                      {t.profile.viewResume}
                     </AppLink>
                   </div>
                 ) : null}
@@ -478,7 +480,7 @@ export function ProfilePageClient({
                   <div className="grid gap-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium text-muted-foreground">
-                        連結
+                        {t.profile.linksLabel}
                         {savingField === "links" && (
                           <Loader2 className="size-3 animate-spin inline ml-1 text-muted-foreground" />
                         )}
@@ -489,13 +491,13 @@ export function ProfilePageClient({
                         className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors"
                       >
                         <Plus className="size-3" />
-                        新增
+                        {t.actions.add}
                       </button>
                     </div>
                     {links.map((link, idx) => (
                       <div key={idx} className="flex items-center gap-1.5">
                         <input
-                          aria-label={`連結 ${idx + 1}`}
+                          aria-label={t.profile.linkAriaLabel.replace("{n}", String(idx + 1))}
                           value={link}
                           onChange={(e) => updateLink(idx, e.target.value)}
                           onBlur={(e) => {
@@ -507,7 +509,7 @@ export function ProfilePageClient({
                         />
                         <button
                           type="button"
-                          aria-label={`刪除連結 ${idx + 1}`}
+                          aria-label={t.profile.deleteLinkAria.replace("{n}", String(idx + 1))}
                           onClick={() => removeLink(idx)}
                           className="text-muted-foreground hover:text-destructive transition-colors"
                         >
@@ -516,7 +518,7 @@ export function ProfilePageClient({
                       </div>
                     ))}
                     {links.length === 0 && (
-                      <p className="text-xs text-muted-foreground">尚未新增連結</p>
+                      <p className="text-xs text-muted-foreground">{t.profile.noLinks}</p>
                     )}
                   </div>
                 ) : canViewPrivateProfile && viewLinks.length > 0 ? (
@@ -537,7 +539,7 @@ export function ProfilePageClient({
               {isOwner && isVendor && <VendorEventsSection />}
 
               {mergedItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-12 text-center">尚無成果紀錄</p>
+                <p className="text-sm text-muted-foreground py-12 text-center">{t.profile.noResults}</p>
               ) : (
                 mergedItems.map((item) => {
                   if (item.kind === "result") {
@@ -564,13 +566,13 @@ export function ProfilePageClient({
                           <div className="grid gap-2 lg:content-center">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h3 className="text-lg font-bold break-keep">
-                                {result.title || "(無標題)"}
+                                {result.title || t.common.untitled}
                               </h3>
                               {eventName && (
                                 <Badge variant="default">{eventName}</Badge>
                               )}
                               {isOwner && result.status === "draft" && (
-                                <Badge variant="secondary">草稿</Badge>
+                                <Badge variant="secondary">{t.common.draft}</Badge>
                               )}
                             </div>
                             {result.summary && (
@@ -614,7 +616,7 @@ export function ProfilePageClient({
                       <div className="grid gap-2 lg:content-center">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="text-lg font-bold break-keep">{ext.title}</h3>
-                          <Badge variant="outline">外部</Badge>
+                          <Badge variant="outline">{t.profile.externalBadge}</Badge>
                         </div>
                         {ext.description && (
                           <p className="text-sm text-muted-foreground line-clamp-3">{ext.description}</p>

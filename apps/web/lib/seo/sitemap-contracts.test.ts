@@ -46,12 +46,17 @@ describe("sitemap contracts", () => {
 
 describe("metadata contracts", () => {
   test("major public pages define metadata", () => {
-    assert.ok(homePage.includes("export const metadata") || homePage.includes("generateMetadata"))
-    assert.ok(announcementPage.includes("export const metadata"))
-    assert.ok(eventsPage.includes("export const metadata"))
-    assert.ok(insightsPage.includes("export const metadata"))
-    assert.ok(introductionPage.includes("export const metadata"))
-    assert.ok(organizationPage.includes("export const metadata"))
+    // Locale-aware pages define metadata via generateMetadata (needed to emit
+    // per-locale canonical + hreflang alternates); static `export const metadata`
+    // is still accepted for pages that don't vary by locale.
+    const definesMetadata = (src: string) =>
+      src.includes("export const metadata") || src.includes("generateMetadata")
+    assert.ok(definesMetadata(homePage))
+    assert.ok(definesMetadata(announcementPage))
+    assert.ok(definesMetadata(eventsPage))
+    assert.ok(definesMetadata(insightsPage))
+    assert.ok(definesMetadata(introductionPage))
+    assert.ok(definesMetadata(organizationPage))
   })
 
   test("public detail pages describe the entity in metadata", () => {

@@ -17,6 +17,7 @@ import { useEventActions } from "@/hooks/use-event-actions";
 import { formatDate } from "@/lib/date";
 import { createClient } from "@/lib/supabase/client";
 import { getSurnameStrokes } from "@/lib/chinese-stroke";
+import { useT } from "@/lib/i18n/locale-provider";
 import { composeRecruitment } from "@winlab/domain";
 import type {
   Announcement,
@@ -78,13 +79,7 @@ function TabSummaryBar({
 
 export type EventTab = "announcements" | "results" | "recruitment" | "members";
 
-const BASE_TABS: { value: EventTab; label: string }[] = [
-  { value: "announcements", label: "公告" },
-  { value: "results", label: "成果" },
-  { value: "recruitment", label: "徵才" },
-];
-
-const MEMBERS_TAB: { value: EventTab; label: string } = { value: "members", label: "學員名單" };
+const BASE_TAB_VALUES: EventTab[] = ["announcements", "results", "recruitment"];
 
 function sortAnnouncements(list: Announcement[]): Announcement[] {
   return [...list].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
@@ -114,6 +109,7 @@ export function EventDetailClient({
   publishedRecruitments: Recruitment[];
   initialMembers: EventMember[];
 }) {
+  const t = useT();
   const { user, isAdmin } = useAuth();
   const userId = user?.id ?? null;
   const supabaseRef = useRef(createClient());
@@ -145,7 +141,7 @@ export function EventDetailClient({
       .eq("event_id", event.id)
       .eq("user_id", memberId);
     if (error) {
-      toast.error("無法移除成員");
+      toast.error(t.events.members.removeError);
     } else {
       setCurrentMembers((prev) => prev.filter((m) => m.id !== memberId));
     }
@@ -221,7 +217,7 @@ export function EventDetailClient({
       }
       for (const row of (coauthorRows as { result_id: string; user_id: string }[] | null) ?? []) {
         const list = coauthorsByResult.get(row.result_id) ?? [];
-        list.push({ id: row.user_id, name: profileMap[row.user_id] ?? "未知使用者" });
+        list.push({ id: row.user_id, name: profileMap[row.user_id] ?? t.common.unknownUser });
         coauthorsByResult.set(row.result_id, list);
       }
       const composed: ResultWithMeta[] = drafts.map((r) => ({
@@ -232,7 +228,7 @@ export function EventDetailClient({
       if (!cancelled) setDraftResults(composed);
     })();
     return () => { cancelled = true; };
-  }, [event.id, isAdmin, userId]);
+  }, [event.id, isAdmin, userId, t]);
 
   // Per-recruitment ownership for non-admins (powers the inline edit gate).
   // Admins skip this fetch entirely; the empty initial Set covers them.
@@ -349,10 +345,16 @@ export function EventDetailClient({
   const openCreateSheet = () => { setEditingRecruitment(null); setSheetOpen(true); };
   const openEditSheet = (r: Recruitment) => { setEditingRecruitment(r); setSheetOpen(true); };
 
-  const visibleTabs = useMemo(
-    () => userId ? [...BASE_TABS, MEMBERS_TAB] : BASE_TABS,
-    [userId],
-  );
+  const visibleTabs = useMemo(() => {
+    const labels: Record<EventTab, string> = {
+      announcements: t.events.tabs.announcements,
+      results: t.events.tabs.results,
+      recruitment: t.events.tabs.recruitment,
+      members: t.events.tabs.members,
+    };
+    const values: EventTab[] = userId ? [...BASE_TAB_VALUES, "members"] : BASE_TAB_VALUES;
+    return values.map((value) => ({ value, label: labels[value] }));
+  }, [userId, t]);
 
   // Splits the roster into "has profile" (foregrounded) and "no profile
   // yet" (deprioritised) sections, each bucketed by surname stroke count
@@ -387,7 +389,10 @@ export function EventDetailClient({
         })
         .map(([stroke, list]) => ({
           key: stroke === null ? "other" : `s${stroke}`,
-          label: stroke === null ? "其他" : `${stroke} 畫`,
+          label:
+            stroke === null
+              ? t.events.members.otherStrokeBucket
+              : t.events.members.strokeBucket.replace("{stroke}", String(stroke)),
           members: list,
         }));
     };
@@ -404,7 +409,7 @@ export function EventDetailClient({
       withoutProfileCount: withoutProfile.length,
       matchCount: matches.length,
     };
-  }, [currentMembers, memberSearch]);
+  }, [currentMembers, memberSearch, t]);
 
   return (
     <PageShell>
@@ -413,14 +418,14 @@ export function EventDetailClient({
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        回首頁
+        {t.actions.backHome}
       </Link>
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold">{event.name}</h1>
-            {event.status === "draft" && <Badge variant="secondary">草稿</Badge>}
+            {event.status === "draft" && <Badge variant="secondary">{t.common.draft}</Badge>}
           </div>
           {event.description && (
             <p className="text-muted-foreground">{event.description}</p>
@@ -450,26 +455,26 @@ export function EventDetailClient({
       {tab === "announcements" && (
         <div className="flex flex-col gap-6">
           {announcements.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">尚無公告</div>
+            <div className="text-center py-12 text-muted-foreground">{t.events.empty.announcements}</div>
           ) : (
             <>
               <TabSummaryBar
-                countLabel={`共 ${announcements.length} 則公告`}
+                countLabel={t.events.count.announcements.replace("{count}", String(announcements.length))}
                 searchValue={announcementSearch}
                 onSearchChange={setAnnouncementSearch}
-                searchPlaceholder="搜尋公告⋯"
+                searchPlaceholder={t.events.search.announcements}
               />
               {displayedAnnouncements.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">沒有符合搜尋的公告</div>
+                <div className="text-center py-12 text-muted-foreground">{t.events.search.noAnnouncements}</div>
               ) : (
                 <div className="rounded-xl border border-border overflow-hidden">
                   <table className="w-full">
                     <thead>
                       <tr className="bg-muted h-12">
-                        <th className="text-base font-bold text-left pl-5 pr-4 py-3 w-32">公告日期</th>
-                        <th className="text-base font-bold text-left px-4 py-3 w-28">類別</th>
-                        <th className="text-base font-bold text-left px-4 py-3">標題</th>
-                        {isAdmin && <th className="text-base font-bold text-left px-4 py-3 w-20">狀態</th>}
+                        <th className="text-base font-bold text-left pl-5 pr-4 py-3 w-32">{t.common.date}</th>
+                        <th className="text-base font-bold text-left px-4 py-3 w-28">{t.common.category}</th>
+                        <th className="text-base font-bold text-left px-4 py-3">{t.common.title}</th>
+                        {isAdmin && <th className="text-base font-bold text-left px-4 py-3 w-20">{t.common.status}</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -486,11 +491,11 @@ export function EventDetailClient({
                             >
                               <span className="pl-5 pr-4 py-3 w-32 text-base shrink-0">{formatDate(item.date)}</span>
                               <span className="px-4 py-3 w-28 text-base shrink-0">{item.category}</span>
-                              <span className="px-4 py-3 text-base flex-1">{item.title || "(無標題)"}</span>
+                              <span className="px-4 py-3 text-base flex-1">{item.title || t.common.untitled}</span>
                               {isAdmin && (
                                 <span className="px-4 py-3 w-20 text-base shrink-0">
                                   <Badge variant={item.status === "published" ? "default" : "secondary"}>
-                                    {item.status === "published" ? "已發布" : "草稿"}
+                                    {item.status === "published" ? t.common.published : t.common.draft}
                                   </Badge>
                                 </span>
                               )}
@@ -510,17 +515,17 @@ export function EventDetailClient({
       {tab === "results" && (
         <div className="flex flex-col gap-6">
           {results.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">尚無成果</div>
+            <div className="text-center py-12 text-muted-foreground">{t.events.empty.results}</div>
           ) : (
             <>
               <TabSummaryBar
-                countLabel={`共 ${results.length} 個成果`}
+                countLabel={t.events.count.results.replace("{count}", String(results.length))}
                 searchValue={resultSearch}
                 onSearchChange={setResultSearch}
-                searchPlaceholder="搜尋成果或作者⋯"
+                searchPlaceholder={t.events.search.results}
               />
               {displayedResults.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">沒有符合搜尋的成果</div>
+                <div className="text-center py-12 text-muted-foreground">{t.events.search.noResults}</div>
               ) : (
                 <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
                   {displayedResults.map((item) => {
@@ -552,17 +557,17 @@ export function EventDetailClient({
       {tab === "recruitment" && (
         <div className="flex flex-col gap-6">
           {recruitments.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">尚無徵才資訊</div>
+            <div className="text-center py-12 text-muted-foreground">{t.events.empty.recruitment}</div>
           ) : (
             <>
               <TabSummaryBar
-                countLabel={`共 ${recruitments.length} 筆徵才`}
+                countLabel={t.events.count.recruitment.replace("{count}", String(recruitments.length))}
                 searchValue={recruitmentSearch}
                 onSearchChange={setRecruitmentSearch}
-                searchPlaceholder="搜尋企業或職缺⋯"
+                searchPlaceholder={t.events.search.recruitment}
               />
               {displayedRecruitments.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">沒有符合搜尋的徵才</div>
+                <div className="text-center py-12 text-muted-foreground">{t.events.search.noRecruitment}</div>
               ) : (
                 <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
                   {displayedRecruitments.map((item) => (
@@ -594,15 +599,17 @@ export function EventDetailClient({
         <div className="flex flex-col gap-6">
           {currentMembers.length > 0 && (
             <TabSummaryBar
-              countLabel={`共 ${memberSections.total} 位學員 · ${memberSections.withProfileTotal} 位已建檔`}
+              countLabel={t.events.count.members
+                .replace("{total}", String(memberSections.total))
+                .replace("{withProfile}", String(memberSections.withProfileTotal))}
               searchValue={memberSearch}
               onSearchChange={setMemberSearch}
-              searchPlaceholder="搜尋學員⋯"
+              searchPlaceholder={t.events.search.members}
             />
           )}
 
           {currentMembers.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">尚無成員</div>
+            <div className="text-center py-12 text-muted-foreground">{t.events.empty.members}</div>
           ) : (
             <>
               {memberSections.withProfileGroups.map((group) => (
@@ -623,7 +630,7 @@ export function EventDetailClient({
                             <AvatarFallback>{(member.display_name ?? "?")[0]}</AvatarFallback>
                           </Avatar>
                           <span className="text-sm font-medium text-center line-clamp-1">
-                            {member.display_name ?? "未知使用者"}
+                            {member.display_name ?? t.common.unknownUser}
                           </span>
                         </AppLink>
                         {isAdmin && (
@@ -631,7 +638,7 @@ export function EventDetailClient({
                             type="button"
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeMember(member.id); }}
                             disabled={removingMemberId === member.id}
-                            aria-label={`移除 ${member.display_name ?? "成員"}`}
+                            aria-label={t.events.members.removeAria.replace("{name}", member.display_name ?? t.events.members.removeAriaFallback)}
                             className="absolute top-1 right-1 size-6 rounded-full bg-background/90 border border-border flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
                           >
                             {removingMemberId === member.id ? (
@@ -650,7 +657,7 @@ export function EventDetailClient({
               {memberSections.withoutProfileCount > 0 && (
                 <div className="flex flex-col gap-4 mt-4">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-medium text-muted-foreground">尚未建立個人檔案</h2>
+                    <h2 className="text-sm font-medium text-muted-foreground">{t.events.members.noProfileHeading}</h2>
                     <Badge variant="secondary">{memberSections.withoutProfileCount}</Badge>
                   </div>
                   {memberSections.withoutProfileGroups.map((group) => (
@@ -668,7 +675,7 @@ export function EventDetailClient({
                                 <AvatarFallback>{(member.display_name ?? "?")[0]}</AvatarFallback>
                               </Avatar>
                               <span className="text-sm text-center line-clamp-1 text-muted-foreground">
-                                {member.display_name ?? "未知使用者"}
+                                {member.display_name ?? t.common.unknownUser}
                               </span>
                             </div>
                             {isAdmin && (
@@ -676,7 +683,7 @@ export function EventDetailClient({
                                 type="button"
                                 onClick={() => removeMember(member.id)}
                                 disabled={removingMemberId === member.id}
-                                aria-label={`移除 ${member.display_name ?? "成員"}`}
+                                aria-label={t.events.members.removeAria.replace("{name}", member.display_name ?? t.events.members.removeAriaFallback)}
                                 className="absolute top-1 right-1 size-6 rounded-full bg-background/90 border border-border flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
                               >
                                 {removingMemberId === member.id ? (
@@ -695,7 +702,7 @@ export function EventDetailClient({
               )}
 
               {memberSections.matchCount === 0 && (
-                <div className="text-center py-12 text-muted-foreground">沒有符合搜尋的學員</div>
+                <div className="text-center py-12 text-muted-foreground">{t.events.search.noMembers}</div>
               )}
             </>
           )}
@@ -711,7 +718,7 @@ export function EventDetailClient({
           <FloatingActionPill
             inline
             icon={Pencil}
-            label="編輯活動"
+            label={t.events.actions.editEvent}
             onClick={() => setEventEditOpen(true)}
           />
         )}
@@ -719,7 +726,7 @@ export function EventDetailClient({
           <FloatingActionPill
             inline
             icon={Plus}
-            label={isCreatingAnnouncement ? "建立中…" : "新增公告"}
+            label={isCreatingAnnouncement ? t.common.creating : t.events.actions.newAnnouncement}
             onClick={createAnnouncement}
             loading={isCreatingAnnouncement}
           />
@@ -728,7 +735,7 @@ export function EventDetailClient({
           <FloatingActionPill
             inline
             icon={Plus}
-            label={isCreatingResult ? "建立中…" : "新增成果"}
+            label={isCreatingResult ? t.common.creating : t.events.actions.newResult}
             onClick={createResult}
             loading={isCreatingResult}
           />
@@ -737,7 +744,7 @@ export function EventDetailClient({
           <FloatingActionPill
             inline
             icon={Plus}
-            label="新增徵才"
+            label={t.events.actions.newRecruitment}
             onClick={openCreateSheet}
           />
         )}

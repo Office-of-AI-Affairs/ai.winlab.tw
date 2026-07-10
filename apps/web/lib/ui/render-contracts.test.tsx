@@ -16,6 +16,8 @@ import { RecruitmentDetail } from "@/components/recruitment-detail"
 import { SettingsMenuSkeleton } from "@/components/settings-menu"
 import { UsersTableSkeleton } from "@/components/users-table"
 import { BlockSkeleton } from "@/components/ui/block"
+import zhTW from "@/lib/i18n/messages/zh-TW.json"
+import { LocaleProvider } from "@/lib/i18n/locale-provider"
 import type { Recruitment, Result } from "@winlab/db"
 
 const tiptapEditorSource = readFileSync(resolve(process.cwd(), "components/tiptap-editor.tsx"), "utf8")
@@ -152,6 +154,7 @@ describe("component-owned skeleton render contracts", () => {
   test("hides protected recruitment sections from signed-out viewers", () => {
     const html = renderToStaticMarkup(
       <RecruitmentDetail
+        t={zhTW.recruitment}
         recruitment={recruitmentFixture}
         backHref="/recruitment"
         backLabel="返回列表"
@@ -170,6 +173,7 @@ describe("component-owned skeleton render contracts", () => {
   test("renders protected recruitment sections for signed-in viewers", () => {
     const html = renderToStaticMarkup(
       <RecruitmentDetail
+        t={zhTW.recruitment}
         recruitment={recruitmentFixture}
         backHref="/recruitment"
         backLabel="返回列表"
@@ -187,6 +191,7 @@ describe("component-owned skeleton render contracts", () => {
   test("renders recruitment cover images at full width without forcing a video crop", () => {
     const html = renderToStaticMarkup(
       <RecruitmentDetail
+        t={zhTW.recruitment}
         recruitment={{ ...recruitmentFixture, image: "https://example.com/poster.png" }}
         backHref="/recruitment"
         backLabel="返回列表"
@@ -229,11 +234,13 @@ describe("component-owned skeleton render contracts", () => {
 
   test("renders personal result cards with a clickable publisher link", () => {
     const html = renderToStaticMarkup(
-      <ResultCard
-        item={{ ...resultFixture, author_name: "蕭哲安" }}
-        href="/events/ai-rising-star/results/res_1"
-        publisherHref="/profile/user_1"
-      />
+      <LocaleProvider locale="zh-TW" dict={zhTW}>
+        <ResultCard
+          item={{ ...resultFixture, author_name: "蕭哲安" }}
+          href="/events/ai-rising-star/results/res_1"
+          publisherHref="/profile/user_1"
+        />
+      </LocaleProvider>
     )
 
     assert.ok(html.includes('href="/events/ai-rising-star/results/res_1"'))

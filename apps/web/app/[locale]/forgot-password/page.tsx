@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
+import type { Dictionary } from "@/lib/i18n/dictionary";
+import { useT } from "@/lib/i18n/locale-provider";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import Link from "next/link";
@@ -19,16 +21,20 @@ const RESEND_COOLDOWN_SECONDS = 60;
 // Matches the GoTrue `GOTRUE_MAILER_OTP_LENGTH` setting for this project.
 const OTP_LENGTH = 8;
 
-function friendlyAuthError(err: { status?: number; code?: string; message?: string } | null | undefined): string {
-  if (!err) return "發送失敗，請稍後再試。";
+function friendlyAuthError(
+  err: { status?: number; code?: string; message?: string } | null | undefined,
+  t: Dictionary["auth"]["forgotPassword"],
+): string {
+  if (!err) return t.sendFailed;
   // Supabase throttles same-email sends; surface cooldown hint instead of a generic error.
   if (err.status === 429 || err.code === "over_email_send_rate_limit" || /rate limit/i.test(err.message ?? "")) {
-    return "寄送太頻繁，請稍後再試。";
+    return t.rateLimited;
   }
-  return "發送失敗，請稍後再試。";
+  return t.sendFailed;
 }
 
 export default function ForgotPasswordPage() {
+  const t = useT();
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -64,7 +70,7 @@ export default function ForgotPasswordPage() {
 
     const err = await sendCode(value);
     if (err) {
-      setError(friendlyAuthError(err));
+      setError(friendlyAuthError(err, t.auth.forgotPassword));
     } else {
       setEmail(value);
       setCode("");
@@ -81,7 +87,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     const err = await sendCode(email);
     if (err) {
-      setError(friendlyAuthError(err));
+      setError(friendlyAuthError(err, t.auth.forgotPassword));
     } else {
       setResent(true);
       setCooldown(RESEND_COOLDOWN_SECONDS);
@@ -94,7 +100,7 @@ export default function ForgotPasswordPage() {
     setError(null);
 
     if (code.length !== OTP_LENGTH) {
-      setError(`請輸入 ${OTP_LENGTH} 位數驗證碼。`);
+      setError(t.auth.forgotPassword.otpLengthError.replace("${OTP_LENGTH}", String(OTP_LENGTH)));
       return;
     }
 
@@ -103,11 +109,11 @@ export default function ForgotPasswordPage() {
     const confirm = formData.get("confirm") as string;
 
     if (password !== confirm) {
-      setError("兩次輸入的密碼不一致。");
+      setError(t.auth.password.mismatch);
       return;
     }
     if (!passwordRegex.test(password)) {
-      setError("密碼須至少 6 個字元，且包含大寫、小寫字母與特殊符號。");
+      setError(t.auth.password.requirements);
       return;
     }
 
@@ -120,14 +126,14 @@ export default function ForgotPasswordPage() {
       type: "recovery",
     });
     if (verifyError) {
-      setError("驗證碼錯誤或已過期，請重新輸入或申請新的驗證碼。");
+      setError(t.auth.forgotPassword.otpInvalid);
       setIsLoading(false);
       return;
     }
 
     const { error: updateError } = await supabase.auth.updateUser({ password });
     if (updateError) {
-      setError("密碼更新失敗，請重新申請驗證碼。");
+      setError(t.auth.forgotPassword.updateFailed);
       setIsLoading(false);
       return;
     }
@@ -141,11 +147,11 @@ export default function ForgotPasswordPage() {
     <PageShell tone="auth">
       <div className="w-full max-w-md flex flex-col gap-6">
         <div className="text-center">
-          <h1 className="text-3xl font-bold">忘記密碼</h1>
+          <h1 className="text-3xl font-bold">{t.auth.forgotPassword.title}</h1>
           <p className="text-muted-foreground mt-2">
-            {step === "email" && "輸入電子信箱，我們會寄送驗證碼"}
-            {step === "code" && `輸入信中的 ${OTP_LENGTH} 位數驗證碼與新密碼`}
-            {step === "success" && "密碼已更新"}
+            {step === "email" && t.auth.forgotPassword.emailStepSubtitle}
+            {step === "code" && t.auth.forgotPassword.codeStepSubtitle.replace("${OTP_LENGTH}", String(OTP_LENGTH))}
+            {step === "success" && t.auth.password.updated}
           </p>
         </div>
 
@@ -153,21 +159,21 @@ export default function ForgotPasswordPage() {
           {step === "email" && (
             <form onSubmit={handleEmailSubmit} className="flex flex-col gap-5">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="email">電子信箱</Label>
+                <Label htmlFor="email">{t.common.email}</Label>
                 <Input id="email" name="email" type="email" autoComplete="email" placeholder="your@email.com" required />
               </div>
               {error && (
                 <p role="alert" className="text-sm font-medium text-destructive text-center">{error}</p>
               )}
               <Button type="submit" className="w-full mt-1" disabled={isLoading}>
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "發送驗證碼"}
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : t.auth.forgotPassword.sendCode}
               </Button>
               <Link
                 href="/login"
                 className="inline-flex items-center justify-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                返回登入
+                {t.auth.backToLogin}
               </Link>
             </form>
           )}
@@ -181,7 +187,7 @@ export default function ForgotPasswordPage() {
                 saved password?" saves an orphan entry that won't match on login.
               */}
               <div className="flex flex-col gap-2">
-                <Label htmlFor="email">電子信箱</Label>
+                <Label htmlFor="email">{t.common.email}</Label>
                 <Input
                   id="email"
                   name="email"
@@ -193,7 +199,7 @@ export default function ForgotPasswordPage() {
                 />
               </div>
               <div className="flex flex-col gap-2 items-center">
-                <Label htmlFor="code" className="self-start">驗證碼</Label>
+                <Label htmlFor="code" className="self-start">{t.auth.forgotPassword.otpLabel}</Label>
                 <InputOTP
                   id="code"
                   maxLength={OTP_LENGTH}
@@ -211,21 +217,21 @@ export default function ForgotPasswordPage() {
                 </InputOTP>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="password">新密碼</Label>
-                <Input id="password" name="password" type="password" autoComplete="new-password" placeholder="至少 6 字元，含大小寫與特殊符號" required />
+                <Label htmlFor="password">{t.auth.newPasswordLabel}</Label>
+                <Input id="password" name="password" type="password" autoComplete="new-password" placeholder={t.auth.newPasswordPlaceholder} required />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="confirm">確認新密碼</Label>
-                <Input id="confirm" name="confirm" type="password" autoComplete="new-password" placeholder="再次輸入新密碼" required />
+                <Label htmlFor="confirm">{t.auth.confirmPasswordLabel}</Label>
+                <Input id="confirm" name="confirm" type="password" autoComplete="new-password" placeholder={t.auth.confirmPasswordPlaceholder} required />
               </div>
               {error && (
                 <p role="alert" className="text-sm font-medium text-destructive text-center">{error}</p>
               )}
               {resent && !error && (
-                <p role="status" className="text-sm font-medium text-muted-foreground text-center">已重新寄出驗證碼</p>
+                <p role="status" className="text-sm font-medium text-muted-foreground text-center">{t.auth.forgotPassword.resent}</p>
               )}
               <Button type="submit" className="w-full mt-1" disabled={isLoading || code.length !== OTP_LENGTH}>
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "更新密碼"}
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : t.auth.updatePassword}
               </Button>
               <div className="flex items-center justify-between text-sm">
                 <button
@@ -239,7 +245,7 @@ export default function ForgotPasswordPage() {
                   className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  換個信箱
+                  {t.auth.forgotPassword.changeEmail}
                 </button>
                 <button
                   type="button"
@@ -247,7 +253,7 @@ export default function ForgotPasswordPage() {
                   disabled={isLoading || cooldown > 0}
                   className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {cooldown > 0 ? `${cooldown} 秒後可重寄` : "沒收到？重寄驗證碼"}
+                  {cooldown > 0 ? t.auth.forgotPassword.resendCooldown.replace("${cooldown}", String(cooldown)) : t.auth.forgotPassword.resend}
                 </button>
               </div>
             </form>
@@ -257,11 +263,11 @@ export default function ForgotPasswordPage() {
             <div role="status" className="flex flex-col items-center gap-4 py-4">
               <CheckCircle2 className="w-10 h-10 text-green-600" />
               <div className="text-center">
-                <p className="font-medium">密碼已更新</p>
-                <p className="text-sm text-muted-foreground mt-1">請使用新密碼重新登入。</p>
+                <p className="font-medium">{t.auth.password.updated}</p>
+                <p className="text-sm text-muted-foreground mt-1">{t.auth.password.loginWithNew}</p>
               </div>
               <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors mt-2">
-                前往登入
+                {t.auth.goToLogin}
               </Link>
             </div>
           )}

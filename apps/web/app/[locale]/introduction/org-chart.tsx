@@ -3,6 +3,8 @@
 import type { ReactNode, RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useT } from "@/lib/i18n/locale-provider";
+
 type Rect = { top: number; left: number; width: number; height: number };
 
 function topCenter(r: Rect) {
@@ -67,6 +69,7 @@ function OrgNode({
 type ActiveTab = "core" | "legal_entity" | "industry";
 
 export function OrgChart({ activeTab = "core" }: { activeTab?: ActiveTab }) {
+  const t = useT();
   const containerRef = useRef<HTMLDivElement>(null!);
   const directorRef = useRef<HTMLDivElement>(null!);
   const viceLeftRef = useRef<HTMLDivElement>(null!);
@@ -145,8 +148,8 @@ export function OrgChart({ activeTab = "core" }: { activeTab?: ActiveTab }) {
     elements.push(
       <line key="le-hub" x1={leR.x} y1={lowerHubY} x2={hubX} y2={lowerHubY} stroke={stroke} strokeWidth={sw} strokeDasharray="6 4" />,
       <line key="hub-ind" x1={hubX} y1={lowerHubY} x2={indL.x} y2={lowerHubY} stroke={stroke} strokeWidth={sw} strokeDasharray="6 4" />,
-      <text key="lbl-left" x={(leR.x + hubX) / 2} y={lowerHubY - 6} textAnchor="middle" fontSize="11" fill="var(--muted-foreground)" fontWeight="bold">聯盟</text>,
-      <text key="lbl-right" x={(hubX + indL.x) / 2} y={lowerHubY - 6} textAnchor="middle" fontSize="11" fill="var(--muted-foreground)" fontWeight="bold">聯盟</text>,
+      <text key="lbl-left" x={(leR.x + hubX) / 2} y={lowerHubY - 6} textAnchor="middle" fontSize="11" fill="var(--muted-foreground)" fontWeight="bold">{t.introduction.orgChart.alliance}</text>,
+      <text key="lbl-right" x={(hubX + indL.x) / 2} y={lowerHubY - 6} textAnchor="middle" fontSize="11" fill="var(--muted-foreground)" fontWeight="bold">{t.introduction.orgChart.alliance}</text>,
     );
 
     // ── Lower hub → bus bar → 合聘 / 培訓 / 應用 ──
@@ -160,7 +163,7 @@ export function OrgChart({ activeTab = "core" }: { activeTab?: ActiveTab }) {
     );
 
     setLines(elements);
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -173,7 +176,7 @@ export function OrgChart({ activeTab = "core" }: { activeTab?: ActiveTab }) {
 
   return (
     <div className="w-full bg-background rounded-xl select-none">
-      <h1 className="text-3xl font-bold">組織架構</h1>
+      <h1 className="text-3xl font-bold">{t.introduction.orgChart.heading}</h1>
 
       {/* ── Desktop (md+): SVG org chart with horizontal scroll fallback ── */}
       <div className="hidden md:block overflow-x-auto px-6 pb-8">
@@ -208,40 +211,40 @@ export function OrgChart({ activeTab = "core" }: { activeTab?: ActiveTab }) {
               {/* Row 1: 主任 at col 3 */}
               <div /><div />
               <div className="flex justify-center">
-                <OrgNode nodeRef={directorRef} title="主任" person="曾建超教授" sub="資訊學院" className="min-w-[130px]" highlighted={activeTab === "core"} />
+                <OrgNode nodeRef={directorRef} title={t.introduction.orgChart.director} person={t.introduction.orgChart.directorName} sub={t.introduction.orgChart.collegeCS} className="min-w-[130px]" highlighted={activeTab === "core"} />
               </div>
               <div /><div />
 
               {/* Row 2: 副主任左(col2), hub-space(col3), 副主任右(col4) */}
               <div />
               <div className="flex justify-center">
-                <OrgNode nodeRef={viceLeftRef} title="副主任" person="黃俊龍副院長" sub="資訊學院" className="w-full" highlighted={activeTab === "core"} />
+                <OrgNode nodeRef={viceLeftRef} title={t.introduction.orgChart.deputyDirector} person={t.introduction.orgChart.deputyLeftName} sub={t.introduction.orgChart.collegeCS} className="w-full" highlighted={activeTab === "core"} />
               </div>
               <div /> {/* hub occupies this column – position derived by SVG calc */}
               <div className="flex justify-center">
-                <OrgNode nodeRef={viceRightRef} title="副主任" person="陳建志所長" sub="智慧綠能學院" className="w-full" highlighted={activeTab === "core"} />
+                <OrgNode nodeRef={viceRightRef} title={t.introduction.orgChart.deputyDirector} person={t.introduction.orgChart.deputyRightName} sub={t.introduction.orgChart.collegeGreenEnergy} className="w-full" highlighted={activeTab === "core"} />
               </div>
               <div />
 
               {/* Row 3: 法人(col1), 産業(col5) – dashed alliance to hub */}
               <div className="flex justify-center items-center">
-                <OrgNode nodeRef={legalRef} title="法人" className="w-full" highlighted={activeTab === "legal_entity"} />
+                <OrgNode nodeRef={legalRef} title={t.introduction.category.legalEntity} className="w-full" highlighted={activeTab === "legal_entity"} />
               </div>
               <div /><div /><div />
               <div className="flex justify-center items-center">
-                <OrgNode nodeRef={industryRef} title="產業" className="w-full" highlighted={activeTab === "industry"} />
+                <OrgNode nodeRef={industryRef} title={t.introduction.category.industry} className="w-full" highlighted={activeTab === "industry"} />
               </div>
 
               {/* Row 4: 合聘(col2), 培訓(col3), 應用(col4) */}
               <div />
               <div className="flex justify-center">
-                <OrgNode nodeRef={jointRef} title="合聘專家" person="許懷中教授" sub="逢甲AI中心主任" className="w-full" highlighted={activeTab === "core"} />
+                <OrgNode nodeRef={jointRef} title={t.introduction.orgChart.jointExpert} person={t.introduction.orgChart.jointExpertName} sub={t.introduction.orgChart.jointExpertSub} className="w-full" highlighted={activeTab === "core"} />
               </div>
               <div className="flex justify-center">
-                <OrgNode nodeRef={trainingRef} title="培訓團隊" sub="（資訊技術中心）" className="w-full" highlighted={activeTab === "core"} />
+                <OrgNode nodeRef={trainingRef} title={t.introduction.orgChart.trainingTeam} sub={t.introduction.orgChart.trainingSub} className="w-full" highlighted={activeTab === "core"} />
               </div>
               <div className="flex justify-center">
-                <OrgNode nodeRef={applyRef} title="應用團隊" sub="（教授與實驗室）" className="w-full" highlighted={activeTab === "core"} />
+                <OrgNode nodeRef={applyRef} title={t.introduction.orgChart.applicationTeam} sub={t.introduction.orgChart.applicationSub} className="w-full" highlighted={activeTab === "core"} />
               </div>
               <div />
             </div>
@@ -253,24 +256,24 @@ export function OrgChart({ activeTab = "core" }: { activeTab?: ActiveTab }) {
       <div className="md:hidden px-4 pb-6 flex flex-col gap-3 min-h-[420px]">
         {/* Row 1: 主任 */}
         <div className="flex justify-center">
-          <OrgNode title="主任" person="曾建超教授" sub="資訊學院" className="w-48" highlighted={activeTab === "core"} />
+          <OrgNode title={t.introduction.orgChart.director} person={t.introduction.orgChart.directorName} sub={t.introduction.orgChart.collegeCS} className="w-48" highlighted={activeTab === "core"} />
         </div>
         {/* Row 2: 副主任×2 */}
         <div className="flex gap-3">
-          <OrgNode title="副主任" person="黃俊龍副院長" sub="資訊學院" className="flex-1" highlighted={activeTab === "core"} />
-          <OrgNode title="副主任" person="陳建志所長" sub="智慧綠能學院" className="flex-1" highlighted={activeTab === "core"} />
+          <OrgNode title={t.introduction.orgChart.deputyDirector} person={t.introduction.orgChart.deputyLeftName} sub={t.introduction.orgChart.collegeCS} className="flex-1" highlighted={activeTab === "core"} />
+          <OrgNode title={t.introduction.orgChart.deputyDirector} person={t.introduction.orgChart.deputyRightName} sub={t.introduction.orgChart.collegeGreenEnergy} className="flex-1" highlighted={activeTab === "core"} />
         </div>
         {/* Row 3: 法人 & 産業 (dashed alliance) */}
         <div className="flex items-center gap-2">
-          <OrgNode title="法人" className="flex-1 border-dashed" highlighted={activeTab === "legal_entity"} />
-          <span className="text-xs text-muted-foreground shrink-0 px-1">⋯ 聯盟 ⋯</span>
-          <OrgNode title="產業" className="flex-1 border-dashed" highlighted={activeTab === "industry"} />
+          <OrgNode title={t.introduction.category.legalEntity} className="flex-1 border-dashed" highlighted={activeTab === "legal_entity"} />
+          <span className="text-xs text-muted-foreground shrink-0 px-1">⋯ {t.introduction.orgChart.alliance} ⋯</span>
+          <OrgNode title={t.introduction.category.industry} className="flex-1 border-dashed" highlighted={activeTab === "industry"} />
         </div>
         {/* Row 4: 合聘/培訓/應用 */}
         <div className="flex gap-3">
-          <OrgNode title="合聘專家" person="許懷中教授" sub="逢甲AI中心主任" className="flex-1" highlighted={activeTab === "core"} />
-          <OrgNode title="培訓團隊" sub="（資訊技術中心）" className="flex-1" highlighted={activeTab === "core"} />
-          <OrgNode title="應用團隊" sub="（教授與實驗室）" className="flex-1" highlighted={activeTab === "core"} />
+          <OrgNode title={t.introduction.orgChart.jointExpert} person={t.introduction.orgChart.jointExpertName} sub={t.introduction.orgChart.jointExpertSub} className="flex-1" highlighted={activeTab === "core"} />
+          <OrgNode title={t.introduction.orgChart.trainingTeam} sub={t.introduction.orgChart.trainingSub} className="flex-1" highlighted={activeTab === "core"} />
+          <OrgNode title={t.introduction.orgChart.applicationTeam} sub={t.introduction.orgChart.applicationSub} className="flex-1" highlighted={activeTab === "core"} />
         </div>
       </div>
     </div>

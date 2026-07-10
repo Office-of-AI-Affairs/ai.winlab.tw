@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useContentEditor } from "@/hooks/use-content-editor";
 import { useEditMode } from "@/hooks/use-edit-mode";
 import { formatDate } from "@/lib/date";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb";
 import type { TocItem } from "@/lib/ui/article";
 import { ArrowLeft, Loader2, LogOut, Send, Trash2 } from "lucide-react";
@@ -40,6 +41,8 @@ export function InsightArticleClient({
   initialMode,
 }: Props) {
   const router = useRouter();
+  const t = useT();
+  const isEn = useLocale() === "en";
   const { user, isAdmin, isMember } = useAuth();
   const canEdit = isAdmin || (isMember && user?.id === initialArticle.author_id);
   const { isEditing, setMode } = useEditMode({ enabled: canEdit });
@@ -100,10 +103,10 @@ export function InsightArticleClient({
   }, [hasChanges, article.content]);
 
   const exitEdit = useCallback(() => {
-    if (hasChanges && !window.confirm("你有尚未儲存的變更，確定要離開嗎？")) return;
+    if (hasChanges && !window.confirm(t.common.unsavedConfirm)) return;
     setActionsOpen(false);
     setMode("view");
-  }, [hasChanges, setMode]);
+  }, [hasChanges, setMode, t]);
 
   // ⌘S — force immediate save (skip 3s debounce).
   useEffect(() => {
@@ -132,18 +135,18 @@ export function InsightArticleClient({
         ? "dirty"
         : "saved";
   const statusLabel = isDeleting
-    ? "刪除中…"
+    ? t.editor.status.deleting
     : isPublishing
       ? article.status === "published"
-        ? "取消發布中…"
-        : "發布中…"
+        ? t.editor.status.unpublishing
+        : t.editor.status.publishing
       : isSaving
-        ? "儲存中…"
+        ? t.editor.status.saving
         : hasChanges
-          ? "尚未儲存"
+          ? t.editor.status.unsaved
           : article.status === "published"
-            ? "已發布"
-            : "草稿";
+            ? t.common.published
+            : t.common.draft;
 
   const titleClass = "text-4xl font-extrabold tracking-tight text-balance mb-4";
 
@@ -168,8 +171,8 @@ export function InsightArticleClient({
   };
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: "首頁", path: "/" },
-    { name: "觀點", path: "/insights" },
+    { name: t.common.home, path: "/" },
+    { name: t.insights.heading, path: "/insights" },
     { name: article.title, path: sharePath },
   ]);
 
@@ -184,7 +187,7 @@ export function InsightArticleClient({
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
         >
           <ArrowLeft className="w-4 h-4" />
-          返回列表
+          {t.actions.backToList}
         </Link>
         <ShareButtons url={sharePath} title={article.title} />
       </div>
@@ -208,8 +211,8 @@ export function InsightArticleClient({
             onChange={(event) =>
               setArticle((prev) => ({ ...prev, title: event.target.value }))
             }
-            placeholder="輸入標題…"
-            aria-label="標題"
+            placeholder={t.editor.titlePlaceholder}
+            aria-label={t.common.title}
             className={`${titleClass} w-full border-0 bg-transparent p-0 outline-none focus:outline-none placeholder:text-muted-foreground/60`}
           />
         ) : (
@@ -229,7 +232,7 @@ export function InsightArticleClient({
           {readingTimeMin ? (
             <>
               <span aria-hidden className="opacity-30">·</span>
-              <span>閱讀 {readingTimeMin} 分鐘</span>
+              <span>{t.article.readingTime.replace("{min}", String(readingTimeMin))}</span>
             </>
           ) : null}
         </div>
@@ -239,15 +242,22 @@ export function InsightArticleClient({
 
       <div className="max-w-6xl lg:flex lg:items-start lg:gap-8">
         <div className="min-w-0 flex-1">
-          <RichTextSurface
-            content={article.content as Record<string, unknown> | null}
-            contentHtml={renderedHtml}
-            editing={isEditing}
-            onChange={(content) =>
-              setArticle((prev) => ({ ...prev, content }))
-            }
-            emptyText="（無內容）"
-          />
+          {isEn && (
+            <p className="text-sm text-muted-foreground mb-4">
+              {t.i18nNotice.untranslated}
+            </p>
+          )}
+          <div lang={isEn ? "zh-Hant" : undefined}>
+            <RichTextSurface
+              content={article.content as Record<string, unknown> | null}
+              contentHtml={renderedHtml}
+              editing={isEditing}
+              onChange={(content) =>
+                setArticle((prev) => ({ ...prev, content }))
+              }
+              emptyText={t.editor.emptyContent}
+            />
+          </div>
         </div>
         <Toc items={toc} className="hidden lg:block" />
       </div>
@@ -258,33 +268,33 @@ export function InsightArticleClient({
         <EditActionsPill
           status={status}
           statusLabel={statusLabel}
-          title="管理文章"
+          title={t.editor.manageArticle}
           open={actionsOpen}
           onOpenChange={setActionsOpen}
         >
           <div className="flex flex-col gap-2">
-            <Label htmlFor="article-summary" className="text-sm">摘要</Label>
+            <Label htmlFor="article-summary" className="text-sm">{t.editor.summaryLabel}</Label>
             <Textarea
               id="article-summary"
               value={(article.summary as string | null) ?? ""}
               onChange={(event) =>
                 setArticle((prev) => ({ ...prev, summary: event.target.value }))
               }
-              placeholder="一段話介紹這篇文章…"
+              placeholder={t.editor.summaryPlaceholder}
               rows={2}
               disabled={isSaving || isPublishing || isDeleting}
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="article-cover" className="text-sm">封面圖 URL</Label>
+            <Label htmlFor="article-cover" className="text-sm">{t.editor.coverLabel}</Label>
             <Input
               id="article-cover"
               value={(article.cover_image_url as string | null) ?? ""}
               onChange={(event) =>
                 setArticle((prev) => ({ ...prev, cover_image_url: event.target.value }))
               }
-              placeholder="https://…（留空時自動取文章內第一張圖）"
+              placeholder={t.editor.coverPlaceholder}
               disabled={isSaving || isPublishing || isDeleting}
             />
           </div>
@@ -305,7 +315,7 @@ export function InsightArticleClient({
               ) : (
                 <Trash2 className="size-4" />
               )}
-              刪除文章
+              {t.editor.deleteArticle}
             </Button>
             <div className="flex flex-wrap items-center gap-2">
               <Button
@@ -316,7 +326,7 @@ export function InsightArticleClient({
                 disabled={isSaving || isPublishing || isDeleting}
               >
                 <LogOut className="size-4" />
-                退出編輯
+                {t.actions.exitEdit}
               </Button>
               <Button
                 type="button"
@@ -330,7 +340,7 @@ export function InsightArticleClient({
                 ) : (
                   <Send className="size-4" />
                 )}
-                {article.status === "published" ? "取消發布" : "發布"}
+                {article.status === "published" ? t.actions.unpublish : t.actions.publish}
               </Button>
             </div>
           </div>

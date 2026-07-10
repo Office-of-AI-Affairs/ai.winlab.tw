@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useT } from "@/lib/i18n/locale-provider";
 import { createClient } from "@/lib/supabase/client";
 import type { Tag } from "@winlab/db";
 import { Check, Loader2, Pencil, Plus, Tag as TagIcon, Trash2, X } from "lucide-react";
@@ -18,6 +19,7 @@ type Props = {
 type TagWithChildren = Tag & { children: Tag[] };
 
 export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }: Props) {
+  const t = useT();
   const supabase = createClient();
   const [tags, setTags] = useState<TagWithChildren[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -79,7 +81,7 @@ export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }:
     if (!inputValue.trim()) return;
     setSaving(true);
     const { error } = await supabase.from("tags").insert({ name: inputValue.trim(), parent_id: null, sort_order: tags.length });
-    if (error) { toast.error("操作失敗"); setSaving(false); return; }
+    if (error) { toast.error(t.common.actionFailed); setSaving(false); return; }
     setInputValue("");
     setAddingParent(false);
     await fetchTags();
@@ -92,7 +94,7 @@ export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }:
     const parent = tags.find((p) => p.id === parentId);
     const childCount = parent?.children.length ?? 0;
     const { error } = await supabase.from("tags").insert({ name: inputValue.trim(), parent_id: parentId, sort_order: childCount });
-    if (error) { toast.error("操作失敗"); setSaving(false); return; }
+    if (error) { toast.error(t.common.actionFailed); setSaving(false); return; }
     setInputValue("");
     setAddingChildOf(null);
     await fetchTags();
@@ -103,7 +105,7 @@ export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }:
     if (!inputValue.trim()) return;
     setSaving(true);
     const { error } = await supabase.from("tags").update({ name: inputValue.trim() }).eq("id", tagId);
-    if (error) { toast.error("操作失敗"); setSaving(false); return; }
+    if (error) { toast.error(t.common.actionFailed); setSaving(false); return; }
     setInputValue("");
     setEditingId(null);
     await fetchTags();
@@ -111,9 +113,9 @@ export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }:
   };
 
   const handleDelete = async (tagId: string) => {
-    if (!confirm("確定要刪除此標籤？（包含所有子標籤）")) return;
+    if (!confirm(t.tags.confirmDelete)) return;
     const { error } = await supabase.from("tags").delete().eq("id", tagId);
-    if (error) { toast.error("操作失敗"); return; }
+    if (error) { toast.error(t.common.actionFailed); return; }
     if (selectedTagIds.has(tagId)) onToggle(tagId);
     await fetchTags();
   };
@@ -144,14 +146,14 @@ export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }:
       <div className="flex items-center justify-between mb-2">
         <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
           <TagIcon className="w-3.5 h-3.5" />
-          標籤篩選
+          {t.tags.filterHeading}
         </span>
         {isAdmin && !addingParent && (
           <button
             type="button"
             onClick={() => { setAddingParent(true); setInputValue(""); setEditingId(null); setAddingChildOf(null); }}
             className="text-muted-foreground hover:text-foreground transition-colors"
-            title="新增大標"
+            title={t.tags.addParentTitle}
           >
             <Plus className="w-3.5 h-3.5" />
           </button>
@@ -166,7 +168,7 @@ export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }:
           onConfirm={handleAddParent}
           onCancel={cancelEdit}
           saving={saving}
-          placeholder="大標名稱…"
+          placeholder={t.tags.parentPlaceholder}
         />
       )}
 
@@ -180,7 +182,7 @@ export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }:
             : "hover:bg-muted text-foreground"
         }`}
       >
-        全部
+        {t.tags.all}
       </button>
 
       {isLoading ? (
@@ -198,7 +200,7 @@ export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }:
                     onConfirm={() => handleRename(parent.id)}
                     onCancel={cancelEdit}
                     saving={saving}
-                    placeholder="大標名稱…"
+                    placeholder={t.tags.parentPlaceholder}
                     className="flex-1"
                   />
                 ) : (
@@ -220,7 +222,7 @@ export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }:
                           type="button"
                           onClick={() => { setAddingChildOf(parent.id); setInputValue(""); setEditingId(null); setAddingParent(false); }}
                           className="p-0.5 rounded text-muted-foreground hover:text-foreground"
-                          title="新增小標"
+                          title={t.tags.addChildTitle}
                         >
                           <Plus className="w-3 h-3" />
                         </button>
@@ -228,7 +230,7 @@ export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }:
                           type="button"
                           onClick={() => startEdit(parent)}
                           className="p-0.5 rounded text-muted-foreground hover:text-foreground"
-                          title="編輯"
+                          title={t.actions.edit}
                         >
                           <Pencil className="w-3 h-3" />
                         </button>
@@ -236,7 +238,7 @@ export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }:
                           type="button"
                           onClick={() => handleDelete(parent.id)}
                           className="p-0.5 rounded text-muted-foreground hover:text-destructive"
-                          title="刪除"
+                          title={t.actions.delete}
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -257,7 +259,7 @@ export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }:
                         onConfirm={() => handleRename(child.id)}
                         onCancel={cancelEdit}
                         saving={saving}
-                        placeholder="小標名稱…"
+                        placeholder={t.tags.childPlaceholder}
                         className="flex-1"
                       />
                     ) : (
@@ -279,7 +281,7 @@ export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }:
                               type="button"
                               onClick={() => startEdit(child)}
                               className="p-0.5 rounded text-muted-foreground hover:text-foreground"
-                              title="編輯"
+                              title={t.actions.edit}
                             >
                               <Pencil className="w-3 h-3" />
                             </button>
@@ -287,7 +289,7 @@ export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }:
                               type="button"
                               onClick={() => handleDelete(child.id)}
                               className="p-0.5 rounded text-muted-foreground hover:text-destructive"
-                              title="刪除"
+                              title={t.actions.delete}
                             >
                               <Trash2 className="w-3 h-3" />
                             </button>
@@ -306,7 +308,7 @@ export function ResultTagSidebar({ selectedTagIds, onToggle, onClear, isAdmin }:
                     onConfirm={() => handleAddChild(parent.id)}
                     onCancel={cancelEdit}
                     saving={saving}
-                    placeholder="小標名稱…"
+                    placeholder={t.tags.childPlaceholder}
                   />
                 )}
               </div>

@@ -4,6 +4,7 @@ import { AppLink } from "@/components/app-link";
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useT } from "@/lib/i18n/locale-provider";
 import type { OrganizationMember, OrganizationMemberCategory } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { GraduationCap, Mail, Microscope, Plus } from "lucide-react";
@@ -23,11 +24,7 @@ const OrganizationMemberDialog = dynamic(
   { ssr: false },
 );
 
-const TABS: { value: OrganizationMemberCategory; label: string }[] = [
-  { value: "core", label: "核心成員" },
-  { value: "legal_entity", label: "法人" },
-  { value: "industry", label: "產業" },
-];
+const TAB_VALUES: OrganizationMemberCategory[] = ["core", "legal_entity", "industry"];
 
 const tabParser = parseAsStringLiteral(["core", "legal_entity", "industry"] as const).withDefault("core");
 
@@ -36,8 +33,15 @@ export function OrganizationPageClient({
 }: {
   membersByCategory: Record<OrganizationMemberCategory, OrganizationMember[]>;
 }) {
+  const t = useT();
   const { isAdmin } = useAuth();
   const [tab, setTab] = useQueryState("tab", tabParser);
+
+  const tabLabels: Record<OrganizationMemberCategory, string> = {
+    core: t.introduction.category.core,
+    legal_entity: t.introduction.category.legalEntity,
+    industry: t.introduction.category.industry,
+  };
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<OrganizationMember | null>(null);
 
@@ -59,14 +63,14 @@ export function OrganizationPageClient({
 
       <div className="flex flex-col gap-6">
         <div className="flex gap-2 border-b border-border pb-2">
-          {TABS.map(({ value, label }) => (
+          {TAB_VALUES.map((value) => (
             <Button
               key={value}
               variant={tab === value ? "default" : "ghost"}
               size="sm"
               onClick={() => setTab(value)}
             >
-              {label}
+              {tabLabels[value]}
             </Button>
           ))}
         </div>
@@ -75,13 +79,13 @@ export function OrganizationPageClient({
           <div className="flex justify-end">
             <Button variant="secondary" onClick={openCreate}>
               <Plus className="w-4 h-4" />
-              新增
+              {t.actions.add}
             </Button>
           </div>
         )}
 
         {members.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">待更新</div>
+          <div className="text-center py-12 text-muted-foreground">{t.introduction.membersPending}</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
             {members.map((member) => {

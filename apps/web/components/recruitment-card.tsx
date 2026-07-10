@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useT } from "@/lib/i18n/locale-provider";
 import type { RecruitmentSummary } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { Pencil, Pin } from "lucide-react";
@@ -23,6 +24,7 @@ type RecruitmentCardProps = {
 };
 
 export function RecruitmentCard({ item, href, isAdmin, onEdit, onPinToggle }: RecruitmentCardProps) {
+  const t = useT();
   const isExpired = item.end_date ? new Date(item.end_date) < new Date() : false;
 
   return (
@@ -39,7 +41,7 @@ export function RecruitmentCard({ item, href, isAdmin, onEdit, onPinToggle }: Re
           {isAdmin ? (
             <button
               type="button"
-              aria-label={item.pinned ? "取消訂選" : "訂選"}
+              aria-label={item.pinned ? t.actions.unpin : t.actions.pin}
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPinToggle?.(item.id, !item.pinned); }}
               className={`absolute top-2 right-2 z-20 rounded-full p-1.5 interactive-opacity text-white ${item.pinned
                 ? "bg-black/50 opacity-100"
@@ -59,7 +61,7 @@ export function RecruitmentCard({ item, href, isAdmin, onEdit, onPinToggle }: Re
         </div>
         <CardHeader className="shrink-0 pb-0">
           <CardTitle className="text-xl font-bold line-clamp-2">
-            {item.title || "(無標題)"}
+            {item.title || t.common.untitled}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex-1 pt-1 pb-4 flex flex-col gap-2">
@@ -71,16 +73,16 @@ export function RecruitmentCard({ item, href, isAdmin, onEdit, onPinToggle }: Re
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>
               {item.start_date}
-              {item.end_date ? ` ~ ${item.end_date}` : " 起"}
+              {item.end_date ? ` ~ ${item.end_date}` : t.recruitment.card.startOnward}
             </span>
-            {isExpired && <Badge variant="destructive">已截止</Badge>}
+            {isExpired && <Badge variant="destructive">{t.recruitment.detail.closed}</Badge>}
           </div>
         </CardContent>
       </div>
       <AppLink
         href={href}
         className="absolute inset-0 z-10"
-        aria-label={item.title || "(無標題)"}
+        aria-label={item.title || t.common.untitled}
         interactive={false}
       />
       {onEdit && (
@@ -88,7 +90,7 @@ export function RecruitmentCard({ item, href, isAdmin, onEdit, onPinToggle }: Re
           type="button"
           className="absolute top-2 right-12 z-20 rounded-full bg-black/50 p-1.5 text-white hover:bg-black/70 transition-colors cursor-pointer"
           onClick={onEdit}
-          aria-label="編輯"
+          aria-label={t.actions.edit}
         >
           <Pencil className="w-4 h-4" />
         </button>

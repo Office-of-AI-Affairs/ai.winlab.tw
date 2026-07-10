@@ -115,10 +115,10 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-6 text-xl font-bold">
         <AppLink
           href="/"
-          aria-label="人工智慧專責辦公室 — Office of AI Affairs"
+          aria-label={t.nav.brandAriaLabel}
           className="inline-flex flex-col justify-center leading-none"
         >
-          <span className="text-xl sm:text-2xl tracking-widest">人工智慧專責辦公室</span>
+          <span className="text-xl sm:text-2xl tracking-widest">{t.common.orgNameZh}</span>
           <span
             className="mt-1 text-sm sm:text-base font-normal tracking-[0.08em] text-white/75"
             style={{ fontFamily: "var(--font-instrument-serif)" }}

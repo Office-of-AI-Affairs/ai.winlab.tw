@@ -1,6 +1,9 @@
 import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { JsonLd } from "@/components/json-ld";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { defaultLocale, isLocale } from "@/lib/i18n/config";
+import { localeAlternates } from "@/lib/i18n/seo";
 import type { Metadata } from "next";
 
 const getEventMeta = unstable_cache(
@@ -23,24 +26,29 @@ const getEventMeta = unstable_cache(
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
+  const { locale: rawLocale, slug } = await params;
+  const locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
+  const dict = await getDictionary(locale);
   const data = await getEventMeta(slug);
 
-  const name = data?.name ?? "活動";
-  const description = data?.description ?? `${name} — 國立陽明交通大學人工智慧專責辦公室`;
+  const name = data?.name ?? dict.events.meta.fallbackName;
+  const description =
+    data?.description ?? dict.events.meta.fallbackDescription.replace("{name}", name);
   const ogImages = data?.cover_image
     ? [{ url: data.cover_image, width: 1200, height: 630, alt: name }]
     : [];
+  const a = localeAlternates(`/events/${slug}`, locale);
   return {
-    title: `${name}｜人工智慧專責辦公室`,
+    title: `${name}${dict.events.meta.titleSuffix}`,
     description,
     alternates: {
-      canonical: `/events/${slug}`,
+      canonical: a.canonical,
+      languages: a.languages,
     },
     openGraph: {
-      title: `${name}｜人工智慧專責辦公室`,
+      title: `${name}${dict.events.meta.titleSuffix}`,
       description,
       url: `/events/${slug}`,
       images: ogImages,

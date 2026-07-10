@@ -5,6 +5,7 @@ import {
   AnnouncementArticleClient as SharedAnnouncementArticleClient,
   type AnnouncementArticleClientProps,
 } from "@/components/announcement-article-client"
+import { useT } from "@/lib/i18n/locale-provider"
 
 type Props = Omit<
   AnnouncementArticleClientProps,
@@ -15,17 +16,18 @@ type Props = Omit<
 }
 
 export function EventAnnouncementArticleClient({ slug, eventName, ...rest }: Props) {
+  const t = useT()
   const id = rest.initialAnnouncement.id
   return (
     <SharedAnnouncementArticleClient
       {...rest}
       backHref={`/events/${slug}/announcements`}
-      backLabel="返回活動"
+      backLabel={t.events.backToEvent}
       sharePath={`/events/${slug}/announcements/${id}`}
       shareUrl={`https://ai.winlab.tw/events/${slug}/announcements/${id}`}
       breadcrumb={[
-        { name: "首頁", path: "/" },
-        { name: "活動", path: "/events" },
+        { name: t.common.home, path: "/" },
+        { name: t.nav.events, path: "/events" },
         { name: eventName, path: `/events/${slug}` },
         {
           name: rest.initialAnnouncement.title,
@@ -33,7 +35,7 @@ export function EventAnnouncementArticleClient({ slug, eventName, ...rest }: Pro
         },
       ]}
       onCacheInvalidate={revalidateAllEventCaches}
-      manageTitle="管理活動公告"
+      manageTitle={t.announcement.edit.manageTitle}
     />
   )
 }

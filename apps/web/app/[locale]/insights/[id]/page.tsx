@@ -4,6 +4,9 @@ import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
 import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/site";
+import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { localeAlternates } from "@/lib/i18n/seo";
 import { InsightArticleClient } from "./article-client";
 import { InsightDraftFallback } from "./draft-fallback";
 
@@ -15,22 +18,25 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ locale: string; id: string }>;
 }): Promise<Metadata> {
-  const { id } = await params;
+  const { locale: raw, id } = await params;
+  const locale: Locale = isLocale(raw) ? raw : defaultLocale;
+  const dict = await getDictionary(locale);
   const article = await getPublishedArticle(id);
-  const title = article?.title ?? "觀點";
+  const title = article?.title ?? dict.insights.meta.fallbackTitle;
   const description = article?.summary
-    ?? `${title}｜國立陽明交通大學人工智慧專責辦公室觀點分享`;
+    ?? dict.insights.meta.detailDescriptionFallback.replace("{title}", title);
   const coverImage = article?.cover_image_url
     ?? (article ? extractFirstImage(article.content as Record<string, unknown> | null) : null);
   const ogImages = coverImage
     ? [{ url: coverImage, width: 1200, height: 630, alt: title }]
     : [{ url: "/og.png", width: 1200, height: 630, alt: title }];
+  const a = localeAlternates(`/insights/${id}`, locale);
   return {
-    title: `${title}｜人工智慧專責辦公室`,
+    title: `${title}${dict.common.titleSuffix}`,
     description,
-    alternates: { canonical: `/insights/${id}` },
+    alternates: { canonical: a.canonical, languages: a.languages },
     // Next.js App Router performs object-level replace (not deep merge) when a
     // child segment exports openGraph. All required fields must be declared here
     // explicitly; relying on layout.tsx inheritance silently drops og:type /
@@ -39,14 +45,14 @@ export async function generateMetadata({
       type: "article",
       siteName: SITE_NAME,
       locale: "zh_TW",
-      title: `${title}｜人工智慧專責辦公室`,
+      title: `${title}${dict.common.titleSuffix}`,
       description,
       url: `/insights/${id}`,
       images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
-      title: `${title}｜人工智慧專責辦公室`,
+      title: `${title}${dict.common.titleSuffix}`,
       description,
       images: ogImages.map((i) => i.url),
     },
