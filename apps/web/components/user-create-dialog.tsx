@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/locale-provider";
 
 type UserCreateDialogProps = {
   open: boolean;
@@ -35,6 +36,7 @@ export function UserCreateDialog({
   onOpenChange,
   onCreated,
 }: UserCreateDialogProps) {
+  const t = useT();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("user");
@@ -48,7 +50,7 @@ export function UserCreateDialog({
 
   async function handleCreate() {
     if (!email.trim()) {
-      toast.error("請填寫電子信箱");
+      toast.error(t.admin.users.create.toast.emailRequired);
       return;
     }
 
@@ -66,12 +68,12 @@ export function UserCreateDialog({
         return;
       }
 
-      toast.success("使用者已建立，需透過「忘記密碼」設定密碼");
+      toast.success(t.admin.users.create.toast.success);
       reset();
       onCreated();
       onOpenChange(false);
     } catch {
-      toast.error("建立失敗");
+      toast.error(t.common.createFailed);
     } finally {
       setSaving(false);
     }
@@ -87,15 +89,15 @@ export function UserCreateDialog({
     >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>新增使用者</DialogTitle>
+          <DialogTitle>{t.admin.users.createUser}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="create-name">姓名</Label>
+            <Label htmlFor="create-name">{t.common.name}</Label>
             <Input
               id="create-name"
-              placeholder="顯示名稱"
+              placeholder={t.admin.users.create.namePlaceholder}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -103,7 +105,7 @@ export function UserCreateDialog({
 
           <div className="space-y-1.5">
             <Label htmlFor="create-email">
-              電子信箱 <span className="text-destructive">*</span>
+              {t.common.email} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="create-email"
@@ -121,15 +123,15 @@ export function UserCreateDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="create-role">角色</Label>
+            <Label htmlFor="create-role">{t.admin.users.field.role}</Label>
             <Select value={role} onValueChange={setRole}>
               <SelectTrigger id="create-role" className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="user">一般用戶</SelectItem>
-                <SelectItem value="vendor">廠商</SelectItem>
-                <SelectItem value="admin">管理員</SelectItem>
+                <SelectItem value="user">{t.admin.users.roles.user}</SelectItem>
+                <SelectItem value="vendor">{t.admin.users.roles.vendor}</SelectItem>
+                <SelectItem value="admin">{t.admin.users.roles.admin}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -137,11 +139,11 @@ export function UserCreateDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            取消
+            {t.actions.cancel}
           </Button>
           <Button onClick={handleCreate} disabled={saving}>
             {saving && <Loader2 className="size-4 animate-spin mr-1" />}
-            建立
+            {t.actions.create}
           </Button>
         </DialogFooter>
       </DialogContent>

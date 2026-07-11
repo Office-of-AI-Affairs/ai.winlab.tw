@@ -189,7 +189,7 @@ export function AnnouncementArticleClient({
     url: shareUrl,
     publisher: {
       "@type": "Organization",
-      name: "國立陽明交通大學 人工智慧專責辦公室",
+      name: t.common.orgFullName,
       url: "https://ai.winlab.tw",
     },
   }

@@ -300,7 +300,7 @@ describe("tiptap editor render contracts", () => {
 
   test("mobile toolbar exposes a dedicated block insertion trigger", () => {
     assert.ok(tiptapMobileToolbarSource.includes('data-slot="tiptap-mobile-insert-trigger"'))
-    assert.ok(tiptapMobileToolbarSource.includes("開啟插入選單"))
+    assert.ok(tiptapMobileToolbarSource.includes("t.editor.toolbar.openInsertMenu"))
     assert.ok(tiptapMobileToolbarSource.includes("blockCommands"))
   })
 })

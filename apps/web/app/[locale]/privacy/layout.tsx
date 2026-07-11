@@ -1,8 +1,20 @@
 import type { Metadata } from "next";
+import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 
-export const metadata: Metadata = {
-  title: "隱私權政策｜人工智慧專責辦公室",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale: raw } = await params;
+  const locale: Locale = isLocale(raw) ? raw : defaultLocale;
+  const dict = await getDictionary(locale);
+  return {
+    title: dict.privacy.meta.title,
+    description: dict.privacy.meta.description,
+  };
+}
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return children;

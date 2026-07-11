@@ -64,21 +64,24 @@ export default async function Layout({
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ slug: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 }) {
-  const { slug } = await params;
+  const { locale: rawLocale, slug } = await params;
+  const locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
+  const dict = await getDictionary(locale);
   const data = await getEventMeta(slug);
   const structuredData = data
     ? {
         "@context": "https://schema.org",
         "@type": "Event",
         name: data.name,
-        description: data.description ?? `${data.name} 活動頁面`,
+        description:
+          data.description ?? dict.events.meta.fallbackDescription.replace("{name}", data.name),
         url: `https://ai.winlab.tw/events/${slug}`,
         eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
         organizer: {
           "@type": "Organization",
-          name: "國立陽明交通大學 人工智慧專責辦公室",
+          name: dict.common.orgFullName,
           url: "https://ai.winlab.tw",
         },
       }

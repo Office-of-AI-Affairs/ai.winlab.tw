@@ -226,7 +226,8 @@ export default async function EventRecruitmentDetailPage({
     "@type": "JobPosting",
     title: recruitment.title,
     description:
-      recruitment.company_description ?? `${recruitment.title}｜活動徵才資訊`,
+      recruitment.company_description ??
+      dict.recruitment.meta.fallbackDescription.replace("{title}", recruitment.title),
     datePosted: recruitment.start_date,
     validThrough: recruitment.end_date ?? undefined,
     url: `https://ai.winlab.tw/events/${slug}/recruitment/${id}`,
@@ -252,8 +253,8 @@ export default async function EventRecruitmentDetailPage({
     .maybeSingle();
   const eventName = eventRow?.name ?? dict.events.meta.fallbackName;
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: "首頁", path: "/" },
-    { name: "活動", path: "/events" },
+    { name: dict.common.home, path: "/" },
+    { name: dict.events.meta.fallbackName, path: "/events" },
     { name: eventName, path: `/events/${slug}` },
     { name: recruitment.title, path: `/events/${slug}/recruitment/${id}` },
   ]);

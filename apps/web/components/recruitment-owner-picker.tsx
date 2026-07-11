@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useT } from "@/lib/i18n/locale-provider";
 import { createClient } from "@/lib/supabase/client";
 
 type UserOption = {
@@ -39,6 +40,7 @@ type Props = {
  * RLS enforces admin-only writes, so non-admin viewers can't open this path).
  */
 export function RecruitmentOwnerPicker({ competitionId }: Props) {
+  const t = useT();
   const supabaseRef = useRef(createClient());
   const [owners, setOwners] = useState<OwnerRow[] | null>(null);
   const [allUsers, setAllUsers] = useState<UserOption[]>([]);
@@ -52,7 +54,7 @@ export function RecruitmentOwnerPicker({ competitionId }: Props) {
       .eq("competition_id", competitionId);
     if (error) {
       console.error("load owners failed:", error);
-      toast.error("載入擁有者失敗");
+      toast.error(t.recruitment.owner.loadOwnersError);
       return;
     }
     const userIds = ((data as { user_id: string }[] | null) ?? []).map((r) => r.user_id);
@@ -61,7 +63,7 @@ export function RecruitmentOwnerPicker({ competitionId }: Props) {
       .rpc("get_all_users");
     if (userErr) {
       console.error("load users (for owners) failed:", userErr);
-      toast.error("載入使用者資料失敗");
+      toast.error(t.recruitment.owner.loadUsersError);
       return;
     }
     const userById = new Map(((userRows as UserOption[] | null) ?? []).map((u) => [u.id, u]));
@@ -69,7 +71,7 @@ export function RecruitmentOwnerPicker({ competitionId }: Props) {
       const u = userById.get(uid);
       return {
         user_id: uid,
-        email: u?.email ?? "(未知)",
+        email: u?.email ?? t.recruitment.owner.unknownEmail,
         display_name: u?.display_name ?? null,
       };
     });
@@ -129,7 +131,7 @@ export function RecruitmentOwnerPicker({ competitionId }: Props) {
           ))}
         </div>
       ) : owners.length === 0 ? (
-        <p className="text-sm text-muted-foreground">尚無擁有者（只有 admin 能編輯此徵才）</p>
+        <p className="text-sm text-muted-foreground">{t.recruitment.owner.empty}</p>
       ) : (
         <ul className="space-y-2">
           {owners.map((o) => (
@@ -149,7 +151,7 @@ export function RecruitmentOwnerPicker({ competitionId }: Props) {
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label={`移除擁有者 ${o.email}`}
+                aria-label={t.recruitment.owner.removeAria.replace("{email}", o.email)}
                 disabled={busyUserId === o.user_id}
                 onClick={() => removeOwner(o.user_id)}
               >
@@ -164,14 +166,14 @@ export function RecruitmentOwnerPicker({ competitionId }: Props) {
         <PopoverTrigger asChild>
           <Button type="button" variant="outline" size="sm">
             <Plus className="size-4 mr-1" />
-            新增擁有者
+            {t.recruitment.owner.add}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[360px] p-0" align="start">
           <Command>
-            <CommandInput placeholder="搜尋 email 或姓名…" />
+            <CommandInput placeholder={t.recruitment.owner.searchPlaceholder} />
             <CommandList>
-              <CommandEmpty>找不到使用者</CommandEmpty>
+              <CommandEmpty>{t.recruitment.owner.noUsers}</CommandEmpty>
               <CommandGroup>
                 {candidates.map((u) => (
                   <CommandItem

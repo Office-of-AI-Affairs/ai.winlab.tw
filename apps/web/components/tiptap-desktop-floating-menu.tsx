@@ -12,6 +12,7 @@ import {
   runBlockCommand,
 } from "@/components/tiptap-editor-shared";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n/locale-provider";
 
 export function TiptapDesktopFloatingMenu({
   editor,
@@ -20,6 +21,7 @@ export function TiptapDesktopFloatingMenu({
   editor: Editor | null;
   uploadFn: EditorUploadFn;
 }) {
+  const t = useT();
   if (!editor) return null;
 
   const blockCommands = createBlockCommands(uploadFn);
@@ -74,7 +76,7 @@ export function TiptapDesktopFloatingMenu({
             })
           ) : (
             <div className="px-3 py-2 text-sm text-muted-foreground">
-              沒有符合的插入項目
+              {t.editor.slashNoResults}
             </div>
           )}
         </div>

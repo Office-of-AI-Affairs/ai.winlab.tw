@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/locale-provider";
 
 export type ProfileRole = "admin" | "user" | "vendor" | "member";
 
@@ -71,6 +72,7 @@ function UserEditForm({
   onSaved: () => void;
   onClose: () => void;
 }) {
+  const t = useT();
   const [role, setRole] = useState<ProfileRole>(user.role);
   const [saving, setSaving] = useState(false);
 
@@ -90,7 +92,7 @@ function UserEditForm({
     }
 
     setSaving(false);
-    toast.success("已儲存");
+    toast.success(t.editor.status.saved);
     onSaved();
     onClose();
   }
@@ -98,12 +100,12 @@ function UserEditForm({
   return (
     <>
       <DialogHeader>
-        <DialogTitle>編輯使用者</DialogTitle>
+        <DialogTitle>{t.admin.users.editUser}</DialogTitle>
       </DialogHeader>
 
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <Label className="text-sm font-medium text-muted-foreground">姓名</Label>
+          <Label className="text-sm font-medium text-muted-foreground">{t.common.name}</Label>
           <p className="text-sm">
             {user.display_name ?? (
               <span className="text-muted-foreground">—</span>
@@ -112,33 +114,33 @@ function UserEditForm({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-sm font-medium text-muted-foreground">電子信箱</Label>
+          <Label className="text-sm font-medium text-muted-foreground">{t.common.email}</Label>
           <p className="text-sm text-muted-foreground">{user.email}</p>
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="role-select" className="text-sm font-medium">
-            角色
+            {t.admin.users.field.role}
           </Label>
           <Select value={role} onValueChange={(v) => setRole(v as ProfileRole)}>
             <SelectTrigger id="role-select" className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="user">一般用戶</SelectItem>
-              <SelectItem value="member">成員</SelectItem>
-              <SelectItem value="vendor">廠商</SelectItem>
-              <SelectItem value="admin">管理員</SelectItem>
+              <SelectItem value="user">{t.admin.users.roles.user}</SelectItem>
+              <SelectItem value="member">{t.admin.users.roles.member}</SelectItem>
+              <SelectItem value="vendor">{t.admin.users.roles.vendor}</SelectItem>
+              <SelectItem value="admin">{t.admin.users.roles.admin}</SelectItem>
             </SelectContent>
           </Select>
           {role === "vendor" && (
             <p className="text-xs text-muted-foreground">
-              vendor 權限由 <strong>徵才編輯頁</strong> 的「擁有者」清單決定（不再綁活動）。
+              {t.admin.users.edit.vendorNote}
             </p>
           )}
           {role === "member" && (
             <p className="text-xs text-muted-foreground">
-              成員可在 <strong>觀點</strong> 頁面發布自己的文章。
+              {t.admin.users.edit.memberNote}
             </p>
           )}
         </div>
@@ -147,7 +149,7 @@ function UserEditForm({
       <DialogFooter>
         <Button onClick={handleSave} disabled={saving}>
           {saving && <Loader2 className="size-4 animate-spin mr-1" />}
-          儲存
+          {t.actions.save}
         </Button>
       </DialogFooter>
     </>

@@ -2,12 +2,14 @@
 
 import { FloatingActionPill } from "@/components/floating-action-pill";
 import { createClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/locale-provider";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export function EventsCreateButton() {
+  const t = useT();
   const router = useRouter();
   const [isCreating, setIsCreating] = useState(false);
 
@@ -28,14 +30,14 @@ export function EventsCreateButton() {
       })
       .select()
       .single();
-    if (error) { toast.error(error.message ?? "建立失敗"); setIsCreating(false); return; }
+    if (error) { toast.error(error.message ?? t.common.createFailed); setIsCreating(false); return; }
     router.push(`/events/${data.slug}?mode=edit`);
   };
 
   return (
     <FloatingActionPill
       icon={Plus}
-      label={isCreating ? "建立中…" : "新增活動"}
+      label={isCreating ? t.common.creating : t.events.actions.newEvent}
       onClick={handleCreate}
       loading={isCreating}
     />

@@ -49,13 +49,20 @@ export async function generateMetadata({
   };
 }
 
-export default async function EventsPage() {
+export default async function EventsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale: raw } = await params;
+  const locale: Locale = isLocale(raw) ? raw : defaultLocale;
+  const dict = await getDictionary(locale);
   const publishedEvents = await getPublishedEvents();
 
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "人工智慧專責辦公室活動列表",
+    name: dict.events.meta.listTitle,
     itemListElement: publishedEvents.map((item, index) => ({
       "@type": "ListItem",
       position: index + 1,

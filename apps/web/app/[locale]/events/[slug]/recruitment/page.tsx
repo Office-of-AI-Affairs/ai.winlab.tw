@@ -40,9 +40,11 @@ export async function generateMetadata({
 export default async function EventRecruitmentPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; locale: string }>;
 }) {
-  const { slug } = await params;
+  const { slug, locale: raw } = await params;
+  const locale: Locale = isLocale(raw) ? raw : defaultLocale;
+  const dict = await getDictionary(locale);
   const data = await getEventPageData(slug);
 
   if (!data) {
@@ -52,11 +54,11 @@ export default async function EventRecruitmentPage({
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: `${data.event.name} 徵才`,
+    name: `${data.event.name} ${dict.events.tabs.recruitment}`,
     url: `https://ai.winlab.tw/events/${slug}/recruitment`,
     isPartOf: {
       "@type": "WebSite",
-      name: "國立陽明交通大學 人工智慧專責辦公室",
+      name: dict.common.orgFullName,
       url: "https://ai.winlab.tw",
     },
   };

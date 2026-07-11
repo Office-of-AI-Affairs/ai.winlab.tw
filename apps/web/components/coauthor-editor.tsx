@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/locale-provider";
 import type { PublicProfile } from "@winlab/db";
 import { Loader2, Search, UserPlus, X } from "lucide-react";
 import Link from "next/link";
@@ -24,6 +25,7 @@ export function CoauthorEditor({
   initialCoauthors,
   onCoauthorsChange,
 }: Props) {
+  const t = useT();
   const supabaseRef = useRef(createClient());
   const [coauthors, setCoauthorsState] = useState<PublicProfile[]>(initialCoauthors);
   const onCoauthorsChangeRef = useRef(onCoauthorsChange);
@@ -98,10 +100,15 @@ export function CoauthorEditor({
       .from("result_coauthors")
       .insert({ result_id: resultId, user_id: profile.id });
     if (error) {
-      toast.error("無法新增共同作者");
+      toast.error(t.coauthor.addError);
     } else {
       setCoauthors((prev) => [...prev, profile]);
-      toast.success(`已新增 ${profile.display_name || "使用者"} 為共同作者`);
+      toast.success(
+        t.coauthor.addSuccess.replace(
+          "{name}",
+          profile.display_name || t.common.user,
+        ),
+      );
     }
     setAdding(null);
     setQuery("");
@@ -116,17 +123,17 @@ export function CoauthorEditor({
       .eq("result_id", resultId)
       .eq("user_id", userId);
     if (error) {
-      toast.error("無法移除共同作者");
+      toast.error(t.coauthor.removeError);
     } else {
       setCoauthors((prev) => prev.filter((c) => c.id !== userId));
-      toast.success("已移除共同作者");
+      toast.success(t.coauthor.removeSuccess);
     }
     setRemoving(null);
   }
 
   return (
     <div className="flex flex-col gap-2">
-      <Label className="text-sm">共同作者</Label>
+      <Label className="text-sm">{t.coauthor.label}</Label>
 
       {coauthors.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -136,7 +143,7 @@ export function CoauthorEditor({
               className="flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm"
             >
               <Link href={`/profile/${ca.id}`} className="hover:underline underline-offset-4">
-                {ca.display_name || "未知使用者"}
+                {ca.display_name || t.common.unknownUser}
               </Link>
               <button
                 type="button"
@@ -162,7 +169,7 @@ export function CoauthorEditor({
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
             onFocus={() => { if (results.length) setShowDropdown(true); }}
-            placeholder="搜尋使用者名稱…"
+            placeholder={t.coauthor.searchPlaceholder}
             className="pl-9"
           />
           {searching && (
@@ -174,7 +181,7 @@ export function CoauthorEditor({
           <div className="absolute z-30 top-full mt-1 w-full bg-background border rounded-lg shadow-lg max-h-60 overflow-y-auto">
             {results.length === 0 ? (
               <p className="px-4 py-3 text-sm text-muted-foreground">
-                {query.trim() ? "找不到符合的使用者" : "輸入名稱搜尋…"}
+                {query.trim() ? t.coauthor.noResults : t.coauthor.searchPrompt}
               </p>
             ) : (
               results.map((profile) => (
@@ -191,7 +198,7 @@ export function CoauthorEditor({
                     </AvatarFallback>
                   </Avatar>
                   <span className="text-sm flex-1">
-                    {profile.display_name || "未知使用者"}
+                    {profile.display_name || t.common.unknownUser}
                   </span>
                   {adding === profile.id ? (
                     <Loader2 className="size-4 animate-spin text-muted-foreground" />

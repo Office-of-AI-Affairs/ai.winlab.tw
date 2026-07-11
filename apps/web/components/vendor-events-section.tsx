@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/components/auth-provider";
 import { createClient } from "@/lib/supabase/client";
+import { useT } from "@/lib/i18n/locale-provider";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ type OwnerRow = {
 };
 
 export function VendorEventsSection() {
+  const t = useT();
   const { user } = useAuth();
   const [recruitments, setRecruitments] = useState<OwnedRecruitment[] | null>(null);
 
@@ -42,7 +44,7 @@ export function VendorEventsSection() {
         .from("competition_owners")
         .select("competition_id, competitions(id, title, image, events(slug, name))")
         .eq("user_id", user!.id);
-      if (error) { console.error("Failed to fetch owned recruitments:", error); toast.error("載入徵才失敗"); }
+      if (error) { console.error("Failed to fetch owned recruitments:", error); toast.error(t.profile.loadRecruitmentsError); }
       const rows = ((data as unknown as OwnerRow[] | null) ?? [])
         .map((r) => r.competitions && r.competitions.events
           ? {
@@ -57,13 +59,13 @@ export function VendorEventsSection() {
       setRecruitments(rows);
     }
     fetchOwnedRecruitments();
-  }, [user]);
+  }, [user, t]);
 
   const loading = user !== null && recruitments === null;
 
   return (
     <div className="grid gap-3">
-      <h2 className="text-lg font-semibold">我管理的徵才</h2>
+      <h2 className="text-lg font-semibold">{t.profile.managedRecruitments}</h2>
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -79,7 +81,7 @@ export function VendorEventsSection() {
         </div>
       ) : !recruitments || recruitments.length === 0 ? (
         <p className="text-sm text-muted-foreground py-4 text-center">
-          尚未被指派為任何徵才的擁有者
+          {t.profile.noOwnedRecruitments}
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

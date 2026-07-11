@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/carousel";
 import { AppLink } from "@/components/app-link";
 import { useAuth } from "@/components/auth-provider";
+import { useT } from "@/lib/i18n/locale-provider";
 import type { CarouselSlide } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { safeHref } from "@/lib/safe-href";
@@ -25,6 +26,7 @@ export function CarouselClient({
   slides: CarouselSlide[];
 }) {
   const { isAdmin } = useAuth();
+  const t = useT();
   const plugin = React.useMemo(
     () => Autoplay({ delay: 5000, stopOnInteraction: true }),
     [],
@@ -39,7 +41,7 @@ export function CarouselClient({
             className="inline-flex items-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 px-4 py-6 w-full justify-center text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
           >
             <Pencil className="w-5 h-5" />
-            尚無橫幅，點此新增首頁輪播
+            {t.carousel.emptyAdminCta}
           </Link>
         </div>
       );
@@ -48,8 +50,8 @@ export function CarouselClient({
       <div className="w-full max-w-6xl mx-auto relative">
         <div className="relative w-full aspect-video min-h-[200px] bg-muted">
           <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground px-4">
-            <p className="text-base md:text-lg font-medium">國立陽明交通大學 人工智慧專責辦公室</p>
-            <p className="text-sm mt-1">歡迎來到 AI Office</p>
+            <p className="text-base md:text-lg font-medium">{t.carousel.placeholderOrg}</p>
+            <p className="text-sm mt-1">{t.carousel.placeholderWelcome}</p>
           </div>
         </div>
       </div>
@@ -64,7 +66,7 @@ export function CarouselClient({
           className="absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-md bg-black/50 px-3 py-1.5 text-sm font-medium text-white hover:bg-black/70 transition-colors"
         >
           <Pencil className="w-3.5 h-3.5" />
-          編輯橫幅
+          {t.carousel.editBanner}
         </Link>
       )}
       <Carousel

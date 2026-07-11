@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useContentEditor } from "@/hooks/use-content-editor";
 import { useImageUpload } from "@/hooks/use-image-upload";
+import { useT } from "@/lib/i18n/locale-provider";
 import type { CarouselSlide } from "@winlab/db";
 import { uploadCarouselImage } from "@/lib/upload-image";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
@@ -21,6 +22,7 @@ interface Props {
 
 export function CarouselEditClient({ id, initialSlide }: Props) {
   const router = useRouter();
+  const t = useT();
 
   const {
     data: slide, setData: setSlide, hasChanges,
@@ -50,7 +52,7 @@ export function CarouselEditClient({ id, initialSlide }: Props) {
         <div className="flex items-center justify-between gap-4">
           <Button variant="ghost" size="sm" onClick={() => guardNavigation(() => router.push("/carousel"))}>
             <ArrowLeft className="w-4 h-4" />
-            返回列表
+            {t.actions.backToList}
           </Button>
           <div className="flex gap-2">
             <Button
@@ -65,7 +67,7 @@ export function CarouselEditClient({ id, initialSlide }: Props) {
               ) : (
                 <Check className="w-4 h-4 text-green-600" />
               )}
-              {hasChanges ? "儲存" : "已儲存"}
+              {hasChanges ? t.actions.save : t.editor.status.saved}
             </Button>
             <Button variant="destructive" onClick={remove} disabled={isDeleting}>
               {isDeleting ? (
@@ -73,7 +75,7 @@ export function CarouselEditClient({ id, initialSlide }: Props) {
               ) : (
                 <Trash2 className="w-4 h-4" />
               )}
-              刪除
+              {t.actions.delete}
             </Button>
           </div>
         </div>
@@ -81,27 +83,27 @@ export function CarouselEditClient({ id, initialSlide }: Props) {
 
       <div className="grid gap-6 max-w-2xl">
         <div className="grid gap-2">
-          <Label htmlFor="title">標題</Label>
+          <Label htmlFor="title">{t.common.title}</Label>
           <Input
             id="title"
             value={slide.title}
             onChange={(e) => setSlide((prev) => ({ ...prev, title: e.target.value }))}
-            placeholder="橫幅主標題"
+            placeholder={t.carousel.titlePlaceholder}
           />
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="description">描述</Label>
+          <Label htmlFor="description">{t.common.description}</Label>
           <Input
             id="description"
             value={slide.description ?? ""}
             onChange={(e) => setSlide((prev) => ({ ...prev, description: e.target.value || null }))}
-            placeholder="副標或說明文字"
+            placeholder={t.carousel.descriptionPlaceholder}
           />
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="link">連結</Label>
+          <Label htmlFor="link">{t.common.link}</Label>
           <Input
             id="link"
             type="url"
@@ -112,7 +114,7 @@ export function CarouselEditClient({ id, initialSlide }: Props) {
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="sort_order">排序（數字愈小愈前面）</Label>
+          <Label htmlFor="sort_order">{t.common.sortOrderHint}</Label>
           <Input
             id="sort_order"
             type="number"
@@ -122,7 +124,7 @@ export function CarouselEditClient({ id, initialSlide }: Props) {
         </div>
 
         <div className="grid gap-2">
-          <Label>橫幅圖片</Label>
+          <Label>{t.carousel.imageLabel}</Label>
           <div className="flex flex-col sm:flex-row gap-4 items-start">
             <div className="relative w-full sm:w-64 aspect-video rounded-md overflow-hidden bg-muted shrink-0">
               <Image
@@ -152,9 +154,9 @@ export function CarouselEditClient({ id, initialSlide }: Props) {
                 ) : (
                   <ImagePlus className="w-4 h-4" />
                 )}
-                {isUploadingImage ? "上傳中…" : "上傳圖片"}
+                {isUploadingImage ? t.common.uploading : t.actions.uploadImage}
               </Button>
-              <p className="text-xs text-muted-foreground">建議比例 16:9，JPEG/PNG/WebP/GIF，最大 5MB</p>
+              <p className="text-xs text-muted-foreground">{t.carousel.imageHint}</p>
             </div>
           </div>
         </div>

@@ -49,12 +49,19 @@ export async function generateMetadata({
   };
 }
 
-export default async function AnnouncementPage() {
+export default async function AnnouncementPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale: raw } = await params;
+  const locale: Locale = isLocale(raw) ? raw : defaultLocale;
+  const dict = await getDictionary(locale);
   const publishedAnnouncements = await getPublishedAnnouncements();
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "人工智慧專責辦公室公告列表",
+    name: dict.announcement.meta.title,
     itemListElement: publishedAnnouncements.map((item, index) => ({
       "@type": "ListItem",
       position: index + 1,

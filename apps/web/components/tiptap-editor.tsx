@@ -7,6 +7,7 @@ import {
   richTextDocumentClassName,
 } from "@/lib/ui/rich-text";
 import { lowlight } from "@/lib/ui/lowlight";
+import { useT } from "@/lib/i18n/locale-provider";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { TiptapDesktopBubbleMenu } from "./tiptap-desktop-bubble-menu";
@@ -56,6 +57,7 @@ export function TiptapEditor({
   flush = false,
   uploadFn = uploadAnnouncementImage,
 }: TiptapEditorProps) {
+  const t = useT();
   const handleImageDrop = useCallback(
     async (editor: import("@tiptap/core").Editor, files: File[], pos: number) => {
       const results = await Promise.all(
@@ -65,7 +67,7 @@ export function TiptapEditor({
         .filter((r): r is { url: string } => "url" in r)
         .map((r) => r.url);
       results.forEach((r) => {
-        if ("error" in r) { console.error(r.error); toast.error("圖片上傳失敗"); }
+        if ("error" in r) { console.error(r.error); toast.error(t.editor.imageUploadFailed); }
       });
       if (urls.length === 0) return;
       const content =
@@ -74,7 +76,7 @@ export function TiptapEditor({
           : urls.map((url) => ({ type: "image" as const, attrs: { src: url } }));
       editor.chain().focus().insertContentAt(pos, content).run();
     },
-    [uploadFn]
+    [uploadFn, t]
   );
 
   const handleImagePaste = useCallback(
@@ -86,13 +88,13 @@ export function TiptapEditor({
         const result = await uploadFn(file);
         if ("error" in result) {
           console.error(result.error);
-          toast.error("圖片上傳失敗");
+          toast.error(t.editor.imageUploadFailed);
           continue;
         }
         editor.chain().focus().setImage({ src: result.url }).run();
       }
     },
-    [uploadFn]
+    [uploadFn, t]
   );
 
   const editor = useEditor({
@@ -103,7 +105,7 @@ export function TiptapEditor({
         HTMLAttributes: { class: "rounded-lg" },
       }),
       Placeholder.configure({
-        placeholder: "開始撰寫公告內容…",
+        placeholder: t.editor.contentPlaceholder,
       }),
       TextAlign.configure({
         types: ["heading", "paragraph"],
