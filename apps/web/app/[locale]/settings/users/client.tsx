@@ -20,6 +20,7 @@ import { UsersTable } from "@/components/users-table";
 import type { UserRow } from "@/components/users-table";
 import { createClient } from "@/lib/supabase/client";
 import { buildUsersCsv, parseUsersCsv } from "@/lib/users-csv";
+import { useT } from "@/lib/i18n/locale-provider";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,6 +40,7 @@ export default function SettingsUsersPageClient({
 }: {
   initialUsers: UserRow[];
 }) {
+  const t = useT();
   const supabase = createClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [users, setUsers] = useState<UserRow[]>(initialUsers);
@@ -73,7 +75,7 @@ export default function SettingsUsersPageClient({
       .eq("id", userId);
 
     if (error) {
-      toast.error("標籤新增失敗");
+      toast.error(t.admin.users.toast.addTagFailed);
       setUsers((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, tags: user.tags } : u))
       );
@@ -95,7 +97,7 @@ export default function SettingsUsersPageClient({
       .eq("id", userId);
 
     if (error) {
-      toast.error("標籤移除失敗");
+      toast.error(t.admin.users.toast.removeTagFailed);
       setUsers((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, tags: user.tags } : u))
       );
@@ -114,11 +116,16 @@ export default function SettingsUsersPageClient({
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success(`已刪除 ${deletingUser.display_name || deletingUser.email}`);
+        toast.success(
+          t.admin.users.toast.deleted.replace(
+            "{name}",
+            deletingUser.display_name || deletingUser.email
+          )
+        );
         await refreshUsers();
       }
     } catch {
-      toast.error("刪除失敗");
+      toast.error(t.admin.users.toast.deleteFailed);
     } finally {
       setIsDeleting(false);
       setDeletingUser(null);
@@ -133,7 +140,7 @@ export default function SettingsUsersPageClient({
     const text = await file.text();
     const rows = parseUsersCsv(text);
     if (rows.length === 0) {
-      toast.error("CSV 格式錯誤或無有效資料。請確認標頭包含 name 和 email 欄位。");
+      toast.error(t.admin.users.toast.csvInvalid);
       return;
     }
 
@@ -145,7 +152,7 @@ export default function SettingsUsersPageClient({
     });
 
     if (error) {
-      toast.error(error.message ?? "匯入失敗");
+      toast.error(error.message ?? t.admin.users.toast.importFailed);
     } else {
       setImportResult(result);
       await refreshUsers();
@@ -161,7 +168,7 @@ export default function SettingsUsersPageClient({
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          系統設定
+          {t.admin.settings.title}
         </AppLink>
       </div>
 
@@ -202,13 +209,16 @@ export default function SettingsUsersPageClient({
       <AlertDialog open={!!deletingUser} onOpenChange={() => setDeletingUser(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>確認刪除使用者</AlertDialogTitle>
+            <AlertDialogTitle>{t.admin.users.deleteDialog.title}</AlertDialogTitle>
             <AlertDialogDescription>
-              確定要刪除 {deletingUser?.display_name || deletingUser?.email}？此操作無法還原。
+              {t.admin.users.deleteDialog.description.replace(
+                "{name}",
+                deletingUser?.display_name || deletingUser?.email || ""
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>取消</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>{t.actions.cancel}</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -217,7 +227,7 @@ export default function SettingsUsersPageClient({
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "刪除中…" : "刪除"}
+              {isDeleting ? t.admin.users.deleteDialog.deleting : t.actions.delete}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

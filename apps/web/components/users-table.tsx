@@ -41,6 +41,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { formatDate } from "@/lib/date"
+import { useT } from "@/lib/i18n/locale-provider"
+import type { Dictionary } from "@/lib/i18n/dictionary"
 
 export type UserRow = {
   id: string
@@ -55,13 +57,6 @@ export type ImportResult = {
   created: number
   skipped: number
   errors: string[]
-}
-
-const roleLabel: Record<string, string> = {
-  admin: "管理員",
-  user: "一般用戶",
-  vendor: "廠商",
-  member: "成員",
 }
 
 function SortableHeader({
@@ -96,6 +91,7 @@ function TagCell({
   onAddTag: (userId: string, tag: string) => void
   onRemoveTag: (userId: string, tag: string) => void
 }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState("")
 
@@ -135,7 +131,7 @@ function TagCell({
         </PopoverTrigger>
         <PopoverContent className="w-52 p-2" align="start">
           <Input
-            placeholder="新增標籤…"
+            placeholder={t.admin.users.tagInputPlaceholder}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -170,12 +166,16 @@ function TagCell({
 }
 
 function createColumns({
+  t,
+  roleLabel,
   allTags,
   onEditUser,
   onDeleteUser,
   onAddTag,
   onRemoveTag,
 }: {
+  t: Dictionary
+  roleLabel: Record<string, string>
   allTags: string[]
   onEditUser?: (user: UserRow) => void
   onDeleteUser?: (user: UserRow) => void
@@ -185,7 +185,7 @@ function createColumns({
   return [
     {
       accessorKey: "display_name",
-      header: ({ column }) => <SortableHeader column={column}>姓名</SortableHeader>,
+      header: ({ column }) => <SortableHeader column={column}>{t.common.name}</SortableHeader>,
       cell: ({ row }) =>
         row.original.display_name || (
           <span className="text-muted-foreground">—</span>
@@ -193,14 +193,14 @@ function createColumns({
     },
     {
       accessorKey: "email",
-      header: ({ column }) => <SortableHeader column={column}>電子信箱</SortableHeader>,
+      header: ({ column }) => <SortableHeader column={column}>{t.common.email}</SortableHeader>,
       cell: ({ row }) => (
         <span className="text-muted-foreground">{row.original.email}</span>
       ),
     },
     {
       accessorKey: "role",
-      header: ({ column }) => <SortableHeader column={column}>角色</SortableHeader>,
+      header: ({ column }) => <SortableHeader column={column}>{t.admin.users.columns.role}</SortableHeader>,
       cell: ({ row }) => {
         const role = row.original.role
         return (
@@ -222,7 +222,7 @@ function createColumns({
     },
     {
       accessorKey: "tags",
-      header: "標籤",
+      header: t.admin.users.columns.tags,
       cell: ({ row }) => (
         <TagCell
           tags={row.original.tags ?? []}
@@ -242,7 +242,7 @@ function createColumns({
     },
     {
       accessorKey: "created_at",
-      header: ({ column }) => <SortableHeader column={column}>加入時間</SortableHeader>,
+      header: ({ column }) => <SortableHeader column={column}>{t.admin.users.columns.joined}</SortableHeader>,
       cell: ({ row }) => (
         <span className="text-muted-foreground">
           {formatDate(row.original.created_at, "long")}
@@ -256,7 +256,7 @@ function createColumns({
           {onEditUser && (
             <button
               type="button"
-              aria-label="編輯使用者"
+              aria-label={t.admin.users.editUser}
               onClick={() => onEditUser(row.original)}
               className="rounded p-1 hover:bg-muted transition-colors duration-200"
             >
@@ -266,7 +266,7 @@ function createColumns({
           {onDeleteUser && (
             <button
               type="button"
-              aria-label="刪除使用者"
+              aria-label={t.admin.users.deleteAria}
               onClick={() => onDeleteUser(row.original)}
               className="rounded p-1 hover:bg-destructive/10 transition-colors duration-200"
             >
@@ -303,21 +303,32 @@ function UsersTable({
   onAddTag: (userId: string, tag: string) => void
   onRemoveTag: (userId: string, tag: string) => void
 }) {
+  const t = useT()
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState("")
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
+  const roleLabel = useMemo<Record<string, string>>(
+    () => ({
+      admin: t.admin.users.roles.admin,
+      user: t.admin.users.roles.user,
+      vendor: t.admin.users.roles.vendor,
+      member: t.admin.users.roles.member,
+    }),
+    [t]
+  )
+
   const allTags = useMemo(() => {
     const set = new Set<string>()
     for (const u of users) {
-      for (const t of u.tags ?? []) set.add(t)
+      for (const tag of u.tags ?? []) set.add(tag)
     }
     return Array.from(set).sort()
   }, [users])
 
   const columns = useMemo(
-    () => createColumns({ allTags, onEditUser, onDeleteUser, onAddTag, onRemoveTag }),
-    [allTags, onEditUser, onDeleteUser, onAddTag, onRemoveTag]
+    () => createColumns({ t, roleLabel, allTags, onEditUser, onDeleteUser, onAddTag, onRemoveTag }),
+    [t, roleLabel, allTags, onEditUser, onDeleteUser, onAddTag, onRemoveTag]
   )
 
   const table = useReactTable({
@@ -345,7 +356,7 @@ function UsersTable({
   return (
     <>
       <div className="mb-8 flex items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold">用戶管理</h1>
+        <h1 className="text-3xl font-bold">{t.admin.users.title}</h1>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -354,7 +365,7 @@ function UsersTable({
             disabled={users.length === 0}
           >
             <Download data-icon="inline-start" />
-            匯出 CSV
+            {t.admin.users.exportCsv}
           </Button>
           <Button
             variant="outline"
@@ -363,12 +374,12 @@ function UsersTable({
             disabled={isImporting}
           >
             <Upload data-icon="inline-start" />
-            {isImporting ? "匯入中…" : "匯入 CSV"}
+            {isImporting ? t.admin.users.importing : t.admin.users.importCsv}
           </Button>
           {onCreateUser && (
             <Button size="sm" onClick={onCreateUser}>
               <UserPlus data-icon="inline-start" />
-              新增使用者
+              {t.admin.users.createUser}
             </Button>
           )}
         </div>
@@ -381,7 +392,9 @@ function UsersTable({
           className="mb-8 flex flex-col gap-1 rounded-xl border bg-muted/40 px-4 py-3 text-sm"
         >
           <p className="font-medium">
-            匯入完成：成功建立 {importResult.created} 位，跳過 {importResult.skipped} 位重複用戶
+            {t.admin.users.importResult.summary
+              .replace("{created}", String(importResult.created))
+              .replace("{skipped}", String(importResult.skipped))}
           </p>
           {importResult.errors.length > 0 && (
             <ul className="list-inside list-disc text-destructive">
@@ -391,14 +404,14 @@ function UsersTable({
             </ul>
           )}
           <p className="mt-1 text-xs text-muted-foreground">
-            新用戶需透過「忘記密碼」設定自己的密碼後才能登入。
+            {t.admin.users.importResult.passwordHint}
           </p>
         </div>
       )}
 
       <div className="mb-4">
         <Input
-          placeholder="搜尋姓名、信箱、角色、標籤…"
+          placeholder={t.admin.users.searchPlaceholder}
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
           className="max-w-sm"
@@ -434,7 +447,7 @@ function UsersTable({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                  {globalFilter ? "找不到符合條件的用戶" : "尚無用戶資料"}
+                  {globalFilter ? t.admin.users.empty.noMatch : t.admin.users.empty.none}
                 </TableCell>
               </TableRow>
             )}
@@ -444,22 +457,19 @@ function UsersTable({
 
       <p className="mt-4 text-right text-xs text-muted-foreground">
         {table.getFilteredRowModel().rows.length !== users.length
-          ? `顯示 ${table.getFilteredRowModel().rows.length} / ${users.length} 位用戶`
-          : `共 ${users.length} 位用戶`}
+          ? t.admin.users.count.filtered
+              .replace("{shown}", String(table.getFilteredRowModel().rows.length))
+              .replace("{total}", String(users.length))
+          : t.admin.users.count.total.replace("{total}", String(users.length))}
       </p>
 
       <div className="mt-8 rounded-xl border bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
-        <p className="mb-1 font-medium text-foreground">CSV 匯入格式</p>
+        <p className="mb-1 font-medium text-foreground">{t.admin.users.csvHelp.title}</p>
         <pre className="font-mono leading-relaxed">
           name,email{"\n"}
-          張三,zhang3@example.com{"\n"}
-          李四,li4@example.com
+          {t.admin.users.csvHelp.sampleRows}
         </pre>
-        <p className="mt-2">
-          僅需 <code className="rounded bg-muted px-1">name</code> 與{" "}
-          <code className="rounded bg-muted px-1">email</code> 欄位。重複 email
-          自動跳過，新用戶預設為一般用戶，需透過「忘記密碼」設定密碼。
-        </p>
+        <p className="mt-2">{t.admin.users.csvHelp.body}</p>
       </div>
     </>
   )
