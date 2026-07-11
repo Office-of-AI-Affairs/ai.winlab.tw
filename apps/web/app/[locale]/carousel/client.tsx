@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { revalidateCarousel } from "@/app/[locale]/carousel/actions";
 import { useCrudList } from "@/hooks/use-crud-list";
+import { useT } from "@/lib/i18n/locale-provider";
 import type { CarouselSlide } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import {
@@ -40,6 +41,7 @@ function SortableSlideCard({
   deletingId: string | null;
   onRemove: (id: string) => void;
 }) {
+  const t = useT();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: slide.id,
   });
@@ -74,8 +76,8 @@ function SortableSlideCard({
           />
         </div>
         <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
-          <p className="text-sm text-muted-foreground">順序 {index + 1}</p>
-          <h2 className="text-xl font-semibold">{slide.title || "(無標題)"}</h2>
+          <p className="text-sm text-muted-foreground">{t.common.orderLabel.replace("{n}", String(index + 1))}</p>
+          <h2 className="text-xl font-semibold">{slide.title || t.carousel.untitled}</h2>
           {slide.description && (
             <p className="text-sm text-muted-foreground line-clamp-2">{slide.description}</p>
           )}
@@ -85,7 +87,7 @@ function SortableSlideCard({
           <Button variant="secondary" size="sm" asChild>
             <Link href={`/carousel/${slide.id}/edit`}>
               <Pencil className="w-4 h-4" />
-              編輯
+              {t.actions.edit}
             </Link>
           </Button>
           <Button
@@ -99,7 +101,7 @@ function SortableSlideCard({
             ) : (
               <Trash2 className="w-4 h-4" />
             )}
-            刪除
+            {t.actions.delete}
           </Button>
         </div>
       </div>
@@ -113,6 +115,7 @@ export function CarouselPageClient({
   initialSlides: CarouselSlide[];
 }) {
   const router = useRouter();
+  const t = useT();
   const { items: slides, isCreating, deletingId, create, remove, reorder } =
     useCrudList<CarouselSlide>({
       table: "carousel_slides",
@@ -149,14 +152,14 @@ export function CarouselPageClient({
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          返回首頁
+          {t.actions.backHome}
         </AppLink>
       </div>
 
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">首頁橫幅</h1>
-          <p className="text-muted-foreground mt-1">管理首頁輪播圖片，可設定標題、描述與連結</p>
+          <h1 className="text-3xl font-bold">{t.carousel.heading}</h1>
+          <p className="text-muted-foreground mt-1">{t.carousel.subtitle}</p>
         </div>
         <Button
           onClick={() => create({ title: "", sort_order: slides.length })}
@@ -167,12 +170,12 @@ export function CarouselPageClient({
           ) : (
             <Plus className="w-4 h-4" />
           )}
-          新增橫幅
+          {t.carousel.addSlide}
         </Button>
       </div>
 
       {slides.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">尚無橫幅</div>
+        <div className="text-center py-12 text-muted-foreground">{t.carousel.empty}</div>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={slides.map((s) => s.id)} strategy={verticalListSortingStrategy}>
