@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useContentEditor } from "@/hooks/use-content-editor";
+import { useT } from "@/lib/i18n/locale-provider";
 import type { Contact } from "@winlab/db";
 import { ArrowLeft, Check, Loader2, Save, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function ContactEditClient({ id, initialContact }: Props) {
+  const t = useT();
   const router = useRouter();
 
   const {
@@ -38,7 +40,7 @@ export function ContactEditClient({ id, initialContact }: Props) {
       <div className="sticky top-16 z-20 bg-background/80 backdrop-blur-sm py-4 -mx-4 px-4 flex items-center justify-between gap-4">
         <Button variant="ghost" size="sm" onClick={() => guardNavigation(() => router.push("/contacts"))}>
           <ArrowLeft className="w-4 h-4" />
-          返回
+          {t.actions.back}
         </Button>
 
         <div className="flex gap-2">
@@ -54,7 +56,7 @@ export function ContactEditClient({ id, initialContact }: Props) {
             ) : (
               <Check className="w-4 h-4 text-green-600" />
             )}
-            {hasChanges ? "儲存" : "已儲存"}
+            {hasChanges ? t.actions.save : t.editor.status.saved}
           </Button>
 
           <Button variant="destructive" onClick={remove} disabled={isDeleting}>
@@ -63,44 +65,44 @@ export function ContactEditClient({ id, initialContact }: Props) {
             ) : (
               <Trash2 className="w-4 h-4" />
             )}
-            刪除
+            {t.actions.delete}
           </Button>
         </div>
       </div>
 
       <div className="grid gap-6 max-w-2xl">
         <div className="grid gap-2">
-          <Label htmlFor="name">姓名</Label>
+          <Label htmlFor="name">{t.common.name}</Label>
           <Input
             id="name"
             value={contact.name}
             onChange={(e) => setContact((prev) => ({ ...prev, name: e.target.value }))}
-            placeholder="聯絡人姓名"
+            placeholder={t.contacts.namePlaceholder}
           />
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="position">職位（新增）</Label>
+          <Label htmlFor="position">{t.contacts.positionLabel}</Label>
           <Input
             id="position"
             value={contact.position ?? ""}
             onChange={(e) => setContact((prev) => ({ ...prev, position: e.target.value || null }))}
-            placeholder="例如：行政助理 / 專案經理"
+            placeholder={t.contacts.positionPlaceholder}
           />
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="phone">電話</Label>
+          <Label htmlFor="phone">{t.common.phone}</Label>
           <Input
             id="phone"
             value={contact.phone ?? ""}
             onChange={(e) => setContact((prev) => ({ ...prev, phone: e.target.value || null }))}
-            placeholder="例如：03-5131867#54832"
+            placeholder={t.contacts.phonePlaceholder}
           />
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="email">信箱</Label>
+          <Label htmlFor="email">{t.contacts.emailLabel}</Label>
           <Input
             id="email"
             type="email"
@@ -111,7 +113,7 @@ export function ContactEditClient({ id, initialContact }: Props) {
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="sort_order">排序（數字愈小愈前面）</Label>
+          <Label htmlFor="sort_order">{t.common.sortOrderHint}</Label>
           <Input
             id="sort_order"
             type="number"

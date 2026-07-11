@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { FloatingActionPill } from "@/components/floating-action-pill";
 import { Input } from "@/components/ui/input";
+import { useT } from "@/lib/i18n/locale-provider";
 import { createClient } from "@/lib/supabase/client";
 import type { PublicProfile } from "@winlab/db";
 import { Check, Loader2, Plus, Search } from "lucide-react";
@@ -25,6 +26,7 @@ type Props = {
 };
 
 export function AddMemberButton({ eventId, memberIds, onMemberAdded, inline }: Props) {
+  const t = useT();
   const supabaseRef = useRef(createClient());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [allUsers, setAllUsers] = useState<PublicProfile[]>([]);
@@ -54,10 +56,10 @@ export function AddMemberButton({ eventId, memberIds, onMemberAdded, inline }: P
       .from("event_participants")
       .insert({ event_id: eventId, user_id: profile.id });
     if (error) {
-      toast.error("無法新增成員");
+      toast.error(t.events.addMemberError);
     } else {
       onMemberAdded(profile);
-      toast.success(`已新增 ${profile.display_name || "使用者"}`);
+      toast.success(t.events.memberAdded.replace("{name}", profile.display_name || t.common.user));
     }
     setAdding(null);
   }
@@ -67,7 +69,7 @@ export function AddMemberButton({ eventId, memberIds, onMemberAdded, inline }: P
       <DialogTrigger asChild>
         <FloatingActionPill
           icon={Plus}
-          label="新增成員"
+          label={t.events.addMember}
           inline={inline}
           onClick={() => {
             setQuery("");
@@ -77,14 +79,14 @@ export function AddMemberButton({ eventId, memberIds, onMemberAdded, inline }: P
       </DialogTrigger>
       <DialogContent className="max-h-[80vh] flex flex-col overflow-hidden">
         <DialogHeader>
-          <DialogTitle>新增成員</DialogTitle>
+          <DialogTitle>{t.events.addMember}</DialogTitle>
         </DialogHeader>
         <div className="relative shrink-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="搜尋使用者名稱…"
+            placeholder={t.events.searchUserPlaceholder}
             className="pl-9"
             autoFocus
           />
@@ -96,7 +98,7 @@ export function AddMemberButton({ eventId, memberIds, onMemberAdded, inline }: P
             </div>
           ) : filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
-              {query.trim() ? "找不到符合的使用者" : "尚無使用者"}
+              {query.trim() ? t.events.noMatchingUser : t.events.noUsers}
             </p>
           ) : (
             <div className="flex flex-col gap-0.5">
@@ -114,7 +116,7 @@ export function AddMemberButton({ eventId, memberIds, onMemberAdded, inline }: P
                       {user.avatar_url && <AvatarImage src={user.avatar_url} alt={user.display_name ?? ""} />}
                       <AvatarFallback>{(user.display_name || "?").slice(0, 1)}</AvatarFallback>
                     </Avatar>
-                    <span className="text-sm flex-1">{user.display_name || "未知使用者"}</span>
+                    <span className="text-sm flex-1">{user.display_name || t.common.unknownUser}</span>
                     {adding === user.id ? (
                       <Loader2 className="size-4 animate-spin text-muted-foreground" />
                     ) : isMember ? (

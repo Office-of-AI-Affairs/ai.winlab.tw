@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ImagePlus, Loader2, Trash2 } from "lucide-react";
 
 import { revalidateOrganizationMembers } from "@/app/[locale]/introduction/actions";
+import { useT } from "@/lib/i18n/locale-provider";
 import { useDialogForm } from "@/hooks/use-dialog-form";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { uploadOrganizationImage } from "@/lib/upload-image";
@@ -42,11 +43,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-const CATEGORIES: { value: OrganizationMemberCategory; label: string }[] = [
-  { value: "core", label: "核心成員" },
-  { value: "legal_entity", label: "法人" },
-  { value: "industry", label: "產業" },
-];
+const CATEGORY_VALUES: OrganizationMemberCategory[] = ["core", "legal_entity", "industry"];
 
 type FormData = {
   name: string;
@@ -96,6 +93,12 @@ type Props = {
 };
 
 export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCategory }: Props) {
+  const t = useT();
+  const categoryLabels: Record<OrganizationMemberCategory, string> = {
+    core: t.introduction.category.core,
+    legal_entity: t.introduction.category.legalEntity,
+    industry: t.introduction.category.industry,
+  };
   const { formData, updateField, resetForm, isSaving, isDeleting, save, remove } = useDialogForm<FormData>({
     table: "organization_members",
     editingId: member?.id ?? null,
@@ -117,7 +120,7 @@ export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCa
       }
       return payload;
     },
-    validate: (form) => form.name.trim() ? null : "請輸入名稱",
+    validate: (form) => form.name.trim() ? null : t.admin.member.nameRequired,
     onClose: () => onOpenChange(false),
     onAfterSave: revalidateOrganizationMembers,
     onAfterRemove: revalidateOrganizationMembers,
@@ -140,21 +143,21 @@ export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:!max-w-2xl max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="px-8 pt-8 pb-0">
-          <DialogTitle>{isEditMode ? "編輯成員" : "新增成員"}</DialogTitle>
+          <DialogTitle>{isEditMode ? t.admin.member.editTitle : t.admin.member.createTitle}</DialogTitle>
           <DialogDescription>
-            {isEditMode ? "修改成員資訊" : "建立新的組織成員"}
+            {isEditMode ? t.admin.member.editDesc : t.admin.member.createDesc}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
           {/* 圖片 */}
           <div className="space-y-3">
-            <Label>照片</Label>
+            <Label>{t.admin.member.photoLabel}</Label>
             <div className="flex items-center gap-5">
               <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-input bg-muted shrink-0">
                 <Image
                   src={resolveImageSrc(formData.image)}
-                  alt={formData.name || "成員照片"}
+                  alt={formData.name || t.admin.member.photoAlt}
                   fill
                   className="object-cover"
                   unoptimized={isExternalImage(formData.image)}
@@ -169,9 +172,9 @@ export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCa
                   onClick={triggerFileInput}
                 >
                   {uploading ? (
-                    <><Loader2 className="size-4 animate-spin mr-1" />上傳中…</>
+                    <><Loader2 className="size-4 animate-spin mr-1" />{t.common.uploading}</>
                   ) : (
-                    <><ImagePlus className="size-4 mr-1" />上傳照片</>
+                    <><ImagePlus className="size-4 mr-1" />{t.admin.member.uploadPhoto}</>
                   )}
                 </Button>
                 {formData.image && (
@@ -179,10 +182,10 @@ export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCa
                     type="button"
                     variant="ghost"
                     size="sm"
-                    aria-label="移除照片"
+                    aria-label={t.admin.member.removePhoto}
                     onClick={() => updateField("image", null)}
                   >
-                    移除照片
+                    {t.admin.member.removePhoto}
                   </Button>
                 )}
               </div>
@@ -199,7 +202,7 @@ export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCa
           {/* 分類 + 排序 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>分類</Label>
+              <Label>{t.common.category}</Label>
               <Select
                 value={formData.category}
                 onValueChange={(v) => updateField("category", v as OrganizationMemberCategory)}
@@ -208,14 +211,14 @@ export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCa
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map(({ value, label }) => (
-                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  {CATEGORY_VALUES.map((value) => (
+                    <SelectItem key={value} value={value}>{categoryLabels[value]}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>排序（數字越小越前面）</Label>
+              <Label>{t.common.sortOrderHint}</Label>
               <Input
                 type="number"
                 value={formData.sort_order}
@@ -227,19 +230,19 @@ export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCa
           {/* 姓名 + 職稱 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>姓名</Label>
+              <Label>{t.common.name}</Label>
               <Input
                 value={formData.name}
                 onChange={(e) => updateField("name", e.target.value)}
-                placeholder="成員姓名"
+                placeholder={t.admin.member.namePlaceholder}
               />
             </div>
             <div className="space-y-2">
-              <Label>職稱（選填）</Label>
+              <Label>{t.admin.member.roleLabel}</Label>
               <Input
                 value={formData.member_role}
                 onChange={(e) => updateField("member_role", e.target.value)}
-                placeholder="例：主任、副主任"
+                placeholder={t.admin.member.rolePlaceholderShort}
               />
             </div>
           </div>
@@ -247,15 +250,15 @@ export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCa
           {/* 學歷 + Email */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>最高學歷（選填）</Label>
+              <Label>{t.admin.member.schoolLabel}</Label>
               <Input
                 value={formData.school}
                 onChange={(e) => updateField("school", e.target.value)}
-                placeholder="例：美國南美以美大學（資工博士）"
+                placeholder={t.admin.member.schoolPlaceholderAlt}
               />
             </div>
             <div className="space-y-2">
-              <Label>Email（選填）</Label>
+              <Label>{t.admin.member.emailLabel}</Label>
               <Input
                 type="email"
                 value={formData.email}
@@ -267,7 +270,7 @@ export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCa
 
           {/* 個人網頁 */}
           <div className="space-y-2">
-            <Label>個人網頁（選填）</Label>
+            <Label>{t.admin.member.websiteLabel}</Label>
             <Input
               type="url"
               value={formData.website}
@@ -278,11 +281,11 @@ export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCa
 
           {/* 研究領域 */}
           <div className="space-y-2">
-            <Label>研究領域（選填）</Label>
+            <Label>{t.admin.member.researchLabel}</Label>
             <Textarea
               value={formData.research_areas}
               onChange={(e) => updateField("research_areas", e.target.value)}
-              placeholder="研究領域（以頓號或換行分隔）"
+              placeholder={t.admin.member.researchPlaceholder}
               rows={3}
             />
           </div>
@@ -294,24 +297,24 @@ export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCa
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" disabled={isDeleting}>
                   {isDeleting ? <Loader2 className="size-4 animate-spin mr-1" /> : <Trash2 className="size-4 mr-1" />}
-                  刪除
+                  {t.actions.delete}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>確定要刪除？</AlertDialogTitle>
-                  <AlertDialogDescription>此操作無法復原</AlertDialogDescription>
+                  <AlertDialogTitle>{t.common.confirmDeleteTitle}</AlertDialogTitle>
+                  <AlertDialogDescription>{t.common.deleteIrreversible}</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>取消</AlertDialogCancel>
-                  <AlertDialogAction onClick={remove}>確定刪除</AlertDialogAction>
+                  <AlertDialogCancel>{t.actions.cancel}</AlertDialogCancel>
+                  <AlertDialogAction onClick={remove}>{t.actions.confirmDelete}</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           )}
           <Button onClick={save} disabled={isSaving} className="ml-auto">
             {isSaving && <Loader2 className="size-4 animate-spin mr-1" />}
-            {isEditMode ? "儲存" : "建立"}
+            {isEditMode ? t.actions.save : t.actions.create}
           </Button>
         </DialogFooter>
       </DialogContent>

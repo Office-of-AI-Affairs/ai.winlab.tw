@@ -128,7 +128,7 @@ describe("accessibility contracts", () => {
     assert.ok(recruitmentDialog.includes("aria-label={t.recruitment.dialog.deletePositionAria.replace("))
     assert.ok(recruitmentDialog.includes("onClick={() => removePosition(index)}"))
     assert.ok(!recruitmentDialog.includes("onClick={(e) => {\n                            e.stopPropagation();"))
-    assert.ok(organizationMemberDialog.includes('aria-label="移除照片"'))
+    assert.ok(organizationMemberDialog.includes('aria-label={t.admin.member.removePhoto}'))
   })
 
   test("editor failure states surface user-visible toast feedback instead of console-only logging", () => {
