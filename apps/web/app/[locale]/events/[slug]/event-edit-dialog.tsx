@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useContentEditor } from "@/hooks/use-content-editor"
 import { useImageUpload } from "@/hooks/use-image-upload"
 import { createClient } from "@/lib/supabase/client"
+import { useT } from "@/lib/i18n/locale-provider"
 import type { Event } from "@winlab/db"
 import { uploadEventImage } from "@/lib/upload-image"
 import { isExternalImage, resolveImageSrc } from "@/lib/utils"
@@ -29,6 +30,7 @@ type Props = {
 }
 
 export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Props) {
+  const t = useT()
   const router = useRouter()
   const supabaseRef = useRef(createClient())
   const savedSlugRef = useRef(initialEvent.slug)
@@ -60,7 +62,7 @@ export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Pro
           .neq("id", initialEvent.id)
           .single()
         if (existing) {
-          setSlugError("此 slug 已被使用，請選擇其他名稱")
+          setSlugError(t.events.edit.slugTaken)
           return false
         }
       }
@@ -94,7 +96,7 @@ export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Pro
   }
 
   const exitEdit = () => {
-    if (hasChanges && !window.confirm("你有尚未儲存的變更，確定要離開嗎？")) return
+    if (hasChanges && !window.confirm(t.common.unsavedConfirm)) return
     onOpenChange(false)
   }
 
@@ -102,11 +104,11 @@ export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Pro
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col gap-4 overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>管理活動</DialogTitle>
+          <DialogTitle>{t.events.edit.dialogTitle}</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-2">
-          <Label className="text-sm">封面圖片</Label>
+          <Label className="text-sm">{t.common.coverImage}</Label>
           <div className="flex items-start gap-4">
             <div className="relative aspect-video w-40 shrink-0 overflow-hidden rounded-lg bg-muted">
               <Image
@@ -137,25 +139,25 @@ export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Pro
                 ) : (
                   <ImagePlus className="size-4" />
                 )}
-                {isUploadingImage ? "上傳中…" : "更換封面"}
+                {isUploadingImage ? t.common.uploading : t.actions.changeCover}
               </Button>
-              <p className="text-xs text-muted-foreground">JPEG / PNG / GIF / WebP，最大 5MB</p>
+              <p className="text-xs text-muted-foreground">{t.common.imageUploadHint}</p>
             </div>
           </div>
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="event-name" className="text-sm">活動名稱</Label>
+          <Label htmlFor="event-name" className="text-sm">{t.events.edit.nameLabel}</Label>
           <Input
             id="event-name"
             value={event.name}
             onChange={(e) => setEvent((prev) => ({ ...prev, name: e.target.value }))}
-            placeholder="例：AI新秀"
+            placeholder={t.events.edit.namePlaceholder}
           />
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="event-slug" className="text-sm">Slug（URL 路徑）</Label>
+          <Label htmlFor="event-slug" className="text-sm">{t.events.edit.slugLabel}</Label>
           <Input
             id="event-slug"
             value={event.slug}
@@ -166,7 +168,7 @@ export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Pro
                 slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
               }))
             }}
-            placeholder="例：ai-rising-star"
+            placeholder={t.events.edit.slugPlaceholder}
           />
           {slugError ? (
             <p className="text-xs text-destructive">{slugError}</p>
@@ -176,7 +178,7 @@ export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Pro
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="event-description" className="text-sm">活動簡介</Label>
+          <Label htmlFor="event-description" className="text-sm">{t.events.edit.descriptionLabel}</Label>
           <Textarea
             id="event-description"
             className="min-h-[80px] resize-y"
@@ -184,12 +186,12 @@ export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Pro
             onChange={(e) =>
               setEvent((prev) => ({ ...prev, description: e.target.value || null }))
             }
-            placeholder="活動簡短介紹（選填）"
+            placeholder={t.events.edit.descriptionPlaceholder}
           />
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label className="text-sm">顯示於導覽列</Label>
+          <Label className="text-sm">{t.events.edit.pinnedLabel}</Label>
           <button
             type="button"
             onClick={() => setEvent((prev) => ({ ...prev, pinned: !prev.pinned }))}
@@ -200,12 +202,12 @@ export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Pro
             }`}
           >
             <Pin className="size-4" fill={event.pinned ? "currentColor" : "none"} />
-            {event.pinned ? "已釘選（顯示於 Header）" : "未釘選"}
+            {event.pinned ? t.events.edit.pinnedOn : t.events.edit.pinnedOff}
           </button>
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="event-sort-order" className="text-sm">排列順序（數字越小越前）</Label>
+          <Label htmlFor="event-sort-order" className="text-sm">{t.events.edit.sortOrderLabel}</Label>
           <Input
             id="event-sort-order"
             inputMode="numeric"
@@ -233,7 +235,7 @@ export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Pro
             ) : (
               <Trash2 className="size-4" />
             )}
-            刪除活動
+            {t.events.edit.delete}
           </Button>
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -244,7 +246,7 @@ export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Pro
               disabled={isSaving || isPublishing || isDeleting}
             >
               <LogOut className="size-4" />
-              退出編輯
+              {t.actions.exitEdit}
             </Button>
             <Button
               type="button"
@@ -257,7 +259,7 @@ export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Pro
               ) : (
                 <Save className="size-4" />
               )}
-              儲存
+              {t.actions.save}
             </Button>
             <Button
               type="button"
@@ -271,7 +273,7 @@ export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Pro
               ) : (
                 <Send className="size-4" />
               )}
-              {event.status === "published" ? "取消發布" : "發布"}
+              {event.status === "published" ? t.actions.unpublish : t.actions.publish}
             </Button>
           </div>
         </div>
