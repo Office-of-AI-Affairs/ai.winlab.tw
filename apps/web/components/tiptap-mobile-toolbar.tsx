@@ -13,6 +13,7 @@ import {
   ToolbarButton,
 } from "@/components/tiptap-editor-shared";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/locale-provider";
 import { Plus } from "lucide-react";
 
 export function TiptapMobileToolbar({
@@ -22,6 +23,7 @@ export function TiptapMobileToolbar({
   editor: Editor | null;
   uploadFn: EditorUploadFn;
 }) {
+  const t = useT();
   const [showInsertMenu, setShowInsertMenu] = useState(false);
 
   if (!editor) return null;
@@ -66,7 +68,7 @@ export function TiptapMobileToolbar({
       )}
       <div className="flex flex-wrap gap-1">
         <ToolbarButton
-          ariaLabel="開啟插入選單"
+          ariaLabel={t.editor.toolbar.openInsertMenu}
           data-slot="tiptap-mobile-insert-trigger"
           onClick={() => setShowInsertMenu((value) => !value)}
           className={showInsertMenu ? "bg-muted" : ""}
