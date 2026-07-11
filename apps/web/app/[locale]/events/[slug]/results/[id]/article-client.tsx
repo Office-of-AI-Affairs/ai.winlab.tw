@@ -178,8 +178,8 @@ export function ResultArticleClient({
   const titleClass = "text-3xl font-bold tracking-tight mb-4"
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: "首頁", path: "/" },
-    { name: "活動", path: "/events" },
+    { name: t.common.home, path: "/" },
+    { name: t.events.meta.fallbackName, path: "/events" },
     { name: eventName, path: `/events/${slug}` },
     { name: result.title, path: `/events/${slug}/results/${result.id}` },
   ])
@@ -205,7 +205,7 @@ export function ResultArticleClient({
       : {}),
     publisher: {
       "@type": "Organization",
-      name: "國立陽明交通大學 人工智慧專責辦公室",
+      name: t.common.orgFullName,
       url: "https://ai.winlab.tw",
     },
   }

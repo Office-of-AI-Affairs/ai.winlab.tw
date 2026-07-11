@@ -42,7 +42,7 @@ export async function generateMetadata({
   const twitterImages = ogImages.map((i) => i.url);
   const a = localeAlternates(`/events/${slug}/announcements/${id}`, locale);
   return {
-    title: `${title}｜人工智慧專責辦公室`,
+    title: `${title}｜${dict.common.orgFullName}`,
     description,
     alternates: { canonical: a.canonical, languages: a.languages },
     // Next.js App Router performs object-level replace (not deep merge) when a
@@ -53,14 +53,14 @@ export async function generateMetadata({
       type: "article",
       siteName: SITE_NAME,
       locale: "zh_TW",
-      title: `${title}｜人工智慧專責辦公室`,
+      title: `${title}｜${dict.common.orgFullName}`,
       description,
       url: `/events/${slug}/announcements/${id}`,
       images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
-      title: `${title}｜人工智慧專責辦公室`,
+      title: `${title}｜${dict.common.orgFullName}`,
       description,
       images: twitterImages,
     },
