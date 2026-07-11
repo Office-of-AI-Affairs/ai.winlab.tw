@@ -14,15 +14,10 @@ import type {
 } from "@winlab/db";
 import { uploadOrganizationImage } from "@/lib/upload-image";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
+import { useT } from "@/lib/i18n/locale-provider";
 import { ArrowLeft, Check, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-
-const CATEGORIES: { value: OrganizationMemberCategory; label: string }[] = [
-  { value: "core", label: "核心成員" },
-  { value: "legal_entity", label: "法人" },
-  { value: "industry", label: "產業" },
-];
 
 export function OrganizationMemberEditClient({
   id,
@@ -31,7 +26,14 @@ export function OrganizationMemberEditClient({
   id: string;
   initialMember: OrganizationMember;
 }) {
+  const t = useT();
   const router = useRouter();
+
+  const CATEGORIES: { value: OrganizationMemberCategory; label: string }[] = [
+    { value: "core", label: t.introduction.category.core },
+    { value: "legal_entity", label: t.introduction.category.legalEntity },
+    { value: "industry", label: t.introduction.category.industry },
+  ];
 
   const {
     data: member, setData: setMember, hasChanges,
@@ -64,7 +66,7 @@ export function OrganizationMemberEditClient({
           onClick={() => guardNavigation(() => router.push("/introduction"))}
         >
           <ArrowLeft className="w-4 h-4" />
-          返回
+          {t.actions.back}
         </Button>
 
         <div className="flex gap-2">
@@ -80,7 +82,7 @@ export function OrganizationMemberEditClient({
             ) : (
               <Check className="w-4 h-4 text-green-600" />
             )}
-            {hasChanges ? "儲存" : "已儲存"}
+            {hasChanges ? t.actions.save : t.editor.status.saved}
           </Button>
 
           <Button variant="destructive" onClick={remove} disabled={isDeleting}>
@@ -89,14 +91,14 @@ export function OrganizationMemberEditClient({
             ) : (
               <Trash2 className="w-4 h-4" />
             )}
-            刪除
+            {t.actions.delete}
           </Button>
         </div>
       </div>
 
       <div className="flex flex-col gap-6">
         <div className="grid gap-2">
-          <Label>分類</Label>
+          <Label>{t.common.category}</Label>
           <select
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs md:text-sm"
             value={member.category}
@@ -116,28 +118,28 @@ export function OrganizationMemberEditClient({
         </div>
 
         <div className="grid gap-2">
-          <Label>名稱</Label>
+          <Label>{t.common.name}</Label>
           <Input
             value={member.name}
             onChange={(e) => setMember((prev) => ({ ...prev, name: e.target.value }))}
-            placeholder="成員名稱"
+            placeholder={t.admin.member.namePlaceholder}
           />
         </div>
 
         <div className="grid gap-2">
-          <Label>簡介</Label>
+          <Label>{t.admin.member.summaryLabel}</Label>
           <Textarea
             className="min-h-[120px] resize-y"
             value={member.summary ?? ""}
             onChange={(e) =>
               setMember((prev) => ({ ...prev, summary: e.target.value || null }))
             }
-            placeholder="簡短介紹"
+            placeholder={t.admin.member.summaryPlaceholder}
           />
         </div>
 
         <div className="grid gap-2">
-          <Label>圖片</Label>
+          <Label>{t.admin.member.imageLabel}</Label>
           <div className="flex items-center gap-4">
             <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-input bg-muted">
               <Image
@@ -166,13 +168,13 @@ export function OrganizationMemberEditClient({
               ) : (
                 <ImagePlus className="w-4 h-4" />
               )}
-              上傳圖片
+              {t.actions.uploadImage}
             </Button>
           </div>
         </div>
 
         <div className="grid gap-2">
-          <Label>連結（選填）</Label>
+          <Label>{t.admin.member.linkLabel}</Label>
           <Input
             type="url"
             value={member.link ?? ""}
@@ -184,7 +186,7 @@ export function OrganizationMemberEditClient({
         </div>
 
         <div className="grid gap-2">
-          <Label>排序（數字越小越前面）</Label>
+          <Label>{t.common.sortOrderHint}</Label>
           <Input
             type="number"
             value={member.sort_order}
@@ -198,35 +200,35 @@ export function OrganizationMemberEditClient({
         </div>
 
         <div className="grid gap-2">
-          <Label>職稱（選填）</Label>
+          <Label>{t.admin.member.roleLabel}</Label>
           <Input
             value={member.member_role ?? ""}
             onChange={(e) => setMember((prev) => ({ ...prev, member_role: e.target.value || null }))}
-            placeholder="例：主任、副主任、合聘專家"
+            placeholder={t.admin.member.rolePlaceholder}
           />
         </div>
 
         <div className="grid gap-2">
-          <Label>最高學歷（選填）</Label>
+          <Label>{t.admin.member.schoolLabel}</Label>
           <Input
             value={member.school ?? ""}
             onChange={(e) => setMember((prev) => ({ ...prev, school: e.target.value || null }))}
-            placeholder="例：國立台灣大學（電機博士）"
+            placeholder={t.admin.member.schoolPlaceholder}
           />
         </div>
 
         <div className="grid gap-2">
-          <Label>研究領域（選填）</Label>
+          <Label>{t.admin.member.researchLabel}</Label>
           <Textarea
             className="min-h-[80px] resize-y"
             value={member.research_areas ?? ""}
             onChange={(e) => setMember((prev) => ({ ...prev, research_areas: e.target.value || null }))}
-            placeholder="研究領域（以頓號或換行分隔）"
+            placeholder={t.admin.member.researchPlaceholder}
           />
         </div>
 
         <div className="grid gap-2">
-          <Label>Email（選填）</Label>
+          <Label>{t.admin.member.emailLabel}</Label>
           <Input
             type="email"
             value={member.email ?? ""}
@@ -236,7 +238,7 @@ export function OrganizationMemberEditClient({
         </div>
 
         <div className="grid gap-2">
-          <Label>個人網頁（選填）</Label>
+          <Label>{t.admin.member.websiteLabel}</Label>
           <Input
             type="url"
             value={member.website ?? ""}

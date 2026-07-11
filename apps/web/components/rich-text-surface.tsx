@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { EditorUploadFn } from "@/components/tiptap-editor-shared"
+import { useT } from "@/lib/i18n/locale-provider"
 import { richTextDocumentClassName } from "@/lib/ui/rich-text-classes"
 
 const TiptapEditor = dynamic(
@@ -40,9 +41,10 @@ export function RichTextSurface({
   contentHtml,
   editing,
   onChange,
-  emptyText = "尚無內容",
+  emptyText,
   uploadFn,
 }: Props) {
+  const t = useT()
   if (editing) {
     return (
       <div data-slot="rich-text-surface" data-mode="edit">
@@ -69,7 +71,7 @@ export function RichTextSurface({
 
   return (
     <p data-slot="rich-text-surface" data-mode="empty" className="text-muted-foreground">
-      {emptyText}
+      {emptyText ?? t.common.noContent}
     </p>
   )
 }

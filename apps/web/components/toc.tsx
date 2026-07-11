@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
+import { useT } from "@/lib/i18n/locale-provider"
 import type { TocItem } from "@/lib/ui/article"
 
 type Props = {
@@ -10,6 +11,7 @@ type Props = {
 }
 
 export function Toc({ items, className }: Props) {
+  const t = useT()
   const [activeId, setActiveId] = useState<string | null>(items[0]?.id ?? null)
 
   useEffect(() => {
@@ -52,10 +54,10 @@ export function Toc({ items, className }: Props) {
         "w-48 shrink-0 sticky top-20 self-start max-h-[calc(100dvh-6rem)] overflow-y-auto",
         className,
       )}
-      aria-label="本頁目錄"
+      aria-label={t.common.tableOfContents}
     >
       <p className="text-xs font-medium tracking-widest text-muted-foreground uppercase mb-3">
-        本頁目錄
+        {t.common.tableOfContents}
       </p>
       <ol className="flex flex-col gap-1.5 text-sm">
         {items.map((item) => {

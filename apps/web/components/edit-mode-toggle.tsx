@@ -3,6 +3,7 @@
 import { Pencil } from "lucide-react"
 
 import { FloatingActionPill } from "@/components/floating-action-pill"
+import { useT } from "@/lib/i18n/locale-provider"
 
 type Props = {
   onClick: () => void
@@ -23,13 +24,14 @@ type Props = {
 export function EditModeToggle({
   onClick,
   className,
-  label = "編輯",
+  label,
   showShortcut = true,
 }: Props) {
+  const t = useT()
   return (
     <FloatingActionPill
       icon={Pencil}
-      label={label}
+      label={label ?? t.actions.edit}
       onClick={onClick}
       shortcut={showShortcut ? "⌘E" : undefined}
       className={className}

@@ -10,16 +10,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { useT } from "@/lib/i18n/locale-provider"
 import { cn } from "@/lib/utils"
 
 export type EditStatus = "saved" | "saving" | "dirty" | "error"
-
-const defaultStatusLabel: Record<EditStatus, string> = {
-  saved: "已儲存",
-  saving: "儲存中…",
-  dirty: "尚未儲存",
-  error: "儲存失敗",
-}
 
 type Props = {
   status: EditStatus
@@ -50,6 +44,7 @@ export function EditActionsPill({
   onOpenChange,
   className,
 }: Props) {
+  const t = useT()
   const [internalOpen, setInternalOpen] = useState(false)
   const isControlled = open !== undefined
   const dialogOpen = isControlled ? open : internalOpen
@@ -58,6 +53,12 @@ export function EditActionsPill({
     onOpenChange?.(next)
   }
 
+  const defaultStatusLabel: Record<EditStatus, string> = {
+    saved: t.editor.status.saved,
+    saving: t.editor.status.saving,
+    dirty: t.editor.status.unsaved,
+    error: t.editor.status.error,
+  }
   const label = statusLabel ?? defaultStatusLabel[status]
 
   return (
@@ -65,7 +66,7 @@ export function EditActionsPill({
       <DialogTrigger asChild>
         <button
           type="button"
-          aria-label={`${label}．展開編輯工具`}
+          aria-label={`${label}．${t.editor.pill.expandAria}`}
           className={cn(
             "interactive-scale fixed bottom-4 right-4 z-30 inline-flex h-10 items-center gap-2 rounded-full border border-border bg-background/95 px-4 text-sm font-medium text-foreground shadow-lg backdrop-blur-sm transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:bottom-6 md:right-6",
             className,
