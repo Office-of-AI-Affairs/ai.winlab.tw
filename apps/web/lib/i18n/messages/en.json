@@ -41,7 +41,9 @@
     "loading": "Loading…",
     "description": "Description",
     "link": "Link",
-    "email": "Email"
+    "email": "Email",
+    "tableOfContents": "On this page",
+    "noContent": "No content yet"
   },
   "nav": {
     "about": "About",
@@ -159,7 +161,8 @@
       "editEvent": "Edit event",
       "newAnnouncement": "New announcement",
       "newResult": "New result",
-      "newRecruitment": "New recruitment"
+      "newRecruitment": "New recruitment",
+      "newEvent": "New event"
     },
     "edit": {
       "slugTaken": "This slug is already in use. Please choose another.",
@@ -167,6 +170,7 @@
       "nameLabel": "Event name",
       "namePlaceholder": "e.g. AI Rising Star",
       "slugLabel": "Slug (URL path)",
+      "slugPlaceholder": "e.g. ai-rising-star",
       "descriptionLabel": "Event description",
       "descriptionPlaceholder": "Short event description (optional)",
       "pinnedLabel": "Show in navigation bar",
@@ -363,9 +367,13 @@
       "undo": "Undo",
       "redo": "Redo",
       "insertImage": "Insert image",
-      "insertYoutube": "Insert YouTube video"
+      "insertYoutube": "Insert YouTube video",
+      "openInsertMenu": "Open insert menu"
     },
     "youtubePrompt": "Enter the YouTube video URL",
+    "imageUploadFailed": "Image upload failed",
+    "contentPlaceholder": "Start writing…",
+    "slashNoResults": "No matching commands",
     "pill": {
       "expandAria": "Expand editing tools"
     }
@@ -588,7 +596,8 @@
     "namePlaceholder": "Contact name",
     "positionPlaceholder": "e.g. Administrative Assistant / Project Manager",
     "phonePlaceholder": "e.g. 03-5131867#54832",
-    "emailLabel": "Email"
+    "emailLabel": "Email",
+    "editButton": "Edit contacts"
   },
   "privacy": {
     "meta": {
@@ -625,7 +634,11 @@
     "titlePlaceholder": "Banner headline",
     "descriptionPlaceholder": "Subtitle or descriptive text",
     "imageLabel": "Banner image",
-    "imageHint": "Recommended 16:9 ratio; JPEG/PNG/WebP/GIF, up to 5 MB"
+    "imageHint": "Recommended 16:9 ratio; JPEG/PNG/WebP/GIF, up to 5 MB",
+    "editBanner": "Edit banner",
+    "emptyAdminCta": "No banners yet — click here to add a home carousel banner",
+    "placeholderOrg": "NYCU Office of AI Affairs",
+    "placeholderWelcome": "Welcome to the AI Office"
   },
   "auth": {
     "login": {
@@ -704,6 +717,9 @@
     "noResumeUploaded": "No resume uploaded yet",
     "uploadResume": "Upload PDF resume",
     "viewResume": "View resume",
+    "loadRecruitmentsError": "Failed to load recruitments",
+    "managedRecruitments": "Recruitments I manage",
+    "noOwnedRecruitments": "Not yet assigned as owner of any recruitment",
     "linksLabel": "Links",
     "linkAriaLabel": "Link {n}",
     "deleteLinkAria": "Delete link {n}",

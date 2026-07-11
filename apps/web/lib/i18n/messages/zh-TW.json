@@ -41,7 +41,9 @@
     "loading": "載入中…",
     "description": "描述",
     "link": "連結",
-    "email": "電子信箱"
+    "email": "電子信箱",
+    "tableOfContents": "本頁目錄",
+    "noContent": "尚無內容"
   },
   "nav": {
     "about": "關於",
@@ -159,7 +161,8 @@
       "editEvent": "編輯活動",
       "newAnnouncement": "新增公告",
       "newResult": "新增成果",
-      "newRecruitment": "新增徵才"
+      "newRecruitment": "新增徵才",
+      "newEvent": "新增活動"
     },
     "edit": {
       "slugTaken": "此 slug 已被使用，請選擇其他名稱",
@@ -167,6 +170,7 @@
       "nameLabel": "活動名稱",
       "namePlaceholder": "例：AI新秀",
       "slugLabel": "Slug（URL 路徑）",
+      "slugPlaceholder": "例：ai-rising-star",
       "descriptionLabel": "活動簡介",
       "descriptionPlaceholder": "活動簡短介紹（選填）",
       "pinnedLabel": "顯示於導覽列",
@@ -363,9 +367,13 @@
       "undo": "復原",
       "redo": "重做",
       "insertImage": "插入圖片",
-      "insertYoutube": "插入 YouTube"
+      "insertYoutube": "插入 YouTube",
+      "openInsertMenu": "開啟插入選單"
     },
     "youtubePrompt": "請輸入 YouTube 影片網址",
+    "imageUploadFailed": "圖片上傳失敗",
+    "contentPlaceholder": "開始撰寫公告內容…",
+    "slashNoResults": "沒有符合的插入項目",
     "pill": {
       "expandAria": "展開編輯工具"
     }
@@ -588,7 +596,8 @@
     "namePlaceholder": "聯絡人姓名",
     "positionPlaceholder": "例如：行政助理 / 專案經理",
     "phonePlaceholder": "例如：03-5131867#54832",
-    "emailLabel": "信箱"
+    "emailLabel": "信箱",
+    "editButton": "編輯聯絡資訊"
   },
   "privacy": {
     "meta": {
@@ -625,7 +634,11 @@
     "titlePlaceholder": "橫幅主標題",
     "descriptionPlaceholder": "副標或說明文字",
     "imageLabel": "橫幅圖片",
-    "imageHint": "建議比例 16:9，JPEG/PNG/WebP/GIF，最大 5MB"
+    "imageHint": "建議比例 16:9，JPEG/PNG/WebP/GIF，最大 5MB",
+    "editBanner": "編輯橫幅",
+    "emptyAdminCta": "尚無橫幅，點此新增首頁輪播",
+    "placeholderOrg": "國立陽明交通大學 人工智慧專責辦公室",
+    "placeholderWelcome": "歡迎來到 AI Office"
   },
   "auth": {
     "login": {
@@ -704,6 +717,9 @@
     "noResumeUploaded": "尚未上傳履歷",
     "uploadResume": "上傳 PDF 履歷",
     "viewResume": "查看履歷",
+    "loadRecruitmentsError": "載入徵才失敗",
+    "managedRecruitments": "我管理的徵才",
+    "noOwnedRecruitments": "尚未被指派為任何徵才的擁有者",
     "linksLabel": "連結",
     "linkAriaLabel": "連結 {n}",
     "deleteLinkAria": "刪除連結 {n}",
