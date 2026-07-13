@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/carousel";
 import { AppLink } from "@/components/app-link";
 import { useAuth } from "@/components/auth-provider";
-import { useT } from "@/lib/i18n/locale-provider";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
+import { localizedField } from "@/lib/i18n/localized-field";
 import type { CarouselSlide } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { safeHref } from "@/lib/safe-href";
@@ -27,6 +28,7 @@ export function CarouselClient({
 }) {
   const { isAdmin } = useAuth();
   const t = useT();
+  const locale = useLocale();
   const plugin = React.useMemo(
     () => Autoplay({ delay: 5000, stopOnInteraction: true }),
     [],
@@ -84,11 +86,17 @@ export function CarouselClient({
             // renders with priority + eager loading to beat the carousel JS.
             const isLead = index === 0;
             const imageSrc = resolveImageSrc(slide.image);
+            const title = localizedField(slide, "title", locale);
+            const description = localizedField(slide, "description", locale);
+            // Mark only the text that fell back so screen readers / SEO keep
+            // the correct language; no banner-wide notice (would hurt LCP).
+            const textLang =
+              title.isFallback || description.isFallback ? "zh-Hant" : undefined;
             const slideContent = (
               <>
                 <Image
                   src={imageSrc}
-                  alt={slide.title}
+                  alt={title.value || t.carousel.untitled}
                   fill
                   priority={isLead}
                   loading={isLead ? "eager" : "lazy"}
@@ -97,13 +105,16 @@ export function CarouselClient({
                   className="object-cover"
                 />
                 <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-black/60 to-transparent" />
-                <div className="absolute inset-0 flex flex-col items-center justify-end text-white px-4 md:px-8 pb-12 md:pb-16 pointer-events-none">
+                <div
+                  className="absolute inset-0 flex flex-col items-center justify-end text-white px-4 md:px-8 pb-12 md:pb-16 pointer-events-none"
+                  lang={textLang}
+                >
                   <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-center mb-3">
-                    {slide.title}
+                    {title.value}
                   </h2>
-                  {slide.description && (
+                  {description.value && (
                     <span className="inline-block text-xs md:text-sm lg:text-base text-center max-w-3xl">
-                      {slide.description}
+                      {description.value}
                     </span>
                   )}
                 </div>

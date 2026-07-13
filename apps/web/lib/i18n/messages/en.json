@@ -287,7 +287,9 @@
       "gateCta": "Go to sign in",
       "applicationMethod": "How to apply",
       "contact": "Contact",
-      "requiredDocs": "Required documents"
+      "requiredDocs": "Required documents",
+      "legacyRecruitmentLink": "Official website",
+      "legacyApplicationLink": "Website"
     },
     "card": {
       "startOnward": " onward"
@@ -633,7 +635,13 @@
     "addSlide": "Add banner",
     "empty": "No banners yet",
     "titlePlaceholder": "Banner headline",
+    "titlePlaceholderEn": "English banner headline",
     "descriptionPlaceholder": "Subtitle or descriptive text",
+    "descriptionPlaceholderEn": "English subtitle or descriptive text",
+    "contentLanguage": "Content language",
+    "langZh": "中文",
+    "langEn": "English",
+    "missingEn": "English missing",
     "imageLabel": "Banner image",
     "imageHint": "Recommended 16:9 ratio; JPEG/PNG/WebP/GIF, up to 5 MB",
     "editBanner": "Edit banner",

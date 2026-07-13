@@ -2,10 +2,18 @@ import assert from "node:assert/strict"
 import { describe, test } from "node:test"
 
 import {
+  LEGACY_APPLICATION_LINK_LABEL,
+  LEGACY_RECRUITMENT_LINK_LABEL,
   getApplicationMethodLinks,
+  localizeApplicationLinkLabel,
   normalizeApplicationMethod,
 } from "@/lib/recruitment-application-method"
 import type { ApplicationMethod } from "@winlab/db"
+
+const EN_LINK_LABELS = {
+  applicationWebsite: "Website",
+  recruitmentWebsite: "Official website",
+}
 
 describe("getApplicationMethodLinks", () => {
   test("returns sanitized named links from the new links array", () => {
@@ -60,6 +68,24 @@ describe("getApplicationMethodLinks", () => {
         },
       ]
     )
+  })
+})
+
+describe("localizeApplicationLinkLabel", () => {
+  test("maps legacy Chinese labels to the active locale", () => {
+    assert.equal(
+      localizeApplicationLinkLabel(LEGACY_RECRUITMENT_LINK_LABEL, EN_LINK_LABELS),
+      "Official website",
+    )
+    assert.equal(
+      localizeApplicationLinkLabel(LEGACY_APPLICATION_LINK_LABEL, EN_LINK_LABELS),
+      "Website",
+    )
+  })
+
+  test("passes user-authored labels through unchanged", () => {
+    assert.equal(localizeApplicationLinkLabel("104", EN_LINK_LABELS), "104")
+    assert.equal(localizeApplicationLinkLabel("Facebook", EN_LINK_LABELS), "Facebook")
   })
 })
 

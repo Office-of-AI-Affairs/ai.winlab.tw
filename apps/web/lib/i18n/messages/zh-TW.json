@@ -287,7 +287,9 @@
       "gateCta": "前往登入",
       "applicationMethod": "應徵方式",
       "contact": "聯絡窗口",
-      "requiredDocs": "應備文件"
+      "requiredDocs": "應備文件",
+      "legacyRecruitmentLink": "官方網站",
+      "legacyApplicationLink": "網站"
     },
     "card": {
       "startOnward": " 起"
@@ -633,7 +635,13 @@
     "addSlide": "新增橫幅",
     "empty": "尚無橫幅",
     "titlePlaceholder": "橫幅主標題",
+    "titlePlaceholderEn": "英文橫幅主標題",
     "descriptionPlaceholder": "副標或說明文字",
+    "descriptionPlaceholderEn": "英文副標或說明文字",
+    "contentLanguage": "內容語言",
+    "langZh": "中文",
+    "langEn": "English",
+    "missingEn": "缺英文",
     "imageLabel": "橫幅圖片",
     "imageHint": "建議比例 16:9，JPEG/PNG/WebP/GIF，最大 5MB",
     "editBanner": "編輯橫幅",
