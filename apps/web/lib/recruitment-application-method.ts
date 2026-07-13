@@ -5,12 +5,35 @@ import type {
 
 import { safeHref } from "@/lib/safe-href"
 
-const LEGACY_APPLICATION_LINK_LABEL = "網站"
-const LEGACY_RECRUITMENT_LINK_LABEL = "官方網站"
+/**
+ * Stable zh-TW labels used when promoting legacy URL fields into named links.
+ * Stored / synthesized values stay in Chinese so identity is locale-independent;
+ * call {@link localizeApplicationLinkLabel} at the UI boundary.
+ */
+export const LEGACY_APPLICATION_LINK_LABEL = "網站"
+export const LEGACY_RECRUITMENT_LINK_LABEL = "官方網站"
+
+export type ApplicationLinkLabelDict = {
+  applicationWebsite: string
+  recruitmentWebsite: string
+}
 
 function trimOptional(value?: string): string | undefined {
   const trimmed = value?.trim()
   return trimmed ? trimmed : undefined
+}
+
+/**
+ * Map known system-generated link labels to the current locale.
+ * User-authored labels (e.g. "104", "Facebook") pass through unchanged.
+ */
+export function localizeApplicationLinkLabel(
+  label: string,
+  dict: ApplicationLinkLabelDict,
+): string {
+  if (label === LEGACY_RECRUITMENT_LINK_LABEL) return dict.recruitmentWebsite
+  if (label === LEGACY_APPLICATION_LINK_LABEL) return dict.applicationWebsite
+  return label
 }
 
 export function getApplicationMethodLinks(

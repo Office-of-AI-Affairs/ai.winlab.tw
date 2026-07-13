@@ -1,7 +1,10 @@
 import { AppLink } from "@/components/app-link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getApplicationMethodLinks } from "@/lib/recruitment-application-method";
+import {
+  getApplicationMethodLinks,
+  localizeApplicationLinkLabel,
+} from "@/lib/recruitment-application-method";
 import type {
   Recruitment,
   RecruitmentPositionType,
@@ -47,10 +50,17 @@ export function RecruitmentDetail({
     recruitment.end_date && new Date(recruitment.end_date) < new Date();
 
   const positionCount = recruitment.positions?.reduce((sum, p) => sum + (p.count ?? 0), 0) ?? 0;
+  const linkLabelDict = {
+    applicationWebsite: t.detail.legacyApplicationLink,
+    recruitmentWebsite: t.detail.legacyRecruitmentLink,
+  };
   const applicationLinks = getApplicationMethodLinks(
     recruitment.application_method,
     recruitment.link,
-  );
+  ).map((link) => ({
+    ...link,
+    label: localizeApplicationLinkLabel(link.label, linkLabelDict),
+  }));
   const hasApplicationMethod = !!(
     recruitment.application_method?.email ||
     recruitment.application_method?.other ||

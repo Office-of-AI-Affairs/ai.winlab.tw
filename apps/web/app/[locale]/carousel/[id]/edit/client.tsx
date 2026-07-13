@@ -2,6 +2,7 @@
 
 import { revalidateCarousel } from "@/app/[locale]/carousel/actions";
 import { PageShell } from "@/components/page-shell";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,15 +15,19 @@ import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { ArrowLeft, Check, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface Props {
   id: string;
   initialSlide: CarouselSlide;
 }
 
+type ContentLang = "zh" | "en";
+
 export function CarouselEditClient({ id, initialSlide }: Props) {
   const router = useRouter();
   const t = useT();
+  const [contentLang, setContentLang] = useState<ContentLang>("zh");
 
   const {
     data: slide, setData: setSlide, hasChanges,
@@ -32,7 +37,7 @@ export function CarouselEditClient({ id, initialSlide }: Props) {
     table: "carousel_slides",
     id,
     initialData: initialSlide,
-    fields: ["title", "description", "link", "image", "sort_order"],
+    fields: ["title", "title_en", "description", "description_en", "link", "image", "sort_order"],
     redirectTo: "/carousel",
     publishable: false,
     onAfterSave: revalidateCarousel,
@@ -45,6 +50,16 @@ export function CarouselEditClient({ id, initialSlide }: Props) {
     const url = await handleFileChange(e);
     if (url) setSlide((prev) => ({ ...prev, image: url }));
   };
+
+  const missingEn =
+    !(slide.title_en?.trim()) ||
+    // Description is optional in both languages; only flag missing EN when
+    // zh has a description but en does not.
+    (!!(slide.description?.trim()) && !(slide.description_en?.trim()));
+
+  const titleValue = contentLang === "zh" ? slide.title : (slide.title_en ?? "");
+  const descriptionValue =
+    contentLang === "zh" ? (slide.description ?? "") : (slide.description_en ?? "");
 
   return (
     <PageShell tone="editor">
@@ -82,23 +97,83 @@ export function CarouselEditClient({ id, initialSlide }: Props) {
       </div>
 
       <div className="grid gap-6 max-w-2xl">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex rounded-lg border p-0.5" role="tablist" aria-label={t.carousel.contentLanguage}>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={contentLang === "zh"}
+              className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
+                contentLang === "zh"
+                  ? "bg-muted font-medium text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => setContentLang("zh")}
+            >
+              {t.carousel.langZh}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={contentLang === "en"}
+              className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
+                contentLang === "en"
+                  ? "bg-muted font-medium text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => setContentLang("en")}
+            >
+              {t.carousel.langEn}
+            </button>
+          </div>
+          {missingEn && (
+            <Badge variant="secondary">{t.carousel.missingEn}</Badge>
+          )}
+        </div>
+
         <div className="grid gap-2">
-          <Label htmlFor="title">{t.common.title}</Label>
+          <Label htmlFor="title">
+            {t.common.title}
+            {contentLang === "en" ? ` (${t.carousel.langEn})` : ""}
+          </Label>
           <Input
             id="title"
-            value={slide.title}
-            onChange={(e) => setSlide((prev) => ({ ...prev, title: e.target.value }))}
-            placeholder={t.carousel.titlePlaceholder}
+            value={titleValue}
+            onChange={(e) =>
+              setSlide((prev) =>
+                contentLang === "zh"
+                  ? { ...prev, title: e.target.value }
+                  : { ...prev, title_en: e.target.value || null },
+              )
+            }
+            placeholder={
+              contentLang === "zh"
+                ? t.carousel.titlePlaceholder
+                : t.carousel.titlePlaceholderEn
+            }
           />
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="description">{t.common.description}</Label>
+          <Label htmlFor="description">
+            {t.common.description}
+            {contentLang === "en" ? ` (${t.carousel.langEn})` : ""}
+          </Label>
           <Input
             id="description"
-            value={slide.description ?? ""}
-            onChange={(e) => setSlide((prev) => ({ ...prev, description: e.target.value || null }))}
-            placeholder={t.carousel.descriptionPlaceholder}
+            value={descriptionValue}
+            onChange={(e) =>
+              setSlide((prev) =>
+                contentLang === "zh"
+                  ? { ...prev, description: e.target.value || null }
+                  : { ...prev, description_en: e.target.value || null },
+              )
+            }
+            placeholder={
+              contentLang === "zh"
+                ? t.carousel.descriptionPlaceholder
+                : t.carousel.descriptionPlaceholderEn
+            }
           />
         </div>
 
@@ -129,7 +204,7 @@ export function CarouselEditClient({ id, initialSlide }: Props) {
             <div className="relative w-full sm:w-64 aspect-video rounded-md overflow-hidden bg-muted shrink-0">
               <Image
                 src={resolveImageSrc(slide.image)}
-                alt={slide.title}
+                alt={slide.title || t.carousel.untitled}
                 fill
                 className="object-cover"
                 unoptimized={isExternalImage(slide.image)}

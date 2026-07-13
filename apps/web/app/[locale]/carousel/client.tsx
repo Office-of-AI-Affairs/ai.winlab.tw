@@ -2,6 +2,7 @@
 
 import { AppLink } from "@/components/app-link";
 import { PageShell } from "@/components/page-shell";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { revalidateCarousel } from "@/app/[locale]/carousel/actions";
@@ -76,7 +77,12 @@ function SortableSlideCard({
           />
         </div>
         <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
-          <p className="text-sm text-muted-foreground">{t.common.orderLabel.replace("{n}", String(index + 1))}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm text-muted-foreground">{t.common.orderLabel.replace("{n}", String(index + 1))}</p>
+            {!(slide.title_en?.trim()) && (
+              <Badge variant="secondary">{t.carousel.missingEn}</Badge>
+            )}
+          </div>
           <h2 className="text-xl font-semibold">{slide.title || t.carousel.untitled}</h2>
           {slide.description && (
             <p className="text-sm text-muted-foreground line-clamp-2">{slide.description}</p>

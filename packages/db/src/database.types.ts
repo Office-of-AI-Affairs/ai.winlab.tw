@@ -104,31 +104,37 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          description_en: string | null
           id: string
           image: string | null
           link: string | null
           sort_order: number
           title: string
+          title_en: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           description?: string | null
+          description_en?: string | null
           id?: string
           image?: string | null
           link?: string | null
           sort_order?: number
           title?: string
+          title_en?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           description?: string | null
+          description_en?: string | null
           id?: string
           image?: string | null
           link?: string | null
           sort_order?: number
           title?: string
+          title_en?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -387,23 +393,29 @@ export type Database = {
       introduction: {
         Row: {
           content: Json
+          content_en: Json | null
           created_at: string
           id: string
           title: string
+          title_en: string | null
           updated_at: string
         }
         Insert: {
           content?: Json
+          content_en?: Json | null
           created_at?: string
           id?: string
           title?: string
+          title_en?: string | null
           updated_at?: string
         }
         Update: {
           content?: Json
+          content_en?: Json | null
           created_at?: string
           id?: string
           title?: string
+          title_en?: string | null
           updated_at?: string
         }
         Relationships: []
