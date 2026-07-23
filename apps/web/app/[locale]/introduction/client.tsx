@@ -47,6 +47,11 @@ export function OrganizationPageClient({
 
   const members = membersByCategory[tab] ?? [];
 
+  // Members arrive ordered by group_order then sort_order (see data.ts).
+  // Split into unnamed groups; single-group categories render unchanged.
+  const groupOrders = [...new Set(members.map((m) => m.group_order))];
+  const memberGroups = groupOrders.map((order) => members.filter((m) => m.group_order === order));
+
   const openCreate = () => {
     setEditingMember(null);
     setDialogOpen(true);
@@ -87,85 +92,94 @@ export function OrganizationPageClient({
         {members.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">{t.introduction.membersPending}</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-            {members.map((member) => {
-              const memberContent = (
-                <>
-                  <div className="relative w-full aspect-square shrink-0 overflow-hidden">
-                    <Image
-                      src={resolveImageSrc(member.image)}
-                      alt={member.name}
-                      fill
-                      className="object-cover"
-                      unoptimized={isExternalImage(member.image)}
-                    />
-                  </div>
+          <div className="flex flex-col gap-6">
+            {memberGroups.map((group, groupIndex) => (
+              <div
+                key={group[0].group_order}
+                className={groupIndex > 0 ? "border-t border-border pt-6" : undefined}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+                  {group.map((member) => {
+                    const memberContent = (
+                      <>
+                        <div className="relative w-full aspect-square shrink-0 overflow-hidden">
+                          <Image
+                            src={resolveImageSrc(member.image)}
+                            alt={member.name}
+                            fill
+                            className="object-cover"
+                            unoptimized={isExternalImage(member.image)}
+                          />
+                        </div>
 
-                  <div className="p-4 flex flex-col gap-2">
-                    <div>
-                      <p className="text-base font-bold text-foreground leading-snug">{member.name}</p>
-                      {member.member_role && (
-                        <p className="text-sm text-muted-foreground mt-0.5">{member.member_role}</p>
-                      )}
-                    </div>
-
-                    {(member.school || member.research_areas || member.email) && (
-                      <div className="flex flex-col gap-1.5">
-                        {member.school && (
-                          <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
-                            <GraduationCap className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                            <span>{member.school}</span>
+                        <div className="p-4 flex flex-col gap-2">
+                          <div>
+                            <p className="text-base font-bold text-foreground leading-snug">{member.name}</p>
+                            {member.member_role && (
+                              <p className="text-sm text-muted-foreground mt-0.5">{member.member_role}</p>
+                            )}
                           </div>
-                        )}
-                        {member.research_areas && (
-                          <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
-                            <Microscope className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                            <span>{member.research_areas}</span>
-                          </div>
-                        )}
-                        {member.email && (
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <Mail className="w-3.5 h-3.5 shrink-0" />
-                            <span className="truncate">{member.email}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </>
-              );
 
-              if (isAdmin) {
-                return (
-                  <button
-                    key={member.id}
-                    type="button"
-                    className="text-left"
-                    onClick={() => openEdit(member)}
-                  >
-                    <Card className="py-0 overflow-hidden flex flex-col cursor-pointer interactive-scale h-full">
-                      {memberContent}
-                    </Card>
-                  </button>
-                );
-              }
+                          {(member.school || member.research_areas || member.email) && (
+                            <div className="flex flex-col gap-1.5">
+                              {member.school && (
+                                <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
+                                  <GraduationCap className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                                  <span>{member.school}</span>
+                                </div>
+                              )}
+                              {member.research_areas && (
+                                <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
+                                  <Microscope className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                                  <span>{member.research_areas}</span>
+                                </div>
+                              )}
+                              {member.email && (
+                                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                  <Mail className="w-3.5 h-3.5 shrink-0" />
+                                  <span className="truncate">{member.email}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    );
 
-              if (member.website) {
-                return (
-                  <AppLink key={member.id} href={member.website!} className="block">
-                    <Card className="py-0 overflow-hidden flex flex-col interactive-scale h-full">
-                      {memberContent}
-                    </Card>
-                  </AppLink>
-                );
-              }
+                    if (isAdmin) {
+                      return (
+                        <button
+                          key={member.id}
+                          type="button"
+                          className="text-left"
+                          onClick={() => openEdit(member)}
+                        >
+                          <Card className="py-0 overflow-hidden flex flex-col cursor-pointer interactive-scale h-full">
+                            {memberContent}
+                          </Card>
+                        </button>
+                      );
+                    }
 
-              return (
-                <Card key={member.id} className="py-0 overflow-hidden flex flex-col h-full">
-                  {memberContent}
-                </Card>
-              );
-            })}
+                    if (member.website) {
+                      return (
+                        <AppLink key={member.id} href={member.website!} className="block">
+                          <Card className="py-0 overflow-hidden flex flex-col interactive-scale h-full">
+                            {memberContent}
+                          </Card>
+                        </AppLink>
+                      );
+                    }
+
+                    return (
+                      <Card key={member.id} className="py-0 overflow-hidden flex flex-col h-full">
+                        {memberContent}
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

@@ -473,6 +473,7 @@ export type Database = {
           category: string
           created_at: string
           email: string | null
+          group_order: number
           id: string
           image: string | null
           link: string | null
@@ -489,6 +490,7 @@ export type Database = {
           category: string
           created_at?: string
           email?: string | null
+          group_order?: number
           id?: string
           image?: string | null
           link?: string | null
@@ -505,6 +507,7 @@ export type Database = {
           category?: string
           created_at?: string
           email?: string | null
+          group_order?: number
           id?: string
           image?: string | null
           link?: string | null

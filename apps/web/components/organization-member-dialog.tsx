@@ -53,6 +53,7 @@ type FormData = {
   email: string;
   website: string;
   image: string | null;
+  group_order: number;
   sort_order: number;
   category: OrganizationMemberCategory;
 };
@@ -66,6 +67,7 @@ function getDefaults(category: OrganizationMemberCategory): FormData {
     email: "",
     website: "",
     image: null,
+    group_order: 1,
     sort_order: 0,
     category,
   };
@@ -80,6 +82,7 @@ function formDataFromMember(m: OrganizationMember): FormData {
     email: m.email ?? "",
     website: m.website ?? "",
     image: m.image,
+    group_order: m.group_order,
     sort_order: m.sort_order,
     category: m.category as OrganizationMemberCategory,
   };
@@ -112,6 +115,7 @@ export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCa
         email: form.email.trim() || null,
         website: form.website.trim() || null,
         image: form.image,
+        group_order: form.group_order,
         sort_order: form.sort_order,
         category: form.category,
       };
@@ -199,8 +203,8 @@ export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCa
             </div>
           </div>
 
-          {/* 分類 + 排序 */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* 分類 + 群組 + 排序 */}
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>{t.common.category}</Label>
               <Select
@@ -216,6 +220,14 @@ export function OrganizationMemberDialog({ open, onOpenChange, member, defaultCa
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{t.admin.member.groupLabel}</Label>
+              <Input
+                type="number"
+                value={formData.group_order}
+                onChange={(e) => updateField("group_order", parseInt(e.target.value) || 1)}
+              />
             </div>
             <div className="space-y-2">
               <Label>{t.common.sortOrderHint}</Label>

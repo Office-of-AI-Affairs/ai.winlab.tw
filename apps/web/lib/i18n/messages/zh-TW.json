@@ -503,7 +503,8 @@
       "uploadPhoto": "上傳照片",
       "removePhoto": "移除照片",
       "rolePlaceholderShort": "例：主任、副主任",
-      "schoolPlaceholderAlt": "例：美國南美以美大學（資工博士）"
+      "schoolPlaceholderAlt": "例：美國南美以美大學（資工博士）",
+      "groupLabel": "群組"
     },
     "settings": {
       "title": "系統設定",

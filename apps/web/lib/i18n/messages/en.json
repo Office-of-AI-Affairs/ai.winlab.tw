@@ -503,7 +503,8 @@
       "uploadPhoto": "Upload photo",
       "removePhoto": "Remove photo",
       "rolePlaceholderShort": "e.g. Director, Deputy Director",
-      "schoolPlaceholderAlt": "e.g. Southern Methodist University, USA (PhD, CS)"
+      "schoolPlaceholderAlt": "e.g. Southern Methodist University, USA (PhD, CS)",
+      "groupLabel": "Group"
     },
     "settings": {
       "title": "Settings",
