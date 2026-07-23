@@ -18,6 +18,7 @@ export const getOrganizationMembers = unstable_cache(
     const { data } = await supabase
       .from("organization_members")
       .select("*")
+      .order("group_order", { ascending: true })
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
     return (data as OrganizationMember[] | null) ?? [];
