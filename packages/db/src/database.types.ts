@@ -26,6 +26,7 @@ export type Database = {
           slug: string
           status: string
           title: string
+          title_en: string | null
           updated_at: string
         }
         Insert: {
@@ -39,6 +40,7 @@ export type Database = {
           slug?: string
           status?: string
           title?: string
+          title_en?: string | null
           updated_at?: string
         }
         Update: {
@@ -52,6 +54,7 @@ export type Database = {
           slug?: string
           status?: string
           title?: string
+          title_en?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -328,6 +331,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          name_en: string | null
           pinned: boolean
           slug: string
           sort_order: number
@@ -340,6 +344,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          name_en?: string | null
           pinned?: boolean
           slug: string
           sort_order?: number
@@ -352,6 +357,7 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          name_en?: string | null
           pinned?: boolean
           slug?: string
           sort_order?: number
@@ -778,6 +784,7 @@ export type Database = {
           status: string
           summary: string | null
           title: string
+          title_en: string | null
           updated_at: string
         }
         Insert: {
@@ -792,6 +799,7 @@ export type Database = {
           status?: string
           summary?: string | null
           title?: string
+          title_en?: string | null
           updated_at?: string
         }
         Update: {
@@ -806,6 +814,7 @@ export type Database = {
           status?: string
           summary?: string | null
           title?: string
+          title_en?: string | null
           updated_at?: string
         }
         Relationships: [
