@@ -179,8 +179,32 @@ rhythm, it's a `PageShell`/`PageSection` tone choice (see
 ## Imagery
 
 - **Card covers** (result cards, announcement cards, recruitment tiles,
-  event tiles): `aspect-video` (16:9), `object-cover`. Never
+  event tiles): `aspect-video` (16:9), `object-cover`, enforced at every
+  breakpoint — not just `md:` and up. `result-card.tsx` and
+  `recruitment-card.tsx` used to fall back to a bare `h-[200px]` box on
+  mobile (whatever aspect ratio the upload happened to be), which is
+  exactly the "mixed aspect ratios reads as visual noise" problem #57
+  describes; fixed to `aspect-video` unconditionally. Never
   `object-contain` — covers crop to fill, they don't letterbox.
+- **Cover-image upload guidelines** (result covers today, the same rule
+  applies wherever a card cover gets uploaded): state the aspect ratio
+  and crop behavior in the upload UI itself, next to the file-type/size
+  hint, not just in this doc — see `t.results.edit.coverImageGuidelines`
+  in the result edit dialog. The three things every uploader needs to
+  know before picking a file:
+  - **Aspect ratio**: 16:9 suggested; anything else gets auto-cropped to
+    fill the card (`object-cover`), not letterboxed, so off-center
+    subjects can get cut.
+  - **No dense screenshot-of-text covers**: slide decks, spreadsheets,
+    or paragraph-dense screenshots shrink illegibly at card size and
+    read as visual noise in a grid — prefer a photo, diagram, or a
+    cover with a short headline, not a full slide.
+  - **Safe area**: keep the subject (face, headline, logo) centered —
+    the crop trims evenly from both long edges, so anything near the
+    left/right border of a non-16:9 upload may not survive the crop.
+  - Minimum resolution and a client-side crop tool are still open
+    (tracked as follow-up, not blocking #57); for now the guidance is
+    advisory copy plus the enforced `aspect-video` display.
 - **Hero / carousel text overlays**: text always sits on a bottom-up
   scrim, sized to the text block only (not the full image):
 

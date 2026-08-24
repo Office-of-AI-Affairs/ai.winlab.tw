@@ -328,7 +328,8 @@
       "manageTitle": "Manage result",
       "summaryLabel": "Summary",
       "summaryPlaceholder": "Shown on the list card",
-      "delete": "Delete result"
+      "delete": "Delete result",
+      "coverImageGuidelines": "16:9 recommended — it's auto-cropped to fill the card. Avoid dense text or screenshot-style covers, and keep the subject inside the centered safe area"
     },
     "card": {
       "anonymousAuthor": "Anonymous",

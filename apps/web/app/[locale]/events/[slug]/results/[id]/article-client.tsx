@@ -335,6 +335,7 @@ export function ResultArticleClient({
                   {isUploadingImage ? t.common.uploading : t.actions.changeCover}
                 </Button>
                 <p className="text-xs text-muted-foreground">{t.common.imageUploadHint}</p>
+                <p className="text-xs text-muted-foreground">{t.results.edit.coverImageGuidelines}</p>
               </div>
             </div>
           </div>
