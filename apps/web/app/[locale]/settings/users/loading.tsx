@@ -1,6 +1,6 @@
-import { PageShell } from "@/components/page-shell"
+import { PageShell } from "@/components/shared/page-shell"
 import { Skeleton } from "@/components/ui/skeleton"
-import { UsersTableSkeleton } from "@/components/users-table"
+import { UsersTableSkeleton } from "@/components/admin/users-table"
 
 export default function Loading() {
   return (

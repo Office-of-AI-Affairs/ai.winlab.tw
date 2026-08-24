@@ -1,8 +1,8 @@
 "use client";
 
-import { AnnouncementTable } from "@/components/announcement-table";
-import { useAuth } from "@/components/auth-provider";
-import { PageShell } from "@/components/page-shell";
+import { AnnouncementTable } from "@/components/announcement/announcement-table";
+import { useAuth } from "@/components/layout/auth-provider";
+import { PageShell } from "@/components/shared/page-shell";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n/locale-provider";
 import { createClient } from "@/lib/supabase/client";

@@ -17,13 +17,13 @@ The site's design philosophy: admin and visitor see the same layout on the same 
 
 1. **`useEditMode({ enabled })`** (`hooks/use-edit-mode.ts`) — drives `?mode=view|edit` URL state via nuqs, ⌘E toggle, auto-clears the param when the viewer can't edit. Pass `enabled: isAdmin` (or `isAuthor` etc.).
 
-2. **`<RichTextSurface>`** (`components/rich-text-surface.tsx`) — pure presentational shell. View mode renders server HTML via `dangerouslySetInnerHTML`; edit mode dynamically loads `<TiptapEditor flush>`. Visitors never download Tiptap; admins do, only when `isEditing` flips true.
+2. **`<RichTextSurface>`** (`components/editor/rich-text-surface.tsx`) — pure presentational shell. View mode renders server HTML via `dangerouslySetInnerHTML`; edit mode dynamically loads `<TiptapEditor flush>`. Visitors never download Tiptap; admins do, only when `isEditing` flips true.
 
-3. **`<TiptapEditor flush>`** (`components/tiptap-editor.tsx`) — `flush={true}` drops the editor's internal `min-h-[360px] py-6 sm:py-8` padding and the rounded canvas frame. Use for inline view+edit pages so the editing surface is pixel-aligned with the read layout. Default `flush={false}` keeps the padded canvas that dedicated `/edit` pages depend on.
+3. **`<TiptapEditor flush>`** (`components/editor/tiptap-editor.tsx`) — `flush={true}` drops the editor's internal `min-h-[360px] py-6 sm:py-8` padding and the rounded canvas frame. Use for inline view+edit pages so the editing surface is pixel-aligned with the read layout. Default `flush={false}` keeps the padded canvas that dedicated `/edit` pages depend on.
 
-4. **`<EditModeToggle>`** (`components/edit-mode-toggle.tsx`) — view-mode floating "編輯" pill, bottom-right. Click → `setMode("edit")`. Renders only when `isAdmin && !isEditing`.
+4. **`<EditModeToggle>`** (`components/editor/edit-mode-toggle.tsx`) — view-mode floating "編輯" pill, bottom-right. Click → `setMode("edit")`. Renders only when `isAdmin && !isEditing`.
 
-5. **`<EditActionsPill>`** (`components/edit-actions-pill.tsx`) — edit-mode status pill that opens a Dialog. Pill shows status (`已儲存` / `尚未發布` / `儲存中…` / `第 N 版`); click opens dialog with page-specific actions, hidden attributes, and history. Body is fully controlled by the caller.
+5. **`<EditActionsPill>`** (`components/editor/edit-actions-pill.tsx`) — edit-mode status pill that opens a Dialog. Pill shows status (`已儲存` / `尚未發布` / `儲存中…` / `第 N 版`); click opens dialog with page-specific actions, hidden attributes, and history. Body is fully controlled by the caller.
 
 ## Layout rules
 

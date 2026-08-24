@@ -1,15 +1,15 @@
 "use client";
 
-import { AppLink } from "@/components/app-link";
-import { useAuth } from "@/components/auth-provider";
+import { AppLink } from "@/components/shared/app-link";
+import { useAuth } from "@/components/layout/auth-provider";
 import {
   FloatingActionPill,
   FloatingActionStack,
-} from "@/components/floating-action-pill";
-import { AddMemberButton } from "@/components/member-editor";
-import { RecruitmentCard } from "@/components/recruitment-card";
-import { ResultCard, type ResultWithMeta } from "@/components/result-card";
-import { PageShell } from "@/components/page-shell";
+} from "@/components/shared/floating-action-pill";
+import { AddMemberButton } from "@/components/events/member-editor";
+import { RecruitmentCard } from "@/components/events/recruitment-card";
+import { ResultCard, type ResultWithMeta } from "@/components/events/result-card";
+import { PageShell } from "@/components/shared/page-shell";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ import { toast } from "sonner";
 // pull in via useImageUpload).
 const RecruitmentDialog = dynamic(
   () =>
-    import("@/components/recruitment-dialog").then((m) => ({
+    import("@/components/events/recruitment-dialog").then((m) => ({
       default: m.RecruitmentDialog,
     })),
   { ssr: false },

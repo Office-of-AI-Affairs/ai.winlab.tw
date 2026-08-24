@@ -1,7 +1,7 @@
 "use client";
 
-import { AppLink } from "@/components/app-link";
-import { useAuth } from "@/components/auth-provider";
+import { AppLink } from "@/components/shared/app-link";
+import { useAuth } from "@/components/layout/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useT } from "@/lib/i18n/locale-provider";
@@ -18,7 +18,7 @@ import { OrgChart } from "./org-chart";
 // form deps (and the upload-image module they pull in).
 const OrganizationMemberDialog = dynamic(
   () =>
-    import("@/components/organization-member-dialog").then((m) => ({
+    import("@/components/introduction/organization-member-dialog").then((m) => ({
       default: m.OrganizationMemberDialog,
     })),
   { ssr: false },

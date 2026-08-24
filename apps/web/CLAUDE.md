@@ -45,6 +45,30 @@
   `packages/{db,domain}`. Schema / RLS / admin workflow 改了 → 兩個 app
   自動跟著 `@winlab/db` + `@winlab/domain`，不用手動同步。
 
+## Components
+
+`components/` is organized by domain, one folder per feature area, plus
+two cross-cutting layers (`ui/`, `shared/`):
+
+| Folder | Holds |
+|---|---|
+| `ui/` | shadcn primitives only — regenerable via `bunx shadcn add <name>`, see `docs/design/visual-identity.md#component-policy` |
+| `home/` | `/` sections (`HomeCarousel`, `HomeStats`, `HomePartners`, `HomeAnnouncement`, ...) and the carousel client/indicators they render |
+| `announcement/` | `/announcement` list + article client |
+| `insights/` | `/insights` card |
+| `events/` | `/events/[slug]` tabs — results, recruitment, members, coauthors, vendor section |
+| `admin/` | `/settings/users` table + dialogs, settings menu |
+| `introduction/` | `/introduction` organization member dialog |
+| `layout/` | root-layout chrome: header, footer, language switch, auth provider, analytics beacon, lazy toaster |
+| `editor/` | the Tiptap editor stack + the inline view/edit primitives (`RichTextSurface`, `EditModeToggle`, `EditActionsPill`) that every article-style page shares |
+| `seo/` | JSON-LD structured-data builders |
+| `shared/` | generic cross-domain primitives that aren't shadcn output: `AppLink`, `Block`, `SubButton`, `PageShell`/`PageSection`, `Reveal`, `FloatingActionPill`, `ShareButtons`, `Toc` |
+
+No feature component sits directly in `components/` — everything below
+`ui/` belongs to exactly one of the folders above. When adding a new
+component, put it in the domain it serves; if it's genuinely used across
+domains and isn't shadcn output, it goes in `shared/`.
+
 ## ISR / SSG pattern
 
 Public-facing pages (`/`, `/introduction`, `/announcement`, `/events`,
@@ -168,7 +192,7 @@ Conventions:
 
 ## Editor
 
-- `TiptapEditor`（`components/tiptap-editor.tsx`）— 圖片上傳用 `uploadAnnouncementImage`
+- `TiptapEditor`（`components/editor/tiptap-editor.tsx`）— 圖片上傳用 `uploadAnnouncementImage`
 - `nuqs` — URL params（`NuqsAdapter` in root layout）
 
 ## Design system
@@ -228,7 +252,7 @@ is the standard selector hook; `next/image` allows `*.supabase.co` and
   ISR/static pages (they're served from the CDN and never hit the
   Next.js server, so they produce no server-side OTel telemetry on their
   own — see `instrumentation.ts`)
-- `<AnalyticsBeacon />` (`components/analytics-beacon.tsx`) mounted once
+- `<AnalyticsBeacon />` (`components/layout/analytics-beacon.tsx`) mounted once
   in the root layout: pageview on load + every App Router navigation
   (`usePathname` effect), web-vitals via `useReportWebVitals`
   (`next/web-vitals`); `navigator.sendBeacon` first, `fetch(...,

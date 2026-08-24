@@ -77,7 +77,7 @@ Use `updateTag`, not `revalidateTag`. Next 16's `updateTag` gives "read-your-own
 
 ```tsx
 "use client";
-import { useAuth } from "@/components/auth-provider";
+import { useAuth } from "@/components/layout/auth-provider";
 
 const { isAdmin, user } = useAuth();
 useEffect(() => {

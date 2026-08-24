@@ -1,6 +1,6 @@
-import { EventCardSkeleton } from "@/components/event-card"
-import { PageShell } from "@/components/page-shell"
-import { BlockSkeleton } from "@/components/block"
+import { EventCardSkeleton } from "@/components/events/event-card"
+import { PageShell } from "@/components/shared/page-shell"
+import { BlockSkeleton } from "@/components/shared/block"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function Loading() {

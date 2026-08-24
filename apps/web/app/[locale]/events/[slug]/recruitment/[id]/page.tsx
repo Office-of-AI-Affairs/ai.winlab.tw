@@ -1,7 +1,7 @@
-import { RecruitmentDetail } from "@/components/recruitment-detail";
-import { RecruitmentInterestButton } from "@/components/recruitment-interest-button";
-import { RecruitmentInterestList } from "@/components/recruitment-interest-list";
-import { JsonLd } from "@/components/json-ld";
+import { RecruitmentDetail } from "@/components/events/recruitment-detail";
+import { RecruitmentInterestButton } from "@/components/events/recruitment-interest-button";
+import { RecruitmentInterestList } from "@/components/events/recruitment-interest-list";
+import { JsonLd } from "@/components/seo/json-ld";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb";
 import { composeRecruitment } from "@winlab/domain";
 import { isRecruitmentOwner } from "@/lib/supabase/check-recruitment-owner";

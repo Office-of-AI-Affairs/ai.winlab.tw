@@ -203,7 +203,8 @@ in that directory must be reproducible by `bunx shadcn add <name>` with
 no hand edits beyond what the token system (`@theme` values in
 `globals.css`) already changes automatically. Customizations,
 project-specific variants, and one-off styling live in feature
-components (`components/*.tsx` outside `ui/`) or thin wrappers, never by
+components (`components/<domain>/*.tsx` outside `ui/` — see
+`apps/web/CLAUDE.md` for the domain layout) or thin wrappers, never by
 hand-editing a stock primitive's markup or adding bespoke classes beyond
 what regenerating the primitive would produce. `ui/` is regenerable at
 any time — `bunx shadcn add <name> --overwrite` should be a no-op for
@@ -211,11 +212,13 @@ every file except the documented exceptions below.
 
 `block.tsx` and `sub-button.tsx` were never shadcn output (no upstream
 `block`/`sub-button` registry item exists) and moved to the feature layer
-as plain `components/block.tsx` / `components/sub-button.tsx` (#53). The
-`CarouselIndicators` dot-nav component was extracted from
-`components/ui/carousel.tsx` into `components/carousel-indicators.tsx`
+as `components/shared/block.tsx` / `components/shared/sub-button.tsx`
+(#53). The `CarouselIndicators` dot-nav component was extracted from
+`components/ui/carousel.tsx` into `components/home/carousel-indicators.tsx`
 for the same reason — it consumes the newly-exported `useCarousel` hook
-instead of living inside the stock file.
+instead of living inside the stock file. (Both since reorganized into
+domain folders by #54; see `apps/web/CLAUDE.md` for the `components/`
+layout.)
 
 ### Documented exceptions (#53)
 

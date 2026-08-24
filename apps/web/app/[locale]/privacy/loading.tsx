@@ -1,4 +1,4 @@
-import { BlockSkeleton } from "@/components/block"
+import { BlockSkeleton } from "@/components/shared/block"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function Loading() {

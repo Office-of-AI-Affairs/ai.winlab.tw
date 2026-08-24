@@ -1,7 +1,7 @@
-import { AnnouncementTableSkeleton } from "@/components/announcement-table"
-import { PageShell } from "@/components/page-shell"
-import { RecruitmentCardSkeleton } from "@/components/recruitment-card"
-import { ResultCardSkeleton } from "@/components/result-card"
+import { AnnouncementTableSkeleton } from "@/components/announcement/announcement-table"
+import { PageShell } from "@/components/shared/page-shell"
+import { RecruitmentCardSkeleton } from "@/components/events/recruitment-card"
+import { ResultCardSkeleton } from "@/components/events/result-card"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function Loading() {

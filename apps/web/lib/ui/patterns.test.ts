@@ -8,24 +8,24 @@ import { getAutoLinkProps, pageSectionVariants, pageShellVariants } from "./patt
 const globalsCss = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8")
 const claudeMd = readFileSync(resolve(process.cwd(), "CLAUDE.md"), "utf8")
 const designMd = readFileSync(resolve(process.cwd(), "DESIGN.md"), "utf8")
-const homeIntroduction = readFileSync(resolve(process.cwd(), "components/home-introduction.tsx"), "utf8")
-const recruitmentDialog = readFileSync(resolve(process.cwd(), "components/recruitment-dialog.tsx"), "utf8")
-const organizationMemberDialog = readFileSync(resolve(process.cwd(), "components/organization-member-dialog.tsx"), "utf8")
-const tiptapEditor = readFileSync(resolve(process.cwd(), "components/tiptap-editor.tsx"), "utf8")
+const homeIntroduction = readFileSync(resolve(process.cwd(), "components/home/home-introduction.tsx"), "utf8")
+const recruitmentDialog = readFileSync(resolve(process.cwd(), "components/events/recruitment-dialog.tsx"), "utf8")
+const organizationMemberDialog = readFileSync(resolve(process.cwd(), "components/introduction/organization-member-dialog.tsx"), "utf8")
+const tiptapEditor = readFileSync(resolve(process.cwd(), "components/editor/tiptap-editor.tsx"), "utf8")
 const profileClient = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/client.tsx"), "utf8")
-const resultTagSidebar = readFileSync(resolve(process.cwd(), "components/result-tag-sidebar.tsx"), "utf8")
-const tiptapDesktopBubbleMenu = readFileSync(resolve(process.cwd(), "components/tiptap-desktop-bubble-menu.tsx"), "utf8")
-const tiptapDesktopFloatingMenu = readFileSync(resolve(process.cwd(), "components/tiptap-desktop-floating-menu.tsx"), "utf8")
-const tiptapMobileToolbar = readFileSync(resolve(process.cwd(), "components/tiptap-mobile-toolbar.tsx"), "utf8")
-const carouselClient = readFileSync(resolve(process.cwd(), "components/carousel-client.tsx"), "utf8")
-const contactsEditButton = readFileSync(resolve(process.cwd(), "components/contacts-edit-button.tsx"), "utf8")
-const eventsCreateButton = readFileSync(resolve(process.cwd(), "components/events-create-button.tsx"), "utf8")
+const resultTagSidebar = readFileSync(resolve(process.cwd(), "components/events/result-tag-sidebar.tsx"), "utf8")
+const tiptapDesktopBubbleMenu = readFileSync(resolve(process.cwd(), "components/editor/tiptap-desktop-bubble-menu.tsx"), "utf8")
+const tiptapDesktopFloatingMenu = readFileSync(resolve(process.cwd(), "components/editor/tiptap-desktop-floating-menu.tsx"), "utf8")
+const tiptapMobileToolbar = readFileSync(resolve(process.cwd(), "components/editor/tiptap-mobile-toolbar.tsx"), "utf8")
+const carouselClient = readFileSync(resolve(process.cwd(), "components/home/carousel-client.tsx"), "utf8")
+const contactsEditButton = readFileSync(resolve(process.cwd(), "components/home/contacts-edit-button.tsx"), "utf8")
+const eventsCreateButton = readFileSync(resolve(process.cwd(), "components/events/events-create-button.tsx"), "utf8")
 const eventDetailClient = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/client.tsx"), "utf8")
 const richTextContract = readFileSync(resolve(process.cwd(), "lib/ui/rich-text.ts"), "utf8")
 const richTextClasses = readFileSync(resolve(process.cwd(), "lib/ui/rich-text-classes.ts"), "utf8")
-const announcementArticleClient = readFileSync(resolve(process.cwd(), "components/announcement-article-client.tsx"), "utf8")
+const announcementArticleClient = readFileSync(resolve(process.cwd(), "components/announcement/announcement-article-client.tsx"), "utf8")
 const resultArticleClient = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/results/[id]/article-client.tsx"), "utf8")
-const richTextSurface = readFileSync(resolve(process.cwd(), "components/rich-text-surface.tsx"), "utf8")
+const richTextSurface = readFileSync(resolve(process.cwd(), "components/editor/rich-text-surface.tsx"), "utf8")
 
 function collectProjectFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((entry) => {
@@ -132,7 +132,7 @@ describe("global UI patterns", () => {
     // (we'll re-introduce entries here as those surfaces appear).
     const authAwareButShouldUseProps: string[] = []
     for (const content of authAwareButShouldUseProps) {
-      assert.ok(!content.includes('from "@/components/auth-provider"'))
+      assert.ok(!content.includes('from "@/components/layout/auth-provider"'))
       assert.ok(!content.includes("useAuth("))
     }
   })

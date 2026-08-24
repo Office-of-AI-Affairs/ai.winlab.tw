@@ -1,7 +1,7 @@
 "use client";
 
-import { useAuth } from "@/components/auth-provider";
-import { PageShell } from "@/components/page-shell";
+import { useAuth } from "@/components/layout/auth-provider";
+import { PageShell } from "@/components/shared/page-shell";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n/locale-provider";
 import Link from "next/link";

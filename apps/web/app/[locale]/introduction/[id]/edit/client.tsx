@@ -1,7 +1,7 @@
 "use client";
 
 import { revalidateOrganizationMembers } from "@/app/[locale]/introduction/actions";
-import { PageShell } from "@/components/page-shell";
+import { PageShell } from "@/components/shared/page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

@@ -1,7 +1,7 @@
 import { EventDetailClient } from "../client";
 import { EventDetailNotFoundClient } from "../not-found-client";
 import { getEventPageData } from "../data";
-import { JsonLd } from "@/components/json-ld";
+import { JsonLd } from "@/components/seo/json-ld";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { localeAlternates } from "@/lib/i18n/seo";

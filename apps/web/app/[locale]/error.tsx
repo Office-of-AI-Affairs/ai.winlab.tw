@@ -10,8 +10,8 @@
 // reported to Sensorium as OTel log records via `onRequestError` in
 // ../instrumentation.ts, independent of this console.error.
 
-import { AppLink } from "@/components/app-link";
-import { PageShell } from "@/components/page-shell";
+import { AppLink } from "@/components/shared/app-link";
+import { PageShell } from "@/components/shared/page-shell";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n/locale-provider";
 import { AlertTriangle, Home, RotateCw } from "lucide-react";

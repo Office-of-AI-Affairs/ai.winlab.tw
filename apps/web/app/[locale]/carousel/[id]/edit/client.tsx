@@ -1,7 +1,7 @@
 "use client";
 
 import { revalidateCarousel } from "@/app/[locale]/carousel/actions";
-import { PageShell } from "@/components/page-shell";
+import { PageShell } from "@/components/shared/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
