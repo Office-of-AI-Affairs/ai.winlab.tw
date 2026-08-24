@@ -29,6 +29,19 @@ export function proxy(request: NextRequest) {
   );
   if (hasLocalePrefix) return NextResponse.next();
 
+  // Already carries the default locale's own internal prefix (`/zh-TW`,
+  // `/zh-TW/...`) → serve as-is too, rather than falling through to the
+  // bare-path branch below and rewriting it to `/zh-TW/zh-TW/...` (404).
+  // Public links never point here (canonical/`localizedPath` always emit
+  // the bare form for the default locale), but Next's file-convention
+  // metadata routes (`opengraph-image.tsx` etc.) resolve their own
+  // absolute URL from the real segment path, which *does* include this
+  // prefix for the default locale — so the URL baked into `og:image` must
+  // resolve directly, not only its bare alias.
+  if (pathname === `/${defaultLocale}` || pathname.startsWith(`/${defaultLocale}/`)) {
+    return NextResponse.next();
+  }
+
   // Root-level routes / metadata / static assets are not under [locale].
   if (
     ROOT_METADATA.has(pathname) ||

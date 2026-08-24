@@ -6,6 +6,8 @@ import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { localeAlternates } from "@/lib/i18n/seo";
 import { localizedField } from "@/lib/i18n/localized-field";
+import { localizedPath } from "@/lib/i18n/routing";
+import { OG_HEIGHT, OG_WIDTH } from "@/lib/seo/og-image";
 import type { Metadata } from "next";
 
 // Tab-as-route: /events/[slug]/announcements. See issue #1 for the SEO
@@ -27,17 +29,28 @@ export async function generateMetadata({
   const eventName = localizedField(data.event, "name", locale).value;
   const title = dict.events.meta.announcementsTitle.replace("{name}", eventName);
   const description = dict.events.meta.announcementsDescription.replace("{name}", eventName);
-  const ogImages = data.event.cover_image
-    ? [{ url: data.event.cover_image, width: 1200, height: 630, alt: eventName }]
-    : [];
-  const twitterImages = ogImages.length ? ogImages.map((i) => i.url) : ["/og.png"];
   const a = localeAlternates(`/events/${slug}/announcements`, locale);
+  // Next only auto-injects a sibling/ancestor `opengraph-image.tsx` file's
+  // output when this segment's own metadata declares no `openGraph` object
+  // at all — this page needs its own `title`/`description`/`url`, so any
+  // `openGraph` object it returns fully replaces the ancestor's (object-level
+  // replace, not merge; see `events/[slug]/page.tsx`'s comment) and the
+  // event's branded card from `events/[slug]/opengraph-image.tsx` (#74)
+  // would silently disappear. Point `images` at that same rendered card
+  // directly instead of `event.cover_image` (the raw, unbranded Supabase
+  // storage URL this used before #74).
+  const ogImageUrl = localizedPath(`/events/${slug}/opengraph-image`, locale);
   return {
     title,
     description,
     alternates: { canonical: a.canonical, languages: a.languages },
-    openGraph: { title, description, url: a.canonical, images: ogImages },
-    twitter: { card: "summary_large_image", title, description, images: twitterImages },
+    openGraph: {
+      title,
+      description,
+      url: a.canonical,
+      images: [{ url: ogImageUrl, width: OG_WIDTH, height: OG_HEIGHT, alt: eventName }],
+    },
+    twitter: { card: "summary_large_image", title, description, images: [ogImageUrl] },
   };
 }
 
