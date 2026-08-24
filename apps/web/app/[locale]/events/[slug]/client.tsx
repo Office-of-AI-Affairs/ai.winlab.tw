@@ -433,6 +433,16 @@ export function EventDetailClient({
           {event.description && (
             <p className="text-muted-foreground">{event.description}</p>
           )}
+          {/* Per-event .ics download (#46) — see lib/feeds/events-calendar.ts
+              for why this is an all-day entry dated on created_at rather
+              than a real start/end time. */}
+          <AppLink
+            href={`/events/${slug}/event.ics`}
+            prefetch={false}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors underline self-start"
+          >
+            {t.events.addToCalendar}
+          </AppLink>
         </div>
       </div>
 

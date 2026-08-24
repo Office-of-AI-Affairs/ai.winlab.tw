@@ -8,6 +8,12 @@
  * cost — they don't touch the ISR/SSG/cookieless architecture.
  */
 
+/** Canonical absolute origin. Feed/sitemap builders need an absolute base;
+ *  most call sites still inline the literal (see `app/sitemap.ts`,
+ *  `lib/seo/jsonld.ts`) — this export exists for new code (feeds) that
+ *  wants one, not a mandate to refactor the existing ones. */
+export const SITE_URL = "https://ai.winlab.tw";
+
 /** University name, English. NYCU is the university's established acronym. */
 export const UNIVERSITY_NAME_EN = "National Yang Ming Chiao Tung University";
 

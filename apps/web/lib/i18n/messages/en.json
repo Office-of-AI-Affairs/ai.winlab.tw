@@ -65,7 +65,9 @@
     "organization": "Organization",
     "announcement": "Announcements",
     "events": "Events",
-    "privacy": "Privacy"
+    "privacy": "Privacy",
+    "rss": "RSS",
+    "calendar": "Subscribe to calendar"
   },
   "home": {
     "activityHeading": "Latest updates",
@@ -188,10 +190,12 @@
       "delete": "Delete event"
     },
     "backToEvent": "Back to event",
+    "addToCalendar": "Add to calendar (.ics)",
     "list": {
       "heading": "Events",
       "countSummary": "{count} events in total",
-      "empty": "No events yet"
+      "empty": "No events yet",
+      "subscribeCalendar": "Subscribe to events calendar (.ics)"
     },
     "notFound": {
       "title": "Event not found",
