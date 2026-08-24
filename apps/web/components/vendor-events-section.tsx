@@ -70,7 +70,7 @@ export function VendorEventsSection() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="rounded-[2rem] border border-border overflow-hidden">
+            <div key={i} className="rounded-lg border border-border overflow-hidden">
               <Skeleton className="aspect-video w-full" />
               <div className="p-4 grid gap-2">
                 <Skeleton className="h-5 w-3/4" />
@@ -91,7 +91,7 @@ export function VendorEventsSection() {
               href={`/events/${item.event_slug}/recruitment/${item.id}`}
               className="block interactive-scale"
             >
-              <div className="rounded-[2rem] border border-border overflow-hidden">
+              <div className="rounded-lg border border-border overflow-hidden">
                 <div className="relative aspect-video w-full bg-muted">
                   {item.image ? (
                     <Image

@@ -13,7 +13,7 @@ export default function Loading() {
           </div>
           <div className="w-full grid lg:grid-cols-3 gap-4">
             <div className="col-span-1">
-              <div className="rounded-[2rem] border border-border p-6 flex flex-col gap-4">
+              <div className="rounded-lg border border-border p-6 flex flex-col gap-4">
                 <Skeleton className="size-20 rounded-full" />
                 <div className="flex flex-col gap-2">
                   <Skeleton className="h-6 w-32 rounded-lg" />

@@ -169,7 +169,7 @@ export function TiptapEditor({
       {editable && <TiptapMobileToolbar editor={editor} uploadFn={uploadFn} />}
       <div
         data-slot="tiptap-canvas"
-        className={cn(!flush && "rounded-[2rem] bg-background")}
+        className={cn(!flush && "rounded-lg bg-background")}
       >
         <EditorContent editor={editor} />
       </div>
