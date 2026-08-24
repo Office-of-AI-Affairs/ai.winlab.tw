@@ -11,6 +11,9 @@ import Link from "next/link";
 type ActivityItem = {
   kind: "announcement" | "result" | "recruitment";
   id: string;
+  /** Slug for announcements (URL-safe); undefined for results/recruitment,
+   *  which are still id-routed. */
+  slug?: string;
   title: string;
   eventSlug: string;
   eventName: string;
@@ -21,7 +24,7 @@ type ActivityItem = {
 function buildHref(item: ActivityItem): string {
   switch (item.kind) {
     case "announcement":
-      return `/events/${item.eventSlug}/announcements/${item.id}`;
+      return `/events/${item.eventSlug}/announcements/${encodeURIComponent(item.slug || item.id)}`;
     case "result":
       return `/events/${item.eventSlug}/results/${item.id}`;
     case "recruitment":
@@ -56,7 +59,7 @@ export async function HomeActivity({
   const [annsRes, resultsRes, recruitsRes] = await Promise.all([
     supabase
       .from("announcements")
-      .select("id, title, event_id, created_at")
+      .select("id, slug, title, event_id, created_at")
       .in("event_id", eventIds)
       .eq("status", "published")
       .order("created_at", { ascending: false })
@@ -104,6 +107,7 @@ export async function HomeActivity({
     items.push({
       kind: "announcement",
       id: a.id,
+      slug: a.slug,
       title: a.title,
       eventSlug: e.slug,
       eventName: e.name,

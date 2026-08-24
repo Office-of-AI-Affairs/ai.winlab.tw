@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useT } from "@/lib/i18n/locale-provider"
 import { createClient } from "@/lib/supabase/client"
+import { isUuid } from "@/lib/slug"
 import type { TocItem } from "@/lib/ui/article"
 import type { Announcement } from "@winlab/db"
 import Link from "next/link"
@@ -40,11 +41,18 @@ export function EventAnnouncementDraftFallback({ slug, id }: { slug: string; id:
     let cancelled = false
     void (async () => {
       const [announcementRes, eventRes] = await Promise.all([
-        supabaseRef.current
-          .from("announcements")
-          .select("*")
-          .eq("id", id)
-          .single(),
+        (async () => {
+          // Admin drafts might be reached by slug (table link) or by the raw
+          // id (right after creation, before a title — and thus a slug —
+          // exists).
+          const bySlug = await supabaseRef.current
+            .from("announcements")
+            .select("*")
+            .eq("slug", id)
+            .maybeSingle()
+          if (bySlug.data || !isUuid(id)) return bySlug
+          return supabaseRef.current.from("announcements").select("*").eq("id", id).maybeSingle()
+        })(),
         supabaseRef.current
           .from("events")
           .select("name")

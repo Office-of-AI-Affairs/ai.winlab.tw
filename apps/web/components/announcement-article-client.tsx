@@ -15,6 +15,8 @@ import { useEditMode } from "@/hooks/use-edit-mode"
 import { useLocale, useT } from "@/lib/i18n/locale-provider"
 import { formatDate } from "@/lib/date"
 import { buildBreadcrumbJsonLd, buildNewsArticleJsonLd } from "@/lib/seo/jsonld"
+import { generateUniqueAnnouncementSlug } from "@/lib/slug"
+import { createClient } from "@/lib/supabase/client"
 import { extractFirstImage, type TocItem } from "@/lib/ui/article"
 import type { Announcement } from "@winlab/db"
 import { ArrowLeft, Loader2, LogOut, Send, Trash2 } from "lucide-react"
@@ -77,6 +79,40 @@ export function AnnouncementArticleClient({
     didApplyInitialMode.current = true
   }, [initialMode, isAdmin, setMode])
 
+  // Own client just for the slug backstop below — useContentEditor keeps its
+  // Supabase reference internal.
+  const slugSupabaseRef = useRef(createClient())
+  // Latest announcement state + setter, mirrored via the effect below so
+  // onBeforeSave (defined before the hook call that produces them, to avoid
+  // a circular reference) always reads current values.
+  const announcementRef = useRef<Announcement>(initialAnnouncement)
+  const setAnnouncementRef = useRef<((updater: (prev: Announcement) => Announcement) => void) | null>(
+    null,
+  )
+
+  // Slugs are assigned on create; this is a backstop for rows that somehow
+  // reach the editor without one (e.g. pre-migration data before the
+  // backfill lands). Stable once set — never regenerated from a later title
+  // edit.
+  const onBeforeSaveAssignSlug = useCallback(async () => {
+    const current = announcementRef.current
+    if (current.slug || !current.title) return true
+    const slug = await generateUniqueAnnouncementSlug(
+      slugSupabaseRef.current,
+      current.title,
+      current.id,
+    )
+    const { error } = await slugSupabaseRef.current
+      .from("announcements")
+      .update({ slug })
+      .eq("id", current.id)
+    if (!error) {
+      announcementRef.current = { ...current, slug }
+      setAnnouncementRef.current?.((prev) => ({ ...prev, slug }))
+    }
+    return true
+  }, [])
+
   const {
     data: announcement,
     setData: setAnnouncement,
@@ -93,10 +129,16 @@ export function AnnouncementArticleClient({
     initialData: initialAnnouncement,
     fields: ["title", "category", "date", "content"],
     redirectTo: backHref,
+    onBeforeSave: onBeforeSaveAssignSlug,
     onAfterSave: onCacheInvalidate,
     onAfterPublish: onCacheInvalidate,
     onAfterRemove: onCacheInvalidate,
   })
+
+  useEffect(() => {
+    announcementRef.current = announcement
+    setAnnouncementRef.current = setAnnouncement
+  }, [announcement, setAnnouncement])
 
   const [renderedHtml, setRenderedHtml] = useState<string | null>(initialContentHtml)
   const [toc, setToc] = useState<TocItem[]>(initialToc)

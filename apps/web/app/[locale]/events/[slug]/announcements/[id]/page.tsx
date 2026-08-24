@@ -8,8 +8,31 @@ import { SITE_NAME } from "@/lib/site";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { localeAlternates } from "@/lib/i18n/seo";
+import { localizedPath } from "@/lib/i18n/routing";
+import { isUuid } from "@/lib/slug";
+import { permanentRedirect } from "next/navigation";
 import { EventAnnouncementArticleClient } from "./article-client";
 import { EventAnnouncementDraftFallback } from "./draft-fallback";
+
+// `param` is whatever arrived in the `[id]` route segment — a slug for every
+// link this app generates, or a legacy UUID for old bookmarks/backlinks.
+// Slug lookup first; UUID fallback only if the param actually looks like one.
+async function findAnnouncement(
+  supabase: ReturnType<typeof createPublicClient>,
+  eventId: string,
+  param: string,
+  { publishedOnly }: { publishedOnly: boolean },
+): Promise<Announcement | null> {
+  let query = supabase.from("announcements").select("*").eq("event_id", eventId);
+  if (publishedOnly) query = query.eq("status", "published");
+  const { data: bySlug } = await query.eq("slug", param).maybeSingle();
+  if (bySlug) return bySlug as Announcement;
+  if (!isUuid(param)) return null;
+  let byIdQuery = supabase.from("announcements").select("*").eq("event_id", eventId);
+  if (publishedOnly) byIdQuery = byIdQuery.eq("status", "published");
+  const { data: byId } = await byIdQuery.eq("id", param).maybeSingle();
+  return (byId as Announcement | null) ?? null;
+}
 
 export async function generateMetadata({
   params,
@@ -20,27 +43,35 @@ export async function generateMetadata({
   const locale: Locale = isLocale(raw) ? raw : defaultLocale;
   const dict = await getDictionary(locale);
   const supabase = createPublicClient();
-  const [announcementRes, eventRes] = await Promise.all([
-    supabase.from("announcements").select("title, category, content").eq("id", id).maybeSingle(),
-    supabase.from("events").select("cover_image, name").eq("slug", slug).maybeSingle(),
-  ]);
-  const title = announcementRes.data?.title ?? dict.announcement.meta.fallbackTitle;
-  const description = announcementRes.data?.category
+  const eventRes = await supabase
+    .from("events")
+    .select("id, cover_image, name")
+    .eq("slug", slug)
+    .maybeSingle();
+  const announcement = eventRes.data
+    ? await findAnnouncement(supabase, eventRes.data.id, id, { publishedOnly: false })
+    : null;
+  const title = announcement?.title ?? dict.announcement.meta.fallbackTitle;
+  const description = announcement?.category
     ? dict.announcement.meta.categoryDescription
-        .replace("{category}", announcementRes.data.category)
+        .replace("{category}", announcement.category)
         .replace("{title}", title)
     : dict.announcement.meta.fallbackDescription.replace("{title}", title);
-  const inlineImage = announcementRes.data
-    ? extractFirstImage(
-        announcementRes.data.content as Record<string, unknown> | null,
-      )
+  const inlineImage = announcement
+    ? extractFirstImage(announcement.content as Record<string, unknown> | null)
     : null;
   const ogImageUrl = inlineImage ?? eventRes.data?.cover_image ?? null;
   const ogImages = ogImageUrl
     ? [{ url: ogImageUrl, width: 1200, height: 630, alt: title }]
     : [{ url: "/og.png", width: 1200, height: 630, alt: title }];
   const twitterImages = ogImages.map((i) => i.url);
-  const a = localeAlternates(`/events/${slug}/announcements/${id}`, locale);
+  // Canonical always points at the slug URL, even when this render was
+  // reached via a legacy UUID link.
+  const canonicalId = announcement?.slug ?? id;
+  const a = localeAlternates(
+    `/events/${slug}/announcements/${encodeURIComponent(canonicalId)}`,
+    locale,
+  );
   return {
     title: `${title}｜${dict.common.orgFullName}`,
     description,
@@ -55,7 +86,7 @@ export async function generateMetadata({
       locale: "zh_TW",
       title: `${title}｜${dict.common.orgFullName}`,
       description,
-      url: `/events/${slug}/announcements/${id}`,
+      url: `/events/${slug}/announcements/${encodeURIComponent(canonicalId)}`,
       images: ogImages,
     },
     twitter: {
@@ -77,21 +108,27 @@ export default async function EventAnnouncementDetailPage({
   const dict = await getDictionary(locale);
   const supabase = createPublicClient();
 
-  const [announcementRes, eventRes] = await Promise.all([
-    supabase
-      .from("announcements")
-      .select("*")
-      .eq("id", id)
-      .eq("status", "published")
-      .maybeSingle(),
-    supabase.from("events").select("name").eq("slug", slug).maybeSingle(),
-  ]);
+  const eventRes = await supabase.from("events").select("id, name").eq("slug", slug).maybeSingle();
+  const eventId = eventRes.data?.id;
+  const announcement = eventId
+    ? await findAnnouncement(supabase, eventId, id, { publishedOnly: true })
+    : null;
 
-  if (!announcementRes.data) {
+  if (!announcement) {
     return <EventAnnouncementDraftFallback slug={slug} id={id} />;
   }
 
-  const announcement = announcementRes.data as Announcement;
+  // Legacy `[uuid]` link that resolved by id — send visitors (and search
+  // engines) forward to the canonical slug URL permanently.
+  if (isUuid(id) && announcement.slug !== id) {
+    permanentRedirect(
+      localizedPath(
+        `/events/${slug}/announcements/${encodeURIComponent(announcement.slug)}`,
+        locale,
+      ),
+    );
+  }
+
   const eventName = eventRes.data?.name ?? dict.events.meta.fallbackName;
 
   const { html, toc } = renderArticle(announcement.content);

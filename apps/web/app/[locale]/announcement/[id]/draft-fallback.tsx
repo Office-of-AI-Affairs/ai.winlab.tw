@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useT } from "@/lib/i18n/locale-provider"
 import { createClient } from "@/lib/supabase/client"
+import { isUuid } from "@/lib/slug"
 import type { TocItem } from "@/lib/ui/article"
 import type { Announcement } from "@winlab/db"
 import Link from "next/link"
@@ -33,11 +34,21 @@ export function AnnouncementDraftFallback({ id }: { id: string }) {
     if (isLoading || !isAdmin) return
     let cancelled = false
     void (async () => {
-      const { data } = await supabaseRef.current
+      // Admin drafts might be reached by slug (table link) or by the raw id
+      // (right after creation, before a title — and thus a slug — exists).
+      let { data } = await supabaseRef.current
         .from("announcements")
         .select("*")
-        .eq("id", id)
-        .single()
+        .eq("slug", id)
+        .maybeSingle()
+      if (!data && isUuid(id)) {
+        const byId = await supabaseRef.current
+          .from("announcements")
+          .select("*")
+          .eq("id", id)
+          .maybeSingle()
+        data = byId.data
+      }
       if (cancelled) return
       if (!data) {
         setState({ kind: "missing" })

@@ -23,7 +23,7 @@ export async function GET() {
 
   const { data: announcements } = await supabase
     .from("announcements")
-    .select("id, title, date, category, event_id, updated_at")
+    .select("id, slug, title, date, category, event_id, updated_at")
     .eq("status", "published")
     .order("date", { ascending: false })
     .limit(30);
@@ -44,8 +44,8 @@ export async function GET() {
     .map((a) => {
       const url =
         a.event_id && slugMap[a.event_id]
-          ? `${SITE}/events/${slugMap[a.event_id]}/announcements/${a.id}`
-          : `${SITE}/announcement/${a.id}`;
+          ? `${SITE}/events/${slugMap[a.event_id]}/announcements/${encodeURIComponent(a.slug)}`
+          : `${SITE}/announcement/${encodeURIComponent(a.slug)}`;
       const pubDate = new Date(a.date).toUTCString();
       return `    <item>
       <title>${escapeXml(a.title)}</title>

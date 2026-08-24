@@ -23,6 +23,7 @@ export type Database = {
           date: string
           event_id: string | null
           id: string
+          slug: string
           status: string
           title: string
           updated_at: string
@@ -35,6 +36,7 @@ export type Database = {
           date?: string
           event_id?: string | null
           id?: string
+          slug?: string
           status?: string
           title?: string
           updated_at?: string
@@ -47,6 +49,7 @@ export type Database = {
           date?: string
           event_id?: string | null
           id?: string
+          slug?: string
           status?: string
           title?: string
           updated_at?: string

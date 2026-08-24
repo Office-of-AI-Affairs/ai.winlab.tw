@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/components/auth-provider";
 import { createClient } from "@/lib/supabase/client";
+import { generateUniqueAnnouncementSlug } from "@/lib/slug";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -25,10 +26,13 @@ export function useEventActions(eventId: string, slug: string, userId: string | 
       return;
     }
     setIsCreatingAnnouncement(true);
+    const title = "新公告";
+    const newSlug = await generateUniqueAnnouncementSlug(supabaseRef.current, title);
     const { data, error } = await supabaseRef.current
       .from("announcements")
       .insert({
-        title: "新公告",
+        title,
+        slug: newSlug,
         category: "一般",
         date: new Date().toISOString().slice(0, 10),
         content: {},
@@ -43,7 +47,7 @@ export function useEventActions(eventId: string, slug: string, userId: string | 
       toast.error(isRlsViolation(error) ? "沒有權限建立公告" : "操作失敗");
       return;
     }
-    router.push(`/events/${slug}/announcements/${data.id}?mode=edit`);
+    router.push(`/events/${slug}/announcements/${encodeURIComponent(data.slug)}?mode=edit`);
   }, [eventId, isAdmin, router, slug, userId]);
 
   const createResult = useCallback(async () => {
