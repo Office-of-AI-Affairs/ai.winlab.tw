@@ -10,6 +10,7 @@ import {
 import { CarouselIndicators } from "@/components/home/carousel-indicators";
 import { AppLink } from "@/components/shared/app-link";
 import { useAuth } from "@/components/layout/auth-provider";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { useLocale, useT } from "@/lib/i18n/locale-provider";
 import { localizedField } from "@/lib/i18n/localized-field";
 import type { CarouselSlide } from "@winlab/db";
@@ -29,6 +30,7 @@ export function CarouselClient({
   const { isAdmin } = useAuth();
   const t = useT();
   const locale = useLocale();
+  const prefersReducedMotion = usePrefersReducedMotion();
   const plugin = React.useMemo(
     () => Autoplay({ delay: 5000, stopOnInteraction: true }),
     [],
@@ -72,12 +74,16 @@ export function CarouselClient({
         </Link>
       )}
       <Carousel
-        plugins={[plugin]}
+        plugins={prefersReducedMotion ? [] : [plugin]}
         className="w-full relative group"
-        onMouseEnter={plugin.stop}
-        onMouseLeave={plugin.reset}
-        onFocus={plugin.stop}
-        onBlur={plugin.reset}
+        {...(prefersReducedMotion
+          ? {}
+          : {
+              onMouseEnter: plugin.stop,
+              onMouseLeave: plugin.reset,
+              onFocus: plugin.stop,
+              onBlur: plugin.reset,
+            })}
         opts={{ loop: true }}
       >
         <CarouselContent className="ml-0">
@@ -104,7 +110,23 @@ export function CarouselClient({
                   unoptimized={isExternalImage(slide.image) && !imageSrc.includes("/announcement-images/")}
                   className="object-cover"
                 />
-                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-black/60 to-transparent" />
+                {/*
+                  Scrim behind the title/description, per
+                  docs/design/visual-identity.md#imagery: sized to the
+                  text's bounding area, not a full-image darken. The div
+                  covers the bottom half of the slide (where the text
+                  block lives at every breakpoint); within it the
+                  gradient stays flat at the spec's black/0.6 across the
+                  bottom 60% (text's actual footprint) and only fades to
+                  transparent in the top 40% (pure photo, no text) so the
+                  edge blends into the image instead of cutting a hard
+                  line. A plain two-stop fade across the whole half
+                  (0.6 -> 0 linearly) leaves the text itself sitting in
+                  the low-opacity part of the ramp and fails AA on
+                  brighter slides — verified against all 6 current
+                  slides, worst case 5.77:1 (AA needs 4.5:1).
+                */}
+                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(to_top,rgb(0_0_0/0.6)_0%,rgb(0_0_0/0.6)_60%,transparent_100%)]" />
                 <div
                   className="absolute inset-0 flex flex-col items-center justify-end text-white px-4 md:px-8 pb-12 md:pb-16 pointer-events-none"
                   lang={textLang}

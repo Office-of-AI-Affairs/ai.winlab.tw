@@ -185,16 +185,42 @@ rhythm, it's a `PageShell`/`PageSection` tone choice (see
   scrim, sized to the text block only (not the full image):
 
   ```css
-  background: linear-gradient(to top, rgb(0 0 0 / 0.6), transparent);
+  background: linear-gradient(
+    to top,
+    rgb(0 0 0 / 0.6) 0%,
+    rgb(0 0 0 / 0.6) 60%,
+    transparent 100%
+  );
   ```
 
-  The scrim exists purely so overlaid text clears AA contrast against an
-  arbitrary photo; it is not a full-image darken. Size/position it so it
-  covers exactly the text's bounding area (e.g. the bottom third), not
-  the entire hero.
+  applied to a `bottom-0 h-1/2` div (i.e. the gradient's own stop
+  positions are relative to that div, not the full image). The scrim
+  exists purely so overlaid text clears AA contrast against an arbitrary
+  photo; it is not a full-image darken.
+
+  The middle stop matters: a plain two-stop fade
+  (`rgb(0 0 0 / 0.6), transparent`) ramps opacity linearly across the
+  *entire* half-height div, so by the time the ramp reaches the text
+  block itself — which sits at the very bottom, inside `pb-12`/`pb-16` —
+  the effective opacity is well under 0.6 and fails AA on brighter
+  slides (measured 1.87:1 on the current homepage carousel before this
+  fix, #55). Holding the gradient flat at `0.6` from the bottom up to the
+  `60%` stop keeps the *entire* text footprint (bottom ~30% of the
+  16:9 box, verified against 2-line titles + 2-line descriptions at
+  desktop proportions) at the full documented opacity; the fade only
+  happens in the top 40% of the div, which is pure photo — no text ever
+  renders there.
 - Any image-with-overlaid-text combination must be checked for AA text
   contrast against the *darkest* pixel region the scrim produces, not
-  the average image brightness.
+  the average image brightness — and specifically against the region
+  where the text actually sits, not just "the bottom of the gradient".
+  Compute it: render the image at the actual display box (`object-cover`
+  crop to the container's aspect ratio, not the source file's native
+  aspect ratio), composite the scrim's per-row opacity in sRGB space,
+  convert to WCAG relative luminance, and check the contrast ratio
+  against the text color (4.5:1 body / description, 3:1 large bold
+  title) — don't eyeball it or assume the average image brightness is
+  representative.
 
 ## Component policy
 
