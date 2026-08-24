@@ -107,11 +107,23 @@ export default function DesignPage() {
             <div className="flex gap-8 items-end flex-wrap">
               <div className="flex flex-col items-center gap-2">
                 <div className="w-24 h-24 border-2 border-primary rounded-sm" />
-                <span className="text-sm font-mono">1rem</span>
+                <span className="text-sm font-mono">sm / 0.5rem</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-24 h-24 border-2 border-primary rounded-md" />
+                <span className="text-sm font-mono">md / 0.75rem</span>
               </div>
               <div className="flex flex-col items-center gap-2">
                 <div className="w-24 h-24 border-2 border-primary rounded-lg" />
-                <span className="text-sm font-mono">2rem</span>
+                <span className="text-sm font-mono">lg / 1rem</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-24 h-24 border-2 border-primary rounded-xl" />
+                <span className="text-sm font-mono">xl / 1.5rem</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-24 h-24 border-2 border-primary rounded-2xl" />
+                <span className="text-sm font-mono">2xl / 2rem</span>
               </div>
             </div>
           </section>

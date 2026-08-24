@@ -9,7 +9,7 @@ export default function Loading() {
     <PageShell>
       <Skeleton className="h-4 w-20" />
       <div className="flex flex-col gap-4">
-        <Skeleton className="w-full aspect-[3/1] rounded-[2rem]" />
+        <Skeleton className="w-full aspect-[3/1] rounded-xl" />
         <Skeleton className="h-9 w-1/2 rounded-lg" />
         <Skeleton className="h-4 w-1/3" />
       </div>

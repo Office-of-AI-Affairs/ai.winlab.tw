@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 const blockVariants = cva(
-  "rounded-[2rem] p-6 w-full",
+  "rounded-lg p-6 w-full",
   {
     variants: {
       variant: {
@@ -62,7 +62,7 @@ function BlockSkeleton({
       size={size}
       {...props}
     >
-      {showMedia && <Skeleton className="aspect-video w-full rounded-[2rem]" />}
+      {showMedia && <Skeleton className="aspect-video w-full rounded-lg" />}
       <div className="flex flex-col gap-3">
         <Skeleton className="h-8 w-1/2 rounded-lg" />
         {Array.from({ length: lines }).map((_, index) => (
