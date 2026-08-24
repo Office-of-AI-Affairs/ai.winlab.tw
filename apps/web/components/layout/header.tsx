@@ -3,6 +3,7 @@
 import { AppLink } from "@/components/shared/app-link";
 import { useAuth } from "@/components/layout/auth-provider";
 import { LanguageToggle } from "@/components/layout/language-toggle";
+import { SearchTriggerButton } from "@/components/search/search-trigger-button";
 import { useLocale, useT } from "@/lib/i18n/locale-provider";
 import { localizedField } from "@/lib/i18n/localized-field";
 import { stripLocalePrefix } from "@/lib/i18n/routing";
@@ -153,6 +154,7 @@ export function Header({
             </AppLink>
           )}
           {renderAuthSection()}
+          <SearchTriggerButton />
           <LanguageToggle />
         </nav>
 
@@ -214,6 +216,10 @@ export function Header({
               </AppLink>
             )}
             {renderAuthSection(true)}
+            <SearchTriggerButton
+              className="interactive-scale mt-1 inline-flex items-center gap-2 self-start rounded-lg px-3 py-2 hover:bg-black/10"
+              onBeforeOpen={() => setOpen(false)}
+            />
             <LanguageToggle onNavigate={() => setOpen(false)} className="mt-3 self-start" />
           </div>
         </div>
