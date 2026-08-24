@@ -1,6 +1,5 @@
 import { createPublicClient } from "@/lib/supabase/public";
 import type { Announcement } from "@winlab/db";
-import { extractFirstImage } from "@/lib/ui/article";
 import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
 import type { Metadata } from "next";
@@ -75,14 +74,6 @@ export async function generateMetadata({
         .replace("{category}", announcement.category)
         .replace("{title}", title)
     : dict.announcement.meta.fallbackDescription.replace("{title}", title);
-  const inlineImage = announcement
-    ? extractFirstImage(announcement.content as Record<string, unknown> | null)
-    : null;
-  const ogImageUrl = inlineImage ?? eventRes.data?.cover_image ?? null;
-  const ogImages = ogImageUrl
-    ? [{ url: ogImageUrl, width: 1200, height: 630, alt: title }]
-    : [{ url: "/og.png", width: 1200, height: 630, alt: title }];
-  const twitterImages = ogImages.map((i) => i.url);
   // Canonical always points at the slug URL, even when this render was
   // reached via a legacy UUID link.
   const canonicalId = announcement?.slug ?? id;
@@ -97,7 +88,9 @@ export async function generateMetadata({
     // Next.js App Router performs object-level replace (not deep merge) when a
     // child segment exports openGraph. All required fields must be declared here
     // explicitly; relying on layout.tsx inheritance silently drops og:type /
-    // og:site_name / og:locale.
+    // og:site_name / og:locale. `images` is intentionally omitted — the
+    // sibling `opengraph-image.tsx` file convention (#49) generates a
+    // per-announcement branded card and Next injects it automatically.
     openGraph: {
       type: "article",
       siteName: SITE_NAME,
@@ -105,13 +98,11 @@ export async function generateMetadata({
       title: `${title}｜${dict.common.orgFullName}`,
       description,
       url: `/events/${slug}/announcements/${encodeURIComponent(canonicalId)}`,
-      images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
       title: `${title}｜${dict.common.orgFullName}`,
       description,
-      images: twitterImages,
     },
   };
 }

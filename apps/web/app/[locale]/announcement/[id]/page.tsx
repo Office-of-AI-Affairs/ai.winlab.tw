@@ -1,5 +1,4 @@
 import { getPublishedAnnouncementByParam, getPublishedAnnouncementSlugs } from "@/app/[locale]/announcement/data";
-import { extractFirstImage } from "@/lib/ui/article";
 import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
 import type { Metadata } from "next";
@@ -51,13 +50,6 @@ export async function generateMetadata({
         .replace("{category}", announcement.category)
         .replace("{title}", title)
     : dict.announcement.meta.detailDescriptionFallback.replace("{title}", title);
-  const inlineImage = announcement
-    ? extractFirstImage(announcement.content as Record<string, unknown> | null)
-    : null;
-  const ogImages = inlineImage
-    ? [{ url: inlineImage, width: 1200, height: 630, alt: title }]
-    : [{ url: "/og.png", width: 1200, height: 630, alt: title }];
-  const twitterImages = ogImages.map((i) => i.url);
   // Canonical always points at the slug URL, even when this render was
   // reached via a legacy UUID link.
   const canonicalId = announcement?.slug ?? id;
@@ -69,7 +61,11 @@ export async function generateMetadata({
     // Next.js App Router performs object-level replace (not deep merge) when a
     // child segment exports openGraph. All required fields must be declared here
     // explicitly; relying on layout.tsx inheritance silently drops og:type /
-    // og:site_name / og:locale.
+    // og:site_name / og:locale. `images` is intentionally omitted — the
+    // sibling `opengraph-image.tsx` file convention (#49) generates a
+    // per-announcement branded card and Next injects it automatically
+    // (falls through to `twitter:image` too, since no `twitter-image` file
+    // exists in this segment).
     openGraph: {
       type: "article",
       siteName: SITE_NAME,
@@ -77,13 +73,11 @@ export async function generateMetadata({
       title: `${title}${dict.common.titleSuffix}`,
       description,
       url: `/announcement/${encodeURIComponent(canonicalId)}`,
-      images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
       title: `${title}${dict.common.titleSuffix}`,
       description,
-      images: twitterImages,
     },
   };
 }
