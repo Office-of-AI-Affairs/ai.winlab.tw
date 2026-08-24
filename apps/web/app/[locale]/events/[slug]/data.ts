@@ -50,7 +50,7 @@ export async function getEventPageData(
       supabase
         .from("announcements")
         .select(
-          "id, event_id, title, category, date, content, status, author_id, created_at, updated_at",
+          "id, slug, event_id, title, category, date, content, status, author_id, created_at, updated_at",
         )
         .eq("event_id", eventRow.id)
         .eq("status", "published")

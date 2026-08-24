@@ -21,7 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ] = await Promise.all([
     supabase
       .from("announcements")
-      .select("id, date, event_id")
+      .select("id, slug, date, event_id")
       .eq("status", "published"),
     supabase.from("events").select("id, slug, updated_at").eq("status", "published"),
     supabase
@@ -84,8 +84,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const announcementRoutes: MetadataRoute.Sitemap = (announcementsRes.data ?? []).map((announcement) => ({
     url: announcement.event_id && eventSlugMap[announcement.event_id]
-      ? `${BASE_URL}/events/${eventSlugMap[announcement.event_id]}/announcements/${announcement.id}`
-      : `${BASE_URL}/announcement/${announcement.id}`,
+      ? `${BASE_URL}/events/${eventSlugMap[announcement.event_id]}/announcements/${encodeURIComponent(announcement.slug)}`
+      : `${BASE_URL}/announcement/${encodeURIComponent(announcement.slug)}`,
     lastModified: announcement.date ?? undefined,
     priority: 0.6,
   }));

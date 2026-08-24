@@ -11,7 +11,7 @@ export function HomeAnnouncementTable({
   return (
     <AnnouncementTable
       announcements={announcements}
-      getHref={(item) => `/announcement/${item.id}`}
+      getHref={(item) => `/announcement/${encodeURIComponent(item.slug || item.id)}`}
     />
   );
 }

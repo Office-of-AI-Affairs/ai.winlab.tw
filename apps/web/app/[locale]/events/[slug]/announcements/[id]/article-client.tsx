@@ -17,21 +17,23 @@ type Props = Omit<
 
 export function EventAnnouncementArticleClient({ slug, eventName, ...rest }: Props) {
   const t = useT()
-  const id = rest.initialAnnouncement.id
+  const announcementSlug = encodeURIComponent(
+    rest.initialAnnouncement.slug || rest.initialAnnouncement.id,
+  )
   return (
     <SharedAnnouncementArticleClient
       {...rest}
       backHref={`/events/${slug}/announcements`}
       backLabel={t.events.backToEvent}
-      sharePath={`/events/${slug}/announcements/${id}`}
-      shareUrl={`https://ai.winlab.tw/events/${slug}/announcements/${id}`}
+      sharePath={`/events/${slug}/announcements/${announcementSlug}`}
+      shareUrl={`https://ai.winlab.tw/events/${slug}/announcements/${announcementSlug}`}
       breadcrumb={[
         { name: t.common.home, path: "/" },
         { name: t.nav.events, path: "/events" },
         { name: eventName, path: `/events/${slug}` },
         {
           name: rest.initialAnnouncement.title,
-          path: `/events/${slug}/announcements/${id}`,
+          path: `/events/${slug}/announcements/${announcementSlug}`,
         },
       ]}
       onCacheInvalidate={revalidateAllEventCaches}

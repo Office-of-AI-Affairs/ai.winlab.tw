@@ -6,6 +6,7 @@ import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n/locale-provider";
 import { createClient } from "@/lib/supabase/client";
+import { generateUniqueAnnouncementSlug } from "@/lib/slug";
 import type { Announcement } from "@winlab/db";
 import { Loader2, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -52,13 +53,14 @@ export function AnnouncementPageClient({
   const handleCreate = async () => {
     if (!user?.id || !isAdmin) return;
     setIsCreating(true);
+    const slug = await generateUniqueAnnouncementSlug(supabaseRef.current, t.announcement.newTitle);
     const { data, error } = await supabaseRef.current
       .from("announcements")
-      .insert({ title: t.announcement.newTitle, category: t.announcement.defaultCategory, content: {}, status: "draft", author_id: user.id, event_id: null })
+      .insert({ title: t.announcement.newTitle, slug, category: t.announcement.defaultCategory, content: {}, status: "draft", author_id: user.id, event_id: null })
       .select()
       .single();
     if (error) { toast.error(t.common.createFailed); setIsCreating(false); return; }
-    router.push(`/announcement/${data.id}?mode=edit`);
+    router.push(`/announcement/${encodeURIComponent(data.slug)}?mode=edit`);
   };
 
   return (
@@ -79,11 +81,12 @@ export function AnnouncementPageClient({
         <AnnouncementTable
           announcements={announcements}
           showStatus={isAdmin}
-          getHref={(item) =>
-            isAdmin
-              ? `/announcement/${item.id}${item.status === "draft" ? "?mode=edit" : ""}`
-              : `/announcement/${item.id}`
-          }
+          getHref={(item) => {
+            const slug = encodeURIComponent(item.slug || item.id);
+            return isAdmin
+              ? `/announcement/${slug}${item.status === "draft" ? "?mode=edit" : ""}`
+              : `/announcement/${slug}`;
+          }}
         />
       )}
     </PageShell>

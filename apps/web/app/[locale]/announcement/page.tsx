@@ -65,7 +65,7 @@ export default async function AnnouncementPage({
     itemListElement: publishedAnnouncements.map((item, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      url: `https://ai.winlab.tw/announcement/${item.id}`,
+      url: `https://ai.winlab.tw/announcement/${encodeURIComponent(item.slug)}`,
       name: item.title,
     })),
   };
