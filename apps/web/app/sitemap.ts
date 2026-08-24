@@ -51,6 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/events`, priority: 0.8 },
     { url: `${BASE_URL}/insights`, priority: 0.8 },
     { url: `${BASE_URL}/privacy`, priority: 0.3 },
+    { url: `${BASE_URL}/accessibility`, priority: 0.3 },
   ];
 
   const eventRoutes: MetadataRoute.Sitemap = (eventsRes.data ?? []).flatMap((e) => [

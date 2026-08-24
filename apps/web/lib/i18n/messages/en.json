@@ -644,6 +644,25 @@
     "current": "Current",
     "restore": "Restore"
   },
+  "accessibility": {
+    "meta": {
+      "title": "Accessibility Statement | Office of AI Affairs",
+      "description": "Accessibility statement for the NYCU Office of AI Affairs website: conformance target, known limitations, and how to report issues."
+    },
+    "heading": "Accessibility Statement",
+    "intro": "The NYCU Office of AI Affairs is committed to making this website accessible to all users, including people who rely on screen readers, keyboard navigation, or reduced motion.",
+    "conformanceHeading": "Conformance target",
+    "conformanceBody": "This website aims to conform to the Web Content Accessibility Guidelines (WCAG) 2.1, level AA, and is reviewed and improved on an ongoing basis.",
+    "limitationsHeading": "Known limitations",
+    "limitationsIntro": "Despite our ongoing efforts, the following areas do not yet fully meet the standard above:",
+    "limitationZhOnlyArticles": "Some announcements and result articles are only available in Chinese and have not yet been translated into English.",
+    "limitationThirdPartyEmbeds": "Some pages embed third-party services (e.g. registration forms, maps, or video) provided by outside vendors; their accessibility is not fully within this office's direct control.",
+    "limitationLegacyContent": "A small number of older announcements and event pages predate this accessibility policy and may not fully meet current standards.",
+    "contactHeading": "Reporting issues",
+    "contactBody": "If you encounter an accessibility barrier on this website, please contact us and we will do our best to address it promptly:",
+    "lastReviewedHeading": "Last reviewed",
+    "lastReviewedLabel": "This statement was last reviewed on"
+  },
   "carousel": {
     "untitled": "(Untitled)",
     "heading": "Home Banner",

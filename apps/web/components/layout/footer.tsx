@@ -11,6 +11,7 @@ export function Footer({ t, locale }: { t: Dictionary["footer"]; locale: Locale 
     { href: "/announcement", label: t.announcement },
     { href: "/events", label: t.events },
     { href: "/privacy", label: t.privacy },
+    { href: "/accessibility", label: t.accessibility },
     // Feed discovery (#46) — same per-locale feed the <head> alternate link
     // points to; /events/calendar.ics has no per-locale content difference
     // (events have no i18n body), but still routes through localizedPath
