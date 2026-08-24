@@ -176,15 +176,22 @@ Conventions:
 **Single source of truth**: [`DESIGN.md`](DESIGN.md) at the repo root —
 canonical spec (Google's DESIGN.md format: YAML frontmatter + canonical
 sections). Live gallery at `/design` renders one specimen of every
-primitive listed there.
+primitive listed there. Token rationale (color/radius/typography/
+spacing/imagery — why, not just what) lives in
+[`docs/design/visual-identity.md`](docs/design/visual-identity.md);
+`DESIGN.md` cites it rather than duplicating values.
 
 Quick reminders that bite during implementation (full rationale in
-`DESIGN.md`):
+`DESIGN.md` and `docs/design/visual-identity.md`):
 
 - **Tokens** — semantic only (`text-foreground`, `bg-primary`, `border-border`).
-  Never hardcode `gray-*` or hex literals.
-- **Radius** — `rounded-sm/md` = 1rem, `rounded-lg+` = 2rem, `rounded-full`
-  for capsule (single-row floating action surfaces).
+  Never hardcode `gray-*` or hex literals. `--primary` is OKLCH (brand blue,
+  with a same-hue dark-mode variant); there is no `--nycu` token or
+  `.bg-nycu`/`.text-nycu` utility — use `bg-primary`/`text-primary`.
+- **Radius** — base `--radius: 1rem`; `rounded-sm` 0.5rem, `rounded-md`
+  0.75rem (controls), `rounded-lg` 1rem (cards/dialogs), `rounded-xl`
+  1.5rem (hero surfaces), `rounded-2xl` 2rem (floating panels),
+  `rounded-full` for capsule. Don't hardcode `rounded-[...]` literals.
 - **Interaction** — `duration-200` only; `hover:scale-[1.02]` +
   `active:scale-[0.98]` or `.interactive-scale`. **Never `transition-all`**
   (banned by `lib/ui/patterns.test.ts`).

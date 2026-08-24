@@ -11,11 +11,9 @@ Companion files:
   properties). This spec is the source of *intent*; `globals.css` is the
   source of *implementation*. If they disagree, `globals.css` is wrong.
 - `apps/web/DESIGN.md` — the pre-existing component-level design doc
-  (layout shells, component variants, do's/don'ts). It still describes the
-  *old* flattened radius scale and the *old* non-OKLCH brand color as of
-  this writing; #51 and #52 update `globals.css` to match this spec, and
-  `DESIGN.md` needs a follow-up pass to stop contradicting it (tracked
-  separately — see "Known gap" at the end of this doc).
+  (layout shells, component variants, do's/don'ts). It cites this spec
+  for radius/color rationale and exact values instead of duplicating
+  them (see "Reconciliation with `DESIGN.md`" at the end of this doc).
 
 ## Color
 
@@ -216,13 +214,10 @@ semantic `rounded-*` class, that's a policy violation independent of the
 radius bug — #51 fixes both at once by migrating those literals to
 `rounded-lg`.
 
-## Known gap
+## Reconciliation with `DESIGN.md`
 
 `apps/web/DESIGN.md` is the pre-existing canonical design doc referenced
-by `apps/web/CLAUDE.md`. As of this spec, it still documents the old
-two-tier radius system (`inner: 1rem` / `outer: 2rem`) and states the
-brand color is "the only non-OKLCH value" — both statements become false
-once #51 and #52 land. Reconciling `DESIGN.md` with this spec (either by
-rewriting its Shapes/Colors sections or by having it defer to this
-document) is out of scope for the three issues in this milestone and is
-flagged here for the lead to schedule as a follow-up.
+by `apps/web/CLAUDE.md`. It no longer duplicates radius/color values —
+its Shapes and Colors sections, its `rounded`/`colors` frontmatter, and
+`apps/web/CLAUDE.md`'s quick reminders now point here for rationale and
+exact values, so there's a single place these numbers can drift from.

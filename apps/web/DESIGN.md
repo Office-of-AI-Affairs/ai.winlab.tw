@@ -4,7 +4,9 @@ name: ai.winlab.tw Design System
 description: >
   國立陽明交通大學人工智慧專責辦公室網站的設計基礎。
   Content-first、視覺低調、view 與 edit 在多數頁面共用同一條路由。
-  Single source of truth alongside `app/globals.css` (tokens),
+  Single source of truth alongside `docs/design/visual-identity.md`
+  (the tokens contract: color/radius/typography/spacing/imagery
+  rationale), `app/globals.css` (tokens implementation),
   `lib/ui/patterns.ts` (layout shells), and `/design` (live gallery).
 colors:
   background: "#FFFFFF"
@@ -61,8 +63,12 @@ typography:
     fontSize: 0.875rem
     fontWeight: 500
 rounded:
-  inner: 1rem      # rounded-sm / rounded-md (table cells, badges, small chips)
-  outer: 2rem      # rounded-lg through rounded-4xl all alias --radius
+  # Full derivation + usage rules: docs/design/visual-identity.md#radius
+  sm: 0.5rem       # rounded-sm (dense internal elements)
+  md: 0.75rem      # rounded-md (controls: buttons, inputs, selects, textareas)
+  lg: 1rem         # rounded-lg (base --radius; cards, blocks, dialogs, tiptap canvas)
+  xl: 1.5rem       # rounded-xl (hero/feature surfaces)
+  2xl: 2rem        # rounded-2xl (floating panel surfaces: FloatingMenu, TiptapMobileToolbar expanded, SettingsMenu, users table)
   full: 9999px     # capsule (single-row floating action surfaces)
 spacing:
   pageHome: 4rem      # py-16
@@ -72,7 +78,7 @@ spacing:
   floaterInsetDesktop: 1.5rem  # bottom-6 / right-6 (md and up)
 components:
   button:
-    rounded: "{rounded.outer}"
+    rounded: "{rounded.md}"
     height: 2.25rem
     padding: "0 1rem"
     backgroundColor: "{colors.primary}"
@@ -86,7 +92,7 @@ components:
     backgroundColor: transparent
     textColor: "{colors.foreground}"
   card:
-    rounded: "{rounded.outer}"
+    rounded: "{rounded.lg}"
     backgroundColor: "{colors.card}"
     textColor: "{colors.cardForeground}"
   badge:
@@ -109,14 +115,14 @@ components:
     shadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)"
     backdropFilter: blur(4px)
   panelFloater:
-    rounded: "{rounded.outer}"
+    rounded: "{rounded.2xl}"
     padding: 0.5rem
     backgroundColor: "{colors.background}"
     border: "{colors.border}"
     shadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)"
     backdropFilter: blur(4px)
   input:
-    rounded: "{rounded.inner}"
+    rounded: "{rounded.md}"
     height: 2.25rem
     padding: "0 0.75rem"
     border: "{colors.input}"
@@ -159,7 +165,7 @@ All colors come from CSS custom properties in `app/globals.css`. Use **semantic 
 | `destructive` | Delete buttons, error states, "刪除失敗" toasts |
 | `ring` | Keyboard focus ring (`focus-visible:ring-ring`) |
 
-The brand color `#0033A0` is the only non-OKLCH value — university brand sheet locks the hex. Everything else is OKLCH so light/dark variants stay perceptually consistent.
+Every token, including the brand color, is OKLCH — `primary` is NYCU Royal Blue `#0033A0` converted to `oklch(0.378 0.182 262.51)` (exact conversion, not eyeballed), with a dark-mode brand variant on the same hue (raised lightness/reduced chroma for AA contrast on dark surfaces) and a matching low-chroma `ring`. `--chart-1..5` are derived from the same brand hue plus two supporting hues. Full values, the conversion method, and contrast numbers: `docs/design/visual-identity.md#color`.
 
 `primary/10`, `primary/20`, `background/95` etc. (Tailwind opacity-suffix syntax) are how we get translucent variants — used for subtle accent fills (`bg-primary/10`) and floating surface glass (`bg-background/95 backdrop-blur-sm`).
 
@@ -215,15 +221,23 @@ Outline focus uses `ring-ring focus-visible:ring-2 ring-offset-1` — never `out
 
 ## Shapes
 
-Two radius tiers, plus capsule:
+Base `--radius: 1rem` in `app/globals.css`, with a real derived scale — no
+step aliases another. Full derivation and the usage rule (controls vs.
+cards vs. hero surfaces) live in `docs/design/visual-identity.md#radius`;
+current values:
 
 | Token | Tailwind alias | Used for |
 |---|---|---|
-| `inner` (1rem) | `rounded-sm`, `rounded-md` | Inputs, table cells, badges, internal pills (e.g. role chip in users table) |
-| `outer` (2rem) | `rounded-lg`, `rounded-xl`, `rounded-2xl`, `rounded-3xl`, `rounded-4xl` (all alias `--radius`) | Cards, blocks, dialogs, panel-shaped floating tools, dropdown panels |
+| `sm` (0.5rem) | `rounded-sm` | Dense internal elements |
+| `md` (0.75rem) | `rounded-md` | Controls: buttons, inputs, selects, textareas |
+| `lg` (1rem) | `rounded-lg` | Cards, blocks, dialogs, tiptap editor canvas |
+| `xl` (1.5rem) | `rounded-xl` | Hero / feature surfaces |
+| `2xl` (2rem) | `rounded-2xl` | Floating panel surfaces (FloatingMenu, expanded TiptapMobileToolbar, SettingsMenu, users table wrapper) |
 | `full` (9999px) | `rounded-full` | Capsule: single-row floating action surfaces, status pills, avatars |
 
-The `--radius: 2rem` setup in `app/globals.css` aliases every `rounded-lg+` step to the same value — pick whichever variant reads best in the JSX, the rendered result is the same. Don't introduce new radius values.
+Pick the semantic class for the surface type above — don't hardcode an
+arbitrary `rounded-[...]` value, and don't introduce a new radius step
+without updating the spec first.
 
 ## Components
 
@@ -250,7 +264,7 @@ The live gallery at **`/design`** renders one specimen of every primitive listed
 
 ### Form
 
-- `<Input>`, `<Textarea>`, `<Label>`, `<Select>`, `<Checkbox>` — all shadcn defaults, all use `border-input` + `rounded-sm`. Always pair inputs with `<Label>`; never rely on `placeholder` as the only label (an a11y contract test enforces this on profile edit / users table).
+- `<Input>`, `<Textarea>`, `<Label>`, `<Select>`, `<Checkbox>` — all shadcn defaults, all use `border-input` + `rounded-md` (controls tier, see Shapes above). Always pair inputs with `<Label>`; never rely on `placeholder` as the only label (an a11y contract test enforces this on profile edit / users table).
 
 ### Overlays
 
@@ -326,7 +340,7 @@ Capsule on a multi-row container warps into an oval — use the panel shape ther
 
 `<TiptapEditor>` (`components/tiptap-editor.tsx`) is the single rich-text editor. Two modes:
 
-- **Default (padded canvas)** — `editableRichTextDocumentClassName` adds `min-h-[360px] py-6 sm:py-8`, the canvas wraps in `rounded-[2rem] bg-background`. Used by every dedicated `/edit` page.
+- **Default (padded canvas)** — `editableRichTextDocumentClassName` adds `min-h-[360px] py-6 sm:py-8`, the canvas wraps in `rounded-lg bg-background`. Used by every dedicated `/edit` page.
 - **`flush={true}`** — drops the internal padding, min-height, and rounded canvas frame. `RichTextSurface` opts in for inline-edit pages where view and edit must pixel-align (only `/privacy` today; same pattern will apply to other inline-edit migrations).
 
 `<RichTextSurface>` (`components/rich-text-surface.tsx`) is the unified shell that renders server HTML in view mode and dynamically loads `TiptapEditor` (`flush`) in edit mode. View visitors never download Tiptap; admins do, only when `useEditMode` flips to `edit`.
@@ -370,7 +384,7 @@ This trio is the inline view+edit template. Other rich-text pages (announcement,
 - Don't hardcode `gray-*`, `slate-*`, or hex colors. Tokens or nothing.
 - Don't use `transition-all` (a patterns test bans it). Use `transition-colors`, `transition-transform`, or `transition-[<list>]`.
 - Don't add `transition-transform` separately from `interactive-scale` — that utility already includes the transition.
-- Don't introduce new radius values. `rounded-sm/md` (1rem) and `rounded-lg+` (2rem) cover everything; capsule is `rounded-full`.
+- Don't hardcode arbitrary `rounded-[...]` values or introduce new radius steps. `rounded-sm` through `rounded-2xl` derive from `--radius` (see Shapes above and `docs/design/visual-identity.md#radius`); capsule is `rounded-full`.
 - Don't push admin chrome into the read flow. If admin needs to manage something, use a floating pill + dialog (see `/privacy`). Toolbars that push content down break the inline-edit philosophy.
 - Don't nest cards. The Dialog / Popover / EditActionsPill / Card itself is the card — inside, use `divide-y`, `<Separator />`, or whitespace to group. No `rounded-xl border` around a list within a Dialog.
 - Don't use `variant="ghost"` for a real action sitting next to a filled button — it reads as unclickable. Pair primary (`default`) with secondary (`outline`).
@@ -383,5 +397,5 @@ This trio is the inline view+edit template. Other rich-text pages (announcement,
 ## Provenance
 
 - Format inspired by [Google Labs DESIGN.md spec](https://github.com/google-labs-code/design.md) (March 2026).
-- Companion files: `app/globals.css` (runtime tokens), `lib/ui/patterns.ts` (layout shells), `lib/ui/rich-text-classes.ts` (prose contract), `app/design/page.tsx` (live gallery).
+- Companion files: `docs/design/visual-identity.md` (tokens contract — color/radius/typography/spacing/imagery rationale, the canonical spec for the "UI System Refresh" milestone), `app/globals.css` (runtime tokens), `lib/ui/patterns.ts` (layout shells), `lib/ui/rich-text-classes.ts` (prose contract), `app/design/page.tsx` (live gallery).
 - Component contract tests: `lib/ui/patterns.test.ts`, `lib/ui/render-contracts.test.tsx`, `lib/ui/accessibility-contracts.test.ts`.
