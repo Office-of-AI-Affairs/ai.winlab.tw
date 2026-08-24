@@ -77,7 +77,12 @@
     "contactsHeading": "Contact us",
     "organizationHeading": "Our team",
     "explore": "Explore more",
-    "introFallbackTitle": "NYCU Office of AI Affairs"
+    "introFallbackTitle": "NYCU Office of AI Affairs",
+    "statsResults": "Published results",
+    "statsEvents": "Events held",
+    "statsParticipants": "Event participants",
+    "statsPartners": "Industry partners",
+    "partnersHeading": "Partners"
   },
   "activityKind": {
     "announcement": "Announcement",

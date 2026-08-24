@@ -19,7 +19,7 @@ export const getPublishedAnnouncements = unstable_cache(
   { tags: ["announcements-published"], revalidate: 3600 },
 );
 
-// Home page wants only the 5 most recent; share the same cache tag so edits
+// Home page wants only the 3 most recent; share the same cache tag so edits
 // invalidate both variants at once.
 export const getLatestAnnouncements = unstable_cache(
   async (): Promise<Announcement[]> => {
@@ -30,7 +30,7 @@ export const getLatestAnnouncements = unstable_cache(
       .eq("status", "published")
       .is("event_id", null)
       .order("date", { ascending: false })
-      .limit(5);
+      .limit(3);
     return (data as Announcement[] | null) ?? [];
   },
   ["announcements-latest"],

@@ -7,6 +7,8 @@ const carouselPage = readFileSync(resolve(process.cwd(), "app/[locale]/carousel/
 const contactsPage = readFileSync(resolve(process.cwd(), "app/[locale]/contacts/page.tsx"), "utf8")
 const settingsUsersPage = readFileSync(resolve(process.cwd(), "app/[locale]/settings/users/page.tsx"), "utf8")
 const homeOrganization = readFileSync(resolve(process.cwd(), "components/home-organization.tsx"), "utf8")
+const homeStats = readFileSync(resolve(process.cwd(), "components/home-stats.tsx"), "utf8")
+const homePartners = readFileSync(resolve(process.cwd(), "components/home-partners.tsx"), "utf8")
 const announcementPage = readFileSync(resolve(process.cwd(), "app/[locale]/announcement/page.tsx"), "utf8")
 const eventsPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/page.tsx"), "utf8")
 const eventDetailPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/page.tsx"), "utf8")
@@ -60,6 +62,20 @@ describe("server admin page contracts", () => {
     assert.ok(!homeOrganization.includes('from "@/lib/supabase/client"'))
     assert.ok(!homeOrganization.includes("useEffect("))
     assert.ok(homeOrganization.includes("getOrganizationMembers()"))
+  })
+
+  test("home stats + partner wall sections are server-renderable through cached fetchers", () => {
+    // Same contract as the home organization section: the homepage narrative
+    // layer (stats band, partner wall) must stay cookieless so `/` keeps
+    // rendering static.
+    for (const content of [homeStats, homePartners]) {
+      assert.ok(!content.includes('"use client"'))
+      assert.ok(!content.includes('from "@/lib/supabase/server"'))
+      assert.ok(!content.includes('from "@/lib/supabase/client"'))
+      assert.ok(!content.includes("useEffect("))
+    }
+    assert.ok(homeStats.includes("getHomeStats()"))
+    assert.ok(homePartners.includes("getOrganizationMembers()"))
   })
 
   test("global recruitment route is removed in favor of event-scoped recruitment", () => {

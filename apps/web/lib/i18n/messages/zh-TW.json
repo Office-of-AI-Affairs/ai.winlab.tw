@@ -77,7 +77,12 @@
     "contactsHeading": "聯絡我們",
     "organizationHeading": "組織人員",
     "explore": "探索更多",
-    "introFallbackTitle": "國立陽明交通大學人工智慧專責辦公室"
+    "introFallbackTitle": "國立陽明交通大學人工智慧專責辦公室",
+    "statsResults": "已發布成果",
+    "statsEvents": "舉辦活動",
+    "statsParticipants": "活動參與人數",
+    "statsPartners": "合作企業夥伴",
+    "partnersHeading": "合作夥伴"
   },
   "activityKind": {
     "announcement": "公告",
