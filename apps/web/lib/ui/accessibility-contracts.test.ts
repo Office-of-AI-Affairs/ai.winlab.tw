@@ -29,6 +29,7 @@ const eventResultPage = readFileSync(
 )
 const profileClient = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/client.tsx"), "utf8")
 const organizationMemberDialog = readFileSync(resolve(process.cwd(), "components/introduction/organization-member-dialog.tsx"), "utf8")
+const carouselClient = readFileSync(resolve(process.cwd(), "components/home/carousel-client.tsx"), "utf8")
 const carouselEditClient = readFileSync(resolve(process.cwd(), "app/[locale]/carousel/[id]/edit/client.tsx"), "utf8")
 const contactEditClient = readFileSync(resolve(process.cwd(), "app/[locale]/contacts/[id]/edit/client.tsx"), "utf8")
 const organizationEditClient = readFileSync(resolve(process.cwd(), "app/[locale]/introduction/[id]/edit/client.tsx"), "utf8")
@@ -129,6 +130,23 @@ describe("accessibility contracts", () => {
     assert.ok(recruitmentDialog.includes("onClick={() => removePosition(index)}"))
     assert.ok(!recruitmentDialog.includes("onClick={(e) => {\n                            e.stopPropagation();"))
     assert.ok(organizationMemberDialog.includes('aria-label={t.admin.member.removePhoto}'))
+  })
+
+  test("hero carousel scrim stays flat across the text's footprint instead of fading through it", () => {
+    // A plain two-stop fade (rgb(0 0 0 / 0.6) -> transparent) ramps opacity
+    // linearly across the whole bottom-half div, so the actual text block
+    // (anchored at the very bottom via pb-12/pb-16) sits in the low-opacity
+    // part of the ramp and fails AA on bright slides (#55). The fix holds
+    // the gradient flat at the documented 0.6 across the bottom 60% of the
+    // div (the text's footprint) and only fades in the top 40% (pure photo).
+    assert.ok(carouselClient.includes("rgb(0_0_0/0.6)_0%"))
+    assert.ok(carouselClient.includes("rgb(0_0_0/0.6)_60%"))
+    assert.ok(carouselClient.includes("transparent_100%"))
+  })
+
+  test("hero carousel autoplay is gated behind prefers-reduced-motion", () => {
+    assert.ok(carouselClient.includes("usePrefersReducedMotion"))
+    assert.ok(carouselClient.includes("prefersReducedMotion ? [] : [plugin]"))
   })
 
   test("editor failure states surface user-visible toast feedback instead of console-only logging", () => {
