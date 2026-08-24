@@ -2,7 +2,7 @@ import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
 import { BatchLogRecordProcessor } from "@opentelemetry/sdk-logs";
 import { OTLPHttpJsonTraceExporter, registerOTel } from "@vercel/otel";
 import { getClientAttributionAttributes } from "@/lib/otel/attribution";
-import { emitErrorLog } from "@/lib/otel/log";
+import { emitErrorLog, flushLogs, setLogFlusher } from "@/lib/otel/log";
 
 /**
  * OpenTelemetry bootstrap — producer for the Sensorium observability
@@ -62,6 +62,20 @@ export function register() {
   const trimmedEndpoint = endpoint.replace(/\/+$/, "");
   const headers = parseOtlpHeaders(process.env.OTEL_EXPORTER_OTLP_HEADERS);
 
+  // Built outside the `registerOTel` call so we keep our own reference to
+  // it — `registerOTel` returns `void` and wraps whatever's in
+  // `logRecordProcessors` into a `LoggerProvider` it never hands back, so
+  // this is the only handle we'll have. See the long comment on
+  // `flushLogs` in lib/otel/log.ts for why we need it: `forceFlush()` on
+  // *this* processor is how logs actually make it out before a Vercel
+  // function instance freezes.
+  const logProcessor = new BatchLogRecordProcessor({
+    exporter: new OTLPLogExporter({
+      url: `${trimmedEndpoint}/v1/logs`,
+      headers,
+    }),
+  });
+
   registerOTel({
     // OTEL_RESOURCE_ATTRIBUTES (service.namespace / service.name) is read
     // automatically by @vercel/otel's default env resource detector; this
@@ -72,15 +86,10 @@ export function register() {
       url: `${trimmedEndpoint}/v1/traces`,
       headers,
     }),
-    logRecordProcessors: [
-      new BatchLogRecordProcessor({
-        exporter: new OTLPLogExporter({
-          url: `${trimmedEndpoint}/v1/logs`,
-          headers,
-        }),
-      }),
-    ],
+    logRecordProcessors: [logProcessor],
   });
+
+  setLogFlusher(() => logProcessor.forceFlush());
 }
 
 /**
@@ -126,6 +135,27 @@ export async function onRequestError(
       ...getClientAttributionAttributes(request.headers),
     },
   });
+
+  // Same freeze problem as app/api/beacon/route.ts (see flushLogs' doc
+  // comment) — this error record would otherwise just as likely sit in the
+  // batch processor's buffer forever on Vercel.
+  //
+  // Can't use `after()` here like the beacon route does: verified empirically
+  // (throwing a route handler locally and inspecting the error) that
+  // `after()` unconditionally throws "called outside a request scope" from
+  // inside `onRequestError`. That's not a fluke of one route type — Next
+  // runs the actual handler inside `workAsyncStorage.run(...)`, and that
+  // scope is already torn down by the time it reaches the surrounding
+  // catch block that calls this hook, for every routeType (`render` /
+  // `route` / `action` / `proxy`). So this is a hard limitation, not a
+  // sometimes-works one: awaiting the flush inline is the only way to get
+  // a delivery guarantee here, at the cost of adding flush latency to
+  // error responses (measured against a local OTLP sink: single-digit ms
+  // once warm; unmeasured against the real network round-trip to
+  // Sensorium, which will be higher — see PR description). Only the rare
+  // 4xx/5xx path pays this cost; the beacon's `204` path (the hot path)
+  // stays exactly as fast as before via `after()`.
+  await flushLogs();
 }
 
 /**
