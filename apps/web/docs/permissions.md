@@ -17,6 +17,12 @@ contains an RLS-enabled relation that is not documented here.
 - `member`: profile role allowed to author articles.
 - `vendor`: profile role; actual recruitment editing rights come from
   `competition_owners`.
+- `editor`: profile role (added #47). Can create/edit *draft*
+  `announcements` + `results` (any row, not just own). RLS `WITH CHECK`
+  blocks setting `status = 'published'` and blocks touching a row whose
+  current `status` is already `'published'` — this is a hard DB-level
+  boundary, so it also holds for writes through the MCP app (user-JWT
+  client) and any other future writer. No grant on any other table.
 - `recruitment_owner`: a user listed in `competition_owners` for a recruitment.
 - `author`: a row owner such as `results.author_id` or `articles.author_id`.
 - `admin`: `profiles.role = 'admin'`.
@@ -26,7 +32,7 @@ contains an RLS-enabled relation that is not documented here.
 
 | Relation | Read | Write |
 | --- | --- | --- |
-| `public.announcements` | `anon`: published. `authenticated`: published, plus admin can see drafts. | Admin can insert, update, delete. |
+| `public.announcements` | `anon`/`authenticated`: rows where `status = 'published'` AND (`publish_at` is null or has passed) — scheduled publishing, #47. `authenticated` additionally: admin or editor can see every row regardless of status/`publish_at`. | Admin can insert, update, delete any row. Editor (#47) can insert/update only while `status = 'draft'`, and RLS `WITH CHECK` blocks it from ever writing `status = 'published'` or touching a row that's already published. Delete stays admin-only. |
 | `public.articles` | Published is public. Author can read own draft. Admin can read all. | Admin or author with `member` role can insert, update, delete. |
 | `public.carousel_slides` | Public read. | Admin can insert, update, delete. |
 | `public.contacts` | Public read. | Admin can insert, update, delete. |
@@ -45,10 +51,17 @@ contains an RLS-enabled relation that is not documented here.
 | `public.competition_owners` | User can read own owner rows. Admin can read all. | Admin can insert/delete owner rows. |
 | `public.event_participants` | Public read. Current rows expose event membership IDs, not profile PII; profile PII remains gated by `profiles`. | Admin can insert/delete. |
 | `public.recruitment_interests` | Applicant can read own applications. Recruitment owner can read applications for owned recruitments. Admin can read all. | Authenticated user can insert own interest and delete own interest. |
-| `public.results` | `anon`: published. `authenticated`: published, own authored rows, plus admin can see all. | Author or admin can insert, update, delete. |
+| `public.results` | `anon`: published. `authenticated`: published, own authored rows, plus admin or editor can see all. | Author or admin can insert, update, delete (unchanged — authors could already self-publish before #47). Editor (#47) can additionally insert/update only while `status = 'draft'`; RLS `WITH CHECK` blocks it from writing `status = 'published'` or touching an already-published row. No editor delete. |
 | `public.result_coauthors` | Public can read coauthors on published results. A user can read their own coauthor row. Result author or admin can read draft coauthors. | Result author or admin can insert/delete. |
 | `public.result_tags` | Public read. | Result author or admin can insert/delete. |
 | `public.external_results` | Public read. | User can insert, update, delete own rows. No admin override policy. |
+
+## Editorial Workflow (#47)
+
+| Relation | Read | Write |
+| --- | --- | --- |
+| `public.content_revisions` | Admin or editor can read. | No client INSERT/UPDATE/DELETE policy — every row is written by the `record_content_revision()` SECURITY DEFINER trigger (`AFTER UPDATE` on `announcements` + `results`), which runs as the table owner and bypasses RLS. A "restore" in the admin UI is itself a plain `UPDATE` through the normal `announcements`/`results` write policies above, so it creates its own new revision. |
+| `public.audit_log` | Admin only. | No client INSERT/UPDATE/DELETE policy — every row is written by the `record_audit_log()` SECURITY DEFINER trigger (`AFTER INSERT OR UPDATE OR DELETE` on `announcements`, `results`, `events`, `carousel_slides`, `organization_members`). |
 
 ## Profiles And Private Account Data
 

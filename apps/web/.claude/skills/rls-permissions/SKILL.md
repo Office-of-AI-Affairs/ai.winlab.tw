@@ -27,6 +27,10 @@ Naming convention: `<role/scope> can <op> <resource>` (e.g. `Admin can update ev
 - **recruitment_owner** — row in `competition_owners`. Edits that recruitment + sees its applicants
 - **author** — `results.author_id = auth.uid()`
 - **admin** — `profiles.role = 'admin'`. Platform-wide
+- **editor** — `profiles.role = 'editor'` (#47). Create/edit *draft*
+  `announcements` + `results` only; RLS `WITH CHECK` blocks
+  `status='published'` writes and blocks touching an already-published
+  row. No grant on anything else
 
 Role swap requires admin. Teams subsystem retired 2026-04-30.
 
@@ -36,9 +40,9 @@ Role swap requires admin. Teams subsystem retired 2026-04-30.
 
 ## Public-readable (anon allowed)
 
-`announcements` — anon: published / user: published + admin sees draft / admin: ✅. INSERT/UPDATE/DELETE: admin only.
+`announcements` — anon/user: `status='published'` AND (`publish_at` null or passed) (#47 scheduled publishing) / admin+editor: ✅ read all. INSERT/UPDATE: admin ✅, editor only `status='draft'` rows staying `draft`. DELETE: admin only.
 `events` — anon/user: published. INSERT/UPDATE/DELETE: admin only.
-`results` — anon: published / user/author: published + self. INSERT/UPDATE/DELETE: author self, admin ✅.
+`results` — anon: published / user/author: published + self / admin+editor: ✅ read all. INSERT/UPDATE: author self or admin ✅ (unchanged), editor only `status='draft'` rows staying `draft`. DELETE: author self, admin ✅ (no editor).
 `external_results` — SELECT all public. INSERT/UPDATE/DELETE: self only (no admin override).
 `result_coauthors` — SELECT: anon sees published-result coauthors; user sees self OR result published OR you're author OR admin. INSERT/DELETE: result's author self. (Tightened 2026-04-30 `20260430000007`.)
 `result_tags` — SELECT all public. INSERT/DELETE: result's author self.
@@ -59,6 +63,10 @@ Role swap requires admin. Teams subsystem retired 2026-04-30.
 `competition_owners` — SELECT: own rows / admin all. INSERT/DELETE: admin only.
 
 `recruitment_interests` — SELECT: own applications / recruitment_owner sees own recruitment's applicants / admin all. INSERT: self. DELETE: own applications.
+
+`content_revisions` (#47) — SELECT: admin or editor. INSERT/UPDATE/DELETE: ❌ no client policy — written only by the `record_content_revision()` SECURITY DEFINER trigger (`AFTER UPDATE` on `announcements`/`results`).
+
+`audit_log` (#47) — SELECT: admin only. INSERT/UPDATE/DELETE: ❌ no client policy — written only by the `record_audit_log()` SECURITY DEFINER trigger (`AFTER INSERT OR UPDATE OR DELETE` on `announcements`, `results`, `events`, `carousel_slides`, `organization_members`).
 
 `upload_tokens` — SELECT: ❌ service role only. INSERT: self. **Schema 2026-05-18**: `access_token` column removed — `consume_upload_token` RPC now returns user_id + category only, upload route uses service-role storage upload on behalf of the recorded user_id (no JWT replay).
 
