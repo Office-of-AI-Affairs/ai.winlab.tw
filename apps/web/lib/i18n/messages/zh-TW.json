@@ -328,7 +328,8 @@
       "manageTitle": "管理成果",
       "summaryLabel": "摘要",
       "summaryPlaceholder": "顯示於列表卡片",
-      "delete": "刪除成果"
+      "delete": "刪除成果",
+      "coverImageGuidelines": "建議尺寸 16:9，圖片會自動裁切填滿卡片；避免大量文字或密集截圖，主體請置於畫面中央的安全範圍內"
     },
     "card": {
       "anonymousAuthor": "匿名",

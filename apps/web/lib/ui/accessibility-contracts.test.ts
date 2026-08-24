@@ -27,6 +27,10 @@ const eventResultPage = readFileSync(
   resolve(process.cwd(), "app/[locale]/events/[slug]/results/[id]/page.tsx"),
   "utf8"
 )
+const resultArticleClient = readFileSync(
+  resolve(process.cwd(), "app/[locale]/events/[slug]/results/[id]/article-client.tsx"),
+  "utf8"
+)
 const profileClient = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/client.tsx"), "utf8")
 const organizationMemberDialog = readFileSync(resolve(process.cwd(), "components/introduction/organization-member-dialog.tsx"), "utf8")
 const carouselClient = readFileSync(resolve(process.cwd(), "components/home/carousel-client.tsx"), "utf8")
@@ -53,6 +57,21 @@ describe("accessibility contracts", () => {
     assert.ok(!announcementTable.includes('paddingLeft: "1.25rem"'))
     assert.ok(announcementClient.includes("getHref={(item) =>"))
     assert.ok(homeAnnouncementTable.includes("getHref={(item) =>"))
+  })
+
+  test("result and recruitment card covers enforce aspect-video at every breakpoint (#57)", () => {
+    // Both used to fall back to a bare h-[200px] box on mobile (whatever
+    // aspect ratio the upload happened to be) and only switch to
+    // aspect-video at md: and up — exactly the "mixed aspect ratios read
+    // as visual noise" problem #57 describes.
+    assert.ok(!resultCard.includes("h-[200px]"))
+    assert.ok(resultCard.includes('className="relative w-full aspect-video shrink-0"'))
+    assert.ok(!recruitmentCard.includes("h-[200px]"))
+    assert.ok(recruitmentCard.includes('className="relative w-full aspect-video shrink-0"'))
+  })
+
+  test("result cover-image upload UI states the aspect-ratio guidelines", () => {
+    assert.ok(resultArticleClient.includes("t.results.edit.coverImageGuidelines"))
   })
 
   test("recruitment cards own their navigation semantics", () => {
