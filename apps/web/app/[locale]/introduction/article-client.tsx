@@ -7,9 +7,12 @@ import { RichTextSurface } from "@/components/editor/rich-text-surface"
 import { ShareButtons } from "@/components/shared/share-buttons"
 import { Toc } from "@/components/shared/toc"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { useContentEditor } from "@/hooks/use-content-editor"
 import { useEditMode } from "@/hooks/use-edit-mode"
 import { useLocale, useT } from "@/lib/i18n/locale-provider"
+import { localizedField } from "@/lib/i18n/localized-field"
 import type { TocItem } from "@/lib/ui/article"
 import type { Introduction } from "@winlab/db"
 import { LogOut } from "lucide-react"
@@ -44,7 +47,7 @@ export function IntroductionArticleClient({
     table: "introduction",
     id: initialIntroduction.id,
     initialData: initialIntroduction,
-    fields: ["title", "content"],
+    fields: ["title", "title_en", "content"],
     redirectTo: "/introduction",
     publishable: false,
     onAfterSave: revalidateIntroduction,
@@ -117,6 +120,8 @@ export function IntroductionArticleClient({
   const titleClass =
     "text-4xl font-extrabold tracking-tight text-balance"
 
+  const displayTitle = localizedField(introduction, "title", locale).value
+
   return (
     <>
       <div className="mb-8 flex max-w-6xl items-start justify-between gap-4">
@@ -133,7 +138,7 @@ export function IntroductionArticleClient({
             />
           ) : (
             <h1 className={titleClass}>
-              {introduction.title || t.introduction.fallbackTitle}
+              {displayTitle || t.introduction.fallbackTitle}
             </h1>
           )}
           {readingTimeMin ? (
@@ -174,6 +179,21 @@ export function IntroductionArticleClient({
           open={actionsOpen}
           onOpenChange={setActionsOpen}
         >
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="introduction-title-en" className="text-sm">
+              {t.editor.titleEnLabel}
+            </Label>
+            <Input
+              id="introduction-title-en"
+              value={introduction.title_en ?? ""}
+              onChange={(event) =>
+                setIntroduction((prev) => ({ ...prev, title_en: event.target.value || null }))
+              }
+              placeholder={t.editor.titleEnPlaceholder}
+              disabled={isSaving}
+            />
+          </div>
+
           <div className="flex flex-wrap items-center justify-end gap-2">
             <Button
               type="button"

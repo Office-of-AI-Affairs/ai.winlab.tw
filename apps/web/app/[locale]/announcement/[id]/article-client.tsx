@@ -5,7 +5,8 @@ import {
   AnnouncementArticleClient as SharedAnnouncementArticleClient,
   type AnnouncementArticleClientProps,
 } from "@/components/announcement/announcement-article-client"
-import { useT } from "@/lib/i18n/locale-provider"
+import { useLocale, useT } from "@/lib/i18n/locale-provider"
+import { localizedField } from "@/lib/i18n/localized-field"
 
 export function AnnouncementArticleClient(
   props: Omit<
@@ -14,6 +15,7 @@ export function AnnouncementArticleClient(
   >,
 ) {
   const t = useT()
+  const locale = useLocale()
   const slug = encodeURIComponent(props.initialAnnouncement.slug || props.initialAnnouncement.id)
   return (
     <SharedAnnouncementArticleClient
@@ -25,7 +27,10 @@ export function AnnouncementArticleClient(
       breadcrumb={[
         { name: t.common.home, path: "/" },
         { name: t.nav.announcement, path: "/announcement" },
-        { name: props.initialAnnouncement.title, path: `/announcement/${slug}` },
+        {
+          name: localizedField(props.initialAnnouncement, "title", locale).value,
+          path: `/announcement/${slug}`,
+        },
       ]}
       onCacheInvalidate={revalidateAnnouncements}
       manageTitle={t.editor.manageAnnouncement}

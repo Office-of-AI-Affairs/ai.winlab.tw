@@ -175,6 +175,8 @@
       "dialogTitle": "Manage event",
       "nameLabel": "Event name",
       "namePlaceholder": "e.g. AI Rising Star",
+      "nameEnLabel": "English event name (optional)",
+      "nameEnPlaceholder": "e.g. AI Rising Star",
       "slugLabel": "Slug (URL path)",
       "slugPlaceholder": "e.g. ai-rising-star",
       "descriptionLabel": "Event description",
@@ -350,6 +352,8 @@
       "error": "Save failed"
     },
     "titlePlaceholder": "Enter a title…",
+    "titleEnLabel": "English title (optional)",
+    "titleEnPlaceholder": "Enter an English title…",
     "emptyContent": "(No content)",
     "manageAnnouncement": "Manage announcement",
     "manageArticle": "Manage article",

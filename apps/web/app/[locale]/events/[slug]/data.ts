@@ -38,7 +38,7 @@ export async function getEventPageData(
     const { data: event } = await supabase
       .from("events")
       .select(
-        "id, slug, name, description, cover_image, status, pinned, sort_order, created_at, updated_at",
+        "id, slug, name, name_en, description, cover_image, status, pinned, sort_order, created_at, updated_at",
       )
       .eq("slug", slug)
       .eq("status", "published")
@@ -50,7 +50,7 @@ export async function getEventPageData(
       supabase
         .from("announcements")
         .select(
-          "id, slug, event_id, title, category, date, content, status, author_id, created_at, updated_at",
+          "id, slug, event_id, title, title_en, category, date, content, status, author_id, created_at, updated_at",
         )
         .eq("event_id", eventRow.id)
         .eq("status", "published")
@@ -58,7 +58,7 @@ export async function getEventPageData(
       supabase
         .from("results")
         .select(
-          "id, event_id, title, summary, content, header_image, date, pinned, status, author_id, created_at, updated_at",
+          "id, event_id, title, title_en, summary, content, header_image, date, pinned, status, author_id, created_at, updated_at",
         )
         .eq("event_id", eventRow.id)
         .eq("status", "published")

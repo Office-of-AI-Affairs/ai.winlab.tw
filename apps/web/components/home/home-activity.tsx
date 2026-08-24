@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/date";
 import { type Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionary";
+import { localizedField } from "@/lib/i18n/localized-field";
 import { localizedPath } from "@/lib/i18n/routing";
 import { createPublicClient } from "@/lib/supabase/public";
 import Link from "next/link";
@@ -45,7 +46,7 @@ export async function HomeActivity({
 
   const { data: events } = await supabase
     .from("events")
-    .select("id, slug, name")
+    .select("id, slug, name, name_en")
     .eq("pinned", true)
     .eq("status", "published")
     .order("sort_order", { ascending: true });
@@ -53,20 +54,20 @@ export async function HomeActivity({
   if (!events?.length) return null;
   const eventIds = events.map((e) => e.id);
   const idToEvent = Object.fromEntries(
-    events.map((e) => [e.id, { slug: e.slug, name: e.name }]),
+    events.map((e) => [e.id, { slug: e.slug, name: localizedField(e, "name", locale).value }]),
   );
 
   const [annsRes, resultsRes, recruitsRes] = await Promise.all([
     supabase
       .from("announcements")
-      .select("id, slug, title, event_id, created_at")
+      .select("id, slug, title, title_en, event_id, created_at")
       .in("event_id", eventIds)
       .eq("status", "published")
       .order("created_at", { ascending: false })
       .limit(15),
     supabase
       .from("results")
-      .select("id, title, event_id, created_at, author_id")
+      .select("id, title, title_en, event_id, created_at, author_id")
       .in("event_id", eventIds)
       .eq("status", "published")
       .order("created_at", { ascending: false })
@@ -108,7 +109,7 @@ export async function HomeActivity({
       kind: "announcement",
       id: a.id,
       slug: a.slug,
-      title: a.title,
+      title: localizedField(a, "title", locale).value,
       eventSlug: e.slug,
       eventName: e.name,
       createdAt: a.created_at,
@@ -120,7 +121,7 @@ export async function HomeActivity({
     items.push({
       kind: "result",
       id: r.id,
-      title: r.title,
+      title: localizedField(r, "title", locale).value,
       eventSlug: e.slug,
       eventName: e.name,
       createdAt: r.created_at,

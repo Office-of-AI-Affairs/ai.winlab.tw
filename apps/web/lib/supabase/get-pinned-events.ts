@@ -1,13 +1,13 @@
 import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 
-export type PinnedEventNavItem = { name: string; slug: string };
+export type PinnedEventNavItem = { name: string; name_en: string | null; slug: string };
 
 async function fetchPinnedEvents(): Promise<PinnedEventNavItem[]> {
   const supabase = createPublicClient();
   const { data } = await supabase
     .from("events")
-    .select("name, slug")
+    .select("name, name_en, slug")
     .eq("pinned", true)
     .eq("status", "published")
     .order("sort_order", { ascending: true });

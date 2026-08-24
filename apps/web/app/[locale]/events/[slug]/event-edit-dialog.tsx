@@ -50,7 +50,7 @@ export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Pro
     table: "events",
     id: initialEvent.id,
     initialData: initialEvent,
-    fields: ["name", "slug", "description", "cover_image", "pinned", "sort_order"],
+    fields: ["name", "name_en", "slug", "description", "cover_image", "pinned", "sort_order"],
     redirectTo: "/events",
     onBeforeSave: async () => {
       setSlugError(null)
@@ -153,6 +153,16 @@ export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Pro
             value={event.name}
             onChange={(e) => setEvent((prev) => ({ ...prev, name: e.target.value }))}
             placeholder={t.events.edit.namePlaceholder}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="event-name-en" className="text-sm">{t.events.edit.nameEnLabel}</Label>
+          <Input
+            id="event-name-en"
+            value={event.name_en ?? ""}
+            onChange={(e) => setEvent((prev) => ({ ...prev, name_en: e.target.value || null }))}
+            placeholder={t.events.edit.nameEnPlaceholder}
           />
         </div>
 

@@ -175,6 +175,8 @@
       "dialogTitle": "管理活動",
       "nameLabel": "活動名稱",
       "namePlaceholder": "例：AI新秀",
+      "nameEnLabel": "英文活動名稱（選填）",
+      "nameEnPlaceholder": "例：AI Rising Star",
       "slugLabel": "Slug（URL 路徑）",
       "slugPlaceholder": "例：ai-rising-star",
       "descriptionLabel": "活動簡介",
@@ -350,6 +352,8 @@
       "error": "儲存失敗"
     },
     "titlePlaceholder": "輸入標題…",
+    "titleEnLabel": "英文標題（選填）",
+    "titleEnPlaceholder": "輸入英文標題…",
     "emptyContent": "（無內容）",
     "manageAnnouncement": "管理公告",
     "manageArticle": "管理文章",

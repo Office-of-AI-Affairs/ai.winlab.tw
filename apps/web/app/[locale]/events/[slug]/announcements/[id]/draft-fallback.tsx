@@ -3,7 +3,8 @@
 import { useAuth } from "@/components/layout/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useT } from "@/lib/i18n/locale-provider"
+import { useLocale, useT } from "@/lib/i18n/locale-provider"
+import { localizedField } from "@/lib/i18n/localized-field"
 import { createClient } from "@/lib/supabase/client"
 import { isUuid } from "@/lib/slug"
 import type { TocItem } from "@/lib/ui/article"
@@ -32,6 +33,7 @@ type State =
  */
 export function EventAnnouncementDraftFallback({ slug, id }: { slug: string; id: string }) {
   const t = useT()
+  const locale = useLocale()
   const { isAdmin, isLoading } = useAuth()
   const [state, setState] = useState<State>({ kind: "loading" })
   const supabaseRef = useRef(createClient())
@@ -55,7 +57,7 @@ export function EventAnnouncementDraftFallback({ slug, id }: { slug: string; id:
         })(),
         supabaseRef.current
           .from("events")
-          .select("name")
+          .select("name, name_en")
           .eq("slug", slug)
           .single(),
       ])
@@ -76,7 +78,9 @@ export function EventAnnouncementDraftFallback({ slug, id }: { slug: string; id:
       setState({
         kind: "draft",
         announcement,
-        eventName: eventRes.data?.name ?? t.events.meta.fallbackName,
+        eventName: eventRes.data
+          ? localizedField(eventRes.data, "name", locale).value
+          : t.events.meta.fallbackName,
         html,
         toc,
         readingTimeMin: minutes,
@@ -85,7 +89,7 @@ export function EventAnnouncementDraftFallback({ slug, id }: { slug: string; id:
     return () => {
       cancelled = true
     }
-  }, [id, isAdmin, isLoading, slug, t.events.meta.fallbackName])
+  }, [id, isAdmin, isLoading, slug, t.events.meta.fallbackName, locale])
 
   if (isLoading || state.kind === "loading") {
     return (

@@ -2,7 +2,8 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Block } from "@/components/shared/block";
-import { useT } from "@/lib/i18n/locale-provider";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
+import { localizedField } from "@/lib/i18n/localized-field";
 import type { Event } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { AspectRatio } from "@radix-ui/react-aspect-ratio";
@@ -18,6 +19,8 @@ export function EventCard({
   priority?: boolean;
 }) {
   const t = useT();
+  const locale = useLocale();
+  const name = localizedField(item, "name", locale).value;
   const sizes = "(max-width: 1024px) 100vw, 576px";
   return (
     <Block className="overflow-hidden flex flex-col lg:grid lg:grid-cols-2 gap-4">
@@ -25,7 +28,7 @@ export function EventCard({
         <AspectRatio ratio={16 / 9}>
           <Image
             src={resolveImageSrc(item.cover_image)}
-            alt={item.name}
+            alt={name}
             fill
             sizes={sizes}
             priority={priority}
@@ -37,7 +40,7 @@ export function EventCard({
       </div>
       <div className="grid gap-2 lg:content-center">
         <h2 className={`${compact ? "text-lg" : "text-2xl"} font-bold line-clamp-2`}>
-          {item.name || t.common.untitled}
+          {name || t.common.untitled}
         </h2>
         <p className={`${compact ? "text-sm" : "text-base"} text-muted-foreground line-clamp-3`}>
           {item.description || t.common.noDescription}
@@ -47,7 +50,7 @@ export function EventCard({
         <AspectRatio ratio={16 / 9}>
           <Image
             src={resolveImageSrc(item.cover_image)}
-            alt={item.name}
+            alt={name}
             fill
             sizes={sizes}
             priority={priority}

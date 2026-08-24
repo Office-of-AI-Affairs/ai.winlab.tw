@@ -17,7 +17,8 @@ import { useEventActions } from "@/hooks/use-event-actions";
 import { formatDate } from "@/lib/date";
 import { createClient } from "@/lib/supabase/client";
 import { getSurnameStrokes } from "@/lib/chinese-stroke";
-import { useT } from "@/lib/i18n/locale-provider";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
+import { localizedField } from "@/lib/i18n/localized-field";
 import { composeRecruitment } from "@winlab/domain";
 import type {
   Announcement,
@@ -110,6 +111,8 @@ export function EventDetailClient({
   initialMembers: EventMember[];
 }) {
   const t = useT();
+  const locale = useLocale();
+  const eventName = localizedField(event, "name", locale).value;
   const { user, isAdmin } = useAuth();
   const userId = user?.id ?? null;
   const supabaseRef = useRef(createClient());
@@ -424,7 +427,7 @@ export function EventDetailClient({
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">{event.name}</h1>
+            <h1 className="text-3xl font-bold">{eventName}</h1>
             {event.status === "draft" && <Badge variant="secondary">{t.common.draft}</Badge>}
           </div>
           {event.description && (

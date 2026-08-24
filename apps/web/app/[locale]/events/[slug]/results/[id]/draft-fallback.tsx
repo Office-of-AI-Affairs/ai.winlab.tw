@@ -3,7 +3,8 @@
 import { useAuth } from "@/components/layout/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useT } from "@/lib/i18n/locale-provider"
+import { useLocale, useT } from "@/lib/i18n/locale-provider"
+import { localizedField } from "@/lib/i18n/localized-field"
 import { createClient } from "@/lib/supabase/client"
 import type { TocItem } from "@/lib/ui/article"
 import type { PublicProfile, Result } from "@winlab/db"
@@ -34,6 +35,7 @@ type State =
 export function ResultDraftFallback({ slug, id }: { slug: string; id: string }) {
   const { user, isLoading } = useAuth()
   const t = useT()
+  const locale = useLocale()
   const [state, setState] = useState<State>({ kind: "loading" })
   const supabaseRef = useRef(createClient())
 
@@ -56,7 +58,7 @@ export function ResultDraftFallback({ slug, id }: { slug: string; id: string }) 
         await Promise.all([
           supabaseRef.current
             .from("events")
-            .select("name")
+            .select("name, name_en")
             .eq("slug", slug)
             .maybeSingle(),
           result.author_id
@@ -96,7 +98,7 @@ export function ResultDraftFallback({ slug, id }: { slug: string; id: string }) 
       setState({
         kind: "draft",
         result: typedResult,
-        eventName: eventRow?.name ?? t.events.meta.fallbackName,
+        eventName: eventRow ? localizedField(eventRow, "name", locale).value : t.events.meta.fallbackName,
         publisher: publisherRow
           ? {
               id: publisherRow.id,
@@ -112,7 +114,7 @@ export function ResultDraftFallback({ slug, id }: { slug: string; id: string }) 
     return () => {
       cancelled = true
     }
-  }, [id, isLoading, slug, user, t])
+  }, [id, isLoading, slug, user, t, locale])
 
   if (isLoading || state.kind === "loading") {
     return (
