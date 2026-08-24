@@ -1,0 +1,17 @@
+"use client";
+
+import { AnnouncementTable } from "@/components/announcement/announcement-table";
+import type { Announcement } from "@winlab/db";
+
+export function HomeAnnouncementTable({
+  announcements,
+}: {
+  announcements: Announcement[];
+}) {
+  return (
+    <AnnouncementTable
+      announcements={announcements}
+      getHref={(item) => `/announcement/${encodeURIComponent(item.slug || item.id)}`}
+    />
+  );
+}

@@ -1,4 +1,4 @@
-import { JsonLd } from "@/components/json-ld";
+import { JsonLd } from "@/components/seo/json-ld";
 import { createClient } from "@/lib/supabase/server";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { defaultLocale, isLocale } from "@/lib/i18n/config";

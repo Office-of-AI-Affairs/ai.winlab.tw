@@ -1,6 +1,6 @@
 "use client"
 
-import { EditModeToggle } from "@/components/edit-mode-toggle"
+import { EditModeToggle } from "@/components/editor/edit-mode-toggle"
 import type { Recruitment } from "@winlab/db"
 import dynamic from "next/dynamic"
 import { useRouter } from "next/navigation"
@@ -10,7 +10,7 @@ import { useState } from "react"
 // upload-image deps) isn't paid until the pill is actually clicked.
 const RecruitmentDialog = dynamic(
   () =>
-    import("@/components/recruitment-dialog").then((m) => ({
+    import("@/components/events/recruitment-dialog").then((m) => ({
       default: m.RecruitmentDialog,
     })),
   { ssr: false },

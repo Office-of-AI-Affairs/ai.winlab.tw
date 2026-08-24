@@ -1,4 +1,4 @@
-import { JsonLd } from "@/components/json-ld";
+import { JsonLd } from "@/components/seo/json-ld";
 import { EventsPageClient } from "./client";
 import { getPublishedEvents } from "./data";
 import type { Metadata } from "next";

@@ -12,12 +12,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AppLink } from "@/components/app-link";
-import { UserCreateDialog } from "@/components/user-create-dialog";
-import { UserEditDialog } from "@/components/user-edit-dialog";
-import { PageShell } from "@/components/page-shell";
-import { UsersTable } from "@/components/users-table";
-import type { UserRow } from "@/components/users-table";
+import { AppLink } from "@/components/shared/app-link";
+import { UserCreateDialog } from "@/components/admin/user-create-dialog";
+import { UserEditDialog } from "@/components/admin/user-edit-dialog";
+import { PageShell } from "@/components/shared/page-shell";
+import { UsersTable } from "@/components/admin/users-table";
+import type { UserRow } from "@/components/admin/users-table";
 import { createClient } from "@/lib/supabase/client";
 import { buildUsersCsv, parseUsersCsv } from "@/lib/users-csv";
 import { useT } from "@/lib/i18n/locale-provider";

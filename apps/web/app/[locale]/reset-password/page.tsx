@@ -1,6 +1,6 @@
 "use client";
 
-import { PageShell } from "@/components/page-shell";
+import { PageShell } from "@/components/shared/page-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

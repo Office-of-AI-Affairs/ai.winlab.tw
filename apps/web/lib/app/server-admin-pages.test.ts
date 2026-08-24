@@ -6,9 +6,9 @@ import { describe, test } from "node:test"
 const carouselPage = readFileSync(resolve(process.cwd(), "app/[locale]/carousel/page.tsx"), "utf8")
 const contactsPage = readFileSync(resolve(process.cwd(), "app/[locale]/contacts/page.tsx"), "utf8")
 const settingsUsersPage = readFileSync(resolve(process.cwd(), "app/[locale]/settings/users/page.tsx"), "utf8")
-const homeOrganization = readFileSync(resolve(process.cwd(), "components/home-organization.tsx"), "utf8")
-const homeStats = readFileSync(resolve(process.cwd(), "components/home-stats.tsx"), "utf8")
-const homePartners = readFileSync(resolve(process.cwd(), "components/home-partners.tsx"), "utf8")
+const homeOrganization = readFileSync(resolve(process.cwd(), "components/home/home-organization.tsx"), "utf8")
+const homeStats = readFileSync(resolve(process.cwd(), "components/home/home-stats.tsx"), "utf8")
+const homePartners = readFileSync(resolve(process.cwd(), "components/home/home-partners.tsx"), "utf8")
 const announcementPage = readFileSync(resolve(process.cwd(), "app/[locale]/announcement/page.tsx"), "utf8")
 const eventsPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/page.tsx"), "utf8")
 const eventDetailPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/page.tsx"), "utf8")
@@ -31,9 +31,9 @@ const eventResultDetailPage = readFileSync(resolve(process.cwd(), "app/[locale]/
 const eventResultArticleClient = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/results/[id]/article-client.tsx"), "utf8")
 const rootLayout = readFileSync(resolve(process.cwd(), "app/[locale]/layout.tsx"), "utf8")
 const homePage = readFileSync(resolve(process.cwd(), "app/[locale]/page.tsx"), "utf8")
-const homeCarousel = readFileSync(resolve(process.cwd(), "components/home-carousel.tsx"), "utf8")
-const homeContacts = readFileSync(resolve(process.cwd(), "components/home-contacts.tsx"), "utf8")
-const authProvider = readFileSync(resolve(process.cwd(), "components/auth-provider.tsx"), "utf8")
+const homeCarousel = readFileSync(resolve(process.cwd(), "components/home/home-carousel.tsx"), "utf8")
+const homeContacts = readFileSync(resolve(process.cwd(), "components/home/home-contacts.tsx"), "utf8")
+const authProvider = readFileSync(resolve(process.cwd(), "components/layout/auth-provider.tsx"), "utf8")
 const contactEditClient = readFileSync(resolve(process.cwd(), "app/[locale]/contacts/[id]/edit/client.tsx"), "utf8")
 const carouselEditClient = readFileSync(resolve(process.cwd(), "app/[locale]/carousel/[id]/edit/client.tsx"), "utf8")
 const organizationEditClient = readFileSync(resolve(process.cwd(), "app/[locale]/introduction/[id]/edit/client.tsx"), "utf8")
@@ -145,7 +145,7 @@ describe("server admin page contracts", () => {
     // Shared inline-edit client lives in components/; route-level wrappers
     // just specialize back-link / cache-tag / breadcrumb.
     const sharedAnnouncementArticleClient = readFileSync(
-      resolve(process.cwd(), "components/announcement-article-client.tsx"),
+      resolve(process.cwd(), "components/announcement/announcement-article-client.tsx"),
       "utf8",
     )
     assert.ok(sharedAnnouncementArticleClient.includes("useAuth("))
@@ -180,7 +180,7 @@ describe("server admin page contracts", () => {
     assert.ok(eventAnnouncementDetailPage.includes("EventAnnouncementArticleClient"))
     assert.ok(eventAnnouncementDetailPage.includes("EventAnnouncementDraftFallback"))
     assert.ok(eventAnnouncementArticleClient.includes("SharedAnnouncementArticleClient"))
-    assert.ok(existsSync(resolve(process.cwd(), "components/announcement-article-client.tsx")))
+    assert.ok(existsSync(resolve(process.cwd(), "components/announcement/announcement-article-client.tsx")))
   })
 
   test("introduction page hosts both view and edit on a single ISR-friendly route", () => {
@@ -272,7 +272,7 @@ describe("server admin page contracts", () => {
       carouselEditClient,
       organizationEditClient,
     ]) {
-      assert.ok(!content.includes('from "@/components/auth-provider"'))
+      assert.ok(!content.includes('from "@/components/layout/auth-provider"'))
       assert.ok(!content.includes("useAuth("))
       assert.ok(!content.includes("authLoading"))
     }

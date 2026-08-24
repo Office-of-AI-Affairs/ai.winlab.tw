@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/components/auth-provider";
+import { useAuth } from "@/components/layout/auth-provider";
 import { createClient } from "@/lib/supabase/client";
 import { generateUniqueAnnouncementSlug } from "@/lib/slug";
 import { useRouter } from "next/navigation";

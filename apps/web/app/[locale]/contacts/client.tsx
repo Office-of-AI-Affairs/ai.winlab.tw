@@ -1,7 +1,7 @@
 "use client";
 
-import { AppLink } from "@/components/app-link";
-import { PageShell } from "@/components/page-shell";
+import { AppLink } from "@/components/shared/app-link";
+import { PageShell } from "@/components/shared/page-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { revalidateContacts } from "@/app/[locale]/contacts/actions";

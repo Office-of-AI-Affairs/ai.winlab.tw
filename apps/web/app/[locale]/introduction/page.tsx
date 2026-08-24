@@ -1,5 +1,5 @@
-import { JsonLd } from "@/components/json-ld";
-import { PageShell } from "@/components/page-shell";
+import { JsonLd } from "@/components/seo/json-ld";
+import { PageShell } from "@/components/shared/page-shell";
 import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
 import type { Introduction, OrganizationMember, OrganizationMemberCategory } from "@winlab/db";

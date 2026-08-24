@@ -1,5 +1,5 @@
-import { InsightCardSkeleton } from "@/components/insight-card";
-import { PageShell } from "@/components/page-shell";
+import { InsightCardSkeleton } from "@/components/insights/insight-card";
+import { PageShell } from "@/components/shared/page-shell";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Loading() {

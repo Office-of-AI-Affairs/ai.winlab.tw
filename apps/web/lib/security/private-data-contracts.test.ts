@@ -22,7 +22,7 @@ const eventRecruitmentDetailPage = readFileSync(
   resolve(process.cwd(), "app/[locale]/events/[slug]/recruitment/[id]/page.tsx"),
   "utf8"
 )
-const recruitmentDialog = readFileSync(resolve(process.cwd(), "components/recruitment-dialog.tsx"), "utf8")
+const recruitmentDialog = readFileSync(resolve(process.cwd(), "components/events/recruitment-dialog.tsx"), "utf8")
 
 describe("private data contracts", () => {
   test("migration splits public profile reads away from private profile fields", () => {

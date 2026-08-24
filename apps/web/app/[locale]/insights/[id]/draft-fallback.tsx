@@ -1,7 +1,7 @@
 "use client";
 
 import type { ArticleListItem } from "@/app/[locale]/insights/data";
-import { useAuth } from "@/components/auth-provider";
+import { useAuth } from "@/components/layout/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase/client";

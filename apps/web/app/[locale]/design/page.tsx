@@ -1,6 +1,6 @@
-import { AppLink } from "@/components/app-link";
+import { AppLink } from "@/components/shared/app-link";
 import { Badge } from "@/components/ui/badge";
-import { Block } from "@/components/block";
+import { Block } from "@/components/shared/block";
 import { Button } from "@/components/ui/button";
 import {
   Card,

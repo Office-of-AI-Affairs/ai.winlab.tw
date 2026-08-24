@@ -1,10 +1,10 @@
 import "@/app/globals.css";
-import { AnalyticsBeacon } from "@/components/analytics-beacon";
-import { AppLink } from "@/components/app-link";
-import { AuthProvider } from "@/components/auth-provider";
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
-import { LazyToaster } from "@/components/lazy-toaster";
+import { AnalyticsBeacon } from "@/components/layout/analytics-beacon";
+import { AppLink } from "@/components/shared/app-link";
+import { AuthProvider } from "@/components/layout/auth-provider";
+import { Footer } from "@/components/layout/footer";
+import { Header } from "@/components/layout/header";
+import { LazyToaster } from "@/components/layout/lazy-toaster";
 import { getPinnedEvents } from "@/lib/supabase/get-pinned-events";
 import { SITE_DESCRIPTION_EN, SITE_DESCRIPTION_ZH, SITE_NAME } from "@/lib/site";
 import { defaultLocale, isLocale, locales, type Locale } from "@/lib/i18n/config";

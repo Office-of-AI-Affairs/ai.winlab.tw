@@ -1,13 +1,13 @@
 "use client";
 
-import { useAuth } from "@/components/auth-provider";
-import { AppLink } from "@/components/app-link";
+import { useAuth } from "@/components/layout/auth-provider";
+import { AppLink } from "@/components/shared/app-link";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Block } from "@/components/block";
+import { Block } from "@/components/shared/block";
 import { Button } from "@/components/ui/button";
-import { PageShell } from "@/components/page-shell";
+import { PageShell } from "@/components/shared/page-shell";
 import {
   Dialog,
   DialogContent,
@@ -16,12 +16,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SubButton } from "@/components/sub-button";
+import { SubButton } from "@/components/shared/sub-button";
 import { Textarea } from "@/components/ui/textarea";
 import { useProfileEditor, mergeAllLinks } from "@/hooks/use-profile-editor";
 import { useT } from "@/lib/i18n/locale-provider";
 import type { ExternalResult, Profile, Result } from "@winlab/db";
-import { VendorEventsSection } from "@/components/vendor-events-section";
+import { VendorEventsSection } from "@/components/events/vendor-events-section";
 import { hasCustomImage, isExternalImage } from "@/lib/utils";
 import { safeHref } from "@/lib/safe-href";
 import {

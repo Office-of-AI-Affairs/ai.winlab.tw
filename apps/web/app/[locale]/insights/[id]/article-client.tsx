@@ -2,13 +2,13 @@
 
 import { revalidateInsights } from "@/app/[locale]/insights/actions";
 import type { ArticleListItem } from "@/app/[locale]/insights/data";
-import { useAuth } from "@/components/auth-provider";
-import { EditActionsPill, type EditStatus } from "@/components/edit-actions-pill";
-import { EditModeToggle } from "@/components/edit-mode-toggle";
-import { JsonLd } from "@/components/json-ld";
-import { RichTextSurface } from "@/components/rich-text-surface";
-import { ShareButtons } from "@/components/share-buttons";
-import { Toc } from "@/components/toc";
+import { useAuth } from "@/components/layout/auth-provider";
+import { EditActionsPill, type EditStatus } from "@/components/editor/edit-actions-pill";
+import { EditModeToggle } from "@/components/editor/edit-mode-toggle";
+import { JsonLd } from "@/components/seo/json-ld";
+import { RichTextSurface } from "@/components/editor/rich-text-surface";
+import { ShareButtons } from "@/components/shared/share-buttons";
+import { Toc } from "@/components/shared/toc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

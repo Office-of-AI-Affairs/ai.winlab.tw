@@ -1,6 +1,6 @@
 import { createPublicClient } from "@/lib/supabase/public";
 import { composeRecruitment } from "@winlab/domain";
-import type { ResultWithMeta } from "@/components/result-card";
+import type { ResultWithMeta } from "@/components/events/result-card";
 import type {
   Announcement,
   Event,

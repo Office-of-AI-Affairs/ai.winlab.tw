@@ -13,7 +13,7 @@ const privacyPage = readFileSync(resolve(process.cwd(), "app/[locale]/privacy/pa
 const eventLayout = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/layout.tsx"), "utf8")
 const profileLayout = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/layout.tsx"), "utf8")
 const announcementDetailPage = readFileSync(resolve(process.cwd(), "app/[locale]/announcement/[id]/page.tsx"), "utf8")
-const announcementDetailArticleClient = readFileSync(resolve(process.cwd(), "components/announcement-article-client.tsx"), "utf8")
+const announcementDetailArticleClient = readFileSync(resolve(process.cwd(), "components/announcement/announcement-article-client.tsx"), "utf8")
 const eventAnnouncementDetailPage = readFileSync(
   resolve(process.cwd(), "app/[locale]/events/[slug]/announcements/[id]/page.tsx"),
   "utf8"

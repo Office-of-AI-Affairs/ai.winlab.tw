@@ -7,30 +7,30 @@ import SettingsLoading from "@/app/[locale]/settings/loading"
 import SettingsUsersLoading from "@/app/[locale]/settings/users/loading"
 import { renderToStaticMarkup } from "react-dom/server"
 
-import { AnnouncementTableSkeleton } from "@/components/announcement-table"
-import { EventCardSkeleton } from "@/components/event-card"
-import { PageShell } from "@/components/page-shell"
-import { ResultCard } from "@/components/result-card"
-import { RecruitmentCardSkeleton } from "@/components/recruitment-card"
-import { RecruitmentDetail } from "@/components/recruitment-detail"
-import { SettingsMenuSkeleton } from "@/components/settings-menu"
-import { UsersTableSkeleton } from "@/components/users-table"
-import { BlockSkeleton } from "@/components/block"
+import { AnnouncementTableSkeleton } from "@/components/announcement/announcement-table"
+import { EventCardSkeleton } from "@/components/events/event-card"
+import { PageShell } from "@/components/shared/page-shell"
+import { ResultCard } from "@/components/events/result-card"
+import { RecruitmentCardSkeleton } from "@/components/events/recruitment-card"
+import { RecruitmentDetail } from "@/components/events/recruitment-detail"
+import { SettingsMenuSkeleton } from "@/components/admin/settings-menu"
+import { UsersTableSkeleton } from "@/components/admin/users-table"
+import { BlockSkeleton } from "@/components/shared/block"
 import zhTW from "@/lib/i18n/messages/zh-TW.json"
 import { LocaleProvider } from "@/lib/i18n/locale-provider"
 import type { Recruitment, Result } from "@winlab/db"
 
-const tiptapEditorSource = readFileSync(resolve(process.cwd(), "components/tiptap-editor.tsx"), "utf8")
-const tiptapSharedCommandsPath = resolve(process.cwd(), "components/tiptap-editor-shared.tsx")
+const tiptapEditorSource = readFileSync(resolve(process.cwd(), "components/editor/tiptap-editor.tsx"), "utf8")
+const tiptapSharedCommandsPath = resolve(process.cwd(), "components/editor/tiptap-editor-shared.tsx")
 const tiptapSharedCommandsSource = existsSync(tiptapSharedCommandsPath)
   ? readFileSync(tiptapSharedCommandsPath, "utf8")
   : ""
-const tiptapDesktopBubbleMenuPath = resolve(process.cwd(), "components/tiptap-desktop-bubble-menu.tsx")
-const tiptapDesktopFloatingMenuPath = resolve(process.cwd(), "components/tiptap-desktop-floating-menu.tsx")
+const tiptapDesktopBubbleMenuPath = resolve(process.cwd(), "components/editor/tiptap-desktop-bubble-menu.tsx")
+const tiptapDesktopFloatingMenuPath = resolve(process.cwd(), "components/editor/tiptap-desktop-floating-menu.tsx")
 const tiptapDesktopBubbleMenuSource = existsSync(tiptapDesktopBubbleMenuPath)
   ? readFileSync(tiptapDesktopBubbleMenuPath, "utf8")
   : ""
-const tiptapMobileToolbarPath = resolve(process.cwd(), "components/tiptap-mobile-toolbar.tsx")
+const tiptapMobileToolbarPath = resolve(process.cwd(), "components/editor/tiptap-mobile-toolbar.tsx")
 const richTextContractPath = resolve(process.cwd(), "lib/ui/rich-text.ts")
 const richTextContractSource = existsSync(richTextContractPath)
   ? readFileSync(richTextContractPath, "utf8")

@@ -1,5 +1,5 @@
-import { PageShell } from "@/components/page-shell"
-import { SettingsMenuSkeleton } from "@/components/settings-menu"
+import { PageShell } from "@/components/shared/page-shell"
+import { SettingsMenuSkeleton } from "@/components/admin/settings-menu"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function Loading() {

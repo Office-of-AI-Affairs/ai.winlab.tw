@@ -1,4 +1,4 @@
-import { JsonLd } from "@/components/json-ld";
+import { JsonLd } from "@/components/seo/json-ld";
 import { AnnouncementPageClient } from "./client";
 import { getPublishedAnnouncements } from "./data";
 import type { Metadata } from "next";

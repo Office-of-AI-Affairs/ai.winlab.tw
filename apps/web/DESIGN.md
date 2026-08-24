@@ -247,7 +247,7 @@ The live gallery at **`/design`** renders one specimen of every primitive listed
 
 `<Button>` (`components/ui/button.tsx`) variants: `default` (primary), `secondary`, `destructive`, `outline`, `ghost`, plus `size="icon"` and `disabled`. All buttons inherit `interactive-scale` (hover `scale-1.02`, active `scale-0.98`) and `transition-[bg,border,color,shadow,opacity,transform]`. Don't apply `transition-all` anywhere — a contract test (`lib/ui/patterns.test.ts`) catches it.
 
-`<SubButton>` (`components/sub-button.tsx`) — secondary affordance that renders as an `<a>` (link mode) or `<button>` (action mode). Used for "back" links, lightweight CTAs that shouldn't compete with primary buttons.
+`<SubButton>` (`components/shared/sub-button.tsx`) — secondary affordance that renders as an `<a>` (link mode) or `<button>` (action mode). Used for "back" links, lightweight CTAs that shouldn't compete with primary buttons.
 
 ### Badges
 
@@ -314,11 +314,11 @@ Two families, identical glass treatment (`border border-border bg-background/95 
 
 **Action capsule** — `rounded-full`, `h-10`, single-row content:
 
-- `BubbleMenu` (Tiptap selection-bound formatting) — `components/tiptap-desktop-bubble-menu.tsx`
-- `FloatingMenu` block (Tiptap empty-line affordances, non-slash mode) — `components/tiptap-desktop-floating-menu.tsx`
-- `TiptapMobileToolbar` (closed state) — `components/tiptap-mobile-toolbar.tsx`
-- `EditModeToggle` (admin "編輯" pill in view mode) — `components/edit-mode-toggle.tsx`
-- `EditActionsPill` (status pill + dialog trigger in edit mode) — `components/edit-actions-pill.tsx`
+- `BubbleMenu` (Tiptap selection-bound formatting) — `components/editor/tiptap-desktop-bubble-menu.tsx`
+- `FloatingMenu` block (Tiptap empty-line affordances, non-slash mode) — `components/editor/tiptap-desktop-floating-menu.tsx`
+- `TiptapMobileToolbar` (closed state) — `components/editor/tiptap-mobile-toolbar.tsx`
+- `EditModeToggle` (admin "編輯" pill in view mode) — `components/editor/edit-mode-toggle.tsx`
+- `EditActionsPill` (status pill + dialog trigger in edit mode) — `components/editor/edit-actions-pill.tsx`
 
 **Panel** — `rounded-2xl`, padded, multi-row content:
 
@@ -338,12 +338,12 @@ Capsule on a multi-row container warps into an oval — use the panel shape ther
 
 ### Tiptap editor
 
-`<TiptapEditor>` (`components/tiptap-editor.tsx`) is the single rich-text editor. Two modes:
+`<TiptapEditor>` (`components/editor/tiptap-editor.tsx`) is the single rich-text editor. Two modes:
 
 - **Default (padded canvas)** — `editableRichTextDocumentClassName` adds `min-h-[360px] py-6 sm:py-8`, the canvas wraps in `rounded-lg bg-background`. Used by every dedicated `/edit` page.
 - **`flush={true}`** — drops the internal padding, min-height, and rounded canvas frame. `RichTextSurface` opts in for inline-edit pages where view and edit must pixel-align (only `/privacy` today; same pattern will apply to other inline-edit migrations).
 
-`<RichTextSurface>` (`components/rich-text-surface.tsx`) is the unified shell that renders server HTML in view mode and dynamically loads `TiptapEditor` (`flush`) in edit mode. View visitors never download Tiptap; admins do, only when `useEditMode` flips to `edit`.
+`<RichTextSurface>` (`components/editor/rich-text-surface.tsx`) is the unified shell that renders server HTML in view mode and dynamically loads `TiptapEditor` (`flush`) in edit mode. View visitors never download Tiptap; admins do, only when `useEditMode` flips to `edit`.
 
 ### Edit mode primitives
 
@@ -355,7 +355,7 @@ This trio is the inline view+edit template. Other rich-text pages (announcement,
 
 ### Links
 
-- `<AppLink>` (`components/app-link.tsx`) is the only link primitive. Internal links render as `<Link>`; external links auto-detect (`getAutoLinkProps` in `lib/ui/patterns.ts`) and add `target="_blank" rel="noopener noreferrer"`.
+- `<AppLink>` (`components/shared/app-link.tsx`) is the only link primitive. Internal links render as `<Link>`; external links auto-detect (`getAutoLinkProps` in `lib/ui/patterns.ts`) and add `target="_blank" rel="noopener noreferrer"`.
 - Never use raw `<a>` tags. Contract tests will eventually grow to enforce this.
 
 ### Toast

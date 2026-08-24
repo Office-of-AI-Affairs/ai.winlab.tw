@@ -1,5 +1,5 @@
-import { AnnouncementTableSkeleton } from "@/components/announcement-table"
-import { PageShell } from "@/components/page-shell"
+import { AnnouncementTableSkeleton } from "@/components/announcement/announcement-table"
+import { PageShell } from "@/components/shared/page-shell"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function Loading() {

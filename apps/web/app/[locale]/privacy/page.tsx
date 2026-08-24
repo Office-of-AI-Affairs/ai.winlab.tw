@@ -1,4 +1,4 @@
-import { JsonLd } from "@/components/json-ld"
+import { JsonLd } from "@/components/seo/json-ld"
 import { estimateReadingTime } from "@/lib/ui/reading-time"
 import { renderArticle } from "@/lib/ui/rich-text"
 import type { Metadata } from "next"

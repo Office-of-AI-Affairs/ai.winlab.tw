@@ -1,5 +1,5 @@
-import { SettingsMenu } from "@/components/settings-menu";
-import { PageShell } from "@/components/page-shell";
+import { SettingsMenu } from "@/components/admin/settings-menu";
+import { PageShell } from "@/components/shared/page-shell";
 import { getViewer } from "@/lib/supabase/get-viewer";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";

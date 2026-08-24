@@ -4,7 +4,7 @@ import { revalidateAllEventCaches } from "@/app/[locale]/events/actions"
 import {
   AnnouncementArticleClient as SharedAnnouncementArticleClient,
   type AnnouncementArticleClientProps,
-} from "@/components/announcement-article-client"
+} from "@/components/announcement/announcement-article-client"
 import { useT } from "@/lib/i18n/locale-provider"
 
 type Props = Omit<

@@ -9,7 +9,7 @@ const eventsClient = readFileSync(resolve(process.cwd(), "app/[locale]/events/cl
 const eventDetailPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/page.tsx"), "utf8")
 const eventDetailData = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/data.ts"), "utf8")
 const eventDetailClient = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/client.tsx"), "utf8")
-const memberEditor = readFileSync(resolve(process.cwd(), "components/member-editor.tsx"), "utf8")
+const memberEditor = readFileSync(resolve(process.cwd(), "components/events/member-editor.tsx"), "utf8")
 
 describe("events access contracts", () => {
   test("events index restricts drafts to admins", () => {

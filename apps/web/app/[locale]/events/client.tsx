@@ -1,11 +1,11 @@
 "use client";
 
-import { EventCard } from "@/components/event-card";
-import { EventsCreateButton } from "@/components/events-create-button";
-import { useAuth } from "@/components/auth-provider";
-import { PageShell } from "@/components/page-shell";
-import { Block } from "@/components/block";
-import { SubButton } from "@/components/sub-button";
+import { EventCard } from "@/components/events/event-card";
+import { EventsCreateButton } from "@/components/events/events-create-button";
+import { useAuth } from "@/components/layout/auth-provider";
+import { PageShell } from "@/components/shared/page-shell";
+import { Block } from "@/components/shared/block";
+import { SubButton } from "@/components/shared/sub-button";
 import { useT } from "@/lib/i18n/locale-provider";
 import { createClient } from "@/lib/supabase/client";
 import type { Event } from "@winlab/db";
