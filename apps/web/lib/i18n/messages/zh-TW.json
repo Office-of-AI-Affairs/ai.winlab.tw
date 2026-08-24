@@ -67,7 +67,8 @@
     "events": "活動",
     "privacy": "隱私權",
     "rss": "RSS",
-    "calendar": "訂閱行事曆"
+    "calendar": "訂閱行事曆",
+    "accessibility": "無障礙聲明"
   },
   "home": {
     "activityHeading": "最新動態",
@@ -662,7 +663,9 @@
     "editBanner": "編輯橫幅",
     "emptyAdminCta": "尚無橫幅，點此新增首頁輪播",
     "placeholderOrg": "國立陽明交通大學 人工智慧專責辦公室",
-    "placeholderWelcome": "歡迎來到 AI Office"
+    "placeholderWelcome": "歡迎來到 AI Office",
+    "pause": "暫停輪播播放",
+    "resume": "繼續輪播播放"
   },
   "auth": {
     "login": {

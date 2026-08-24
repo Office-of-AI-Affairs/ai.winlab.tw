@@ -8,6 +8,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { CarouselIndicators } from "@/components/home/carousel-indicators";
+import { CarouselPlayPauseButton } from "@/components/home/carousel-play-pause-button";
 import { AppLink } from "@/components/shared/app-link";
 import { useAuth } from "@/components/layout/auth-provider";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
@@ -35,6 +36,21 @@ export function CarouselClient({
     () => Autoplay({ delay: 5000, stopOnInteraction: true }),
     [],
   );
+  // Tracks a *manual* pause via the play/pause button below, distinct from
+  // the transient hover/focus stop (`plugin.stop`/`plugin.reset` on
+  // mouse/focus enter/leave). Manual pause must stick across hover/focus —
+  // moving the mouse away shouldn't silently resume autoplay the user
+  // explicitly paused (WCAG 2.2.2).
+  const [isManuallyPaused, setIsManuallyPaused] = React.useState(false);
+  const toggleAutoplay = React.useCallback(() => {
+    if (plugin.isPlaying()) {
+      plugin.stop();
+      setIsManuallyPaused(true);
+    } else {
+      plugin.play();
+      setIsManuallyPaused(false);
+    }
+  }, [plugin]);
 
   if (slides.length === 0) {
     if (isAdmin) {
@@ -80,9 +96,13 @@ export function CarouselClient({
           ? {}
           : {
               onMouseEnter: plugin.stop,
-              onMouseLeave: plugin.reset,
+              onMouseLeave: () => {
+                if (!isManuallyPaused) plugin.reset();
+              },
               onFocus: plugin.stop,
-              onBlur: plugin.reset,
+              onBlur: () => {
+                if (!isManuallyPaused) plugin.reset();
+              },
             })}
         opts={{ loop: true }}
       >
@@ -173,6 +193,15 @@ export function CarouselClient({
           <ChevronRight className="h-6 w-6 md:h-8 md:w-8" />
         </CarouselNext>
         <CarouselIndicators className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2" />
+        {!prefersReducedMotion && (
+          <CarouselPlayPauseButton
+            paused={isManuallyPaused}
+            onToggle={toggleAutoplay}
+            pauseLabel={t.carousel.pause}
+            playLabel={t.carousel.resume}
+            className="absolute bottom-4 md:bottom-6 right-3 md:right-4 z-10"
+          />
+        )}
       </Carousel>
     </div>
   );
