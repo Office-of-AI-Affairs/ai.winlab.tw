@@ -1,4 +1,5 @@
 import "@/app/globals.css";
+import { AnalyticsBeacon } from "@/components/analytics-beacon";
 import { AppLink } from "@/components/app-link";
 import { AuthProvider } from "@/components/auth-provider";
 import { Footer } from "@/components/footer";
@@ -127,6 +128,7 @@ export default async function RootLayout({
                   <Footer t={dict.footer} locale={locale} />
                 </div>
                 <LazyToaster />
+                <AnalyticsBeacon />
               </AuthProvider>
             </NuqsAdapter>
           </LocaleProvider>

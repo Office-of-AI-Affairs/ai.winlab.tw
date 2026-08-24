@@ -26,3 +26,19 @@ export function emitErrorLog(input: {
     },
   });
 }
+
+/**
+ * Sibling of `emitErrorLog` for first-party client analytics (pageview /
+ * web-vital beacons — see `app/api/beacon/route.ts`) rather than server
+ * errors, so it gets its own severity (INFO, not ERROR) and no `digest`
+ * field. Same no-op-when-unregistered guarantee as `emitErrorLog`.
+ */
+export function emitAnalyticsLog(input: { name: string; attributes?: LogAttributes }): void {
+  const logger = logs.getLogger("web");
+  logger.emit({
+    severityNumber: SeverityNumber.INFO,
+    severityText: "INFO",
+    body: input.name,
+    attributes: input.attributes,
+  });
+}
