@@ -67,7 +67,8 @@
     "events": "活動",
     "privacy": "隱私權",
     "rss": "RSS",
-    "calendar": "訂閱行事曆"
+    "calendar": "訂閱行事曆",
+    "accessibility": "無障礙聲明"
   },
   "home": {
     "activityHeading": "最新動態",
@@ -643,6 +644,25 @@
     "current": "目前",
     "restore": "載入"
   },
+  "accessibility": {
+    "meta": {
+      "title": "無障礙聲明｜人工智慧專責辦公室",
+      "description": "國立陽明交通大學人工智慧專責辦公室網站的無障礙聲明：適用標準、已知限制與回報方式。"
+    },
+    "heading": "無障礙聲明",
+    "intro": "國立陽明交通大學人工智慧專責辦公室致力於讓本網站對所有使用者可存取，包括依賴螢幕閱讀器、鍵盤操作或需要減少動態效果的使用者。",
+    "conformanceHeading": "適用標準",
+    "conformanceBody": "本網站以《網頁內容無障礙指引》（WCAG）2.1 AA 等級為目標，並持續檢視與改善。",
+    "limitationsHeading": "已知限制",
+    "limitationsIntro": "儘管我們持續努力，以下部分內容目前尚未完全符合上述標準：",
+    "limitationZhOnlyArticles": "部分公告與成果文章僅提供中文版本，尚未翻譯為英文。",
+    "limitationThirdPartyEmbeds": "部分頁面內嵌的第三方服務（例如報名表單、地圖或影片）由外部廠商提供，其無障礙程度不在本辦公室直接控制範圍內。",
+    "limitationLegacyContent": "少數歷史公告與活動內容建立於本無障礙政策訂定之前，可能未完全符合現行標準。",
+    "contactHeading": "問題回報",
+    "contactBody": "若您在使用本網站時遇到無障礙相關問題，歡迎與我們聯絡，我們會儘速協助處理：",
+    "lastReviewedHeading": "最後檢視日期",
+    "lastReviewedLabel": "本聲明最後檢視於"
+  },
   "carousel": {
     "untitled": "(無標題)",
     "heading": "首頁橫幅",
@@ -662,7 +682,9 @@
     "editBanner": "編輯橫幅",
     "emptyAdminCta": "尚無橫幅，點此新增首頁輪播",
     "placeholderOrg": "國立陽明交通大學 人工智慧專責辦公室",
-    "placeholderWelcome": "歡迎來到 AI Office"
+    "placeholderWelcome": "歡迎來到 AI Office",
+    "pause": "暫停輪播播放",
+    "resume": "繼續輪播播放"
   },
   "auth": {
     "login": {

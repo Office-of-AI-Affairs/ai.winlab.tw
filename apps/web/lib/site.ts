@@ -51,3 +51,13 @@ export const SITE_DESCRIPTION_EN =
 export function siteTitle(locale: "zh-TW" | "en"): string {
   return locale === "en" ? SITE_NAME_EN : SITE_NAME;
 }
+
+/**
+ * Contact address for accessibility issue reports (`/accessibility`).
+ * Matches the office's public contact (see the `contacts` table / homepage
+ * contact card) rather than a dedicated inbox, since none exists yet.
+ */
+export const ACCESSIBILITY_CONTACT_EMAIL = "hsinyungchen@nycu.edu.tw";
+
+/** Date the `/accessibility` statement was last reviewed (ISO, `YYYY-MM-DD`). */
+export const ACCESSIBILITY_LAST_REVIEWED = "2026-08-24";
