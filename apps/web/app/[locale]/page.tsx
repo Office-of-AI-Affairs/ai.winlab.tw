@@ -4,6 +4,8 @@ import { HomeCarousel } from "@/components/home-carousel";
 import { HomeContacts } from "@/components/home-contacts";
 import { HomeEvents } from "@/components/home-events";
 import { HomeIntroduction } from "@/components/home-introduction";
+import { HomePartners } from "@/components/home-partners";
+import { HomeStats } from "@/components/home-stats";
 import { Reveal } from "@/components/reveal";
 import { JsonLd } from "@/components/json-ld";
 import { SITE_NAME, SITE_NAME_EN, SITE_NAME_ZH } from "@/lib/site";
@@ -72,10 +74,17 @@ export default async function Home({
     <main className="flex flex-col">
       <JsonLd data={structuredData} />
       <HomeCarousel />
+      {/* Not wrapped in <Reveal>: the stats band and partner wall are pure
+          DB-driven numbers/logos, not decorative copy — they must render
+          visible without JS (Reveal's initial state is opacity-0 until an
+          IntersectionObserver effect flips it, which never runs without
+          hydration). */}
+      <HomeStats t={dict.home} />
       <Reveal><HomeIntroduction t={dict.home} locale={locale} /></Reveal>
       <Reveal><HomeActivity t={dict.home} kindLabels={dict.activityKind} locale={locale} /></Reveal>
       <Reveal><HomeAnnouncement t={dict.home} locale={locale} /></Reveal>
       <Reveal><HomeEvents t={dict.home} locale={locale} /></Reveal>
+      <HomePartners t={dict.home} locale={locale} />
       <Reveal><HomeContacts t={dict.home} /></Reveal>
     </main>
   );
