@@ -1,5 +1,6 @@
+import { after } from "next/server";
 import { normalizeBeaconEvent } from "@/lib/analytics/schema";
-import { emitAnalyticsLog } from "@/lib/otel/log";
+import { emitAnalyticsLog, flushLogs } from "@/lib/otel/log";
 
 /**
  * First-party, cookieless analytics beacon for public (ISR/static) pages —
@@ -15,6 +16,13 @@ import { emitAnalyticsLog } from "@/lib/otel/log";
  * Contract with visitors: this endpoint never surfaces an error. Bad/oversize
  * payloads and cross-origin requests are silently dropped; the response is
  * always `204` so a broken/blocked beacon can never affect page behavior.
+ *
+ * `after()` (not an inline `await flushLogs()`) matters here: on Vercel, the
+ * function instance freezes the moment the `204` response is sent, so
+ * `BatchLogRecordProcessor`'s own export schedule may never get a turn —
+ * `after()` is what keeps the instance alive long enough for the flush to
+ * finish without adding that latency to the response itself. See
+ * `flushLogs`'s doc comment in lib/otel/log.ts for the full story.
  */
 export const runtime = "nodejs";
 
@@ -115,6 +123,10 @@ export async function POST(req: Request): Promise<Response> {
       },
     });
   }
+
+  // Scheduled for after the response is sent — never adds latency to the
+  // 204, but still runs while Vercel keeps the invocation alive.
+  after(() => flushLogs());
 
   return noContent();
 }
