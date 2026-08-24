@@ -39,6 +39,7 @@ const eventResultDetailPage = readFileSync(
   resolve(process.cwd(), "app/[locale]/events/[slug]/results/[id]/page.tsx"),
   "utf8"
 )
+const jsonldBuilders = readFileSync(resolve(process.cwd(), "lib/seo/jsonld.ts"), "utf8")
 
 describe("metadata contracts", () => {
   test("root metadata defines metadataBase and open graph defaults", () => {
@@ -99,16 +100,22 @@ describe("metadata contracts", () => {
   })
 
   test("public pages render the expected structured data types", () => {
-    assert.ok(homePage.includes('"@type": "Organization"'))
+    // Organization, NewsArticle, and Event moved into typed builders
+    // (lib/seo/jsonld.ts) — assert each page calls the right builder, and
+    // that the builder itself still declares the matching @type.
+    assert.ok(homePage.includes("buildOrganizationJsonLd("))
+    assert.ok(jsonldBuilders.includes('"@type": "Organization"'))
     assert.ok(announcementPage.includes('"@type": "ItemList"'))
     assert.ok(eventsPage.includes('"@type": "ItemList"'))
     assert.ok(profileLayout.includes('"@type": "Person"'))
     // NewsArticle JSON-LD lives in the announcement article client (the
     // detail page now hands off to the inline view+edit client).
-    assert.ok(announcementDetailArticleClient.includes('"@type": "NewsArticle"'))
+    assert.ok(announcementDetailArticleClient.includes("buildNewsArticleJsonLd("))
+    assert.ok(jsonldBuilders.includes('"@type": "NewsArticle"'))
     // Event JSON-LD moved from /events/[slug]/page.tsx (now a redirect) to
     // the parent layout so it's emitted on every tab listing (issue #1).
-    assert.ok(eventLayout.includes('"@type": "Event"'))
+    assert.ok(eventLayout.includes("buildEventJsonLd("))
+    assert.ok(jsonldBuilders.includes('"@type": "Event"'))
     assert.ok(!eventPage.includes('"@type": "Event"'))
     assert.ok(eventRecruitmentDetailPage.includes('"@type": "JobPosting"'))
   })

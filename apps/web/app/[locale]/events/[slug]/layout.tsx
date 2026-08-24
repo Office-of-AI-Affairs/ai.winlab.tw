@@ -4,6 +4,7 @@ import { JsonLd } from "@/components/json-ld";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { defaultLocale, isLocale } from "@/lib/i18n/config";
 import { localeAlternates } from "@/lib/i18n/seo";
+import { buildEventJsonLd } from "@/lib/seo/jsonld";
 import type { Metadata } from "next";
 
 const getEventMeta = unstable_cache(
@@ -70,21 +71,17 @@ export default async function Layout({
   const locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
   const dict = await getDictionary(locale);
   const data = await getEventMeta(slug);
+  // The `events` table has no start/end date columns today — omit rather
+  // than fake dates on the Event JSON-LD (see lib/seo/jsonld.ts).
   const structuredData = data
-    ? {
-        "@context": "https://schema.org",
-        "@type": "Event",
+    ? buildEventJsonLd({
         name: data.name,
         description:
           data.description ?? dict.events.meta.fallbackDescription.replace("{name}", data.name),
         url: `https://ai.winlab.tw/events/${slug}`,
-        eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-        organizer: {
-          "@type": "Organization",
-          name: dict.common.orgFullName,
-          url: "https://ai.winlab.tw",
-        },
-      }
+        organizerName: dict.common.orgFullName,
+        organizerUrl: "https://ai.winlab.tw",
+      })
     : null;
 
   return (
