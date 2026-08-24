@@ -118,3 +118,11 @@ export type RecruitmentPrivateDetails = {
 export type RecruitmentInterest = Tables<"recruitment_interests">;
 
 export type CompetitionOwner = Tables<"competition_owners">;
+
+// === Editorial workflow (#47) — revisions + audit log ===
+
+export type ContentRevisionTableName = "announcements" | "results";
+export type ContentRevision = Tables<"content_revisions">;
+
+export type AuditLogAction = "insert" | "update" | "delete";
+export type AuditLogEntry = Tables<"audit_log">;

@@ -23,6 +23,10 @@ export type Database = {
           date: string
           event_id: string | null
           id: string
+          // Hand-added ahead of `bun run gen:types` — the editorial-workflow
+          // migration (20260825000001_editorial_workflow.sql) hasn't been
+          // applied to the live project yet. Regenerate after it lands.
+          publish_at: string | null
           slug: string
           status: string
           title: string
@@ -37,6 +41,7 @@ export type Database = {
           date?: string
           event_id?: string | null
           id?: string
+          publish_at?: string | null
           slug?: string
           status?: string
           title?: string
@@ -51,6 +56,7 @@ export type Database = {
           date?: string
           event_id?: string | null
           id?: string
+          publish_at?: string | null
           slug?: string
           status?: string
           title?: string
@@ -103,6 +109,38 @@ export type Database = {
           summary?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      // Hand-added ahead of `bun run gen:types` — see the announcements.
+      // publish_at comment above for why.
+      audit_log: {
+        Row: {
+          action: string
+          actor: string | null
+          changed_fields: string[] | null
+          created_at: string
+          id: string
+          row_id: string | null
+          table_name: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          changed_fields?: string[] | null
+          created_at?: string
+          id?: string
+          row_id?: string | null
+          table_name: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          changed_fields?: string[] | null
+          created_at?: string
+          id?: string
+          row_id?: string | null
+          table_name?: string
         }
         Relationships: []
       }
@@ -264,6 +302,35 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      // Hand-added ahead of `bun run gen:types` — see the announcements.
+      // publish_at comment above for why.
+      content_revisions: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          id: string
+          row_id: string
+          snapshot: Json
+          table_name: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          row_id: string
+          snapshot: Json
+          table_name: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          row_id?: string
+          snapshot?: Json
+          table_name?: string
+        }
+        Relationships: []
       }
       contacts: {
         Row: {
@@ -903,6 +970,9 @@ export type Database = {
         Returns: undefined
       }
       current_user_is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      // Hand-added ahead of `bun run gen:types` — see the announcements.
+      // publish_at comment above for why.
+      current_user_is_editor: { Args: Record<PropertyKey, never>; Returns: boolean }
       current_user_owns_recruitment_with_applicant: {
         Args: { target_user_id: string }
         Returns: boolean
