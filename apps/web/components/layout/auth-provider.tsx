@@ -26,6 +26,8 @@ type AuthContextType = {
   isAdmin: boolean;
   isVendor: boolean;
   isMember: boolean;
+  /** `profile.role === 'editor'` — draft-only announcements/results, never publish. See CLAUDE.md "Editorial workflow". */
+  isEditor: boolean;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
@@ -200,6 +202,7 @@ export function AuthProvider({
         isAdmin: profile?.role === "admin",
         isVendor: profile?.role === "vendor",
         isMember: profile?.role === "member",
+        isEditor: profile?.role === "editor",
         isLoading,
         signIn,
         signOut,

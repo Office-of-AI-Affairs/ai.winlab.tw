@@ -7,6 +7,7 @@ import type { Dictionary } from "@/lib/i18n/dictionary";
 import { localizedField } from "@/lib/i18n/localized-field";
 import { localizedPath } from "@/lib/i18n/routing";
 import { createPublicClient } from "@/lib/supabase/public";
+import { livePublishAtFilter } from "@/lib/scheduling";
 import Link from "next/link";
 
 type ActivityItem = {
@@ -63,6 +64,7 @@ export async function HomeActivity({
       .select("id, slug, title, title_en, event_id, created_at")
       .in("event_id", eventIds)
       .eq("status", "published")
+      .or(livePublishAtFilter())
       .order("created_at", { ascending: false })
       .limit(15),
     supabase

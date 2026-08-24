@@ -57,9 +57,14 @@ export function ResultArticleClient({
   const router = useRouter()
   const t = useT()
   const locale = useLocale()
-  const { user, isAdmin } = useAuth()
+  const { user, isAdmin, isEditor } = useAuth()
   const isAuthor = !!user && user.id === initialResult.author_id
-  const canEdit = isAdmin || isAuthor
+  // Publish/delete stay admin-or-author only (unchanged product behavior —
+  // authors could already self-publish before #47). Editors additionally
+  // get edit access, but only while the result is still a draft, and can
+  // never publish or delete — enforced in RLS, mirrored here in the UI.
+  const canPublishOrDelete = isAdmin || isAuthor
+  const canEdit = canPublishOrDelete || (isEditor && initialResult.status !== "published")
   const { isEditing, setMode } = useEditMode({ enabled: canEdit })
   const didApplyInitialMode = useRef(false)
 
@@ -377,23 +382,25 @@ export function ResultArticleClient({
           />
 
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              onClick={async () => {
-                await remove()
-                router.push(`/events/${slug}/results`)
-              }}
-              disabled={isSaving || isPublishing || isDeleting}
-            >
-              {isDeleting ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Trash2 className="size-4" />
-              )}
-              {t.results.edit.delete}
-            </Button>
+            {canPublishOrDelete && (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={async () => {
+                  await remove()
+                  router.push(`/events/${slug}/results`)
+                }}
+                disabled={isSaving || isPublishing || isDeleting}
+              >
+                {isDeleting ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Trash2 className="size-4" />
+                )}
+                {t.results.edit.delete}
+              </Button>
+            )}
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 type="button"
@@ -405,20 +412,22 @@ export function ResultArticleClient({
                 <LogOut className="size-4" />
                 {t.actions.exitEdit}
               </Button>
-              <Button
-                type="button"
-                variant={result.status === "published" ? "outline" : "default"}
-                size="sm"
-                onClick={() => void publish()}
-                disabled={isSaving || isPublishing || isDeleting}
-              >
-                {isPublishing ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Send className="size-4" />
-                )}
-                {result.status === "published" ? t.actions.unpublish : t.actions.publish}
-              </Button>
+              {canPublishOrDelete && (
+                <Button
+                  type="button"
+                  variant={result.status === "published" ? "outline" : "default"}
+                  size="sm"
+                  onClick={() => void publish()}
+                  disabled={isSaving || isPublishing || isDeleting}
+                >
+                  {isPublishing ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Send className="size-4" />
+                  )}
+                  {result.status === "published" ? t.actions.unpublish : t.actions.publish}
+                </Button>
+              )}
             </div>
           </div>
         </EditActionsPill>

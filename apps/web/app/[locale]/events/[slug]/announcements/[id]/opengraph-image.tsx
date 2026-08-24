@@ -1,4 +1,5 @@
 import { createPublicClient } from "@/lib/supabase/public";
+import { livePublishAtFilter } from "@/lib/scheduling";
 import type { Announcement } from "@winlab/db";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
@@ -31,6 +32,7 @@ async function findAnnouncement(
     .select("*")
     .eq("event_id", eventId)
     .eq("status", "published")
+    .or(livePublishAtFilter())
     .eq("slug", param)
     .maybeSingle();
   if (bySlug) return bySlug as Announcement;
@@ -40,6 +42,7 @@ async function findAnnouncement(
     .select("*")
     .eq("event_id", eventId)
     .eq("status", "published")
+    .or(livePublishAtFilter())
     .eq("id", param)
     .maybeSingle();
   return (byId as Announcement | null) ?? null;

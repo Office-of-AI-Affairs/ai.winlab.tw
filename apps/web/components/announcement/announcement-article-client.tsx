@@ -3,6 +3,7 @@
 import { useAuth } from "@/components/layout/auth-provider"
 import { EditActionsPill, type EditStatus } from "@/components/editor/edit-actions-pill"
 import { EditModeToggle } from "@/components/editor/edit-mode-toggle"
+import { RevisionHistoryPanel } from "@/components/editor/revision-history-panel"
 import { JsonLd } from "@/components/seo/json-ld"
 import { RichTextSurface } from "@/components/editor/rich-text-surface"
 import { ShareButtons } from "@/components/shared/share-buttons"
@@ -15,6 +16,8 @@ import { useEditMode } from "@/hooks/use-edit-mode"
 import { useLocale, useT } from "@/lib/i18n/locale-provider"
 import { localizedField } from "@/lib/i18n/localized-field"
 import { formatDate } from "@/lib/date"
+import { parseAnnouncementRevisionSnapshot } from "@/lib/revisions"
+import { fromDatetimeLocalValue, toDatetimeLocalValue } from "@/lib/scheduling"
 import { buildBreadcrumbJsonLd, buildNewsArticleJsonLd } from "@/lib/seo/jsonld"
 import { generateUniqueAnnouncementSlug } from "@/lib/slug"
 import { createClient } from "@/lib/supabase/client"
@@ -24,6 +27,7 @@ import { ArrowLeft, Loader2, LogOut, Send, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
 
 export type AnnouncementArticleClientProps = {
   initialAnnouncement: Announcement
@@ -68,17 +72,21 @@ export function AnnouncementArticleClient({
   const router = useRouter()
   const t = useT()
   const locale = useLocale()
-  const { isAdmin } = useAuth()
+  const { isAdmin, isEditor } = useAuth()
   const resolvedBackLabel = backLabel ?? t.actions.back
   const resolvedManageTitle = manageTitle ?? t.editor.manageAnnouncement
-  const { isEditing, setMode } = useEditMode({ enabled: isAdmin })
+  // Editors can only enter edit mode on a draft — RLS enforces the same
+  // boundary at the DB level (see the editorial-workflow migration), this
+  // is just keeping the UI from offering an action that would fail.
+  const canEdit = isAdmin || (isEditor && initialAnnouncement.status !== "published")
+  const { isEditing, setMode } = useEditMode({ enabled: canEdit })
   const didApplyInitialMode = useRef(false)
 
   useEffect(() => {
     if (didApplyInitialMode.current) return
-    if (initialMode === "edit" && isAdmin) setMode("edit")
+    if (initialMode === "edit" && canEdit) setMode("edit")
     didApplyInitialMode.current = true
-  }, [initialMode, isAdmin, setMode])
+  }, [initialMode, canEdit, setMode])
 
   // Own client just for the slug backstop below — useContentEditor keeps its
   // Supabase reference internal.
@@ -114,6 +122,43 @@ export function AnnouncementArticleClient({
     return true
   }, [])
 
+  // Restore writes immediately (not through the 3s autosave debounce) so
+  // the admin sees the effect right away. The write itself is a plain
+  // UPDATE, so it creates its own new revision — a restore can always be
+  // undone. Known trade-off: this doesn't sync useContentEditor's internal
+  // `savedData`, so the status pill may show "unsaved" until the next
+  // autosave tick re-sends the (already-persisted) values — harmless, just
+  // a UI blip.
+  const handleRestore = useCallback(
+    async (rawSnapshot: Record<string, unknown>) => {
+      const snap = parseAnnouncementRevisionSnapshot(rawSnapshot)
+      const current = announcementRef.current
+      const payload = {
+        title: snap.title ?? current.title,
+        title_en: snap.title_en,
+        content: snap.content ?? current.content,
+        category: snap.category ?? current.category,
+        date: snap.date ?? current.date,
+        publish_at: snap.publish_at,
+      }
+      // `content` is `Record<string, unknown>` in the domain type
+      // (@winlab/db's `Announcement`) vs. `Json` on the generated client's
+      // column type — same widening `.update()` calls elsewhere in this
+      // codebase route around; `as never` sidesteps it for this one call.
+      const { error } = await slugSupabaseRef.current
+        .from("announcements")
+        .update(payload as never)
+        .eq("id", initialAnnouncement.id)
+      if (error) {
+        toast.error(t.editor.history.restoreFailed)
+        return
+      }
+      setAnnouncementRef.current?.((prev) => ({ ...prev, ...payload }))
+      toast.success(t.editor.history.restoreSuccess)
+    },
+    [initialAnnouncement.id, t],
+  )
+
   const {
     data: announcement,
     setData: setAnnouncement,
@@ -128,7 +173,7 @@ export function AnnouncementArticleClient({
     table: "announcements",
     id: initialAnnouncement.id,
     initialData: initialAnnouncement,
-    fields: ["title", "title_en", "category", "date", "content"],
+    fields: ["title", "title_en", "category", "date", "content", "publish_at"],
     redirectTo: backHref,
     onBeforeSave: onBeforeSaveAssignSlug,
     onAfterSave: onCacheInvalidate,
@@ -309,7 +354,7 @@ export function AnnouncementArticleClient({
         <Toc items={toc} className="hidden lg:block" />
       </div>
 
-      {isAdmin && !isEditing && <EditModeToggle onClick={() => setMode("edit")} />}
+      {canEdit && !isEditing && <EditModeToggle onClick={() => setMode("edit")} />}
 
       {isEditing && (
         <EditActionsPill
@@ -358,24 +403,57 @@ export function AnnouncementArticleClient({
             />
           </div>
 
+          {/* Scheduled publishing (#47) — admin only: an editor can never
+              set status='published' (RLS-enforced), so offering a publish
+              schedule to them would be a dead control. */}
+          {isAdmin && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="announcement-publish-at" className="text-sm">
+                {t.editor.publishAtLabel}
+              </Label>
+              <Input
+                id="announcement-publish-at"
+                type="datetime-local"
+                value={toDatetimeLocalValue(announcement.publish_at)}
+                onChange={(event) =>
+                  setAnnouncement((prev) => ({
+                    ...prev,
+                    publish_at: fromDatetimeLocalValue(event.target.value),
+                  }))
+                }
+                disabled={isSaving || isPublishing || isDeleting}
+              />
+              <p className="text-xs text-muted-foreground">{t.editor.publishAtHint}</p>
+            </div>
+          )}
+
+          <RevisionHistoryPanel
+            tableName="announcements"
+            rowId={initialAnnouncement.id}
+            disabled={isSaving || isPublishing || isDeleting}
+            onRestore={handleRestore}
+          />
+
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              onClick={async () => {
-                await remove()
-                router.push(backHref)
-              }}
-              disabled={isSaving || isPublishing || isDeleting}
-            >
-              {isDeleting ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Trash2 className="size-4" />
-              )}
-              {t.editor.deleteAnnouncement}
-            </Button>
+            {isAdmin && (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={async () => {
+                  await remove()
+                  router.push(backHref)
+                }}
+                disabled={isSaving || isPublishing || isDeleting}
+              >
+                {isDeleting ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Trash2 className="size-4" />
+                )}
+                {t.editor.deleteAnnouncement}
+              </Button>
+            )}
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 type="button"
@@ -387,20 +465,24 @@ export function AnnouncementArticleClient({
                 <LogOut className="size-4" />
                 {t.actions.exitEdit}
               </Button>
-              <Button
-                type="button"
-                variant={announcement.status === "published" ? "outline" : "default"}
-                size="sm"
-                onClick={() => void publish()}
-                disabled={isSaving || isPublishing || isDeleting}
-              >
-                {isPublishing ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Send className="size-4" />
-                )}
-                {announcement.status === "published" ? t.actions.unpublish : t.actions.publish}
-              </Button>
+              {/* Editors never see this — RLS blocks status='published'
+                  writes for them regardless, this just keeps the UI honest. */}
+              {isAdmin && (
+                <Button
+                  type="button"
+                  variant={announcement.status === "published" ? "outline" : "default"}
+                  size="sm"
+                  onClick={() => void publish()}
+                  disabled={isSaving || isPublishing || isDeleting}
+                >
+                  {isPublishing ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Send className="size-4" />
+                  )}
+                  {announcement.status === "published" ? t.actions.unpublish : t.actions.publish}
+                </Button>
+              )}
             </div>
           </div>
         </EditActionsPill>

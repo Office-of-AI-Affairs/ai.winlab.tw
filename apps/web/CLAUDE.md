@@ -16,6 +16,9 @@
   - CDN opt-in：`NEXT_PUBLIC_CDN_BASE_URL`（見「CDN」段；未設則 `toCdnUrl` no-op）
   - Analytics kill switch：`NEXT_PUBLIC_ANALYTICS_DISABLED=1` 關閉 `<AnalyticsBeacon />`（見「Analytics」段）
   - Playwright E2E：`CLAUDE_AGENT_EMAIL` / `CLAUDE_AGENT_PASSWORD` / `CLAUDE_AGENT_USER_ID`（dedicated admin account）
+  - Cron：`CRON_SECRET`（Vercel 自動帶 `Authorization: Bearer $CRON_SECRET` 打
+    `/api/cron/publish-scheduled`；見「Editorial workflow」段。未設時該 route 回
+    500，不會誤放行）
 
 ### Verification
 
@@ -87,9 +90,14 @@ checklist live in the `isr-page` skill.
 | Server Component / Route Handler | `@/lib/supabase/server` |
 | Cookieless public read (ISR data.ts) | `@/lib/supabase/public` |
 
-- 未登入 → 只看 `status: published`
-- 登入非 admin → 自己的草稿 + 所有 published
+- 未登入 → 只看 `status: published` 且已到 `publish_at`（announcements 限定，見
+  「Editorial workflow」段）
+- 登入非 admin/editor → 自己的草稿 + 所有已上線 published
 - admin → 完整讀寫（`profile.role === 'admin'`）
+- editor → `profile.role === 'editor'`；能建立/編輯 announcements + results 的
+  **draft**，不能設 `status: 'published'`、不能改已 published 的 row（RLS
+  `WITH CHECK` 擋，不只是 UI 隱藏），無 users/carousel/contacts/introduction
+  管理權；`useAuth().isEditor`
 - vendor → 被 admin 指派為**某筆 recruitment 的 owner** 後才有權限（`competition_owners` pivot）
   - Owner = 能編輯該筆 recruitment + 查看應徵者
   - **只有 admin 能管理 owner 清單**（新增/移除）
@@ -108,8 +116,14 @@ checklist live in the `isr-page` skill.
 
 ## Data model (`lib/supabase/types.ts`)
 
-- **Announcement** — Tiptap JSON，`status: draft|published`，`event_id`（null = 全域）
+- **Announcement** — Tiptap JSON，`status: draft|published`，`event_id`（null = 全域），
+  `publish_at`（選填 timestamptz，排程發布，見「Editorial workflow」段）
 - **Result** — `pinned`，`event_id`（個人成果，team 子系統 2026-04-30 已下線）
+- **ContentRevision**（DB: `content_revisions`）— announcements/results 的
+  editorial 欄位快照，AFTER UPDATE trigger 寫入，restore = 一次新的 UPDATE
+- **AuditLogEntry**（DB: `audit_log`）— announcements/results/events/
+  carousel_slides/organization_members 的 insert/update/delete 記錄，
+  admin-only 讀取
 - **Recruitment**（DB: `competitions`）— `event_id`，JSON: `positions`、`application_method`、`contact`；`created_by`（稽核用，權限判斷不看這個）
 - **CompetitionOwner**（DB: `competition_owners`）— recruitment ↔ user 多對多 pivot，權限判斷核心；新 INSERT 時 trigger `auto_add_recruitment_owner` 把 creator 自動加進去
 - **RecruitmentInterest**（DB: `recruitment_interests`）
@@ -118,7 +132,7 @@ checklist live in the `isr-page` skill.
 - **Event** — `slug`，`status`，`pinned`，`sort_order`
 - **Introduction** — 單筆，Tiptap JSON
 - **OrganizationMember** — `category: core|legal_entity|industry`
-- **Profile** — `role: admin|user|vendor`，profile fields、social links、**resume（object path, not URL）**
+- **Profile** — `role: admin|user|vendor|member|editor`，profile fields、social links、**resume（object path, not URL）**
 - **PublicProfile** — authenticated-reachable view of profiles plus
   `has_profile_data` boolean kept in sync by a trigger (used by the
   cookieless `/events/[slug]` fetcher)
@@ -142,6 +156,45 @@ Conventions:
   - `recompress-tiptap-images.ts` — jsonb Tiptap embeds
   - `cleanup-orphans.ts` — DB-unreferenced storage objects
 
+## Editorial workflow (#47)
+
+- **Scheduled publishing** — `announcements.publish_at` (nullable
+  timestamptz). A row is "live" for anon/authenticated non-privileged reads
+  when `status = 'published' and (publish_at is null or publish_at <= now())`
+  — enforced in RLS (the actual boundary, so the MCP app inherits it too;
+  see `lib/scheduling.ts`'s `isLive`/`livePublishAtFilter` for the app-level
+  mirror used by every public `data.ts`/feed/sitemap read). `results` and
+  `events` deliberately don't get this column — no scheduling need there yet.
+  - Cron: `vercel.json` → `GET /api/cron/publish-scheduled` every 5 minutes,
+    `CRON_SECRET`-gated (Vercel sends the header automatically). Finds
+    announcements whose `publish_at` passed in the last 10 minutes and
+    invalidates the `announcements-published` ISR tag — without this, a
+    scheduled post can sit invisible on the cached list/home page for up to
+    the 1h `revalidate` window even though RLS already allows reading it.
+    `/events/[slug]` needs no cron hook — that route is already `ƒ Dynamic`
+    (see the `isr-page` skill), so scheduling reflects there immediately.
+- **Version history** — `content_revisions` (table_name, row_id, snapshot
+  jsonb, changed_by, created_at). An `AFTER UPDATE` trigger on
+  `announcements` + `results` snapshots the OLD row's editorial fields
+  before every real change. Admin/editor-only read via RLS. The
+  announcement editor's History panel lists revisions + a one-click
+  "restore" (an UPDATE — which itself creates a new revision, so a restore
+  can always be undone). No diff view by design.
+- **Audit log** — `audit_log` (table_name, row_id, action, actor,
+  changed_fields, created_at), populated by a generic `AFTER INSERT OR
+  UPDATE OR DELETE` trigger on `announcements`, `results`, `events`,
+  `carousel_slides`, `organization_members`. Admin-only read
+  (`requireAdminServer()`) at `/settings/audit`. Both trigger functions are
+  `SECURITY DEFINER` with a hard-coded `search_path` — no client INSERT
+  policy exists on either table, every row comes from the trigger.
+- **`editor` role** — new `profiles.role` value. Can create/edit *draft*
+  announcements + results; RLS `WITH CHECK` blocks setting
+  `status = 'published'` and blocks touching a row that's already
+  published — this is a hard DB-level boundary, not just a hidden button,
+  so it also applies to writes through the MCP app (user-JWT-bound client)
+  and any future reader/writer. No access to users/carousel/contacts/
+  introduction management. `useAuth().isEditor`.
+
 ## CDN
 
 - `cdn.winlab.tw` 前擋 Supabase Storage 公開桶，由 `infra/cdn-worker/`
@@ -163,7 +216,7 @@ Conventions:
 
 **Auth flow** `/login`、`/forgot-password`、`/reset-password`（8 位 OTP，避開企業 link scanner）、`/auth/callback`
 
-**Admin** `/settings`、`/settings/users`、`/api/admin/import-users`（server-only，需 `SUPABASE_SERVICE_ROLE_KEY`）
+**Admin** `/settings`、`/settings/users`、`/settings/audit`（admin-only 稽核紀錄，見「Editorial workflow」段）、`/api/admin/import-users`（server-only，需 `SUPABASE_SERVICE_ROLE_KEY`）
 
 **Design system** `/design` — shadcn gallery + 專案 UI patterns 展示
 

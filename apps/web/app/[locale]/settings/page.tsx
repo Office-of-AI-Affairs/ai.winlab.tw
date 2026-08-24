@@ -3,7 +3,7 @@ import { PageShell } from "@/components/shared/page-shell";
 import { getViewer } from "@/lib/supabase/get-viewer";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
-import { FileText, Image, Users } from "lucide-react";
+import { FileText, Image, ScrollText, Users } from "lucide-react";
 import { redirect } from "next/navigation";
 
 export default async function SettingsPage({
@@ -38,6 +38,12 @@ export default async function SettingsPage({
       icon: FileText,
       label: settings.privacy.label,
       description: settings.privacy.description,
+    },
+    {
+      href: "/settings/audit",
+      icon: ScrollText,
+      label: settings.audit.label,
+      description: settings.audit.description,
     },
   ];
 

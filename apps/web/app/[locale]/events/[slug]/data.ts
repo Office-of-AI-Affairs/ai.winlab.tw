@@ -1,4 +1,5 @@
 import { createPublicClient } from "@/lib/supabase/public";
+import { livePublishAtFilter } from "@/lib/scheduling";
 import { composeRecruitment } from "@winlab/domain";
 import type { ResultWithMeta } from "@/components/events/result-card";
 import type {
@@ -50,10 +51,11 @@ export async function getEventPageData(
       supabase
         .from("announcements")
         .select(
-          "id, slug, event_id, title, title_en, category, date, content, status, author_id, created_at, updated_at",
+          "id, slug, event_id, title, title_en, category, date, content, status, publish_at, author_id, created_at, updated_at",
         )
         .eq("event_id", eventRow.id)
         .eq("status", "published")
+        .or(livePublishAtFilter())
         .order("date", { ascending: false }),
       supabase
         .from("results")

@@ -394,6 +394,20 @@
     "slashNoResults": "No matching commands",
     "pill": {
       "expandAria": "Expand editing tools"
+    },
+    "publishAtLabel": "Scheduled publish time (optional)",
+    "publishAtHint": "Leave empty to go live immediately on save; set a future time to hold it until then",
+    "history": {
+      "title": "Version history",
+      "toggleLabel": "Version history",
+      "empty": "No revisions yet",
+      "loadFailed": "Failed to load revision history",
+      "restore": "Restore",
+      "restoring": "Restoring…",
+      "restoreConfirm": "Restore this revision? The current content will be overwritten (this itself creates a new revision, so it can still be undone).",
+      "restoreSuccess": "Restored",
+      "restoreFailed": "Restore failed",
+      "unknownEditor": "Unknown editor"
     }
   },
   "article": {
@@ -535,7 +549,11 @@
         "label": "Privacy Policy",
         "description": "Edit the privacy policy content with version history"
       },
-      "metaTitle": "Settings | Office of AI Affairs"
+      "metaTitle": "Settings | Office of AI Affairs",
+      "audit": {
+        "label": "Audit Log",
+        "description": "Review changes to content and accounts"
+      }
     },
     "users": {
       "toast": {
@@ -555,7 +573,8 @@
         "admin": "Administrator",
         "user": "User",
         "vendor": "Vendor",
-        "member": "Member"
+        "member": "Member",
+        "editor": "Editor"
       },
       "tagInputPlaceholder": "Add tag…",
       "columns": {
@@ -600,8 +619,31 @@
       },
       "edit": {
         "vendorNote": "Vendor access is determined by the \"Owners\" list on the recruitment editor page (no longer tied to an event).",
-        "memberNote": "Members can publish their own articles on the Perspectives page."
+        "memberNote": "Members can publish their own articles on the Perspectives page.",
+        "editorNote": "Editors can create/edit draft announcements and results, but cannot publish, and cannot manage other users, the carousel, contacts, or the introduction page."
       }
+    },
+    "audit": {
+      "title": "Audit Log",
+      "metaTitle": "Audit Log | Office of AI Affairs",
+      "columns": {
+        "time": "Time",
+        "table": "Table",
+        "action": "Action",
+        "actor": "Actor",
+        "fields": "Changed fields"
+      },
+      "action": {
+        "insert": "Insert",
+        "update": "Update",
+        "delete": "Delete"
+      },
+      "filter": {
+        "allTables": "All tables",
+        "allActions": "All actions"
+      },
+      "empty": "No audit log entries yet",
+      "unknownActor": "Unknown"
     }
   },
   "contacts": {

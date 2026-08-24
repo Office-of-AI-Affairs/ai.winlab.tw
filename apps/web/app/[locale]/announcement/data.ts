@@ -1,10 +1,18 @@
 import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { isUuid } from "@/lib/slug";
+import { livePublishAtFilter } from "@/lib/scheduling";
 import type { Announcement } from "@winlab/db";
 
 // Only fetches published + global (event_id IS NULL). Admin-only drafts are
 // merged in on the client via useAuth so this cache stays visitor-safe.
+//
+// Every query below also ANDs in `livePublishAtFilter()` on top of
+// `.eq("status", "published")` — belt-and-suspenders for scheduled
+// publishing (#47). The RLS policy on `announcements` enforces the same
+// `publish_at` gate for anon/authenticated reads; this app-level filter
+// exists so a cached-but-not-yet-live row can't leak through even before
+// the next cron-triggered revalidation (see app/api/cron/publish-scheduled).
 export const getPublishedAnnouncements = unstable_cache(
   async (): Promise<Announcement[]> => {
     const supabase = createPublicClient();
@@ -12,6 +20,7 @@ export const getPublishedAnnouncements = unstable_cache(
       .from("announcements")
       .select("*")
       .eq("status", "published")
+      .or(livePublishAtFilter())
       .is("event_id", null)
       .order("date", { ascending: false });
     return (data as Announcement[] | null) ?? [];
@@ -29,6 +38,7 @@ export const getLatestAnnouncements = unstable_cache(
       .from("announcements")
       .select("*")
       .eq("status", "published")
+      .or(livePublishAtFilter())
       .is("event_id", null)
       .order("date", { ascending: false })
       .limit(3);
@@ -40,8 +50,8 @@ export const getLatestAnnouncements = unstable_cache(
 
 // Single published announcement by slug — the canonical lookup for the
 // detail page + its generateMetadata now that URLs are slug-based. Drafts
-// return null here on purpose; admins reach drafts through
-// /announcement/[id]/edit.
+// (and not-yet-live scheduled posts) return null here on purpose; admins
+// reach them through `?mode=edit`.
 export const getPublishedAnnouncementBySlug = unstable_cache(
   async (slug: string): Promise<Announcement | null> => {
     const supabase = createPublicClient();
@@ -50,6 +60,7 @@ export const getPublishedAnnouncementBySlug = unstable_cache(
       .select("*")
       .eq("slug", slug)
       .eq("status", "published")
+      .or(livePublishAtFilter())
       .maybeSingle();
     return (data as Announcement | null) ?? null;
   },
@@ -67,6 +78,7 @@ export const getPublishedAnnouncementById = unstable_cache(
       .select("*")
       .eq("id", id)
       .eq("status", "published")
+      .or(livePublishAtFilter())
       .maybeSingle();
     return (data as Announcement | null) ?? null;
   },

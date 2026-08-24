@@ -20,16 +20,18 @@ export function AnnouncementPageClient({
 }) {
   const t = useT();
   const router = useRouter();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isEditor } = useAuth();
+  const canManage = isAdmin || isEditor;
   const supabaseRef = useRef(createClient());
   const [isCreating, setIsCreating] = useState(false);
   const [drafts, setDrafts] = useState<Announcement[]>([]);
 
-  // Admin: fetch own drafts client-side (RLS filters non-admin to empty).
-  // No reset on !isAdmin — useMemo below returns published-only when
-  // isAdmin flips false, so any stale drafts in state are inert.
+  // Admin/editor: fetch drafts client-side (RLS filters everyone else to
+  // empty — see the editorial-workflow migration). No reset on
+  // !canManage — useMemo below returns published-only when canManage flips
+  // false, so any stale drafts in state are inert.
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!canManage) return;
     let cancelled = false;
     (async () => {
       const { data } = await supabaseRef.current
@@ -41,17 +43,17 @@ export function AnnouncementPageClient({
       if (!cancelled) setDrafts((data as Announcement[] | null) ?? []);
     })();
     return () => { cancelled = true; };
-  }, [isAdmin]);
+  }, [canManage]);
 
   const announcements = useMemo(() => {
-    if (!isAdmin || drafts.length === 0) return publishedAnnouncements;
+    if (!canManage || drafts.length === 0) return publishedAnnouncements;
     return [...drafts, ...publishedAnnouncements].sort(
       (a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0),
     );
-  }, [drafts, isAdmin, publishedAnnouncements]);
+  }, [drafts, canManage, publishedAnnouncements]);
 
   const handleCreate = async () => {
-    if (!user?.id || !isAdmin) return;
+    if (!user?.id || !canManage) return;
     setIsCreating(true);
     const slug = await generateUniqueAnnouncementSlug(supabaseRef.current, t.announcement.newTitle);
     const { data, error } = await supabaseRef.current
@@ -67,7 +69,7 @@ export function AnnouncementPageClient({
     <PageShell>
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-3xl font-bold">{t.announcement.heading}</h1>
-        {isAdmin && (
+        {canManage && (
           <Button variant="secondary" onClick={handleCreate} disabled={isCreating}>
             {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
             {t.announcement.create}
@@ -80,10 +82,10 @@ export function AnnouncementPageClient({
       ) : (
         <AnnouncementTable
           announcements={announcements}
-          showStatus={isAdmin}
+          showStatus={canManage}
           getHref={(item) => {
             const slug = encodeURIComponent(item.slug || item.id);
-            return isAdmin
+            return canManage
               ? `/announcement/${slug}${item.status === "draft" ? "?mode=edit" : ""}`
               : `/announcement/${slug}`;
           }}

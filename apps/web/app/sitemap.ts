@@ -1,4 +1,5 @@
 import { createPublicClient } from "@/lib/supabase/public";
+import { livePublishAtFilter } from "@/lib/scheduling";
 import type { MetadataRoute } from "next";
 
 const BASE_URL = "https://ai.winlab.tw";
@@ -22,7 +23,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     supabase
       .from("announcements")
       .select("id, slug, date, event_id")
-      .eq("status", "published"),
+      .eq("status", "published")
+      .or(livePublishAtFilter()),
     supabase.from("events").select("id, slug, updated_at").eq("status", "published"),
     supabase
       .from("results")
