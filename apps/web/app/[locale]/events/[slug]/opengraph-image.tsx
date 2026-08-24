@@ -8,10 +8,12 @@ export const alt = "NYCU Office of AI Affairs — Event";
 export const size = { width: OG_WIDTH, height: OG_HEIGHT };
 export const contentType = "image/png";
 
-// Applies to the whole /events/[slug] subtree (announcements/results/
-// recruitment/members tabs) per Next's closest-segment file-convention
-// rule — there's no more specific opengraph-image below this segment, so
-// every tab shares the event's own branded card.
+// Serves `/events/[slug]/opengraph-image` directly, and is also inherited
+// by tab pages that declare no `openGraph` of their own (e.g.
+// `members/page.tsx`). announcements/results/recruitment declare their own
+// `openGraph` (their own title/description), so they can't inherit this
+// file via Next's convention — they instead point their own `images` at
+// this same route explicitly (see their `generateMetadata`).
 export default async function Image({
   params,
 }: {

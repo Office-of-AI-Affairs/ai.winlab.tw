@@ -47,7 +47,14 @@ export async function generateMetadata({
     },
     // `images` intentionally omitted — the sibling `opengraph-image.tsx`
     // file convention (#49) generates the event's branded card and Next
-    // injects it automatically for this segment and every tab beneath it.
+    // injects it automatically for this exact segment (`/events/[slug]`,
+    // e.g. when a tab page like `members/page.tsx` declares no `openGraph`
+    // of its own and inherits this one wholesale). It does NOT cascade to
+    // tabs that declare their own `openGraph` object (announcements/
+    // results/recruitment) — Next replaces `openGraph` wholesale per
+    // segment rather than merging `images` in, so those pages point
+    // `images` at this same `/events/[slug]/opengraph-image` route
+    // explicitly instead of relying on inheritance.
     openGraph: {
       title: `${name}${dict.events.meta.titleSuffix}`,
       description,
