@@ -6,7 +6,8 @@ import { useAuth } from "@/components/layout/auth-provider";
 import { PageShell } from "@/components/shared/page-shell";
 import { Block } from "@/components/shared/block";
 import { SubButton } from "@/components/shared/sub-button";
-import { useT } from "@/lib/i18n/locale-provider";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
+import { localizedPath } from "@/lib/i18n/routing";
 import { createClient } from "@/lib/supabase/client";
 import type { Event } from "@winlab/db";
 import { ArrowLeftIcon } from "lucide-react";
@@ -19,6 +20,7 @@ export function EventsPageClient({
   publishedEvents: Event[];
 }) {
   const t = useT();
+  const locale = useLocale();
   const { isAdmin } = useAuth();
   const supabaseRef = useRef(createClient());
   const [drafts, setDrafts] = useState<Event[]>([]);
@@ -61,6 +63,18 @@ export function EventsPageClient({
           <Block className="flex flex-col gap-4">
             <h1 className="text-2xl text-foreground font-bold">{t.events.list.heading}</h1>
             <p className="text-muted-foreground">{t.events.list.countSummary.replace("{count}", String(events.length))}</p>
+            {/* Subscribable calendar of every published event (#46).
+                localizedPath here (unlike the plain next/link hrefs below,
+                a pre-existing gap out of scope for this change) — the .ics
+                content differs per locale (event names), so this link must
+                land on the matching locale's route. */}
+            <Link
+              href={localizedPath("/events/calendar.ics", locale)}
+              prefetch={false}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors underline"
+            >
+              {t.events.list.subscribeCalendar}
+            </Link>
           </Block>
         </div>
 

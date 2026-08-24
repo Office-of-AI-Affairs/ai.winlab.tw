@@ -65,7 +65,9 @@
     "organization": "組織",
     "announcement": "公告",
     "events": "活動",
-    "privacy": "隱私權"
+    "privacy": "隱私權",
+    "rss": "RSS",
+    "calendar": "訂閱行事曆"
   },
   "home": {
     "activityHeading": "最新動態",
@@ -188,10 +190,12 @@
       "delete": "刪除活動"
     },
     "backToEvent": "返回活動",
+    "addToCalendar": "加入行事曆（.ics）",
     "list": {
       "heading": "活動專區",
       "countSummary": "當前共有 {count} 場活動",
-      "empty": "目前沒有活動"
+      "empty": "目前沒有活動",
+      "subscribeCalendar": "訂閱活動行事曆（.ics）"
     },
     "notFound": {
       "title": "找不到這個活動",
