@@ -14,6 +14,7 @@
   - Required：`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`
   - Admin API：`SUPABASE_SERVICE_ROLE_KEY`（`/api/admin/import-users` 用）
   - CDN opt-in：`NEXT_PUBLIC_CDN_BASE_URL`（見「CDN」段；未設則 `toCdnUrl` no-op）
+  - Analytics kill switch：`NEXT_PUBLIC_ANALYTICS_DISABLED=1` 關閉 `<AnalyticsBeacon />`（見「Analytics」段）
   - Playwright E2E：`CLAUDE_AGENT_EMAIL` / `CLAUDE_AGENT_PASSWORD` / `CLAUDE_AGENT_USER_ID`（dedicated admin account）
 
 ### Verification
@@ -213,6 +214,31 @@ Quick reminders that bite during implementation (full rationale in
 `light`. `card.tsx` stays a plain `<div>` Server Component; `data-slot`
 is the standard selector hook; `next/image` allows `*.supabase.co` and
 `cdn.winlab.tw`.
+
+## Analytics
+
+- First-party, cookieless pageview + web-vitals beacon for public
+  ISR/static pages (they're served from the CDN and never hit the
+  Next.js server, so they produce no server-side OTel telemetry on their
+  own — see `instrumentation.ts`)
+- `<AnalyticsBeacon />` (`components/analytics-beacon.tsx`) mounted once
+  in the root layout: pageview on load + every App Router navigation
+  (`usePathname` effect), web-vitals via `useReportWebVitals`
+  (`next/web-vitals`); `navigator.sendBeacon` first, `fetch(...,
+  { keepalive: true })` fallback
+- `POST /api/beacon` (`app/api/beacon/route.ts`, `runtime: "nodejs"` so
+  it shares the instrumentation-registered logger) validates the payload
+  (`lib/analytics/schema.ts` — pure, unit-tested, whitelist-only) and
+  emits it as an OTel log record via `emitAnalyticsLog`
+  (`lib/otel/log.ts`), the sibling of `emitErrorLog`. Always `204`, never
+  errors to the client
+- No cookies, no user id, no raw IP, no full referrer URL — only
+  path/referrer-origin/utm/locale/viewport client-side plus
+  country/region (Vercel geo headers) and a coarse UA-derived device
+  bucket server-side
+- Never fires on `/settings`, `/login`, or `?mode=edit`
+  (`isExcludedPath`, locale-prefix aware) — visitor analytics only
+- `NEXT_PUBLIC_ANALYTICS_DISABLED=1` disables the beacon entirely
 
 ## Delivery
 
