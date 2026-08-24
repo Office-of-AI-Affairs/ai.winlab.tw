@@ -1,4 +1,5 @@
 import { createPublicClient } from "@/lib/supabase/public";
+import { livePublishAtFilter } from "@/lib/scheduling";
 import type { Announcement } from "@winlab/db";
 import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
@@ -38,12 +39,12 @@ async function findAnnouncement(
   { publishedOnly }: { publishedOnly: boolean },
 ): Promise<Announcement | null> {
   let query = supabase.from("announcements").select("*").eq("event_id", eventId);
-  if (publishedOnly) query = query.eq("status", "published");
+  if (publishedOnly) query = query.eq("status", "published").or(livePublishAtFilter());
   const { data: bySlug } = await query.eq("slug", param).maybeSingle();
   if (bySlug) return bySlug as Announcement;
   if (!isUuid(param)) return null;
   let byIdQuery = supabase.from("announcements").select("*").eq("event_id", eventId);
-  if (publishedOnly) byIdQuery = byIdQuery.eq("status", "published");
+  if (publishedOnly) byIdQuery = byIdQuery.eq("status", "published").or(livePublishAtFilter());
   const { data: byId } = await byIdQuery.eq("id", param).maybeSingle();
   return (byId as Announcement | null) ?? null;
 }

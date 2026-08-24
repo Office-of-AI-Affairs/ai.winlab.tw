@@ -24,7 +24,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n/locale-provider";
 
-export type ProfileRole = "admin" | "user" | "vendor" | "member";
+export type ProfileRole = "admin" | "user" | "vendor" | "member" | "editor";
 
 export type UserRow = {
   id: string;
@@ -129,6 +129,7 @@ function UserEditForm({
             <SelectContent>
               <SelectItem value="user">{t.admin.users.roles.user}</SelectItem>
               <SelectItem value="member">{t.admin.users.roles.member}</SelectItem>
+              <SelectItem value="editor">{t.admin.users.roles.editor}</SelectItem>
               <SelectItem value="vendor">{t.admin.users.roles.vendor}</SelectItem>
               <SelectItem value="admin">{t.admin.users.roles.admin}</SelectItem>
             </SelectContent>
@@ -141,6 +142,11 @@ function UserEditForm({
           {role === "member" && (
             <p className="text-xs text-muted-foreground">
               {t.admin.users.edit.memberNote}
+            </p>
+          )}
+          {role === "editor" && (
+            <p className="text-xs text-muted-foreground">
+              {t.admin.users.edit.editorNote}
             </p>
           )}
         </div>

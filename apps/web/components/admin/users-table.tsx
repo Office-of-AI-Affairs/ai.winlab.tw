@@ -48,7 +48,7 @@ export type UserRow = {
   id: string
   email: string
   display_name: string | null
-  role: "admin" | "user" | "vendor" | "member"
+  role: "admin" | "user" | "vendor" | "member" | "editor"
   created_at: string
   tags: string[]
 }
@@ -314,6 +314,7 @@ function UsersTable({
       user: t.admin.users.roles.user,
       vendor: t.admin.users.roles.vendor,
       member: t.admin.users.roles.member,
+      editor: t.admin.users.roles.editor,
     }),
     [t]
   )

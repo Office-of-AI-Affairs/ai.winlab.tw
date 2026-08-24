@@ -5,14 +5,23 @@ const INTL_LOCALE: Record<Locale, string> = {
   en: "en-US",
 }
 
-const OPTIONS: Record<"short" | "long", Intl.DateTimeFormatOptions> = {
+const OPTIONS: Record<"short" | "long" | "datetime", Intl.DateTimeFormatOptions> = {
   short: { timeZone: "Asia/Taipei", year: "numeric", month: "2-digit", day: "2-digit" },
   long: { timeZone: "Asia/Taipei", year: "numeric", month: "long", day: "numeric" },
+  // Revision timestamps / scheduled publish_at — date + time, no seconds.
+  datetime: {
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  },
 }
 
 const cache = new Map<string, Intl.DateTimeFormat>()
 
-function getFormatter(locale: Locale, style: "short" | "long") {
+function getFormatter(locale: Locale, style: "short" | "long" | "datetime") {
   const key = `${locale}:${style}`
   let fmt = cache.get(key)
   if (!fmt) {
@@ -24,7 +33,7 @@ function getFormatter(locale: Locale, style: "short" | "long") {
 
 export function formatDate(
   value: string | number | Date,
-  style: "short" | "long" = "short",
+  style: "short" | "long" | "datetime" = "short",
   locale: Locale = defaultLocale
 ) {
   return getFormatter(locale, style).format(new Date(value))

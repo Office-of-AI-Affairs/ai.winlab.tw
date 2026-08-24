@@ -1,14 +1,16 @@
 {
-  "generated_at": "2026-05-18",
+  "generated_at": "2026-08-25",
   "project_ref": "hwezfbhjcetpezfuvelf",
-  "note": "Source-of-truth snapshot of all RLS policies in production. Refreshed manually via the SQL in scripts/refresh-rls-snapshot.md. Drift between this file and prod = git diff after running refresh, drift between this file and docs/permissions.md = test failure.",
+  "note": "Source-of-truth snapshot of all RLS policies in production. Refreshed manually via the SQL in scripts/refresh-rls-snapshot.md. Drift between this file and prod = git diff after running refresh, drift between this file and docs/permissions.md = test failure. 2026-08-25: updated ahead of the actual `supabase db push`/apply for 20260825000001_editorial_workflow.sql (#47) per this repo's migration-first-then-refresh convention — this PR ships the migration + snapshot + docs together, the lead applies the migration at deploy time.",
   "tables_with_rls": [
     { "rel": "public.announcements", "policy_count": 5 },
     { "rel": "public.articles", "policy_count": 4 },
+    { "rel": "public.audit_log", "policy_count": 1 },
     { "rel": "public.carousel_slides", "policy_count": 4 },
     { "rel": "public.competition_owners", "policy_count": 3 },
     { "rel": "public.competition_private_details", "policy_count": 4 },
     { "rel": "public.competitions", "policy_count": 4 },
+    { "rel": "public.content_revisions", "policy_count": 1 },
     { "rel": "public.contacts", "policy_count": 4 },
     { "rel": "public.event_participants", "policy_count": 3 },
     { "rel": "public.events", "policy_count": 5 },
@@ -30,15 +32,17 @@
   ],
   "policies": [
     { "rel": "public.announcements", "polname": "Admin can delete announcement", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin" },
-    { "rel": "public.announcements", "polname": "Admin can insert announcement", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin" },
-    { "rel": "public.announcements", "polname": "Admin can update announcement", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "is_admin" },
-    { "rel": "public.announcements", "polname": "Anon read published announcements", "op": "SELECT", "roles": ["anon"], "using_summary": "status='published'" },
-    { "rel": "public.announcements", "polname": "Authenticated read published or admin announcements", "op": "SELECT", "roles": ["authenticated"], "using_summary": "status='published' OR is_admin" },
+    { "rel": "public.announcements", "polname": "Admin or editor can insert announcement", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin OR (is_editor AND status='draft')" },
+    { "rel": "public.announcements", "polname": "Admin or editor can update announcement", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "is_admin OR (is_editor AND status='draft')", "check_summary": "is_admin OR (is_editor AND status='draft')" },
+    { "rel": "public.announcements", "polname": "Anon read published announcements", "op": "SELECT", "roles": ["anon"], "using_summary": "status='published' AND (publish_at IS NULL OR publish_at<=now())" },
+    { "rel": "public.announcements", "polname": "Authenticated read live, or admin/editor announcements", "op": "SELECT", "roles": ["authenticated"], "using_summary": "(status='published' AND (publish_at IS NULL OR publish_at<=now())) OR is_admin OR is_editor" },
 
     { "rel": "public.articles", "polname": "Admin or author member can delete article", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin OR (author_id=auth.uid() AND is_member)" },
     { "rel": "public.articles", "polname": "Admin or author member can update article", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "is_admin OR (author_id=auth.uid() AND is_member)", "check_summary": "is_admin OR (author_id=auth.uid() AND is_member)" },
     { "rel": "public.articles", "polname": "Admin or member can insert article", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin OR (author_id=auth.uid() AND is_member)" },
     { "rel": "public.articles", "polname": "Read published or own draft or admin", "op": "SELECT", "roles": ["anon", "authenticated"], "using_summary": "status='published' OR author_id=auth.uid() OR is_admin" },
+
+    { "rel": "public.audit_log", "polname": "Admin can read audit_log", "op": "SELECT", "roles": ["authenticated"], "using_summary": "is_admin" },
 
     { "rel": "public.carousel_slides", "polname": "Admin can delete carousel_slides", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin" },
     { "rel": "public.carousel_slides", "polname": "Admin can insert carousel_slides", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin" },
@@ -58,6 +62,8 @@
     { "rel": "public.competitions", "polname": "Admin or owner can delete competition", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin OR is_recruitment_owner" },
     { "rel": "public.competitions", "polname": "Admin or owner can update competition", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "is_admin OR is_recruitment_owner" },
     { "rel": "public.competitions", "polname": "Public read competitions", "op": "SELECT", "roles": ["public"], "using_summary": "true" },
+
+    { "rel": "public.content_revisions", "polname": "Admin or editor can read content_revisions", "op": "SELECT", "roles": ["authenticated"], "using_summary": "is_admin OR is_editor" },
 
     { "rel": "public.contacts", "polname": "Admin can delete contacts", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin" },
     { "rel": "public.contacts", "polname": "Admin can insert contacts", "op": "INSERT", "roles": ["authenticated"], "check_summary": "is_admin" },
@@ -112,9 +118,9 @@
     { "rel": "public.result_tags", "polname": "Public read result_tags", "op": "SELECT", "roles": ["public"], "using_summary": "true" },
 
     { "rel": "public.results", "polname": "Author or admin can delete result", "op": "DELETE", "roles": ["authenticated"], "using_summary": "author_id=auth.uid() OR is_admin" },
-    { "rel": "public.results", "polname": "Author or admin can insert result", "op": "INSERT", "roles": ["authenticated"], "check_summary": "author_id=auth.uid() OR is_admin" },
-    { "rel": "public.results", "polname": "Author or admin can update result", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "author_id=auth.uid() OR is_admin" },
-    { "rel": "public.results", "polname": "Authenticated read own, published, or admin results", "op": "SELECT", "roles": ["authenticated"], "using_summary": "status='published' OR author_id=auth.uid() OR is_admin" },
+    { "rel": "public.results", "polname": "Author, admin, or editor can insert result", "op": "INSERT", "roles": ["authenticated"], "check_summary": "author_id=auth.uid() OR is_admin OR (is_editor AND status='draft')" },
+    { "rel": "public.results", "polname": "Author, admin, or editor can update result", "op": "UPDATE", "roles": ["authenticated"], "using_summary": "author_id=auth.uid() OR is_admin OR (is_editor AND status='draft')", "check_summary": "author_id=auth.uid() OR is_admin OR (is_editor AND status='draft')" },
+    { "rel": "public.results", "polname": "Authenticated read own, published, admin, or editor results", "op": "SELECT", "roles": ["authenticated"], "using_summary": "status='published' OR author_id=auth.uid() OR is_admin OR is_editor" },
     { "rel": "public.results", "polname": "Public read published results", "op": "SELECT", "roles": ["anon"], "using_summary": "status='published'" },
 
     { "rel": "public.tags", "polname": "Admin can delete tags", "op": "DELETE", "roles": ["authenticated"], "using_summary": "is_admin" },

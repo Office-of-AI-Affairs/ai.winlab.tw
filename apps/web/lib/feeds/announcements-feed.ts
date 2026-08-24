@@ -2,6 +2,7 @@ import { buildRssFeed, type RssItemInput } from "@/lib/feeds/rss";
 import { localePrefix, type Locale } from "@/lib/i18n/config";
 import { localizedField } from "@/lib/i18n/localized-field";
 import { SITE_URL } from "@/lib/site";
+import { livePublishAtFilter } from "@/lib/scheduling";
 import { createPublicClient } from "@/lib/supabase/public";
 
 const CHANNEL_TITLE: Record<Locale, string> = {
@@ -39,6 +40,7 @@ export async function buildAnnouncementsRssXml(locale: Locale): Promise<string> 
     .from("announcements")
     .select("id, slug, title, title_en, date, category, event_id, updated_at")
     .eq("status", "published")
+    .or(livePublishAtFilter())
     .order("date", { ascending: false })
     .limit(30);
 

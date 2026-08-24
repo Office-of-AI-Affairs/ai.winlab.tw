@@ -52,10 +52,12 @@ describe("RLS — schema-level compliance", () => {
     const expected = [
       "public.announcements",
       "public.articles",
+      "public.audit_log",
       "public.carousel_slides",
       "public.competition_owners",
       "public.competition_private_details",
       "public.competitions",
+      "public.content_revisions",
       "public.contacts",
       "public.event_participants",
       "public.events",

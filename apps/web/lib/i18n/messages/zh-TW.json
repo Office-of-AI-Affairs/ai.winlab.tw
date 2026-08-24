@@ -394,6 +394,20 @@
     "slashNoResults": "沒有符合的插入項目",
     "pill": {
       "expandAria": "展開編輯工具"
+    },
+    "publishAtLabel": "排程發布時間（選填）",
+    "publishAtHint": "留空表示送出後立即上線；設定未來時間則到時才對外可見",
+    "history": {
+      "title": "版本歷史",
+      "toggleLabel": "版本歷史",
+      "empty": "尚無歷史版本",
+      "loadFailed": "載入歷史版本失敗",
+      "restore": "還原",
+      "restoring": "還原中…",
+      "restoreConfirm": "還原到此版本？目前的內容會被覆蓋（本身也會留一筆新紀錄，仍可再還原）。",
+      "restoreSuccess": "已還原",
+      "restoreFailed": "還原失敗",
+      "unknownEditor": "未知編輯者"
     }
   },
   "article": {
@@ -535,7 +549,11 @@
         "label": "隱私權政策",
         "description": "編輯隱私權政策內容，支援版本紀錄"
       },
-      "metaTitle": "系統設定｜人工智慧專責辦公室"
+      "metaTitle": "系統設定｜人工智慧專責辦公室",
+      "audit": {
+        "label": "稽核紀錄",
+        "description": "查看內容與帳號的異動紀錄"
+      }
     },
     "users": {
       "toast": {
@@ -555,7 +573,8 @@
         "admin": "管理員",
         "user": "一般用戶",
         "vendor": "廠商",
-        "member": "成員"
+        "member": "成員",
+        "editor": "編輯"
       },
       "tagInputPlaceholder": "新增標籤…",
       "columns": {
@@ -600,8 +619,31 @@
       },
       "edit": {
         "vendorNote": "vendor 權限由 徵才編輯頁 的「擁有者」清單決定（不再綁活動）。",
-        "memberNote": "成員可在 觀點 頁面發布自己的文章。"
+        "memberNote": "成員可在 觀點 頁面發布自己的文章。",
+        "editorNote": "編輯者可建立/編輯 announcements 與 results 的草稿，但不能發布，也不能管理其他使用者、輪播圖、聯絡資訊或組織簡介。"
       }
+    },
+    "audit": {
+      "title": "稽核紀錄",
+      "metaTitle": "稽核紀錄｜人工智慧專責辦公室",
+      "columns": {
+        "time": "時間",
+        "table": "資料表",
+        "action": "動作",
+        "actor": "操作者",
+        "fields": "變更欄位"
+      },
+      "action": {
+        "insert": "新增",
+        "update": "更新",
+        "delete": "刪除"
+      },
+      "filter": {
+        "allTables": "所有資料表",
+        "allActions": "所有動作"
+      },
+      "empty": "尚無稽核紀錄",
+      "unknownActor": "未知"
     }
   },
   "contacts": {
