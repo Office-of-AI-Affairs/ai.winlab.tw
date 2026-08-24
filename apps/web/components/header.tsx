@@ -111,7 +111,7 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-nycu text-white">
+    <header className="sticky top-0 z-50 bg-primary text-primary-foreground">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-6 text-xl font-bold">
         <AppLink
           href="/"
