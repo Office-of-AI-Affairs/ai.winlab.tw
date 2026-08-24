@@ -1,5 +1,5 @@
 import { PageShell } from "@/components/page-shell"
-import { BlockSkeleton } from "@/components/ui/block"
+import { BlockSkeleton } from "@/components/block"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function Loading() {

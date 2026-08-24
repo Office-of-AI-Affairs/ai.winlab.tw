@@ -1,7 +1,7 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { Block } from "@/components/ui/block";
+import { Block } from "@/components/block";
 import { useT } from "@/lib/i18n/locale-provider";
 import type { Event } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";

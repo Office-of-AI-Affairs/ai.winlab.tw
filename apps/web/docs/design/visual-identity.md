@@ -205,14 +205,51 @@ no hand edits beyond what the token system (`@theme` values in
 project-specific variants, and one-off styling live in feature
 components (`components/*.tsx` outside `ui/`) or thin wrappers, never by
 hand-editing a stock primitive's markup or adding bespoke classes beyond
-what regenerating the primitive would produce.
+what regenerating the primitive would produce. `ui/` is regenerable at
+any time — `bunx shadcn add <name> --overwrite` should be a no-op for
+every file except the documented exceptions below.
 
-Practical corollary for this milestone: where a stock primitive currently
-hardcodes an arbitrary radius value (e.g. `rounded-[2rem]` in
-`components/ui/card.tsx`, `components/ui/block.tsx`) instead of using the
-semantic `rounded-*` class, that's a policy violation independent of the
-radius bug — #51 fixes both at once by migrating those literals to
-`rounded-lg`.
+`block.tsx` and `sub-button.tsx` were never shadcn output (no upstream
+`block`/`sub-button` registry item exists) and moved to the feature layer
+as plain `components/block.tsx` / `components/sub-button.tsx` (#53). The
+`CarouselIndicators` dot-nav component was extracted from
+`components/ui/carousel.tsx` into `components/carousel-indicators.tsx`
+for the same reason — it consumes the newly-exported `useCarousel` hook
+instead of living inside the stock file.
+
+### Documented exceptions (#53)
+
+A handful of `ui/` primitives keep small, intentional deltas from stock
+because reverting them would either break an existing repo-wide contract
+or delete real product surface. Each is a single, well-scoped edit — not
+grounds to fork the whole file — and is re-checked whenever the shadcn
+version is bumped:
+
+- **`avatar.tsx`** — keeps the `xl`/`2xl`/`3xl`/`4xl` size steps stock
+  dropped down to just `default`/`sm`/`lg`. They're live in production
+  (`/design` gallery, `/profile/[id]`, event member grid in
+  `app/[locale]/events/[slug]/client.tsx`) and the sizing lives in
+  `data-[size=*]` selectors baked into the primitive's own class string,
+  so there's no clean wrapper — extracting them means re-implementing the
+  whole component.
+- **`button.tsx`** — keeps `interactive-scale` plus the explicit
+  `transition-[background-color,border-color,color,box-shadow,opacity,transform]`
+  list instead of stock's `transition-all`; `transition-all` is banned
+  repo-wide by `lib/ui/patterns.test.ts`. Everything else (the `radix-ui`
+  import, `shadow-xs` on `outline`, the `xs`/`icon-xs` sizes) tracks
+  stock.
+- **`select.tsx`** — `SelectTrigger` keeps `interactive-scale` per the
+  DESIGN.md rule that every clickable element that isn't already a
+  `<Button>` gets it; stock doesn't ship it on any control. Everything
+  else in the file (radix-ui import, `shadow-xs`/`shadow-md`, class
+  ordering) tracks stock.
+- **`input-otp.tsx`** — keeps `transition-colors duration-200` instead of
+  stock's `transition-all`, same `patterns.test.ts` ban as `button.tsx`.
+- **`card.tsx`** — keeps `rounded-lg` + `border-border` and does not add
+  stock's `rounded-xl` / `shadow-sm`. Radius: cards are pinned to `lg`
+  (1rem) by the Radius section above. Shadow: "Elevation & Depth" above
+  is explicit that `shadow-lg` is the only elevation this app ships, and
+  only on the named floating tools — cards use borders, not shadows.
 
 ## Reconciliation with `DESIGN.md`
 
