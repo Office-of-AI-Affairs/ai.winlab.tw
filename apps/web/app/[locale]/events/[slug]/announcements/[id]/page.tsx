@@ -14,6 +14,20 @@ import { permanentRedirect } from "next/navigation";
 import { EventAnnouncementArticleClient } from "./article-client";
 import { EventAnnouncementDraftFallback } from "./draft-fallback";
 
+// Next.js does not consistently decode the `[id]` segment before it reaches
+// the page component (observed inconsistency vs. generateMetadata's params
+// on Next 16 / Turbopack for CJK route params — see the sibling
+// announcement/[id]/page.tsx for the fuller writeup). Decode defensively;
+// slugs can never contain a literal "%" (stripped in lib/slug.ts), so
+// decoding an already-decoded string is always a safe no-op.
+function decodeParam(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 // `param` is whatever arrived in the `[id]` route segment — a slug for every
 // link this app generates, or a legacy UUID for old bookmarks/backlinks.
 // Slug lookup first; UUID fallback only if the param actually looks like one.
@@ -39,7 +53,8 @@ export async function generateMetadata({
 }: {
   params: Promise<{ locale: string; slug: string; id: string }>;
 }): Promise<Metadata> {
-  const { locale: raw, slug, id } = await params;
+  const { locale: raw, slug, id: rawId } = await params;
+  const id = decodeParam(rawId);
   const locale: Locale = isLocale(raw) ? raw : defaultLocale;
   const dict = await getDictionary(locale);
   const supabase = createPublicClient();
@@ -103,7 +118,8 @@ export default async function EventAnnouncementDetailPage({
 }: {
   params: Promise<{ locale: string; slug: string; id: string }>;
 }) {
-  const { locale: raw, slug, id } = await params;
+  const { locale: raw, slug, id: rawId } = await params;
+  const id = decodeParam(rawId);
   const locale: Locale = isLocale(raw) ? raw : defaultLocale;
   const dict = await getDictionary(locale);
   const supabase = createPublicClient();
