@@ -20,8 +20,8 @@ const NATIVE_NAME: Record<Locale, string> = {
 /**
  * Segmented language switcher for the header (blue bar). Two locales, so a
  * one-tap segmented control reads clearer than a dropdown; the active segment
- * is filled. Renders on the `bg-nycu` surface, hence the white-on-blue styling
- * rather than semantic tokens.
+ * is filled. Renders on the `bg-primary` surface, hence the white-on-blue
+ * styling for the inactive/track state rather than further semantic tokens.
  */
 export function LanguageToggle({
   onNavigate,
@@ -57,7 +57,7 @@ export function LanguageToggle({
             className={cn(
               "interactive-scale rounded-full px-3 py-1 text-sm leading-none",
               isActive
-                ? "bg-white text-nycu font-semibold"
+                ? "bg-white text-primary font-semibold"
                 : "text-white/75 hover:bg-white/10 hover:text-white"
             )}
           >
