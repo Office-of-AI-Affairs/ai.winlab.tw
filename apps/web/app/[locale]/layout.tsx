@@ -8,7 +8,7 @@ import { LazyToaster } from "@/components/layout/lazy-toaster";
 import { SearchProvider } from "@/components/layout/search-provider";
 import { getPinnedEvents } from "@/lib/supabase/get-pinned-events";
 import { SITE_DESCRIPTION_EN, SITE_DESCRIPTION_ZH, SITE_NAME, siteTitle } from "@/lib/site";
-import { defaultLocale, isLocale, locales, type Locale } from "@/lib/i18n/config";
+import { defaultLocale, isLocale, localePrefix, locales, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { LocaleProvider } from "@/lib/i18n/locale-provider";
 import { ogAlternateLocales, ogLocale } from "@/lib/i18n/seo";
@@ -108,6 +108,15 @@ export default async function RootLayout({
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap"
+        />
+        {/* Announcements feed (#46) — canonical per-locale URL; feed
+            readers/crawlers that only check the site root still find
+            /rss.xml (app/rss.xml/route.ts, always zh-TW). */}
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title={locale === "en" ? "Announcements — NYCU Office of AI Affairs" : "人工智慧專責辦公室 公告"}
+          href={`${localePrefix(locale)}/announcement/rss.xml`}
         />
       </head>
       <body className={`${notoSans.variable} ${notoSansMono.variable} ${instrumentSerif.variable} antialiased`}>
