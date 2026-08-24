@@ -85,6 +85,7 @@ const resultFixture: Result = {
   created_at: "2026-03-21T00:00:00.000Z",
   updated_at: "2026-03-21T00:00:00.000Z",
   title: "個人作品",
+  title_en: null,
   date: "2026-03-21",
   header_image: null,
   summary: "這是摘要",

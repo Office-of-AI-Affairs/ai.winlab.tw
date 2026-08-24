@@ -30,3 +30,18 @@ export const SITE_DESCRIPTION_ZH =
   "國立陽明交通大學人工智慧專責辦公室網站，提供辦公室介紹、組織成員、公告、活動、成果與徵才資訊。";
 export const SITE_DESCRIPTION_EN =
   "The website of NYCU's Office of AI Affairs — office introduction, team members, announcements, events, results, and recruitment.";
+
+/**
+ * `<title>` text for pages that identify the site itself (root layout
+ * default, homepage) rather than a specific article. Declaring
+ * `hreflang="en"` while serving the bilingual `zh｜en` string as the page
+ * title is a misleading locale signal to search engines — zh-TW keeps the
+ * existing bilingual title (it's the primary language and benefits from the
+ * English name being discoverable there too), en gets the English name only.
+ *
+ * Avoid importing `Locale` here to keep this module import-cycle-free from
+ * `lib/i18n/config`; callers pass the locale string directly.
+ */
+export function siteTitle(locale: "zh-TW" | "en"): string {
+  return locale === "en" ? SITE_NAME_EN : SITE_NAME;
+}

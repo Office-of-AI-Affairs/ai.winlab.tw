@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/site";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
-import { localeAlternates } from "@/lib/i18n/seo";
+import { localeAlternates, ogLocale } from "@/lib/i18n/seo";
 import { InsightArticleClient } from "./article-client";
 import { InsightDraftFallback } from "./draft-fallback";
 
@@ -44,7 +44,7 @@ export async function generateMetadata({
     openGraph: {
       type: "article",
       siteName: SITE_NAME,
-      locale: "zh_TW",
+      locale: ogLocale(locale),
       title: `${title}${dict.common.titleSuffix}`,
       description,
       url: `/insights/${id}`,

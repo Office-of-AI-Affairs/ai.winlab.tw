@@ -9,7 +9,7 @@ import { HomeStats } from "@/components/home/home-stats";
 import { Reveal } from "@/components/shared/reveal";
 import { JsonLd } from "@/components/seo/json-ld";
 import { getContacts } from "@/lib/home-data";
-import { SITE_NAME, SITE_NAME_EN, SITE_NAME_ZH } from "@/lib/site";
+import { SITE_NAME, SITE_NAME_EN, SITE_NAME_ZH, siteTitle } from "@/lib/site";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { localeAlternates, ogAlternateLocales, ogLocale } from "@/lib/i18n/seo";
@@ -30,9 +30,10 @@ export async function generateMetadata({
   const locale: Locale = isLocale(raw) ? raw : defaultLocale;
   const description = locale === "en" ? DESCRIPTION_EN : DESCRIPTION_ZH;
   const alternates = localeAlternates("/", locale);
+  const title = siteTitle(locale);
 
   return {
-    title: SITE_NAME,
+    title,
     description,
     alternates: {
       canonical: alternates.canonical,
@@ -47,9 +48,9 @@ export async function generateMetadata({
       locale: ogLocale(locale),
       alternateLocale: ogAlternateLocales(locale),
       url: alternates.canonical,
-      title: SITE_NAME,
+      title,
       description,
-      images: [{ url: "/og.png", width: 1200, height: 630, alt: SITE_NAME }],
+      images: [{ url: "/og.png", width: 1200, height: 630, alt: title }],
     },
   };
 }

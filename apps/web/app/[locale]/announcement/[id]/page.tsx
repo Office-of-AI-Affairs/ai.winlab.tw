@@ -6,7 +6,8 @@ import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/site";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
-import { localeAlternates } from "@/lib/i18n/seo";
+import { localeAlternates, ogLocale } from "@/lib/i18n/seo";
+import { localizedField } from "@/lib/i18n/localized-field";
 import { localizedPath } from "@/lib/i18n/routing";
 import { isUuid } from "@/lib/slug";
 import { permanentRedirect } from "next/navigation";
@@ -42,7 +43,9 @@ export async function generateMetadata({
   const locale: Locale = isLocale(raw) ? raw : defaultLocale;
   const dict = await getDictionary(locale);
   const announcement = await getPublishedAnnouncementByParam(id);
-  const title = announcement?.title ?? dict.announcement.meta.fallbackTitle;
+  const title = announcement
+    ? localizedField(announcement, "title", locale).value
+    : dict.announcement.meta.fallbackTitle;
   const description = announcement?.category
     ? dict.announcement.meta.detailDescription
         .replace("{category}", announcement.category)
@@ -70,7 +73,7 @@ export async function generateMetadata({
     openGraph: {
       type: "article",
       siteName: SITE_NAME,
-      locale: "zh_TW",
+      locale: ogLocale(locale),
       title: `${title}${dict.common.titleSuffix}`,
       description,
       url: `/announcement/${encodeURIComponent(canonicalId)}`,

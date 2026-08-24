@@ -5,7 +5,8 @@ import {
   AnnouncementArticleClient as SharedAnnouncementArticleClient,
   type AnnouncementArticleClientProps,
 } from "@/components/announcement/announcement-article-client"
-import { useT } from "@/lib/i18n/locale-provider"
+import { useLocale, useT } from "@/lib/i18n/locale-provider"
+import { localizedField } from "@/lib/i18n/localized-field"
 
 type Props = Omit<
   AnnouncementArticleClientProps,
@@ -17,6 +18,7 @@ type Props = Omit<
 
 export function EventAnnouncementArticleClient({ slug, eventName, ...rest }: Props) {
   const t = useT()
+  const locale = useLocale()
   const announcementSlug = encodeURIComponent(
     rest.initialAnnouncement.slug || rest.initialAnnouncement.id,
   )
@@ -32,7 +34,7 @@ export function EventAnnouncementArticleClient({ slug, eventName, ...rest }: Pro
         { name: t.nav.events, path: "/events" },
         { name: eventName, path: `/events/${slug}` },
         {
-          name: rest.initialAnnouncement.title,
+          name: localizedField(rest.initialAnnouncement, "title", locale).value,
           path: `/events/${slug}/announcements/${announcementSlug}`,
         },
       ]}

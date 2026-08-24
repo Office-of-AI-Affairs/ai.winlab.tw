@@ -16,6 +16,7 @@ import { useContentEditor } from "@/hooks/use-content-editor"
 import { useEditMode } from "@/hooks/use-edit-mode"
 import { useImageUpload } from "@/hooks/use-image-upload"
 import { useLocale, useT } from "@/lib/i18n/locale-provider"
+import { localizedField } from "@/lib/i18n/localized-field"
 import { formatDate } from "@/lib/date"
 import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb"
 import type { TocItem } from "@/lib/ui/article"
@@ -82,7 +83,7 @@ export function ResultArticleClient({
     table: "results",
     id: initialResult.id,
     initialData: initialResult,
-    fields: ["title", "summary", "header_image", "content"],
+    fields: ["title", "title_en", "summary", "header_image", "content"],
     redirectTo: `/events/${slug}/results`,
     onAfterSave: revalidateAllEventCaches,
     onAfterPublish: revalidateAllEventCaches,
@@ -177,17 +178,19 @@ export function ResultArticleClient({
 
   const titleClass = "text-3xl font-bold tracking-tight mb-4"
 
+  const displayTitle = localizedField(result, "title", locale).value
+
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: t.common.home, path: "/" },
     { name: t.events.meta.fallbackName, path: "/events" },
     { name: eventName, path: `/events/${slug}` },
-    { name: result.title, path: `/events/${slug}/results/${result.id}` },
+    { name: displayTitle, path: `/events/${slug}/results/${result.id}` },
   ])
 
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "CreativeWork",
-    name: result.title,
+    name: displayTitle,
     datePublished: result.date,
     url: `https://ai.winlab.tw/events/${slug}/results/${result.id}`,
     ...(initialPublisher || coauthors.length
@@ -223,7 +226,7 @@ export function ResultArticleClient({
           <ArrowLeft className="w-4 h-4" />
           {t.events.backToEvent}
         </Link>
-        <ShareButtons url={`/events/${slug}/results/${result.id}`} title={result.title} />
+        <ShareButtons url={`/events/${slug}/results/${result.id}`} title={displayTitle} />
       </div>
 
       <div className="mb-8 max-w-6xl">
@@ -238,7 +241,7 @@ export function ResultArticleClient({
             className={`${titleClass} w-full border-0 bg-transparent p-0 outline-none focus:outline-none placeholder:text-muted-foreground/60`}
           />
         ) : (
-          <h1 className={titleClass}>{result.title}</h1>
+          <h1 className={titleClass}>{displayTitle}</h1>
         )}
         <div className="flex flex-wrap items-center gap-2 text-base text-muted-foreground">
           <User className="w-4 h-4 shrink-0" />
@@ -338,6 +341,19 @@ export function ResultArticleClient({
                 <p className="text-xs text-muted-foreground">{t.results.edit.coverImageGuidelines}</p>
               </div>
             </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="result-title-en" className="text-sm">{t.editor.titleEnLabel}</Label>
+            <Input
+              id="result-title-en"
+              value={result.title_en ?? ""}
+              onChange={(event) =>
+                setResult((prev) => ({ ...prev, title_en: event.target.value || null }))
+              }
+              placeholder={t.editor.titleEnPlaceholder}
+              disabled={isSaving || isPublishing || isDeleting}
+            />
           </div>
 
           <div className="flex flex-col gap-2">

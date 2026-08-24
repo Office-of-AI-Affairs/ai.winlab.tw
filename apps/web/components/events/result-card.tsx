@@ -11,7 +11,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/date";
-import { useT } from "@/lib/i18n/locale-provider";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
+import { localizedField } from "@/lib/i18n/localized-field";
 import type { Result } from "@winlab/db";
 import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { Pin, User } from "lucide-react";
@@ -40,6 +41,8 @@ export function ResultCard({
   onPinToggle?: (id: string, pinned: boolean) => void;
 }) {
   const t = useT();
+  const locale = useLocale();
+  const title = localizedField(item, "title", locale).value;
   const primaryName = item.author_name || t.results.card.anonymousAuthor;
 
   return (
@@ -48,7 +51,7 @@ export function ResultCard({
         <div className="relative w-full aspect-video shrink-0">
           <Image
             src={resolveImageSrc(item.header_image)}
-            alt={item.title}
+            alt={title}
             fill
             className="object-cover"
             unoptimized={isExternalImage(item.header_image)}
@@ -84,7 +87,7 @@ export function ResultCard({
         </div>
         <CardHeader className="shrink-0 pb-0">
           <CardTitle className="text-xl font-bold line-clamp-2">
-            {item.title || t.common.untitled}
+            {title || t.common.untitled}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex-1 pt-1">
@@ -96,7 +99,7 @@ export function ResultCard({
       <AppLink
         href={href}
         className="absolute inset-0 z-10"
-        aria-label={item.title || t.common.untitled}
+        aria-label={title || t.common.untitled}
         interactive={false}
       />
       <CardFooter className="relative z-20 pt-0 pb-4">

@@ -12,7 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDate } from "@/lib/date";
-import { useT } from "@/lib/i18n/locale-provider";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
+import { localizedField } from "@/lib/i18n/localized-field";
 import type { Announcement } from "@winlab/db";
 
 export function AnnouncementTable({
@@ -25,6 +26,7 @@ export function AnnouncementTable({
   showStatus?: boolean;
 }) {
   const t = useT();
+  const locale = useLocale();
   return (
     <div className="rounded-xl border border-border overflow-hidden">
       <Table>
@@ -67,7 +69,7 @@ export function AnnouncementTable({
                   href={getHref(item)}
                   className="flex min-h-12 w-full items-center px-4 py-3 whitespace-normal"
                 >
-                  {item.title || t.common.untitled}
+                  {localizedField(item, "title", locale).value || t.common.untitled}
                 </AppLink>
               </TableCell>
               {showStatus && (

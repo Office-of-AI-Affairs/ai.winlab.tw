@@ -3,9 +3,10 @@ import { EventsPageClient } from "./client";
 import { getPublishedEvents } from "./data";
 import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/site";
-import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
+import { defaultLocale, isLocale, localePrefix, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { localeAlternates, ogAlternateLocales, ogLocale } from "@/lib/i18n/seo";
+import { localizedField } from "@/lib/i18n/localized-field";
 
 export async function generateMetadata({
   params,
@@ -66,8 +67,8 @@ export default async function EventsPage({
     itemListElement: publishedEvents.map((item, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      url: `https://ai.winlab.tw/events/${item.slug}`,
-      name: item.name,
+      url: `https://ai.winlab.tw${localePrefix(locale)}/events/${item.slug}`,
+      name: localizedField(item, "name", locale).value,
     })),
   };
 

@@ -3,15 +3,21 @@
 import { AppLink } from "@/components/shared/app-link";
 import { useAuth } from "@/components/layout/auth-provider";
 import { LanguageToggle } from "@/components/layout/language-toggle";
-import { useT } from "@/lib/i18n/locale-provider";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
+import { localizedField } from "@/lib/i18n/localized-field";
 import { stripLocalePrefix } from "@/lib/i18n/routing";
 import { Loader2, TextAlignJustify } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: string }[] }) {
+export function Header({
+  pinnedEvents,
+}: {
+  pinnedEvents: { name: string; name_en: string | null; slug: string }[];
+}) {
   const { user, profile, isLoading, signOut, isAdmin } = useAuth();
   const t = useT();
+  const locale = useLocale();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -138,7 +144,7 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
           </AppLink>
           {pinnedEvents.map((event) => (
             <AppLink key={event.slug} href={`/events/${event.slug}`} className={`nav-bracket inline-block ${isActive(`/events/${event.slug}`) ? "nav-bracket-active" : ""}`}>
-              {event.name}
+              {localizedField(event, "name", locale).value}
             </AppLink>
           ))}
           {isAdmin && (
@@ -195,7 +201,7 @@ export function Header({ pinnedEvents }: { pinnedEvents: { name: string; slug: s
                 className={`rounded-lg px-3 py-2 hover:bg-black/10 ${isActive(`/events/${event.slug}`) ? "bg-black/15" : ""}`}
                 onClick={() => setOpen(false)}
               >
-                {event.name}
+                {localizedField(event, "name", locale).value}
               </AppLink>
             ))}
             {isAdmin && (

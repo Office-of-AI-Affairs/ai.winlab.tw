@@ -17,7 +17,8 @@ import { redirect } from "next/navigation";
 import { RecruitmentEditAffordance } from "./edit-affordance-client";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
-import { localeAlternates } from "@/lib/i18n/seo";
+import { localeAlternates, ogLocale } from "@/lib/i18n/seo";
+import { localizedField } from "@/lib/i18n/localized-field";
 
 export async function generateMetadata({
   params,
@@ -63,7 +64,7 @@ export async function generateMetadata({
     openGraph: {
       type: "article",
       siteName: SITE_NAME,
-      locale: "zh_TW",
+      locale: ogLocale(locale),
       title: metaTitle,
       description,
       url: a.canonical,
@@ -248,10 +249,12 @@ export default async function EventRecruitmentDetailPage({
 
   const { data: eventRow } = await supabase
     .from("events")
-    .select("name")
+    .select("name, name_en")
     .eq("slug", slug)
     .maybeSingle();
-  const eventName = eventRow?.name ?? dict.events.meta.fallbackName;
+  const eventName = eventRow
+    ? localizedField(eventRow, "name", locale).value
+    : dict.events.meta.fallbackName;
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: dict.common.home, path: "/" },
     { name: dict.events.meta.fallbackName, path: "/events" },

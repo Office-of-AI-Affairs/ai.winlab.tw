@@ -6,7 +6,8 @@ import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/site";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
-import { localeAlternates } from "@/lib/i18n/seo";
+import { localeAlternates, ogLocale } from "@/lib/i18n/seo";
+import { localizedField } from "@/lib/i18n/localized-field";
 import { ResultArticleClient, type ResultPublisher } from "./article-client";
 import { ResultDraftFallback } from "./draft-fallback";
 
@@ -21,10 +22,10 @@ export async function generateMetadata({
   const supabase = createPublicClient();
   const { data } = await supabase
     .from("results")
-    .select("title, summary, header_image")
+    .select("title, title_en, summary, header_image")
     .eq("id", id)
     .maybeSingle();
-  const title = data?.title ?? dict.results.meta.fallbackTitle;
+  const title = (data ? localizedField(data, "title", locale).value : null) ?? dict.results.meta.fallbackTitle;
   const description =
     data?.summary ?? dict.results.meta.fallbackDescription.replace("{title}", title);
   const ogImages = data?.header_image
@@ -43,7 +44,7 @@ export async function generateMetadata({
     openGraph: {
       type: "article",
       siteName: SITE_NAME,
-      locale: "zh_TW",
+      locale: ogLocale(locale),
       title: `${title}｜${dict.common.orgFullName}`,
       description,
       url: `/events/${slug}/results/${id}`,
@@ -83,7 +84,7 @@ export default async function EventResultDetailPage({
 
   const [{ data: eventRow }, { data: publisherRow }, { data: coauthorRows }] =
     await Promise.all([
-      supabase.from("events").select("name").eq("slug", slug).maybeSingle(),
+      supabase.from("events").select("name, name_en").eq("slug", slug).maybeSingle(),
       result.author_id
         ? supabase
             .from("public_profiles")
@@ -117,7 +118,7 @@ export default async function EventResultDetailPage({
   return (
     <ResultArticleClient
       slug={slug}
-      eventName={eventRow?.name ?? dict.events.meta.fallbackName}
+      eventName={eventRow ? localizedField(eventRow, "name", locale).value : dict.events.meta.fallbackName}
       initialResult={result}
       initialContentHtml={html}
       initialToc={toc}

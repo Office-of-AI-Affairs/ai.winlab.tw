@@ -3,7 +3,7 @@ import { InsightsPageClient } from "./client";
 import { getPublishedArticles } from "./data";
 import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/site";
-import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
+import { defaultLocale, isLocale, localePrefix, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { localeAlternates, ogAlternateLocales, ogLocale } from "@/lib/i18n/seo";
 
@@ -49,16 +49,23 @@ export async function generateMetadata({
   };
 }
 
-export default async function InsightsPage() {
+export default async function InsightsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale: raw } = await params;
+  const locale: Locale = isLocale(raw) ? raw : defaultLocale;
+  const dict = await getDictionary(locale);
   const published = await getPublishedArticles();
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "觀點文章列表",
+    name: dict.insights.meta.title,
     itemListElement: published.map((item, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      url: `https://ai.winlab.tw/insights/${item.id}`,
+      url: `https://ai.winlab.tw${localePrefix(locale)}/insights/${item.id}`,
       name: item.title,
     })),
   };

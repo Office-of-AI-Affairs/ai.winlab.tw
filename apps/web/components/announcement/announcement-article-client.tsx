@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { useContentEditor } from "@/hooks/use-content-editor"
 import { useEditMode } from "@/hooks/use-edit-mode"
 import { useLocale, useT } from "@/lib/i18n/locale-provider"
+import { localizedField } from "@/lib/i18n/localized-field"
 import { formatDate } from "@/lib/date"
 import { buildBreadcrumbJsonLd, buildNewsArticleJsonLd } from "@/lib/seo/jsonld"
 import { generateUniqueAnnouncementSlug } from "@/lib/slug"
@@ -127,7 +128,7 @@ export function AnnouncementArticleClient({
     table: "announcements",
     id: initialAnnouncement.id,
     initialData: initialAnnouncement,
-    fields: ["title", "category", "date", "content"],
+    fields: ["title", "title_en", "category", "date", "content"],
     redirectTo: backHref,
     onBeforeSave: onBeforeSaveAssignSlug,
     onAfterSave: onCacheInvalidate,
@@ -221,10 +222,12 @@ export function AnnouncementArticleClient({
 
   const titleClass = "text-4xl font-extrabold tracking-tight text-balance mb-4"
 
+  const displayTitle = localizedField(announcement, "title", locale).value
+
   const inlineImage = extractFirstImage(announcement.content as Record<string, unknown> | null)
 
   const structuredData = buildNewsArticleJsonLd({
-    headline: announcement.title,
+    headline: displayTitle,
     datePublished: announcement.date,
     dateModified: announcement.updated_at,
     articleSection: announcement.category,
@@ -253,7 +256,7 @@ export function AnnouncementArticleClient({
           <ArrowLeft className="w-4 h-4" />
           {resolvedBackLabel}
         </Link>
-        <ShareButtons url={sharePath} title={shareTitle ?? announcement.title} />
+        <ShareButtons url={sharePath} title={shareTitle ?? displayTitle} />
       </div>
 
       <div className="mb-8 max-w-6xl">
@@ -268,7 +271,7 @@ export function AnnouncementArticleClient({
             className={`${titleClass} w-full border-0 bg-transparent p-0 outline-none focus:outline-none placeholder:text-muted-foreground/60`}
           />
         ) : (
-          <h1 className={titleClass}>{announcement.title}</h1>
+          <h1 className={titleClass}>{displayTitle}</h1>
         )}
         <div className="flex flex-wrap items-center gap-2 text-base text-muted-foreground">
           <span>{formatDate(announcement.date)}</span>
@@ -316,6 +319,19 @@ export function AnnouncementArticleClient({
           open={actionsOpen}
           onOpenChange={setActionsOpen}
         >
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="announcement-title-en" className="text-sm">{t.editor.titleEnLabel}</Label>
+            <Input
+              id="announcement-title-en"
+              value={announcement.title_en ?? ""}
+              onChange={(event) =>
+                setAnnouncement((prev) => ({ ...prev, title_en: event.target.value || null }))
+              }
+              placeholder={t.editor.titleEnPlaceholder}
+              disabled={isSaving || isPublishing || isDeleting}
+            />
+          </div>
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="announcement-date" className="text-sm">{t.common.date}</Label>
             <Input
