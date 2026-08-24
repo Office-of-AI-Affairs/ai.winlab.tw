@@ -1,0 +1,228 @@
+# Visual Identity Spec
+
+Status: accepted. This is the tokens contract for the "UI System Refresh"
+milestone. Every later issue in the milestone (#51 radius, #52 brand color,
+and anything that follows) implements a section of this document and cites
+that section as its acceptance criteria.
+
+Companion files:
+
+- `apps/web/app/globals.css` — runtime tokens (`@theme` block, CSS custom
+  properties). This spec is the source of *intent*; `globals.css` is the
+  source of *implementation*. If they disagree, `globals.css` is wrong.
+- `apps/web/DESIGN.md` — the pre-existing component-level design doc
+  (layout shells, component variants, do's/don'ts). It still describes the
+  *old* flattened radius scale and the *old* non-OKLCH brand color as of
+  this writing; #51 and #52 update `globals.css` to match this spec, and
+  `DESIGN.md` needs a follow-up pass to stop contradicting it (tracked
+  separately — see "Known gap" at the end of this doc).
+
+## Color
+
+Brand: NYCU Royal Blue, `#0033A0`. Converted to OKLCH using the standard
+sRGB → linear → Oklab → OKLCH pipeline (Björn Ottosson's reference
+matrices), not eyeballed:
+
+```
+#0033A0 -> oklch(0.378 0.182 262.51)
+```
+
+Round-trip verified: `oklch(0.378 0.182 262.51)` converts back to
+`#0033a0` exactly.
+
+### Light mode
+
+| Token | Value | Notes |
+|---|---|---|
+| `--primary` | `oklch(0.378 0.182 262.51)` | NYCU blue, exact conversion of `#0033A0` |
+| `--primary-foreground` | `oklch(1 0 0)` | white text on primary; contrast ratio 10.6:1 (AA) |
+| `--ring` | `oklch(0.6 0.04 262.51)` | primary hue, low chroma; 3.9:1 against white background |
+
+### Dark mode
+
+Dark mode does not drop the brand (the current bug in `globals.css`
+reverts `--primary` to stock zinc white in `.dark`). It gets a brand
+variant on the **same hue** (`262.51`), lightness raised and chroma
+slightly reduced so it reads clearly on dark surfaces:
+
+| Token | Value | Notes |
+|---|---|---|
+| `--primary` | `oklch(0.65 0.15 262.51)` | same hue as light mode; L raised from 0.378 to 0.65 for dark-surface legibility |
+| `--primary-foreground` | `oklch(0.145 0 0)` | dark text (matches `--background` dark value); contrast ratio 6.0:1 against `--primary` (AA) |
+| `--ring` | `oklch(0.556 0.05 262.51)` | primary hue, low chroma; 4.2:1 against dark background |
+
+Contrast requirements for every semantic color pairing in this system:
+**4.5:1 (AA) for body text**, **3:1 for large text / UI elements**
+(borders, focus rings, icons). Both `--primary` pairings above clear AA
+text contrast; both `--ring` values clear the 3:1 UI threshold against
+their respective page background.
+
+### Chart palette
+
+`--chart-1..5` are derived from the brand hue family: three steps in the
+brand hue (`262.51`, varying lightness/chroma) plus two supporting hues
+(a cool teal complement and a warm amber accent) for categorical
+distinction. Defined for both modes so charts don't go gray in dark mode
+like the stock shadcn defaults did.
+
+| Token | Light | Dark | Role |
+|---|---|---|---|
+| `--chart-1` | `oklch(0.55 0.18 262.51)` | `oklch(0.65 0.16 262.51)` | primary brand blue |
+| `--chart-2` | `oklch(0.66 0.12 262.51)` | `oklch(0.78 0.10 262.51)` | pale brand blue |
+| `--chart-3` | `oklch(0.32 0.14 262.51)` | `oklch(0.50 0.16 262.51)` | deep brand blue |
+| `--chart-4` | `oklch(0.58 0.13 195)` | `oklch(0.70 0.13 195)` | supporting hue: teal |
+| `--chart-5` | `oklch(0.66 0.15 70)` | `oklch(0.80 0.15 70)` | supporting hue: amber |
+
+All ten values were checked for ≥3:1 contrast against their mode's
+`--background` (non-text UI threshold for chart fills/lines).
+
+### Semantic roles (unchanged by this milestone)
+
+`background` / `foreground`, `card` / `card-foreground`, `muted` /
+`muted-foreground`, `destructive`, `border` / `input` keep their current
+grayscale OKLCH values — this spec doesn't touch them. `secondary` stays
+the flat gray "draft" surface it already is.
+
+### Single source of truth
+
+`--nycu` and the `.bg-nycu` / `.text-nycu` utilities are deleted. There is
+exactly one brand token: `--primary`. Every usage of the old utilities
+migrates to Tailwind `primary` classes (`bg-primary`, `text-primary`,
+`bg-primary/10`, etc.) — see #52.
+
+## Radius
+
+Base radius `--radius: 1rem`. The rest of the scale is a real,
+shadcn-standard derivation — no step aliases another:
+
+| Token | Formula | Value |
+|---|---|---|
+| `--radius-sm` | `calc(var(--radius) - 0.5rem)` | `0.5rem` |
+| `--radius-md` | `calc(var(--radius) - 0.25rem)` | `0.75rem` |
+| `--radius-lg` | `var(--radius)` | `1rem` |
+| `--radius-xl` | `calc(var(--radius) + 0.5rem)` | `1.5rem` |
+| `--radius-2xl` | `calc(var(--radius) + 1rem)` | `2rem` |
+
+`--radius-2xl` is kept as an explicit larger step (rather than falling
+back to Tailwind's stock `1rem`, which would be *smaller* than our `xl`
+and invert the scale) because it's genuinely used today: floating panel
+surfaces (`FloatingMenu` slash menu, expanded `TiptapMobileToolbar`),
+`SettingsMenu`, the users table wrapper. `--radius-3xl` / `--radius-4xl`
+are not referenced anywhere in the codebase — they're left undefined so
+Tailwind's stock values apply (irrelevant, since nothing uses them).
+
+Usage rule:
+
+- **Controls** (buttons, inputs, selects, textareas) → `md` (`0.75rem`)
+- **Cards, blocks, editor canvas, table/list container surfaces** → `lg`
+  (`1rem`)
+- **Hero / feature surfaces** (banners, large promotional blocks) → `xl`
+  (`1.5rem`)
+- **Floating panel surfaces already on `2xl`** keep `2xl` (`2rem`) —
+  unchanged in this milestone
+- **Capsule** (single-row floating action surfaces, avatars, status
+  pills) → `rounded-full`, untouched by this scale
+
+This replaces the old two-value system (`--radius-sm`/`-md` hardcoded to
+`1rem`, `--radius-lg` through `-4xl` all aliasing `--radius: 2rem`).
+Acceptance for #51: no hardcoded rem values in the `@theme` radius block
+except the base `--radius` definition; `sm`/`md`/`lg`/`xl` are distinct
+values; every component listed above that previously hardcoded
+`rounded-[2rem]` (bypassing the token system entirely) is migrated to the
+matching semantic class.
+
+## Typography
+
+Three font families, one job each (unchanged by this milestone, recorded
+here for completeness):
+
+- **Noto Sans TC** (`--font-noto-sans`) — every UI surface, body text,
+  in-content headings. The default; never set explicitly.
+- **Noto Sans Mono** (`--font-noto-sans-mono`) — `<code>`, version
+  markers.
+- **Instrument Serif** — decorative only (hero wordmarks, `Design
+  System` title). Set inline; no Tailwind class exists for it.
+
+Body text: `line-height: 1.7` for zh-TW copy (Chinese text needs more
+vertical breathing room than Latin text at the same font size to stay
+readable — this is already the project's `leading-7`/`1.75` convention
+in `.prose`, formalized here as the rule rather than a per-page choice).
+
+Heading scale (size / weight), used consistently per page type:
+
+| Level | Class | Weight | Used for |
+|---|---|---|---|
+| H1 | `text-3xl` | `700` | Page titles (`/announcement/[id]`, `/events/[slug]`, article pages) |
+| H2 | `text-2xl` | `600` | Major section headers within a page (`.prose h2`, dashboard section titles) |
+| H3 | `text-xl` | `600` | Subsection headers, card group titles |
+| H4 | `text-lg` | `600` | Card titles, list group labels |
+
+Body copy is `text-base` (`1rem`) at `400` weight; muted/secondary copy
+is `text-sm` at `400`. Don't invent a fifth heading size — if a page
+needs a bigger splash than H1, that's the Instrument Serif display
+treatment, not a heavier `text-3xl`.
+
+## Spacing
+
+Section rhythm is already correct; this milestone formalizes the
+existing utilities rather than introducing new values:
+
+| Utility | Padding | Used for |
+|---|---|---|
+| `.page-section-home` | `py-16` (`4rem`) | Homepage sections (`HomeCarousel`, `HomeIntroduction`, etc.) |
+| `.page-section-content` | `py-12` (`3rem`) | Content pages (`/announcement`, `/introduction`, detail pages) |
+| `.page-section-admin` | `py-8` (`2rem`) | Admin surfaces (`/settings`, `/carousel`, `/contacts`) |
+
+All three share `container max-w-6xl mx-auto px-4`. No new spacing
+values are introduced by this milestone — if a page needs different
+rhythm, it's a `PageShell`/`PageSection` tone choice (see
+`apps/web/lib/ui/patterns.ts`), not a bespoke `py-*` value.
+
+## Imagery
+
+- **Card covers** (result cards, announcement cards, recruitment tiles,
+  event tiles): `aspect-video` (16:9), `object-cover`. Never
+  `object-contain` — covers crop to fill, they don't letterbox.
+- **Hero / carousel text overlays**: text always sits on a bottom-up
+  scrim, sized to the text block only (not the full image):
+
+  ```css
+  background: linear-gradient(to top, rgb(0 0 0 / 0.6), transparent);
+  ```
+
+  The scrim exists purely so overlaid text clears AA contrast against an
+  arbitrary photo; it is not a full-image darken. Size/position it so it
+  covers exactly the text's bounding area (e.g. the bottom third), not
+  the entire hero.
+- Any image-with-overlaid-text combination must be checked for AA text
+  contrast against the *darkest* pixel region the scrim produces, not
+  the average image brightness.
+
+## Component policy
+
+`components/ui/` is **stock shadcn (`new-york` style) only** — every file
+in that directory must be reproducible by `bunx shadcn add <name>` with
+no hand edits beyond what the token system (`@theme` values in
+`globals.css`) already changes automatically. Customizations,
+project-specific variants, and one-off styling live in feature
+components (`components/*.tsx` outside `ui/`) or thin wrappers, never by
+hand-editing a stock primitive's markup or adding bespoke classes beyond
+what regenerating the primitive would produce.
+
+Practical corollary for this milestone: where a stock primitive currently
+hardcodes an arbitrary radius value (e.g. `rounded-[2rem]` in
+`components/ui/card.tsx`, `components/ui/block.tsx`) instead of using the
+semantic `rounded-*` class, that's a policy violation independent of the
+radius bug — #51 fixes both at once by migrating those literals to
+`rounded-lg`.
+
+## Known gap
+
+`apps/web/DESIGN.md` is the pre-existing canonical design doc referenced
+by `apps/web/CLAUDE.md`. As of this spec, it still documents the old
+two-tier radius system (`inner: 1rem` / `outer: 2rem`) and states the
+brand color is "the only non-OKLCH value" — both statements become false
+once #51 and #52 land. Reconciling `DESIGN.md` with this spec (either by
+rewriting its Shapes/Colors sections or by having it defer to this
+document) is out of scope for the three issues in this milestone and is
+flagged here for the lead to schedule as a follow-up.
