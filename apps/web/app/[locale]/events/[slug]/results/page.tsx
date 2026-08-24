@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { localeAlternates } from "@/lib/i18n/seo";
+import { localizedField } from "@/lib/i18n/localized-field";
 
 // Tab-as-route: /events/[slug]/results. See issue #1.
 export const dynamic = "force-dynamic";
@@ -20,10 +21,11 @@ export async function generateMetadata({
   const dict = await getDictionary(locale);
   const data = await getEventPageData(slug);
   if (!data) return { title: dict.events.meta.resultsFallbackTitle };
-  const title = dict.events.meta.resultsTitle.replace("{name}", data.event.name);
-  const description = dict.events.meta.resultsDescription.replace("{name}", data.event.name);
+  const eventName = localizedField(data.event, "name", locale).value;
+  const title = dict.events.meta.resultsTitle.replace("{name}", eventName);
+  const description = dict.events.meta.resultsDescription.replace("{name}", eventName);
   const ogImages = data.event.cover_image
-    ? [{ url: data.event.cover_image, width: 1200, height: 630, alt: data.event.name }]
+    ? [{ url: data.event.cover_image, width: 1200, height: 630, alt: eventName }]
     : [];
   const twitterImages = ogImages.length ? ogImages.map((i) => i.url) : ["/og.png"];
   const a = localeAlternates(`/events/${slug}/results`, locale);
@@ -53,7 +55,7 @@ export default async function EventResultsPage({
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: `${data.event.name} ${dict.events.tabs.results}`,
+    name: `${localizedField(data.event, "name", locale).value} ${dict.events.tabs.results}`,
     url: `https://ai.winlab.tw/events/${slug}/results`,
     isPartOf: {
       "@type": "WebSite",

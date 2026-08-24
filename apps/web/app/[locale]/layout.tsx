@@ -6,7 +6,7 @@ import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { LazyToaster } from "@/components/layout/lazy-toaster";
 import { getPinnedEvents } from "@/lib/supabase/get-pinned-events";
-import { SITE_DESCRIPTION_EN, SITE_DESCRIPTION_ZH, SITE_NAME } from "@/lib/site";
+import { SITE_DESCRIPTION_EN, SITE_DESCRIPTION_ZH, SITE_NAME, siteTitle } from "@/lib/site";
 import { defaultLocale, isLocale, locales, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { LocaleProvider } from "@/lib/i18n/locale-provider";
@@ -40,17 +40,18 @@ export async function generateMetadata({
   const { locale: raw } = await params;
   const locale: Locale = isLocale(raw) ? raw : defaultLocale;
   const description = locale === "en" ? SITE_DESCRIPTION_EN : SITE_DESCRIPTION_ZH;
+  const title = siteTitle(locale);
 
   return {
     metadataBase: new URL("https://ai.winlab.tw"),
-    title: SITE_NAME,
+    title,
     description,
     openGraph: {
       type: "website",
       siteName: SITE_NAME,
       locale: ogLocale(locale),
       alternateLocale: ogAlternateLocales(locale),
-      title: SITE_NAME,
+      title,
       description,
       url: "https://ai.winlab.tw",
       images: [
@@ -58,7 +59,7 @@ export async function generateMetadata({
           url: "/og.png",
           width: 1200,
           height: 630,
-          alt: SITE_NAME,
+          alt: title,
         },
       ],
     },

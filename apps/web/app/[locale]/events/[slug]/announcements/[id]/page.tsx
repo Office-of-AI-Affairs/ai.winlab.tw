@@ -7,7 +7,8 @@ import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/site";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
-import { localeAlternates } from "@/lib/i18n/seo";
+import { localeAlternates, ogLocale } from "@/lib/i18n/seo";
+import { localizedField } from "@/lib/i18n/localized-field";
 import { localizedPath } from "@/lib/i18n/routing";
 import { isUuid } from "@/lib/slug";
 import { permanentRedirect } from "next/navigation";
@@ -66,7 +67,9 @@ export async function generateMetadata({
   const announcement = eventRes.data
     ? await findAnnouncement(supabase, eventRes.data.id, id, { publishedOnly: false })
     : null;
-  const title = announcement?.title ?? dict.announcement.meta.fallbackTitle;
+  const title = announcement
+    ? localizedField(announcement, "title", locale).value
+    : dict.announcement.meta.fallbackTitle;
   const description = announcement?.category
     ? dict.announcement.meta.categoryDescription
         .replace("{category}", announcement.category)
@@ -98,7 +101,7 @@ export async function generateMetadata({
     openGraph: {
       type: "article",
       siteName: SITE_NAME,
-      locale: "zh_TW",
+      locale: ogLocale(locale),
       title: `${title}｜${dict.common.orgFullName}`,
       description,
       url: `/events/${slug}/announcements/${encodeURIComponent(canonicalId)}`,
@@ -124,7 +127,7 @@ export default async function EventAnnouncementDetailPage({
   const dict = await getDictionary(locale);
   const supabase = createPublicClient();
 
-  const eventRes = await supabase.from("events").select("id, name").eq("slug", slug).maybeSingle();
+  const eventRes = await supabase.from("events").select("id, name, name_en").eq("slug", slug).maybeSingle();
   const eventId = eventRes.data?.id;
   const announcement = eventId
     ? await findAnnouncement(supabase, eventId, id, { publishedOnly: true })
@@ -145,7 +148,9 @@ export default async function EventAnnouncementDetailPage({
     );
   }
 
-  const eventName = eventRes.data?.name ?? dict.events.meta.fallbackName;
+  const eventName = eventRes.data
+    ? localizedField(eventRes.data, "name", locale).value
+    : dict.events.meta.fallbackName;
 
   const { html, toc } = renderArticle(announcement.content);
   const { minutes: readingTimeMin } = estimateReadingTime(announcement.content);

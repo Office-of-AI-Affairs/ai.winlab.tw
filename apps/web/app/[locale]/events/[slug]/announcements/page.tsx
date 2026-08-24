@@ -5,6 +5,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { localeAlternates } from "@/lib/i18n/seo";
+import { localizedField } from "@/lib/i18n/localized-field";
 import type { Metadata } from "next";
 
 // Tab-as-route: /events/[slug]/announcements. See issue #1 for the SEO
@@ -23,10 +24,11 @@ export async function generateMetadata({
   const dict = await getDictionary(locale);
   const data = await getEventPageData(slug);
   if (!data) return { title: dict.events.meta.announcementsFallbackTitle };
-  const title = dict.events.meta.announcementsTitle.replace("{name}", data.event.name);
-  const description = dict.events.meta.announcementsDescription.replace("{name}", data.event.name);
+  const eventName = localizedField(data.event, "name", locale).value;
+  const title = dict.events.meta.announcementsTitle.replace("{name}", eventName);
+  const description = dict.events.meta.announcementsDescription.replace("{name}", eventName);
   const ogImages = data.event.cover_image
-    ? [{ url: data.event.cover_image, width: 1200, height: 630, alt: data.event.name }]
+    ? [{ url: data.event.cover_image, width: 1200, height: 630, alt: eventName }]
     : [];
   const twitterImages = ogImages.length ? ogImages.map((i) => i.url) : ["/og.png"];
   const a = localeAlternates(`/events/${slug}/announcements`, locale);
@@ -56,7 +58,7 @@ export default async function EventAnnouncementsPage({
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: `${data.event.name} ${dict.events.tabs.announcements}`,
+    name: `${localizedField(data.event, "name", locale).value} ${dict.events.tabs.announcements}`,
     url: `https://ai.winlab.tw/events/${slug}/announcements`,
     isPartOf: {
       "@type": "WebSite",

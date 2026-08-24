@@ -3,9 +3,10 @@ import { AnnouncementPageClient } from "./client";
 import { getPublishedAnnouncements } from "./data";
 import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/site";
-import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
+import { defaultLocale, isLocale, localePrefix, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { localeAlternates, ogAlternateLocales, ogLocale } from "@/lib/i18n/seo";
+import { localizedField } from "@/lib/i18n/localized-field";
 
 export async function generateMetadata({
   params,
@@ -65,8 +66,8 @@ export default async function AnnouncementPage({
     itemListElement: publishedAnnouncements.map((item, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      url: `https://ai.winlab.tw/announcement/${encodeURIComponent(item.slug)}`,
-      name: item.title,
+      url: `https://ai.winlab.tw${localePrefix(locale)}/announcement/${encodeURIComponent(item.slug)}`,
+      name: localizedField(item, "title", locale).value,
     })),
   };
 
