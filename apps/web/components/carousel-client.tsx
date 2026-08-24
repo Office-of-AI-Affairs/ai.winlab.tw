@@ -3,11 +3,11 @@
 import {
   Carousel,
   CarouselContent,
-  CarouselIndicators,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { CarouselIndicators } from "@/components/carousel-indicators";
 import { AppLink } from "@/components/app-link";
 import { useAuth } from "@/components/auth-provider";
 import { useLocale, useT } from "@/lib/i18n/locale-provider";

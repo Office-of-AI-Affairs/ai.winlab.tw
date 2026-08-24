@@ -247,7 +247,7 @@ The live gallery at **`/design`** renders one specimen of every primitive listed
 
 `<Button>` (`components/ui/button.tsx`) variants: `default` (primary), `secondary`, `destructive`, `outline`, `ghost`, plus `size="icon"` and `disabled`. All buttons inherit `interactive-scale` (hover `scale-1.02`, active `scale-0.98`) and `transition-[bg,border,color,shadow,opacity,transform]`. Don't apply `transition-all` anywhere — a contract test (`lib/ui/patterns.test.ts`) catches it.
 
-`<SubButton>` (`components/ui/sub-button.tsx`) — secondary affordance that renders as an `<a>` (link mode) or `<button>` (action mode). Used for "back" links, lightweight CTAs that shouldn't compete with primary buttons.
+`<SubButton>` (`components/sub-button.tsx`) — secondary affordance that renders as an `<a>` (link mode) or `<button>` (action mode). Used for "back" links, lightweight CTAs that shouldn't compete with primary buttons.
 
 ### Badges
 

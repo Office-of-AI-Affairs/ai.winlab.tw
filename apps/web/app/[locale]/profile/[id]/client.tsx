@@ -5,7 +5,7 @@ import { AppLink } from "@/components/app-link";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Block } from "@/components/ui/block";
+import { Block } from "@/components/block";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/page-shell";
 import {
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SubButton } from "@/components/ui/sub-button";
+import { SubButton } from "@/components/sub-button";
 import { Textarea } from "@/components/ui/textarea";
 import { useProfileEditor, mergeAllLinks } from "@/hooks/use-profile-editor";
 import { useT } from "@/lib/i18n/locale-provider";
