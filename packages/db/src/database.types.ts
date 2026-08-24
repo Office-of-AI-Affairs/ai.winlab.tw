@@ -928,6 +928,23 @@ export type Database = {
         Returns: Json
       }
       gravatar_url: { Args: { email: string }; Returns: string }
+      search_site: {
+        // Hand-added ahead of `bun run gen:types` — the search_site() RPC
+        // migration (20260824000003_site_search.sql) hasn't been applied to
+        // the live project yet. Regenerate this file after it lands; this
+        // entry should come out identical (or delete it if the generator
+        // disagrees).
+        Args: { query: string; locale?: string }
+        Returns: {
+          type: string
+          id: string
+          slug: string | null
+          event_slug: string | null
+          title: string
+          snippet: string | null
+          rank: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
