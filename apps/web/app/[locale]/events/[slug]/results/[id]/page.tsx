@@ -28,10 +28,6 @@ export async function generateMetadata({
   const title = (data ? localizedField(data, "title", locale).value : null) ?? dict.results.meta.fallbackTitle;
   const description =
     data?.summary ?? dict.results.meta.fallbackDescription.replace("{title}", title);
-  const ogImages = data?.header_image
-    ? [{ url: data.header_image, width: 1200, height: 630, alt: title }]
-    : [{ url: "/og.png", width: 1200, height: 630, alt: title }];
-  const twitterImages = ogImages.map((i) => i.url);
   const a = localeAlternates(`/events/${slug}/results/${id}`, locale);
   return {
     title: `${title}｜${dict.common.orgFullName}`,
@@ -40,7 +36,9 @@ export async function generateMetadata({
     // Next.js App Router performs object-level replace (not deep merge) when a
     // child segment exports openGraph. All required fields must be declared here
     // explicitly; relying on layout.tsx inheritance silently drops og:type /
-    // og:site_name / og:locale.
+    // og:site_name / og:locale. `images` is intentionally omitted — the
+    // sibling `opengraph-image.tsx` file convention (#49) generates a
+    // per-result branded card and Next injects it automatically.
     openGraph: {
       type: "article",
       siteName: SITE_NAME,
@@ -48,13 +46,11 @@ export async function generateMetadata({
       title: `${title}｜${dict.common.orgFullName}`,
       description,
       url: `/events/${slug}/results/${id}`,
-      images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
       title: `${title}｜${dict.common.orgFullName}`,
       description,
-      images: twitterImages,
     },
   };
 }

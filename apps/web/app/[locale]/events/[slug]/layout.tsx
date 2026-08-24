@@ -37,9 +37,6 @@ export async function generateMetadata({
   const name = data?.name ?? dict.events.meta.fallbackName;
   const description =
     data?.description ?? dict.events.meta.fallbackDescription.replace("{name}", name);
-  const ogImages = data?.cover_image
-    ? [{ url: data.cover_image, width: 1200, height: 630, alt: name }]
-    : [];
   const a = localeAlternates(`/events/${slug}`, locale);
   return {
     title: `${name}${dict.events.meta.titleSuffix}`,
@@ -48,11 +45,13 @@ export async function generateMetadata({
       canonical: a.canonical,
       languages: a.languages,
     },
+    // `images` intentionally omitted — the sibling `opengraph-image.tsx`
+    // file convention (#49) generates the event's branded card and Next
+    // injects it automatically for this segment and every tab beneath it.
     openGraph: {
       title: `${name}${dict.events.meta.titleSuffix}`,
       description,
       url: `/events/${slug}`,
-      images: ogImages,
     },
   };
 }
