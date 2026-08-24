@@ -755,5 +755,26 @@
   },
   "i18nNotice": {
     "untranslated": "This section is currently available in Chinese only."
+  },
+  "search": {
+    "openLabel": "Search",
+    "shortcutHint": "⌘K",
+    "placeholder": "Search announcements, events, results…",
+    "dialogTitle": "Search",
+    "dialogDescription": "Search announcements, events, and results",
+    "minCharsHint": "Type at least 2 characters to search",
+    "loading": "Searching…",
+    "empty": "No results for \"{query}\"",
+    "errorLabel": "Search failed, please try again",
+    "groupAnnouncement": "Announcements",
+    "groupEvent": "Events",
+    "groupResult": "Results",
+    "viewAllResults": "See full results on the search page",
+    "pageTitle": "Search",
+    "pageDescription": "Search announcements, events, and results",
+    "inputLabel": "Search keyword",
+    "submit": "Search",
+    "resultsCount": "{count} results",
+    "noQuery": "Type a keyword to search"
   }
 }

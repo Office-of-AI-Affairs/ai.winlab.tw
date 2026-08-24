@@ -5,6 +5,7 @@ import { AuthProvider } from "@/components/layout/auth-provider";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { LazyToaster } from "@/components/layout/lazy-toaster";
+import { SearchProvider } from "@/components/layout/search-provider";
 import { getPinnedEvents } from "@/lib/supabase/get-pinned-events";
 import { SITE_DESCRIPTION_EN, SITE_DESCRIPTION_ZH, SITE_NAME, siteTitle } from "@/lib/site";
 import { defaultLocale, isLocale, locales, type Locale } from "@/lib/i18n/config";
@@ -114,22 +115,24 @@ export default async function RootLayout({
           <LocaleProvider locale={locale} dict={dict}>
             <NuqsAdapter>
               <AuthProvider>
-                <div className="relative flex flex-col min-h-dvh">
-                  <AppLink
-                    href="#main-content"
-                    interactive={false}
-                    className="sr-only absolute left-4 top-4 z-[60] rounded-md bg-background px-3 py-2 text-sm font-medium text-foreground shadow-md focus:not-sr-only focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    {dict.common.skipToContent}
-                  </AppLink>
-                  <Header pinnedEvents={pinnedEvents} />
-                  <main id="main-content" className="flex-1">
-                    {children}
-                  </main>
-                  <Footer t={dict.footer} locale={locale} />
-                </div>
-                <LazyToaster />
-                <AnalyticsBeacon />
+                <SearchProvider>
+                  <div className="relative flex flex-col min-h-dvh">
+                    <AppLink
+                      href="#main-content"
+                      interactive={false}
+                      className="sr-only absolute left-4 top-4 z-[60] rounded-md bg-background px-3 py-2 text-sm font-medium text-foreground shadow-md focus:not-sr-only focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {dict.common.skipToContent}
+                    </AppLink>
+                    <Header pinnedEvents={pinnedEvents} />
+                    <main id="main-content" className="flex-1">
+                      {children}
+                    </main>
+                    <Footer t={dict.footer} locale={locale} />
+                  </div>
+                  <LazyToaster />
+                  <AnalyticsBeacon />
+                </SearchProvider>
               </AuthProvider>
             </NuqsAdapter>
           </LocaleProvider>

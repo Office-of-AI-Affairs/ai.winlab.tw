@@ -755,5 +755,26 @@
   },
   "i18nNotice": {
     "untranslated": "此區塊目前僅提供中文內容。"
+  },
+  "search": {
+    "openLabel": "搜尋",
+    "shortcutHint": "⌘K",
+    "placeholder": "搜尋公告、活動、成果⋯",
+    "dialogTitle": "搜尋",
+    "dialogDescription": "搜尋公告、活動與成果",
+    "minCharsHint": "至少輸入 2 個字開始搜尋",
+    "loading": "搜尋中⋯",
+    "empty": "找不到符合「{query}」的結果",
+    "errorLabel": "搜尋失敗，請稍後再試",
+    "groupAnnouncement": "公告",
+    "groupEvent": "活動",
+    "groupResult": "成果",
+    "viewAllResults": "在搜尋頁查看完整結果",
+    "pageTitle": "搜尋",
+    "pageDescription": "搜尋公告、活動與成果",
+    "inputLabel": "搜尋關鍵字",
+    "submit": "搜尋",
+    "resultsCount": "共 {count} 項結果",
+    "noQuery": "輸入關鍵字開始搜尋"
   }
 }
