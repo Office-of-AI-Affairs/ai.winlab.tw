@@ -14,8 +14,8 @@ import { useContentEditor } from "@/hooks/use-content-editor"
 import { useEditMode } from "@/hooks/use-edit-mode"
 import { useLocale, useT } from "@/lib/i18n/locale-provider"
 import { formatDate } from "@/lib/date"
-import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb"
-import type { TocItem } from "@/lib/ui/article"
+import { buildBreadcrumbJsonLd, buildNewsArticleJsonLd } from "@/lib/seo/jsonld"
+import { extractFirstImage, type TocItem } from "@/lib/ui/article"
 import type { Announcement } from "@winlab/db"
 import { ArrowLeft, Loader2, LogOut, Send, Trash2 } from "lucide-react"
 import Link from "next/link"
@@ -179,20 +179,22 @@ export function AnnouncementArticleClient({
 
   const titleClass = "text-4xl font-extrabold tracking-tight text-balance mb-4"
 
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "NewsArticle",
+  const inlineImage = extractFirstImage(announcement.content as Record<string, unknown> | null)
+
+  const structuredData = buildNewsArticleJsonLd({
     headline: announcement.title,
     datePublished: announcement.date,
     dateModified: announcement.updated_at,
     articleSection: announcement.category,
     url: shareUrl,
-    publisher: {
-      "@type": "Organization",
-      name: t.common.orgFullName,
-      url: "https://ai.winlab.tw",
-    },
-  }
+    image: inlineImage,
+    // No per-post byline in this data model — announcements are posted by
+    // the office, not a named author, so author and publisher are the same.
+    authorName: t.common.orgFullName,
+    authorUrl: "https://ai.winlab.tw",
+    publisherName: t.common.orgFullName,
+    publisherUrl: "https://ai.winlab.tw",
+  })
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(breadcrumb)
 
