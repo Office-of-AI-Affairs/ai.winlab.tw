@@ -16,9 +16,8 @@
   - CDN opt-in：`NEXT_PUBLIC_CDN_BASE_URL`（見「CDN」段；未設則 `toCdnUrl` no-op）
   - Analytics kill switch：`NEXT_PUBLIC_ANALYTICS_DISABLED=1` 關閉 `<AnalyticsBeacon />`（見「Analytics」段）
   - Playwright E2E：`CLAUDE_AGENT_EMAIL` / `CLAUDE_AGENT_PASSWORD` / `CLAUDE_AGENT_USER_ID`（dedicated admin account）
-  - Cron：`CRON_SECRET`（Vercel 自動帶 `Authorization: Bearer $CRON_SECRET` 打
-    `/api/cron/publish-scheduled`；見「Editorial workflow」段。未設時該 route 回
-    500，不會誤放行）
+  - Cron：`CRON_SECRET`（gate `/api/cron/publish-scheduled`，未設時該 route 回
+    500，不會誤放行）。**目前沒有任何排程器在打它** — 見「Editorial workflow」段
 
 ### Verification
 
@@ -165,14 +164,24 @@ Conventions:
   see `lib/scheduling.ts`'s `isLive`/`livePublishAtFilter` for the app-level
   mirror used by every public `data.ts`/feed/sitemap read). `results` and
   `events` deliberately don't get this column — no scheduling need there yet.
-  - Cron: `vercel.json` → `GET /api/cron/publish-scheduled` every 5 minutes,
-    `CRON_SECRET`-gated (Vercel sends the header automatically). Finds
-    announcements whose `publish_at` passed in the last 10 minutes and
-    invalidates the `announcements-published` ISR tag — without this, a
-    scheduled post can sit invisible on the cached list/home page for up to
-    the 1h `revalidate` window even though RLS already allows reading it.
-    `/events/[slug]` needs no cron hook — that route is already `ƒ Dynamic`
+  - Cache freshness: `GET /api/cron/publish-scheduled` (`CRON_SECRET`-gated)
+    finds announcements whose `publish_at` passed in the last 10 minutes and
+    invalidates the `announcements-published` ISR tag. Without it a scheduled
+    post can sit invisible on the cached list/home page for up to the 1h
+    `revalidate` window even though RLS already allows reading it.
+    `/events/[slug]` never needed this — that route is already `ƒ Dynamic`
     (see the `isr-page` skill), so scheduling reflects there immediately.
+  - **No scheduler currently calls that route.** It was a Vercel Cron
+    (`apps/web/vercel.json`, `*/5 * * * *`), but that cadence exceeds the
+    Hobby plan's once-per-day limit and failed *every* production deployment
+    from #77 (2026-08-24) until #78 (2026-09-06) — the site could not deploy
+    at all for two weeks. No announcement uses `publish_at` yet, so the
+    schedule was invalidating nothing while blocking every deploy; `vercel.json`
+    was deleted rather than downgraded to daily. Scheduled publishing still
+    works (RLS is the boundary); the only cost is cached pages lagging go-live
+    by up to 1h. To restore sub-hour freshness: upgrade the Vercel plan and
+    re-add a `crons` entry, or call the route from an external scheduler with
+    the `CRON_SECRET` bearer token.
 - **Version history** — `content_revisions` (table_name, row_id, snapshot
   jsonb, changed_by, created_at). An `AFTER UPDATE` trigger on
   `announcements` + `results` snapshots the OLD row's editorial fields
