@@ -32,8 +32,11 @@ export function CarouselClient({
   const t = useT();
   const locale = useLocale();
   const prefersReducedMotion = usePrefersReducedMotion();
+  // stopOnInteraction stays false so arrow/indicator clicks don't silently kill
+  // autoplay for the rest of the visit — only the explicit play/pause button
+  // below stops it for good (WCAG 2.2.2, see isManuallyPaused).
   const plugin = React.useMemo(
-    () => Autoplay({ delay: 5000, stopOnInteraction: true }),
+    () => Autoplay({ delay: 3000, stopOnInteraction: false }),
     [],
   );
   // Tracks a *manual* pause via the play/pause button below, distinct from
