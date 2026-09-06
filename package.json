@@ -15,6 +15,9 @@
   },
   "overrides": {
     "sharp": "^0.35.0",
-    "postcss": "^8.5.26"
+    "postcss": "^8.5.26",
+    "qs": "^6.16.0",
+    "@tiptap/core": "^3.30.4",
+    "@tiptap/pm": "^3.30.4"
   }
 }
