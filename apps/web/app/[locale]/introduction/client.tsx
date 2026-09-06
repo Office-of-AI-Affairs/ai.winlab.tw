@@ -10,7 +10,7 @@ import { isExternalImage, resolveImageSrc } from "@/lib/utils";
 import { GraduationCap, Mail, Microscope, Plus } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { OrgChart } from "./org-chart";
 
@@ -47,6 +47,17 @@ export function OrganizationPageClient({
 
   const members = membersByCategory[tab] ?? [];
 
+  // The org chart hangs partner names off its two wings. Same source as the
+  // cards below, so the chart can never drift from the database.
+  const legalEntityNames = useMemo(
+    () => (membersByCategory.legal_entity ?? []).map((m) => m.name),
+    [membersByCategory],
+  );
+  const industryNames = useMemo(
+    () => (membersByCategory.industry ?? []).map((m) => m.name),
+    [membersByCategory],
+  );
+
   // Members arrive ordered by group_order then sort_order (see data.ts).
   // Split into unnamed groups; single-group categories render unchanged.
   const groupOrders = [...new Set(members.map((m) => m.group_order))];
@@ -64,7 +75,12 @@ export function OrganizationPageClient({
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12 flex flex-col gap-10">
-      <OrgChart activeTab={tab} />
+      <OrgChart
+        activeTab={tab}
+        legalEntityNames={legalEntityNames}
+        industryNames={industryNames}
+        onSelectCategory={setTab}
+      />
 
       <div className="flex flex-col gap-6">
         <div className="flex gap-2 border-b border-border pb-2">

@@ -483,8 +483,8 @@
     },
     "category": {
       "core": "Core Members",
-      "legalEntity": "Legal Entity",
-      "industry": "Partners"
+      "legalEntity": "Legal Entities / Associations",
+      "industry": "Industry Partners"
     },
     "membersPending": "To be updated",
     "manageTitle": "Manage organization page",
@@ -492,17 +492,18 @@
       "heading": "Organization Chart",
       "alliance": "Alliance",
       "director": "Director",
-      "deputyDirector": "Deputy Director",
-      "jointExpert": "Joint-appointment Expert",
+      "deputyBoya": "Deputy Director, Boya",
+      "deputyNorth": "Deputy Director, Northern Campus",
+      "deputySouth": "Deputy Director, Southern Campus",
       "trainingTeam": "Training Team",
       "applicationTeam": "Application Team",
       "directorName": "Prof. Chien-Chao Tseng",
-      "deputyLeftName": "Associate Dean Chun-Lung Huang",
-      "deputyRightName": "Director Chien-Chih Chen",
-      "jointExpertName": "Prof. Huai-Chung Hsu",
+      "deputyBoyaName": "Prof. Huai-Chung Hsu",
+      "deputyNorthName": "Associate Dean Chun-Lung Huang",
+      "deputySouthName": "Director Chien-Chih Chen",
       "collegeCS": "College of Computer Science",
       "collegeGreenEnergy": "College of Smart Green Energy",
-      "jointExpertSub": "Director, Feng Chia University AI Center",
+      "collegeBoya": "Boya College",
       "trainingSub": "(Information Technology Center)",
       "applicationSub": "(Faculty & Labs)"
     }

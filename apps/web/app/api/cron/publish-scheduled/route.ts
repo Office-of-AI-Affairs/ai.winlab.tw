@@ -12,19 +12,27 @@ function safeEqual(a: string, b: string): boolean {
 
 export const dynamic = "force-dynamic";
 
-// Vercel Cron (vercel.json) hits this every 5 minutes. Scheduled
-// announcements (`status = 'published'`, `publish_at` in the future) become
-// readable to anon/authenticated clients automatically once RLS's
-// `publish_at <= now()` gate opens on its own — no app code required for
-// that part. What RLS *can't* do is invalidate the `announcements-published`
-// ISR cache tag (unstable_cache, revalidate: 3600), so without this route a
-// scheduled post could sit invisible on the cached /announcement list and
-// home page for up to an hour after go-live. This closes that gap down to
-// the cron interval.
+// Cache-invalidation hook for scheduled announcements — NOT the thing that
+// publishes them. A row with `status = 'published'` and a past `publish_at`
+// becomes readable on its own once RLS's `publish_at <= now()` gate opens,
+// with no app code involved. What RLS can't do is invalidate the
+// `announcements-published` ISR tag (unstable_cache, revalidate: 3600), so a
+// scheduled post can sit invisible on the cached /announcement list and home
+// page for up to an hour after go-live. Calling this route closes that gap.
 //
-// Auth: Vercel automatically sends `Authorization: Bearer ${CRON_SECRET}` to
-// any route listed under `crons` in vercel.json, as long as the CRON_SECRET
-// env var is set on the project — see apps/web/CLAUDE.md.
+// NOTHING CALLS THIS AUTOMATICALLY RIGHT NOW. It was wired to a Vercel Cron
+// (`crons` in apps/web/vercel.json, every 5 minutes), but that cadence
+// exceeds the Hobby plan's once-per-day limit and failed *every* production
+// deployment from #77 onward. Since no announcement uses `publish_at` yet,
+// the schedule was invalidating nothing while blocking every deploy, so it
+// was removed rather than downgraded to daily. Scheduled publishing still
+// works; the only cost is that a cached page can lag go-live by up to the 1h
+// revalidate window. To get sub-hour freshness back: upgrade the Vercel plan
+// and restore the `crons` entry, or call this route from an external
+// scheduler with the bearer token below.
+//
+// Auth: expects `Authorization: Bearer ${CRON_SECRET}` (Vercel Cron sends it
+// automatically for routes listed under `crons`) — see apps/web/CLAUDE.md.
 export async function GET(req: Request) {
   const expected = process.env.CRON_SECRET;
   if (!expected) {

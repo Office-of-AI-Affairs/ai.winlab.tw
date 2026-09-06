@@ -483,8 +483,8 @@
     },
     "category": {
       "core": "核心成員",
-      "legalEntity": "法人",
-      "industry": "合作夥伴"
+      "legalEntity": "法人／協會",
+      "industry": "企業夥伴"
     },
     "membersPending": "待更新",
     "manageTitle": "管理組織頁",
@@ -492,17 +492,18 @@
       "heading": "組織架構",
       "alliance": "聯盟",
       "director": "主任",
-      "deputyDirector": "副主任",
-      "jointExpert": "合聘專家",
+      "deputyBoya": "博雅副主任",
+      "deputyNorth": "北部校區副主任",
+      "deputySouth": "南部校區副主任",
       "trainingTeam": "培訓團隊",
       "applicationTeam": "應用團隊",
       "directorName": "曾建超教授",
-      "deputyLeftName": "黃俊龍副院長",
-      "deputyRightName": "陳建志所長",
-      "jointExpertName": "許懷中教授",
+      "deputyBoyaName": "許懷中教授",
+      "deputyNorthName": "黃俊龍副院長",
+      "deputySouthName": "陳建志所長",
       "collegeCS": "資訊學院",
       "collegeGreenEnergy": "智慧綠能學院",
-      "jointExpertSub": "逢甲AI中心主任",
+      "collegeBoya": "博雅書苑",
       "trainingSub": "（資訊技術中心）",
       "applicationSub": "（教授與實驗室）"
     }
