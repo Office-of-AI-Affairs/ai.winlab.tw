@@ -1,5 +1,4 @@
 import { ImageResponse } from "next/og";
-import sharp from "sharp";
 import { SITE_NAME_EN, SITE_NAME_ZH } from "@/lib/site";
 import { OG_HEIGHT, OG_WIDTH } from "./og-constants";
 
@@ -69,6 +68,18 @@ async function fetchAsDataUri(url: string): Promise<string | null> {
     if (SATORI_SAFE_IMAGE_TYPES.has(contentType)) {
       return `data:${contentType};base64,${buffer.toString("base64")}`;
     }
+
+    // Imported here, not at module scope. Next marks `sharp` as a server
+    // external package, so a top-level import makes *loading this module*
+    // dlopen libvips — and Next loads it just to resolve the
+    // `opengraph-image` file convention into a metadata URL, on every route
+    // whose metadata omits `openGraph.images`. On Vercel that dlopen fails
+    // (`libvips-cpp.so.8.18.3: cannot open shared object file`), which took
+    // down every page under /events/[slug] with digest 3061540916 while the
+    // pages themselves never render an OG card. Deferring it to the one
+    // function that actually transcodes keeps that failure inside the OG
+    // route, where it belongs. See #81.
+    const { default: sharp } = await import("sharp");
 
     // Cap the decode/re-encode size — cover images are already served at
     // upload-time resolution (recompress-images.ts caps at 1920px), this is
