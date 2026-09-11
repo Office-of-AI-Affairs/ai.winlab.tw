@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import sharp from "sharp";
 import { SITE_NAME_EN, SITE_NAME_ZH } from "@/lib/site";
+import { OG_HEIGHT, OG_WIDTH } from "./og-constants";
 
 /**
  * Shared per-page Open Graph image renderer (#49) — used by the
@@ -16,8 +17,10 @@ import { SITE_NAME_EN, SITE_NAME_ZH } from "@/lib/site";
 // no Tailwind/OKLCH token to reach for inside `next/og`.
 const NYCU_BLUE = "#0033A0";
 
-export const OG_WIDTH = 1200;
-export const OG_HEIGHT = 630;
+// Re-exported so the `opengraph-image.tsx` routes keep their single import
+// site; metadata-only callers must import `./og-constants` directly instead,
+// or they pull `next/og` + `sharp` into their own function (#79).
+export { OG_HEIGHT, OG_WIDTH };
 
 // The badge always renders both languages side by side ("公告 · Announcement")
 // regardless of the viewer's locale — it's fixed bilingual branding, not

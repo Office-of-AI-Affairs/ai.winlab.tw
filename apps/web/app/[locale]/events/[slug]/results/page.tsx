@@ -8,7 +8,7 @@ import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { localeAlternates } from "@/lib/i18n/seo";
 import { localizedField } from "@/lib/i18n/localized-field";
 import { localizedPath } from "@/lib/i18n/routing";
-import { OG_HEIGHT, OG_WIDTH } from "@/lib/seo/og-image";
+import { OG_HEIGHT, OG_WIDTH } from "@/lib/seo/og-constants";
 
 // Tab-as-route: /events/[slug]/results. See issue #1.
 export const dynamic = "force-dynamic";
