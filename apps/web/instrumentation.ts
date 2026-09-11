@@ -3,7 +3,6 @@ import { BatchLogRecordProcessor } from "@opentelemetry/sdk-logs";
 import { OTLPHttpJsonTraceExporter, registerOTel } from "@vercel/otel";
 import { getClientAttributionAttributes } from "@/lib/otel/attribution";
 import { emitErrorLog, flushLogs, setLogFlusher } from "@/lib/otel/log";
-import { postDiagError } from "@/lib/diag/error-buffer";
 
 /**
  * OpenTelemetry bootstrap — producer for the Sensorium observability
@@ -122,28 +121,8 @@ export async function onRequestError(
     revalidateReason: "on-demand" | "stale" | undefined;
   }>,
 ) {
-  if (context.routePath.startsWith("/api/diag/")) return;
-
   const message = error instanceof Error ? error.message : String(error);
   const digest = error instanceof Error ? (error as Error & { digest?: string }).digest : undefined;
-
-  // TEMPORARY (#81): ship the real error to the diagnostic route. Module
-  // scope can't bridge them — this hook runs inside the page function and
-  // that route is a separate Lambda on Vercel — so post it across. Remove
-  // together with lib/diag/error-buffer.ts once the cause is known.
-  await postDiagError({
-    at: new Date().toISOString(),
-    routePath: context.routePath,
-    routeType: context.routeType,
-    renderSource: context.renderSource ?? null,
-    path: request.path,
-    name: error instanceof Error ? error.name : typeof error,
-    message,
-    digest: digest ?? null,
-    stack: (error instanceof Error ? (error.stack ?? "") : "").split("\n").slice(0, 30),
-    causeMessage:
-      error instanceof Error && error.cause instanceof Error ? error.cause.message : null,
-  });
 
   emitErrorLog({
     message,
