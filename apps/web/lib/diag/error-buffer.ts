@@ -6,9 +6,11 @@
 // client, preview deployments and per-deployment URLs are behind Vercel
 // SSO, so the deployed function is the only place the real error exists.
 //
-// `onRequestError` already receives that error — this keeps the last few in
-// module scope so a companion route can read them back out of the same
-// warm function instance.
+// `onRequestError` already receives that error, but it runs inside the page
+// function and the diagnostic route is a separate Lambda on Vercel, so
+// module scope cannot bridge them (verified: the buffer read back empty
+// every time). The hook posts the error across to that route, which keeps
+// the last few in its own module scope for reading back.
 
 export type CapturedError = {
   at: string;
@@ -25,8 +27,12 @@ export type CapturedError = {
 
 const MAX_ENTRIES = 8;
 
+// Same throwaway token as the route; see that file.
+const DIAG_TOKEN = "5efbbfda140bd8eee3d6be642eb6f351";
+const DIAG_ENDPOINT = "https://ai.winlab.tw/api/diag/rsc-error";
+
 // Module scope is per-instance and resets on cold start; globalThis keeps it
-// alive across the HMR/module-graph duplication Next can introduce.
+// alive across the module-graph duplication Next can introduce.
 const slot = globalThis as typeof globalThis & { __winlabDiagErrors?: CapturedError[] };
 
 export function captureDiagError(entry: CapturedError): void {
@@ -37,4 +43,18 @@ export function captureDiagError(entry: CapturedError): void {
 
 export function readDiagErrors(): CapturedError[] {
   return slot.__winlabDiagErrors ?? [];
+}
+
+/** Ship an error from the page function to the diagnostic route's instance. */
+export async function postDiagError(entry: CapturedError): Promise<void> {
+  try {
+    await fetch(DIAG_ENDPOINT + "?token=" + DIAG_TOKEN, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(entry),
+      cache: "no-store",
+    });
+  } catch {
+    // Diagnostics must never make the failure worse.
+  }
 }
