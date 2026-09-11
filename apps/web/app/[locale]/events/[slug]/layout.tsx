@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
 import { JsonLd } from "@/components/seo/json-ld";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
@@ -7,19 +7,22 @@ import { localeAlternates } from "@/lib/i18n/seo";
 import { buildEventJsonLd } from "@/lib/seo/jsonld";
 import type { Metadata } from "next";
 
-const getEventMeta = unstable_cache(
-  async (slug: string) => {
-    const supabase = createPublicClient();
-    const { data } = await supabase
-      .from("events")
-      .select("name, description, cover_image")
-      .eq("slug", slug)
-      .maybeSingle();
-    return data as { name: string; description: string | null; cover_image: string | null } | null;
-  },
-  ["event-meta"],
-  { tags: ["events-published"], revalidate: 3600 },
-);
+// `cache()`, not `unstable_cache()`: this whole subtree is force-dynamic
+// precisely because the MCP server writes straight to Supabase and never
+// fires updateTag(), so a 1h tag-revalidated entry here contradicted the
+// rest of the segment (see `data.ts`, which says the same thing and
+// deliberately stays uncached). React's `cache` still dedupes the two
+// calls this layout makes per request — generateMetadata and the render —
+// without introducing a cross-request cache. See #81.
+const getEventMeta = cache(async (slug: string) => {
+  const supabase = createPublicClient();
+  const { data } = await supabase
+    .from("events")
+    .select("name, description, cover_image")
+    .eq("slug", slug)
+    .maybeSingle();
+  return data as { name: string; description: string | null; cover_image: string | null } | null;
+});
 
 // Fallback metadata for the /events/[slug] tree. Each tab-listing page
 // (announcements / results / recruitment / members) overrides title +
