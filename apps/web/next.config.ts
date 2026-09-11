@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import bundleAnalyzer from "@next/bundle-analyzer";
+import path from "node:path";
 
 const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
 
@@ -43,6 +44,13 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // bun hoists this monorepo's node_modules to the repo root, but each Vercel
+  // project builds with rootDirectory = apps/<name>. Without an explicit root,
+  // Next infers a workspace root outside the repo (it warns about the stray
+  // ~/package-lock.json) and output file tracing can drop hoisted native
+  // assets — sharp's .node binary, resvg's wasm — from the traced functions,
+  // 500-ing every route that imports `lib/seo/og-image` (#79).
+  outputFileTracingRoot: path.resolve(process.cwd(), "..", ".."),
   transpilePackages: ["@winlab/db", "@winlab/domain"],
   images: {
     // Serve AVIF first, WebP fallback, then the original. Shaves the LCP
