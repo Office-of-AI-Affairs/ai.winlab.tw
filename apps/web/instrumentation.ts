@@ -3,7 +3,7 @@ import { BatchLogRecordProcessor } from "@opentelemetry/sdk-logs";
 import { OTLPHttpJsonTraceExporter, registerOTel } from "@vercel/otel";
 import { getClientAttributionAttributes } from "@/lib/otel/attribution";
 import { emitErrorLog, flushLogs, setLogFlusher } from "@/lib/otel/log";
-import { captureDiagError } from "@/lib/diag/error-buffer";
+import { postDiagError } from "@/lib/diag/error-buffer";
 
 /**
  * OpenTelemetry bootstrap — producer for the Sensorium observability
@@ -122,13 +122,16 @@ export async function onRequestError(
     revalidateReason: "on-demand" | "stale" | undefined;
   }>,
 ) {
+  if (context.routePath.startsWith("/api/diag/")) return;
+
   const message = error instanceof Error ? error.message : String(error);
   const digest = error instanceof Error ? (error as Error & { digest?: string }).digest : undefined;
 
-  // TEMPORARY (#81): keep the real error in module scope so the companion
-  // diagnostic route can read it back from the same warm instance. Remove
+  // TEMPORARY (#81): ship the real error to the diagnostic route. Module
+  // scope can't bridge them — this hook runs inside the page function and
+  // that route is a separate Lambda on Vercel — so post it across. Remove
   // together with lib/diag/error-buffer.ts once the cause is known.
-  captureDiagError({
+  await postDiagError({
     at: new Date().toISOString(),
     routePath: context.routePath,
     routeType: context.routeType,
