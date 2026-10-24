@@ -6,7 +6,7 @@ import type { Introduction, OrganizationMember } from "@winlab/db";
 
 export const getIntroduction = unstable_cache(
   async (): Promise<Introduction | null> => {
-    const [row] = await db.select().from(introduction).limit(1);
+    const [row] = await db.select().from(introduction).orderBy(asc(introduction.created_at)).limit(1);
     return row ?? null;
   },
   ["introduction"],

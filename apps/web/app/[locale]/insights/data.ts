@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { articles, public_profiles } from "@/lib/db/schema";
+import { isUuid } from "@/lib/slug";
 import type { Article } from "@winlab/db";
 
 export type ArticleListItem = Article & {
@@ -28,6 +29,7 @@ export const getPublishedArticles = unstable_cache(
 
 export const getPublishedArticle = unstable_cache(
   async (id: string): Promise<ArticleListItem | null> => {
+    if (!isUuid(id)) return null;
     const [row] = await db
       .select(withAuthor)
       .from(articles)

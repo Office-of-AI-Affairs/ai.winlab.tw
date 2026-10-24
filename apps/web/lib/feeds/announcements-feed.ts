@@ -2,7 +2,7 @@ import { buildRssFeed, type RssItemInput } from "@/lib/feeds/rss";
 import { localePrefix, type Locale } from "@/lib/i18n/config";
 import { localizedField } from "@/lib/i18n/localized-field";
 import { SITE_URL } from "@/lib/site";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { liveAnnouncement } from "@/lib/db/filters";
 import { announcements as announcementsTable, events } from "@/lib/db/schema";
@@ -46,7 +46,9 @@ export async function buildAnnouncementsRssXml(locale: Locale): Promise<string> 
       event_slug: events.slug,
     })
     .from(announcementsTable)
-    .leftJoin(events, eq(events.id, announcementsTable.event_id))
+    // Only published events: a live announcement in a draft event links
+    // to /announcement/<slug>, as it did when RLS hid the event.
+    .leftJoin(events, and(eq(events.id, announcementsTable.event_id), eq(events.status, "published")))
     .where(liveAnnouncement())
     .orderBy(desc(announcementsTable.date))
     .limit(30);

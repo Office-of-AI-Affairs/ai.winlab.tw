@@ -25,6 +25,12 @@ const STATIC_FILE = /\.(?:png|jpe?g|gif|svg|ico|webp|avif|txt|woff2?|ttf|otf|css
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // A NUL byte can never be part of a real slug, id or query, and Postgres
+  // rejects it in text with an error (22021). Refuse it up front.
+  if (/%00|\u0000/.test(request.nextUrl.pathname + request.nextUrl.search)) {
+    return new NextResponse("Bad request", { status: 400 });
+  }
+
   // Already carries a non-default locale prefix (`/en`, `/en/...`) → serve as-is.
   const hasLocalePrefix = locales.some(
     (l) => l !== defaultLocale && (pathname === `/${l}` || pathname.startsWith(`/${l}/`))
