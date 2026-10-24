@@ -28,8 +28,11 @@ standalone server (`node apps/web/server.js`, port 3000).
   `http://127.0.0.1:3000/` is unhealthy. Roll back by hand with the Carrel
   `app_rollback` tool.
 - Runtime secrets live in `/srv/apps/ai/env` on the machine.
-- `mcp.ai.winlab.tw` points at the same machine and 308-redirects to
-  `ai.winlab.tw` (`next.config.ts`), so old MCP client configs keep working.
+- `mcp.ai.winlab.tw` points at the same machine. It still serves `/mcp`,
+  `/oauth/*`, `/.well-known/*` and `/api/upload` (a cross-origin redirect
+  would drop the MCP client's Authorization header), and the OAuth server
+  accepts its old resource URL. Every other path 308-redirects to
+  `ai.winlab.tw` (`next.config.ts`).
 
 ## Working commands
 
