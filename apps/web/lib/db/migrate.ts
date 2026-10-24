@@ -7,9 +7,11 @@ import { Pool } from "pg";
  * Applies drizzle/*.sql before the server takes requests (called from
  * instrumentation.ts). The SQL is hand-written and is the source of truth;
  * lib/db/schema.ts mirrors it. A new migration is a new numbered file plus
- * an entry in drizzle/meta/_journal.json. Carrel starts the app with a fixed command, so there
- * is no separate migrate step. An advisory lock keeps two processes from
- * migrating at once during a release switch.
+ * an entry in drizzle/meta/_journal.json whose "when" is larger than every
+ * earlier one: the migrator skips anything older than the last it applied.
+ * Carrel starts the app with a fixed command, so there is no separate
+ * migrate step. An advisory lock keeps two processes from migrating at once
+ * during a release switch.
  */
 export async function migrateDatabase(): Promise<void> {
   const url = process.env.DATABASE_URL;

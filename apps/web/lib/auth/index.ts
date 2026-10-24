@@ -32,8 +32,15 @@ export const auth = betterAuth({
     password: { hash: hashPassword, verify: verifyPassword },
     revokeSessionsOnPasswordReset: true,
   },
-  // Name and email belong to the profile and to admins.
-  disabledPaths: ["/update-user", "/change-email"],
+  // Name and email belong to the profile and to admins. Of the email-code
+  // endpoints only the password reset pair stays open: no code sign-in.
+  disabledPaths: [
+    "/update-user",
+    "/change-email",
+    "/sign-in/email-otp",
+    "/email-otp/verify-email",
+    "/email-otp/send-verification-otp",
+  ],
   session: { cookieCache: { enabled: true, maxAge: 5 * 60 } },
   plugins: [
     emailOTP({

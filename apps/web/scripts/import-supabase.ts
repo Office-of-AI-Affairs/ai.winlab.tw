@@ -12,7 +12,9 @@
 // Rows keep their ids. Users keep their bcrypt password hash. Image URLs
 // pointing at Supabase Storage become /files/announcement-images/... .
 // Triggers are off while loading, so audit_log, content_revisions and
-// public_profiles arrive exactly as they were.
+// public_profiles arrive exactly as they were; foreign keys are checked by
+// hand before commit. Stop writes on the old site first: the snapshot is
+// consistent, but anything written after it is not copied.
 import { Pool } from "pg";
 
 const ref = need("SUPABASE_PROJECT_REF");
@@ -87,17 +89,28 @@ type SourceUser = {
   updated_at: string;
   name: string | null;
 };
-const users = await source<SourceUser>(`
-  select u.id, u.email, u.encrypted_password, u.email_confirmed_at, u.created_at, u.updated_at,
-         coalesce(nullif(btrim(p.display_name), ''), u.raw_user_meta_data->>'display_name') as name
-  from auth.users u left join public.profiles p on p.id = u.id
-  order by u.created_at`);
-const counts = await source<{ t: string; n: number }>(
-  TABLES.map((t) => `select '${t}' as t, count(*)::int as n from public.${t}`).join(" union all "),
-);
-const objects = await source<{ bucket_id: string; name: string; mimetype: string | null; owner: string | null }>(`
-  select bucket_id, name, metadata->>'mimetype' as mimetype, owner_id::uuid as owner
-  from storage.objects where bucket_id in ('announcement-images', 'resumes') order by bucket_id, name`);
+type SourceObject = { bucket_id: string; name: string; mimetype: string | null; owner: string | null };
+
+// One statement, so users, rows and the file list come from one snapshot:
+// a row can never point at a parent read earlier or later than itself.
+const [{ snapshot }] = await source<{
+  snapshot: { users: SourceUser[]; objects: SourceObject[]; tables: Record<string, unknown[]> };
+}>(`
+  select json_build_object(
+    'users', (select coalesce(json_agg(x order by x.created_at), '[]') from (
+      select u.id, u.email, u.encrypted_password, u.email_confirmed_at, u.created_at, u.updated_at,
+             coalesce(nullif(btrim(p.display_name), ''), u.raw_user_meta_data->>'display_name') as name
+      from auth.users u left join public.profiles p on p.id = u.id) x),
+    'objects', (select coalesce(json_agg(o order by o.bucket_id, o.name), '[]') from (
+      select bucket_id, name, metadata->>'mimetype' as mimetype, owner_id::uuid as owner
+      from storage.objects where bucket_id in ('announcement-images', 'resumes')) o),
+    'tables', json_build_object(${TABLES.map(
+      (t) => `'${t}', (select coalesce(json_agg(t), '[]') from public.${t} t)`,
+    ).join(", ")})
+  ) as snapshot`);
+const users = snapshot.users;
+const objects = snapshot.objects;
+const counts = TABLES.map((t) => ({ t, n: snapshot.tables[t].length }));
 
 console.log(`source: ${users.length} users, ${objects.length} files`);
 for (const { t, n } of counts) console.log(`  ${t}: ${n}`);
@@ -157,10 +170,7 @@ try {
         [table],
       )
     ).rows.map((r) => `"${r.column_name}"`);
-    const [{ rows }] = await source<{ rows: unknown[] | null }>(
-      `select json_agg(t) as rows from public.${table} t`,
-    );
-    const json = rewriteUrls(JSON.stringify(rows ?? []));
+    const json = rewriteUrls(JSON.stringify(snapshot.tables[table]));
     const list = columns.join(", ");
     await db.query(
       `insert into ${table} (${list}) select ${list} from json_populate_recordset(null::${table}, $1::json)`,
@@ -188,10 +198,31 @@ try {
   if (userCount !== users.length) bad.push(`users: ${userCount} != ${users.length}`);
   const left = (
     await db.query<{ n: number }>(
-      `select count(*)::int as n from (${TABLES.map((t) => `select 1 from ${t} x where x::text like '%supabase.co/storage%'`).join(" union all ")}) s`,
+      `select count(*)::int as n from (${TABLES.map((t) => `select 1 from ${t} x where x::text like '%supabase.co/storage%' or x::text like '%cdn.winlab.tw/%'`).join(" union all ")}) s`,
     )
   ).rows[0].n;
-  if (left) bad.push(`${left} rows still point at Supabase Storage`);
+  if (left) bad.push(`${left} rows still point at Supabase Storage or the old CDN`);
+
+  // Triggers (and so foreign keys) were off while loading: check every
+  // foreign key in the schema by hand.
+  const fks = await db.query<{ name: string; child: string; parent: string; cols: string[]; refs: string[] }>(`
+    select c.conname as name, c.conrelid::regclass::text as child, c.confrelid::regclass::text as parent,
+           array(select attname::text from unnest(c.conkey) with ordinality k(n, i)
+                 join pg_attribute a on a.attrelid = c.conrelid and a.attnum = k.n order by k.i) as cols,
+           array(select attname::text from unnest(c.confkey) with ordinality k(n, i)
+                 join pg_attribute a on a.attrelid = c.confrelid and a.attnum = k.n order by k.i) as refs
+    from pg_constraint c join pg_namespace s on s.oid = c.connamespace
+    where c.contype = 'f' and s.nspname = 'public'`);
+  for (const fk of fks.rows) {
+    const notNull = fk.cols.map((c) => `x."${c}" is not null`).join(" and ");
+    const match = fk.cols.map((c, i) => `p."${fk.refs[i]}" = x."${c}"`).join(" and ");
+    const { rows } = await db.query<{ n: number }>(
+      `select count(*)::int as n from ${fk.child} x where ${notNull}
+       and not exists (select 1 from ${fk.parent} p where ${match})`,
+    );
+    if (rows[0].n) bad.push(`${fk.name}: ${rows[0].n} rows point at a missing ${fk.parent}`);
+  }
+  console.log(`checked ${fks.rows.length} foreign keys`);
   if (bad.length) throw new Error(`verification failed:\n  ${bad.join("\n  ")}`);
 
   await db.query("commit");
