@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "bun test",
+    "test": "bun test && bun test ./app/.well-known",
     "typecheck": "tsc --noEmit",
     "check": "bun run test && bun run typecheck",
     "gen:types": "bunx supabase gen types typescript --project-id hwezfbhjcetpezfuvelf > lib/supabase/database.types.ts",

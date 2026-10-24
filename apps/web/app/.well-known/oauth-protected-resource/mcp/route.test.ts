@@ -12,3 +12,17 @@ test("GET /.well-known/oauth-protected-resource/mcp returns MCP protected resour
     bearer_methods_supported: ["header"],
   });
 });
+
+test("GET on the old mcp.ai.winlab.tw host advertises its own resource", async () => {
+  const response = await GET(
+    new Request("https://mcp.ai.winlab.tw/.well-known/oauth-protected-resource/mcp", {
+      headers: { host: "mcp.ai.winlab.tw" },
+    }),
+  );
+
+  assert.deepStrictEqual(await response.json(), {
+    resource: "https://mcp.ai.winlab.tw/mcp",
+    authorization_servers: ["https://mcp.ai.winlab.tw"],
+    bearer_methods_supported: ["header"],
+  });
+});

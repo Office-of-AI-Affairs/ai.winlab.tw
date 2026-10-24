@@ -17,3 +17,15 @@ test("GET /.well-known/oauth-authorization-server returns OAuth server metadata"
     token_endpoint_auth_methods_supported: ["none"],
   });
 });
+
+test("GET on the old mcp.ai.winlab.tw host keeps its own issuer", async () => {
+  const response = await GET(
+    new Request("https://mcp.ai.winlab.tw/.well-known/oauth-authorization-server", {
+      headers: { host: "mcp.ai.winlab.tw" },
+    }),
+  );
+  const body = await response.json();
+
+  assert.equal(body.issuer, "https://mcp.ai.winlab.tw");
+  assert.equal(body.token_endpoint, "https://mcp.ai.winlab.tw/oauth/token");
+});

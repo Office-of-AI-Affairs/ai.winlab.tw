@@ -1,6 +1,6 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { createMcpServer } from "@/lib/mcp/server";
-import { getProtectedResourceMetadataUrl } from "@/lib/mcp/auth/urls";
+import { getBaseUrlFor, getProtectedResourceMetadataUrl } from "@/lib/mcp/auth/urls";
 import { verifyMcpToken } from "@/lib/mcp/auth/jwt";
 import { createClientWithToken } from "@/lib/mcp/supabase/server";
 
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       {
         status: 401,
         headers: {
-          "WWW-Authenticate": `Bearer resource_metadata="${getProtectedResourceMetadataUrl()}"`,
+          "WWW-Authenticate": `Bearer resource_metadata="${getProtectedResourceMetadataUrl(getBaseUrlFor(request))}"`,
         },
       }
     );
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       {
         status: 401,
         headers: {
-          "WWW-Authenticate": `Bearer resource_metadata="${getProtectedResourceMetadataUrl()}"`,
+          "WWW-Authenticate": `Bearer resource_metadata="${getProtectedResourceMetadataUrl(getBaseUrlFor(request))}"`,
         },
       }
     );
