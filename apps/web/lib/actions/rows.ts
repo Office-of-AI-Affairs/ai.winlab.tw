@@ -2,8 +2,8 @@
 
 import { asc, desc, eq, sql, type SQL } from "drizzle-orm";
 import type { PgColumn } from "drizzle-orm/pg-core";
-import { getViewer } from "@/lib/auth/viewer";
-import { asUser, db } from "@/lib/db";
+import { getViewer, type Viewer } from "@/lib/auth/viewer";
+import { asUser, db, type Tx } from "@/lib/db";
 import { isUuid } from "@/lib/slug";
 import { isRowTable, ROW_POLICIES, writableValues, type RowPolicy, type RowTable } from "@/lib/permissions/rows";
 
@@ -29,6 +29,23 @@ const idColumn = (policy: RowPolicy) => (policy.table as any).id as PgColumn;
 async function loadRow(policy: RowPolicy, id: string): Promise<Row | null> {
   const [row] = await db.select().from(policy.table).where(eq(idColumn(policy), id)).limit(1);
   return (row as Row | undefined) ?? null;
+}
+
+/**
+ * The row, locked until the transaction ends. Writes check the policy on
+ * this copy, so nobody can change the row between the check and the write
+ * (RLS checked inside the statement itself).
+ */
+async function lockRow(tx: Tx, policy: RowPolicy, id: string): Promise<Row | null> {
+  const [row] = await tx.select().from(policy.table).where(eq(idColumn(policy), id)).limit(1).for("update");
+  return (row as Row | undefined) ?? null;
+}
+
+/** Only admins may hand a row to someone else: author_id stays put on update. */
+function withoutOwnerChange(viewer: Viewer, before: Row, clean: Row): Row {
+  if (viewer.role === "admin" || !("author_id" in clean) || clean.author_id === before.author_id) return clean;
+  const { author_id: _ignored, ...rest } = clean;
+  return rest;
 }
 
 /** One row the viewer may read, by id (or by slug for announcements and events). */
@@ -97,18 +114,18 @@ export async function updateRow(table: RowTable, id: string, patch: Row): Promis
   const viewer = await getViewer();
   if (!policy?.update || !viewer) return DENIED;
   if (!isUuid(id)) return NOT_FOUND;
-  const before = await loadRow(policy, id);
-  if (!before) return NOT_FOUND;
-  const clean = writableValues(policy, patch ?? {});
-  // Checked before and after the change, like RLS USING and WITH CHECK.
-  if (!(await policy.update(viewer, before)) || !(await policy.update(viewer, { ...before, ...clean }))) {
-    return DENIED;
-  }
-  if (Object.keys(clean).length === 0) return { ok: true, row: before };
-  const [row] = await asUser(viewer.id, (tx) =>
-    tx.update(policy.table).set(clean).where(eq(idColumn(policy), id)).returning(),
-  );
-  return { ok: true, row: row as Row };
+  return asUser(viewer.id, async (tx): Promise<RowResult> => {
+    const before = await lockRow(tx, policy, id);
+    if (!before) return NOT_FOUND;
+    const clean = withoutOwnerChange(viewer, before, writableValues(policy, patch ?? {}));
+    // Checked before and after the change, like RLS USING and WITH CHECK.
+    if (!(await policy.update!(viewer, before)) || !(await policy.update!(viewer, { ...before, ...clean }))) {
+      return DENIED;
+    }
+    if (Object.keys(clean).length === 0) return { ok: true, row: before };
+    const [row] = await tx.update(policy.table).set(clean).where(eq(idColumn(policy), id)).returning();
+    return { ok: true, row: row as Row };
+  });
 }
 
 export async function deleteRow(table: RowTable, id: string): Promise<Done> {
@@ -116,11 +133,13 @@ export async function deleteRow(table: RowTable, id: string): Promise<Done> {
   const viewer = await getViewer();
   if (!policy?.delete || !viewer) return DENIED;
   if (!isUuid(id)) return NOT_FOUND;
-  const before = await loadRow(policy, id);
-  if (!before) return NOT_FOUND;
-  if (!(await policy.delete(viewer, before))) return DENIED;
-  await asUser(viewer.id, (tx) => tx.delete(policy.table).where(eq(idColumn(policy), id)));
-  return { ok: true };
+  return asUser(viewer.id, async (tx): Promise<Done> => {
+    const before = await lockRow(tx, policy, id);
+    if (!before) return NOT_FOUND;
+    if (!(await policy.delete!(viewer, before))) return DENIED;
+    await tx.delete(policy.table).where(eq(idColumn(policy), id));
+    return { ok: true };
+  });
 }
 
 /** Sets sort_order to each id's position in `ids`. */
@@ -130,14 +149,14 @@ export async function reorderRows(table: RowTable, ids: string[]): Promise<Done>
   if (!policy?.update || !viewer || !Array.isArray(ids) || !ids.every(isUuid)) return DENIED;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!(policy.table as any).sort_order) return DENIED;
-  for (const id of ids) {
-    const before = await loadRow(policy, id);
-    if (!before || !(await policy.update(viewer, before))) return DENIED;
-  }
-  await asUser(viewer.id, async (tx) => {
+  return asUser(viewer.id, async (tx): Promise<Done> => {
+    for (const id of ids) {
+      const before = await lockRow(tx, policy, id);
+      if (!before || !(await policy.update!(viewer, before))) return DENIED;
+    }
     for (const [index, id] of ids.entries()) {
       await tx.update(policy.table).set({ sort_order: index }).where(eq(idColumn(policy), id));
     }
+    return { ok: true };
   });
-  return { ok: true };
 }
