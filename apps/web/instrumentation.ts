@@ -51,7 +51,14 @@ import { emitErrorLog, flushLogs, setLogFlusher } from "@/lib/otel/log";
  * `logRecordProcessors` lets @vercel/otel share the same env-detected
  * `resource` (service.namespace/service.name) between traces and logs.
  */
-export function register() {
+export async function register() {
+  // Next awaits register() before serving, so the schema is current before
+  // the first request. Node only: the migrator needs pg and the filesystem.
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    const { migrateDatabase } = await import("@/lib/db/migrate");
+    await migrateDatabase();
+  }
+
   const endpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
 
   // No collector configured (e.g. plain `bun run dev` locally) — skip
