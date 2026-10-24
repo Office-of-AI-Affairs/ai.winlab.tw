@@ -1,5 +1,6 @@
 import { requireMcpAuth } from "@better-auth/mcp";
 import { auth, mcpResource } from "@/lib/auth";
+import { tokenRevoked } from "@/lib/auth/revoke";
 import { viewerById, type Viewer } from "@/lib/auth/viewer";
 import { uploadImageFile } from "@/lib/files/upload";
 import { CATEGORY_PREFIXES, consumeUploadToken, uploaded } from "@/lib/mcp/tools/images";
@@ -11,14 +12,20 @@ const jwksUrl = `http://127.0.0.1:${process.env.PORT ?? 3000}/api/auth/jwks`;
 // create_upload_url tool (no Authorization header, so plain curl works), or
 // an MCP bearer token. Both upload as that user, under the same folder rules
 // as the site (lib/files/upload.ts).
-async function upload(request: Request, viewer: Viewer, category: string) {
+// `category` is the token's for token uploads; bearer uploads name it in
+// the form (as before) or the query.
+async function upload(request: Request, viewer: Viewer, tokenCategory: string | null) {
   const length = Number(request.headers.get("content-length") ?? 0);
   if (length > MAX_BYTES + 64 * 1024) return Response.json({ error: "File too large. Max: 5MB" }, { status: 413 });
   const form = await request.formData().catch(() => null);
+  const category =
+    tokenCategory ??
+    String(form?.get("category") ?? new URL(request.url).searchParams.get("category") ?? "announcement");
+  if (!Object.hasOwn(CATEGORY_PREFIXES, category)) return Response.json({ error: "Unknown category" }, { status: 400 });
   const file = form?.get("file");
   if (!(file instanceof File)) return Response.json({ error: "Missing 'file' field" }, { status: 400 });
   if (file.size > MAX_BYTES) return Response.json({ error: "File too large. Max: 5MB" }, { status: 400 });
-  const result = await uploadImageFile(viewer, CATEGORY_PREFIXES[category] ?? "", Buffer.from(await file.arrayBuffer()));
+  const result = await uploadImageFile(viewer, CATEGORY_PREFIXES[category], Buffer.from(await file.arrayBuffer()));
   if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
   return Response.json({ success: true, ...uploaded(result.url!, result.path) });
 }
@@ -27,9 +34,10 @@ const withBearer = requireMcpAuth(
   auth,
   async (request, claims) => {
     const viewer = claims.sub ? await viewerById(claims.sub) : null;
-    if (!viewer) return Response.json({ error: "Invalid token" }, { status: 401 });
-    const category = new URL(request.url).searchParams.get("category") ?? "announcement";
-    return upload(request, viewer, category);
+    if (!viewer || (await tokenRevoked(viewer.id, claims.iat))) {
+      return Response.json({ error: "Invalid token" }, { status: 401 });
+    }
+    return upload(request, viewer, null);
   },
   { resource: mcpResource, jwksUrl },
 );

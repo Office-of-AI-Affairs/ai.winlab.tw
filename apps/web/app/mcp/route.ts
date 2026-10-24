@@ -1,6 +1,7 @@
 import { requireMcpAuth } from "@better-auth/mcp";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { auth, mcpResource } from "@/lib/auth";
+import { tokenRevoked } from "@/lib/auth/revoke";
 import { runAsViewer, viewerById } from "@/lib/auth/viewer";
 import { createMcpServer } from "@/lib/mcp/server";
 
@@ -25,6 +26,7 @@ export const POST = requireMcpAuth(
     if (!claims.sub || claims.sub === clientId) return refuse(403, "not a user token");
     const viewer = await viewerById(claims.sub);
     if (!viewer) return refuse(403, "account no longer exists");
+    if (await tokenRevoked(claims.sub, claims.iat)) return refuse(401, "token revoked; sign in again");
     return runAsViewer(viewer, async () => {
       const server = createMcpServer(viewer);
       const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined });

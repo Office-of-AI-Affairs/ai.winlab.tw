@@ -40,6 +40,12 @@ export const auth = betterAuth({
     minPasswordLength: 6,
     password: { hash: hashPassword, verify: verifyPassword },
     revokeSessionsOnPasswordReset: true,
+    // A reset also cuts off every MCP client: their tokens may have come
+    // from the stolen password the reset is meant to lock out.
+    onPasswordReset: async ({ user }) => {
+      const { revokeOAuthTokens } = await import("@/lib/auth/revoke");
+      await revokeOAuthTokens(user.id);
+    },
   },
   // Name and email belong to the profile and to admins. Of the email-code
   // endpoints only the password reset pair stays open: no code sign-in.
