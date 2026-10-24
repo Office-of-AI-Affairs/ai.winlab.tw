@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createClient } from "@/lib/supabase/client";
+import { createUser } from "@/lib/actions/users";
 import { useT } from "@/lib/i18n/locale-provider";
 
 type UserCreateDialogProps = {
@@ -56,15 +56,10 @@ export function UserCreateDialog({
 
     setSaving(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase.rpc("admin_create_user", {
-        p_email: email.trim(),
-        p_name: name.trim() || undefined,
-        p_role: role,
-      });
+      const result = await createUser({ email: email.trim(), name: name.trim(), role });
 
-      if (error) {
-        toast.error(error.message);
+      if (!result.ok) {
+        toast.error(result.error);
         return;
       }
 

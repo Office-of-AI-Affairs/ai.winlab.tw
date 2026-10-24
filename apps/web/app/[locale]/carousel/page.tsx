@@ -1,18 +1,15 @@
 import { CarouselPageClient } from "./client";
-import { requireAdminServer } from "@/lib/supabase/require-admin-server";
-import type { CarouselSlide } from "@winlab/db";
+import { requireAdmin } from "@/lib/auth/viewer";
+import { db } from "@/lib/db";
+import { carousel_slides } from "@/lib/db/schema";
+import { asc } from "drizzle-orm";
 
 export default async function CarouselPage() {
-  const { supabase } = await requireAdminServer();
-  const { data } = await supabase
-    .from("carousel_slides")
-    .select("*")
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: true });
+  await requireAdmin();
+  const slides = await db
+    .select()
+    .from(carousel_slides)
+    .orderBy(asc(carousel_slides.sort_order), asc(carousel_slides.created_at));
 
-  return (
-    <CarouselPageClient
-      initialSlides={(data as CarouselSlide[]) ?? []}
-    />
-  );
+  return <CarouselPageClient initialSlides={slides} />;
 }
