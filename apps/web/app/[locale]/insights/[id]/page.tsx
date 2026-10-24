@@ -1,4 +1,4 @@
-import { getPublishedArticle, getPublishedArticleIds } from "@/app/[locale]/insights/data";
+import { getPublishedArticle } from "@/app/[locale]/insights/data";
 import { extractFirstImage } from "@/lib/ui/article";
 import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
@@ -9,11 +9,6 @@ import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { localeAlternates, ogLocale } from "@/lib/i18n/seo";
 import { InsightArticleClient } from "./article-client";
 import { InsightDraftFallback } from "./draft-fallback";
-
-export async function generateStaticParams() {
-  const ids = await getPublishedArticleIds();
-  return ids.map((id) => ({ id }));
-}
 
 export async function generateMetadata({
   params,

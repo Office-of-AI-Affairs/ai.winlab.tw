@@ -1,30 +1,23 @@
 import { unstable_cache } from "next/cache";
-import { createPublicClient } from "@/lib/supabase/public";
+import { and, desc, eq, isNull } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { liveAnnouncement } from "@/lib/db/filters";
+import { announcements } from "@/lib/db/schema";
 import { isUuid } from "@/lib/slug";
-import { livePublishAtFilter } from "@/lib/scheduling";
 import type { Announcement } from "@winlab/db";
 
-// Only fetches published + global (event_id IS NULL). Admin-only drafts are
+// Only fetches live + global (event_id IS NULL) announcements. Drafts are
 // merged in on the client via useAuth so this cache stays visitor-safe.
-//
-// Every query below also ANDs in `livePublishAtFilter()` on top of
-// `.eq("status", "published")` — belt-and-suspenders for scheduled
-// publishing (#47). The RLS policy on `announcements` enforces the same
-// `publish_at` gate for anon/authenticated reads; this app-level filter
-// exists so a cached-but-not-yet-live row can't leak through even before
-// the next cron-triggered revalidation (see app/api/cron/publish-scheduled).
+// `liveAnnouncement()` also hides scheduled posts until publish_at (#47), so
+// a cached-but-not-yet-live row can't leak through before the next
+// revalidation (see app/api/cron/publish-scheduled).
 export const getPublishedAnnouncements = unstable_cache(
-  async (): Promise<Announcement[]> => {
-    const supabase = createPublicClient();
-    const { data } = await supabase
-      .from("announcements")
-      .select("*")
-      .eq("status", "published")
-      .or(livePublishAtFilter())
-      .is("event_id", null)
-      .order("date", { ascending: false });
-    return (data as Announcement[] | null) ?? [];
-  },
+  async (): Promise<Announcement[]> =>
+    db
+      .select()
+      .from(announcements)
+      .where(and(liveAnnouncement(), isNull(announcements.event_id)))
+      .orderBy(desc(announcements.date)),
   ["announcements-published"],
   { tags: ["announcements-published"], revalidate: 3600 },
 );
@@ -32,37 +25,28 @@ export const getPublishedAnnouncements = unstable_cache(
 // Home page wants only the 3 most recent; share the same cache tag so edits
 // invalidate both variants at once.
 export const getLatestAnnouncements = unstable_cache(
-  async (): Promise<Announcement[]> => {
-    const supabase = createPublicClient();
-    const { data } = await supabase
-      .from("announcements")
-      .select("*")
-      .eq("status", "published")
-      .or(livePublishAtFilter())
-      .is("event_id", null)
-      .order("date", { ascending: false })
-      .limit(3);
-    return (data as Announcement[] | null) ?? [];
-  },
+  async (): Promise<Announcement[]> =>
+    db
+      .select()
+      .from(announcements)
+      .where(and(liveAnnouncement(), isNull(announcements.event_id)))
+      .orderBy(desc(announcements.date))
+      .limit(3),
   ["announcements-latest"],
   { tags: ["announcements-published"], revalidate: 3600 },
 );
 
-// Single published announcement by slug — the canonical lookup for the
-// detail page + its generateMetadata now that URLs are slug-based. Drafts
-// (and not-yet-live scheduled posts) return null here on purpose; admins
-// reach them through `?mode=edit`.
+// Single live announcement by slug — the canonical lookup for the detail
+// page + its generateMetadata. Drafts (and not-yet-live scheduled posts)
+// return null here on purpose; admins reach them through `?mode=edit`.
 export const getPublishedAnnouncementBySlug = unstable_cache(
   async (slug: string): Promise<Announcement | null> => {
-    const supabase = createPublicClient();
-    const { data } = await supabase
-      .from("announcements")
-      .select("*")
-      .eq("slug", slug)
-      .eq("status", "published")
-      .or(livePublishAtFilter())
-      .maybeSingle();
-    return (data as Announcement | null) ?? null;
+    const [row] = await db
+      .select()
+      .from(announcements)
+      .where(and(eq(announcements.slug, slug), liveAnnouncement()))
+      .limit(1);
+    return row ?? null;
   },
   ["announcement-by-slug"],
   { tags: ["announcements-published"], revalidate: 3600 },
@@ -72,15 +56,12 @@ export const getPublishedAnnouncementBySlug = unstable_cache(
 // `/announcement/[uuid]` link — the page 301s to the slug URL on a hit.
 export const getPublishedAnnouncementById = unstable_cache(
   async (id: string): Promise<Announcement | null> => {
-    const supabase = createPublicClient();
-    const { data } = await supabase
-      .from("announcements")
-      .select("*")
-      .eq("id", id)
-      .eq("status", "published")
-      .or(livePublishAtFilter())
-      .maybeSingle();
-    return (data as Announcement | null) ?? null;
+    const [row] = await db
+      .select()
+      .from(announcements)
+      .where(and(eq(announcements.id, id), liveAnnouncement()))
+      .limit(1);
+    return row ?? null;
   },
   ["announcement-by-id"],
   { tags: ["announcements-published"], revalidate: 3600 },
@@ -95,14 +76,4 @@ export async function getPublishedAnnouncementByParam(
   if (bySlug) return bySlug;
   if (isUuid(param)) return getPublishedAnnouncementById(param);
   return null;
-}
-
-export async function getPublishedAnnouncementSlugs(): Promise<string[]> {
-  const supabase = createPublicClient();
-  const { data } = await supabase
-    .from("announcements")
-    .select("slug")
-    .eq("status", "published")
-    .is("event_id", null);
-  return (data ?? []).map((row: { slug: string }) => row.slug);
 }

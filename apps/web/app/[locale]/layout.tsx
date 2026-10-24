@@ -6,7 +6,7 @@ import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { LazyToaster } from "@/components/layout/lazy-toaster";
 import { SearchProvider } from "@/components/layout/search-provider";
-import { getPinnedEvents } from "@/lib/supabase/get-pinned-events";
+import { getPinnedEvents } from "@/lib/data/pinned-events";
 import { SITE_DESCRIPTION_EN, SITE_DESCRIPTION_ZH, SITE_NAME, siteTitle } from "@/lib/site";
 import { defaultLocale, isLocale, localePrefix, locales, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
@@ -74,10 +74,15 @@ export async function generateMetadata({
   };
 }
 
-// Pre-render both locales at build time so `/` (zh-TW, via the middleware
-// rewrite) and `/en` stay fully static. This `[locale]` segment IS the root
-// layout — the segment above it is a root parameter (see next.config +
-// middleware.ts for how the default locale is served un-prefixed).
+// Every page reads Postgres, which lives on the server machine and is not
+// reachable from the CI build. So pages render per request; their data
+// still comes from unstable_cache (tag-revalidated), which keeps the
+// database load at one query per tag per hour.
+export const dynamic = "force-dynamic";
+
+// This `[locale]` segment IS the root layout — the segment above it is a
+// root parameter (see next.config + proxy.ts for how the default locale is
+// served un-prefixed).
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
@@ -93,8 +98,8 @@ export default async function RootLayout({
   const locale: Locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
   const dict = await getDictionary(locale);
 
-  // No cookie reads here — layout stays cookieless so downstream pages
-  // can SSG/ISR. Auth hydrates client-side inside <AuthProvider>.
+  // No cookie reads here — the HTML is the same for every visitor. Auth
+  // hydrates client-side inside <AuthProvider>.
   const pinnedEvents = await getPinnedEvents();
 
   return (

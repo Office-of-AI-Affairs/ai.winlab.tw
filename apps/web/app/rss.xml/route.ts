@@ -1,7 +1,8 @@
 import { buildAnnouncementsRssXml, RSS_RESPONSE_HEADERS } from "@/lib/feeds/announcements-feed";
 import { defaultLocale } from "@/lib/i18n/config";
 
-export const revalidate = 600;
+// Reads Postgres, so never prerendered at build; Cache-Control caches it.
+export const dynamic = "force-dynamic";
 
 /**
  * Discoverable, un-prefixed `/rss.xml` (#46) — feed readers and crawlers

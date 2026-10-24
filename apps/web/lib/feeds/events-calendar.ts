@@ -2,7 +2,9 @@ import { buildIcsCalendar, type IcsEventInput } from "@/lib/feeds/ics";
 import { localePrefix, type Locale } from "@/lib/i18n/config";
 import { localizedField } from "@/lib/i18n/localized-field";
 import { SITE_URL } from "@/lib/site";
-import { createPublicClient } from "@/lib/supabase/public";
+import { and, asc, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { events as eventsTable } from "@/lib/db/schema";
 import type { Event } from "@winlab/db";
 
 const CALENDAR_NAME: Record<Locale, string> = {
@@ -37,31 +39,37 @@ function toIcsEvent(event: Pick<Event, "id" | "slug" | "name" | "name_en" | "des
   };
 }
 
+const icsColumns = {
+  id: eventsTable.id,
+  slug: eventsTable.slug,
+  name: eventsTable.name,
+  name_en: eventsTable.name_en,
+  description: eventsTable.description,
+  created_at: eventsTable.created_at,
+};
+
 /** All published events as a single subscribable VCALENDAR (#46). */
 export async function buildAllEventsIcs(locale: Locale): Promise<string> {
-  const supabase = createPublicClient();
-  const { data: events } = await supabase
-    .from("events")
-    .select("id, slug, name, name_en, description, created_at")
-    .eq("status", "published")
-    .order("sort_order", { ascending: true });
+  const events = await db
+    .select(icsColumns)
+    .from(eventsTable)
+    .where(eq(eventsTable.status, "published"))
+    .orderBy(asc(eventsTable.sort_order));
 
   return buildIcsCalendar({
     calendarName: CALENDAR_NAME[locale],
-    events: (events ?? []).map((e) => toIcsEvent(e, locale)),
+    events: events.map((e) => toIcsEvent(e, locale)),
   });
 }
 
 /** A single published event's `.ics`, or `null` if it doesn't exist / isn't
  *  published (route handler turns that into a 404). */
 export async function buildEventIcs(slug: string, locale: Locale): Promise<string | null> {
-  const supabase = createPublicClient();
-  const { data: event } = await supabase
-    .from("events")
-    .select("id, slug, name, name_en, description, created_at")
-    .eq("slug", slug)
-    .eq("status", "published")
-    .maybeSingle();
+  const [event] = await db
+    .select(icsColumns)
+    .from(eventsTable)
+    .where(and(eq(eventsTable.slug, slug), eq(eventsTable.status, "published")))
+    .limit(1);
 
   if (!event) return null;
 

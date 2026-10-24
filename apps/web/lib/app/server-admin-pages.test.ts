@@ -94,10 +94,10 @@ describe("server admin page contracts", () => {
     }
   })
 
-  test("statically cached public pages fetch via cookieless cached helpers", () => {
-    // Contract: pages that can safely render the same HTML for every visitor
-    // fetch from app/<route>/data.ts helpers wrapped in unstable_cache,
-    // using createPublicClient — never getViewer(). Admin-only UI hydrates
+  test("public pages fetch via cookieless cached helpers", () => {
+    // Contract: pages that render the same HTML for every visitor fetch from
+    // app/<route>/data.ts helpers wrapped in unstable_cache, reading Postgres
+    // through Drizzle — never getViewer(). Admin-only UI hydrates
     // client-side inside the matching client component.
     const cases = [
       { page: organizationPage, route: "introduction", tags: ["introduction", "organization-members"] },
@@ -113,7 +113,7 @@ describe("server admin page contracts", () => {
       const data = readFileSync(resolve(process.cwd(), `app/[locale]/${route}/data.ts`), "utf8")
       assert.ok(data.includes('from "next/cache"'))
       assert.ok(data.includes("unstable_cache"))
-      assert.ok(data.includes('from "@/lib/supabase/public"'))
+      assert.ok(data.includes('from "@/lib/db"'))
       for (const tag of tags) {
         assert.ok(data.includes(`tags: ["${tag}"]`), `${route}/data.ts must declare tag ${tag}`)
       }

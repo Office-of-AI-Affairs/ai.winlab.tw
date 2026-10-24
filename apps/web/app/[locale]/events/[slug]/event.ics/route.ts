@@ -1,7 +1,8 @@
 import { buildEventIcs, ICS_RESPONSE_HEADERS } from "@/lib/feeds/events-calendar";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 
-export const revalidate = 600;
+// Reads Postgres, so never prerendered at build; Cache-Control caches it.
+export const dynamic = "force-dynamic";
 
 /** `.ics` download for a single published event (#46). */
 export async function GET(

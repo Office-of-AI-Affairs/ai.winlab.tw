@@ -1,5 +1,7 @@
 import { cache } from "react";
-import { createPublicClient } from "@/lib/supabase/public";
+import { and, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { events } from "@/lib/db/schema";
 import { JsonLd } from "@/components/seo/json-ld";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { defaultLocale, isLocale } from "@/lib/i18n/config";
@@ -8,20 +10,20 @@ import { buildEventJsonLd } from "@/lib/seo/jsonld";
 import type { Metadata } from "next";
 
 // `cache()`, not `unstable_cache()`: this whole subtree is force-dynamic
-// precisely because the MCP server writes straight to Supabase and never
+// precisely because MCP tools write rows directly and never
 // fires updateTag(), so a 1h tag-revalidated entry here contradicted the
 // rest of the segment (see `data.ts`, which says the same thing and
 // deliberately stays uncached). React's `cache` still dedupes the two
 // calls this layout makes per request — generateMetadata and the render —
 // without introducing a cross-request cache. See #81.
+// Published only: RLS hid drafts from visitors; this filter does now.
 const getEventMeta = cache(async (slug: string) => {
-  const supabase = createPublicClient();
-  const { data } = await supabase
-    .from("events")
-    .select("name, description, cover_image")
-    .eq("slug", slug)
-    .maybeSingle();
-  return data as { name: string; description: string | null; cover_image: string | null } | null;
+  const [row] = await db
+    .select({ name: events.name, description: events.description, cover_image: events.cover_image })
+    .from(events)
+    .where(and(eq(events.slug, slug), eq(events.status, "published")))
+    .limit(1);
+  return row ?? null;
 });
 
 // Fallback metadata for the /events/[slug] tree. Each tab-listing page
