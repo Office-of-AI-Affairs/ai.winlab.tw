@@ -87,11 +87,9 @@ export function AnnouncementArticleClient({
     didApplyInitialMode.current = true
   }, [initialMode, canEdit, setMode])
 
-  // Own client just for the slug backstop below — useContentEditor keeps its
-  // Supabase reference internal.
   // Latest announcement state + setter, mirrored via the effect below so
-  // onBeforeSave (defined before the hook call that produces them, to avoid
-  // a circular reference) always reads current values.
+  // callbacks defined before the hook call that produces them (to avoid a
+  // circular reference) always read current values.
   const announcementRef = useRef<Announcement>(initialAnnouncement)
   const setAnnouncementRef = useRef<((updater: (prev: Announcement) => Announcement) => void) | null>(
     null,

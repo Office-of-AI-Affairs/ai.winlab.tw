@@ -1,32 +1,33 @@
 # Permissions Matrix
 
-This document records the production RLS and storage permission contract for
-`ai.winlab.tw`. The source of truth for the current production snapshot is
-[`lib/security/rls-snapshot.json`](../lib/security/rls-snapshot.json), refreshed
-with [`scripts/refresh-rls-snapshot.md`](../scripts/refresh-rls-snapshot.md).
+This document records who may read and write what on `ai.winlab.tw`. Until
+2026-10 Supabase RLS enforced it; since the move to our own Postgres the same
+rules live in server code:
 
-When a migration changes RLS, update this file in the same PR as the migration
-and snapshot refresh. `lib/security/rls-contracts.test.ts` fails if the snapshot
-contains an RLS-enabled relation that is not documented here.
+- [`lib/permissions/rows.ts`](../lib/permissions/rows.ts): the table rules,
+  copied policy by policy from production RLS on 2026-10-24.
+- [`lib/actions/`](../lib/actions/): server actions that check them.
+- [`lib/files/upload.ts`](../lib/files/upload.ts): the storage rules.
+
+When a rule changes, change the code and this file in the same PR.
 
 ## Roles
 
-- `anon`: no JWT.
+- `anon`: not signed in.
 - `authenticated`: any logged-in user.
 - `user`: default profile role.
 - `member`: profile role allowed to author articles.
 - `vendor`: profile role; actual recruitment editing rights come from
   `competition_owners`.
 - `editor`: profile role (added #47). Can create/edit *draft*
-  `announcements` + `results` (any row, not just own). RLS `WITH CHECK`
-  blocks setting `status = 'published'` and blocks touching a row whose
-  current `status` is already `'published'` — this is a hard DB-level
-  boundary, so it also holds for writes through the MCP app (user-JWT
-  client) and any other future writer. No grant on any other table.
+  `announcements` + `results` (any row, not just own). The row actions check
+  the row before and after each write, so an editor can neither set
+  `status = 'published'` nor touch a row that is already published. MCP
+  tools run as the token's user through the same actions, so this holds
+  there too. No grant on any other table.
 - `recruitment_owner`: a user listed in `competition_owners` for a recruitment.
 - `author`: a row owner such as `results.author_id` or `articles.author_id`.
 - `admin`: `profiles.role = 'admin'`.
-- `service role`: backend-only Supabase service role; no client policy.
 
 ## Public Content
 

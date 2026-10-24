@@ -1,5 +1,5 @@
 /** Row shape returned by the `search_site(query, locale)` Postgres function
- *  (see `supabase/migrations/20260824000003_site_search.sql`). Already
+ *  (see `drizzle/0003_search_published_events.sql`). Already
  *  denormalized/ranked server-side — the client only groups and links. */
 export type SearchResultType = "announcement" | "event" | "result";
 

@@ -13,12 +13,7 @@ async function expectNoConsoleErrors(page: Page, action: () => Promise<void>) {
   await action();
   // Filter the well-known benign errors that predate this refactor:
   //   - Gravatar 404s (by design: ?d=404 lets us fall through to initials)
-  //   - Supabase 406 on .single() with zero rows (authoritative check path)
-  const noisy = errors.filter(
-    (e) =>
-      !e.includes("gravatar.com/avatar/") &&
-      !e.match(/status of 406/),
-  );
+  const noisy = errors.filter((e) => !e.includes("gravatar.com/avatar/"));
   expect(noisy, `unexpected console errors: ${noisy.join(" | ")}`).toHaveLength(0);
 }
 

@@ -12,7 +12,7 @@ This document records the current architecture of `mcp.ai.winlab.tw` and the bou
 - `lib/mcp/server.ts` is the single MCP server assembly point.
 - `lib/tools/*.ts` groups MCP tools by domain.
 - `lib/auth/*` contains OAuth helper logic such as PKCE verification and auth code exchange.
-- `lib/supabase/*` contains Supabase client helpers and shared generated types.
+- `lib/actions/*` and `lib/permissions/rows.ts` hold every permission rule; tools go through them.
 
 ## Route Handler Boundaries
 
@@ -33,14 +33,14 @@ This document records the current architecture of `mcp.ai.winlab.tw` and the bou
 - `/mcp` requires a bearer token and must reject missing, invalid, or expired tokens with `401`.
 - OAuth token exchange logic belongs under `app/oauth/*` and `lib/auth/*`.
 - PKCE verification should stay in `lib/auth/pkce.ts` or a nearby auth helper, not duplicated across routes.
-- Supabase access tokens are security-sensitive. Do not log them, echo them back in debug output, or persist them outside the existing intended flow.
+- Access tokens are security-sensitive. Do not log them, echo them back in debug output, or persist them outside Better Auth's tables.
 - One-time upload token behavior belongs to the upload path and must remain clearly separated from normal bearer-token auth.
 
 ## Storage and Upload Boundaries
 
 - Image upload handling currently targets the `announcement-images` bucket.
 - Category-to-prefix mapping is an explicit contract. Extend it carefully and keep upload routes and MCP image tools aligned.
-- Validate MIME type and file size before uploading to Supabase Storage.
+- Uploads go through `uploadImageFile` (type by magic bytes, size limit, folder rules); never write `files` directly.
 - Public URL generation should happen after a successful upload only.
 
 ## Change Guidance

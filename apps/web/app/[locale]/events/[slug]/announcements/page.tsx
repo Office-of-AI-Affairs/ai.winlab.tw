@@ -37,7 +37,7 @@ export async function generateMetadata({
   // replace, not merge; see `events/[slug]/page.tsx`'s comment) and the
   // event's branded card from `events/[slug]/opengraph-image.tsx` (#74)
   // would silently disappear. Point `images` at that same rendered card
-  // directly instead of `event.cover_image` (the raw, unbranded Supabase
+  // directly instead of `event.cover_image` (the raw, unbranded uploaded
   // storage URL this used before #74).
   const ogImageUrl = localizedPath(`/events/${slug}/opengraph-image`, locale);
   return {
