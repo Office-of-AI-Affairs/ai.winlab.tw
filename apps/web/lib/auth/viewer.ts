@@ -12,16 +12,25 @@ export type Role = "admin" | "user" | "vendor" | "member" | "editor";
 /** The signed-in person, as every permission check sees them. */
 export type Viewer = { id: string; email: string; role: Role };
 
-/** The signed-in viewer, or null. Reads cookies, so server only; once per request. */
+/**
+ * The signed-in viewer, or null. Reads cookies, so server only; once per
+ * request. Skips the 5-minute session cookie cache, so a deleted account or
+ * a session revoked by a password reset stops working at once.
+ */
 export const getViewer = cache(async (): Promise<Viewer | null> => {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await auth.api.getSession({
+    headers: await headers(),
+    query: { disableCookieCache: true },
+  });
   if (!session) return null;
   const [profile] = await db
     .select({ role: profiles.role })
     .from(profiles)
     .where(eq(profiles.id, session.user.id))
     .limit(1);
-  return { id: session.user.id, email: session.user.email, role: (profile?.role ?? "user") as Role };
+  // Every user has a profile (trigger); none means the account is gone.
+  if (!profile) return null;
+  return { id: session.user.id, email: session.user.email, role: profile.role as Role };
 });
 
 /** For pages: anyone signed out goes to /login. */

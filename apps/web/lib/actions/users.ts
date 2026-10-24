@@ -54,12 +54,18 @@ async function insertUser(by: string, email: string, name: string, role: Role): 
 }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_NAME = 100;
+const MAX_TAG = 50;
+
+const validEmail = (value: unknown): boolean =>
+  typeof value === "string" && value.trim().length <= 254 && EMAIL.test(value.trim());
+const cleanName = (value: unknown) => (typeof value === "string" ? value.trim().slice(0, MAX_NAME) : "");
 
 export async function createUser(input: { email: string; name: string; role: string }): Promise<ActionResult> {
   const viewer = await actor("admin");
-  if (!EMAIL.test(input.email.trim())) return { ok: false, error: "Invalid email" };
+  if (!validEmail(input?.email)) return { ok: false, error: "Invalid email" };
   if (!ROLES.includes(input.role as Role)) return { ok: false, error: `Invalid role: ${input.role}` };
-  const result = await insertUser(viewer.id, input.email, input.name, input.role as Role);
+  const result = await insertUser(viewer.id, input.email, cleanName(input.name), input.role as Role);
   if (result === "exists") return { ok: false, error: `Email already registered: ${input.email.trim().toLowerCase()}` };
   return { ok: true };
 }
@@ -71,14 +77,14 @@ export async function importUsers(
   let created = 0;
   let skipped = 0;
   const errors: string[] = [];
-  for (const row of rows.slice(0, 1000)) {
+  for (const row of Array.isArray(rows) ? rows.slice(0, 1000) : []) {
     const email = typeof row?.email === "string" ? row.email.trim() : "";
     if (!email) continue;
-    if (!EMAIL.test(email)) {
-      errors.push(`${email}: invalid email`);
+    if (!validEmail(email)) {
+      errors.push(`${email.slice(0, 254)}: invalid email`);
       continue;
     }
-    const result = await insertUser(viewer.id, email, typeof row.name === "string" ? row.name : "", "user");
+    const result = await insertUser(viewer.id, email, cleanName(row.name), "user");
     if (result === "created") created++;
     else skipped++;
   }
@@ -100,18 +106,25 @@ export async function setUserRole(userId: string, role: string): Promise<ActionR
   const viewer = await actor("admin");
   if (!isUuid(userId) || !ROLES.includes(role as Role)) return { ok: false, error: "Invalid role" };
   if (userId === viewer.id && role !== "admin") return { ok: false, error: "Cannot remove your own admin role" };
-  await asUser(viewer.id, (tx) => tx.update(profiles).set({ role }).where(eq(profiles.id, userId)));
-  return { ok: true };
+  const updated = await asUser(viewer.id, (tx) =>
+    tx.update(profiles).set({ role }).where(eq(profiles.id, userId)).returning({ id: profiles.id }),
+  );
+  return updated.length ? { ok: true } : { ok: false, error: "User not found" };
 }
 
 export async function setUserTags(userId: string, tags: string[]): Promise<ActionResult> {
   const viewer = await actor("admin");
-  if (!isUuid(userId) || !Array.isArray(tags) || tags.some((t) => typeof t !== "string")) {
+  if (
+    !isUuid(userId) ||
+    !Array.isArray(tags) ||
+    tags.length > 50 ||
+    tags.some((t) => typeof t !== "string" || t.trim().length > MAX_TAG)
+  ) {
     return { ok: false, error: "Invalid tags" };
   }
   const clean = [...new Set(tags.map((t) => t.trim()).filter(Boolean))];
-  await asUser(viewer.id, (tx) =>
-    tx.update(profiles).set({ tags: clean }).where(eq(profiles.id, userId)),
+  const updated = await asUser(viewer.id, (tx) =>
+    tx.update(profiles).set({ tags: clean }).where(eq(profiles.id, userId)).returning({ id: profiles.id }),
   );
-  return { ok: true };
+  return updated.length ? { ok: true } : { ok: false, error: "User not found" };
 }

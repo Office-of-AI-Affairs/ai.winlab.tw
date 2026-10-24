@@ -42,6 +42,7 @@ export const auth = betterAuth({
     "/sign-in/email-otp",
     "/email-otp/verify-email",
     "/email-otp/send-verification-otp",
+    "/forget-password/email-otp",
   ],
   session: { cookieCache: { enabled: true, maxAge: 5 * 60 } },
   plugins: [
