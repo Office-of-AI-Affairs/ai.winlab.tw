@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useLocale, useT } from "@/lib/i18n/locale-provider"
 import { localizedField } from "@/lib/i18n/localized-field"
-import { createClient } from "@/lib/supabase/client"
+import { getResultDraft } from "@/lib/actions/results"
 import type { TocItem } from "@/lib/ui/article"
 import type { PublicProfile, Result } from "@winlab/db"
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { ResultArticleClient, type ResultPublisher } from "./article-client"
 
 type State =
@@ -37,56 +37,23 @@ export function ResultDraftFallback({ slug, id }: { slug: string; id: string }) 
   const t = useT()
   const locale = useLocale()
   const [state, setState] = useState<State>({ kind: "loading" })
-  const supabaseRef = useRef(createClient())
 
   useEffect(() => {
     if (isLoading || !user) return
     let cancelled = false
     void (async () => {
-      const { data: result } = await supabaseRef.current
-        .from("results")
-        .select("*")
-        .eq("id", id)
-        .single()
+      const draft = await getResultDraft(id, slug).catch(() => null)
       if (cancelled) return
-      if (!result) {
+      if (!draft) {
         setState({ kind: "missing" })
         return
       }
-
-      const [{ data: eventRow }, { data: publisherRow }, { data: coauthorRows }] =
-        await Promise.all([
-          supabaseRef.current
-            .from("events")
-            .select("name, name_en")
-            .eq("slug", slug)
-            .maybeSingle(),
-          result.author_id
-            ? supabaseRef.current
-                .from("public_profiles")
-                .select("id, display_name")
-                .eq("id", result.author_id)
-                .maybeSingle()
-            : Promise.resolve({ data: null }),
-          supabaseRef.current
-            .from("result_coauthors")
-            .select("user_id")
-            .eq("result_id", result.id),
-        ])
-
-      let coauthors: PublicProfile[] = []
-      if (coauthorRows?.length) {
-        const userIds = coauthorRows.map((r) => r.user_id)
-        const { data: profiles } = await supabaseRef.current
-          .from("public_profiles")
-          .select("id, created_at, updated_at, display_name")
-          .in("id", userIds)
-        coauthors = (profiles ?? []) as PublicProfile[]
-      }
+      const { result, event: eventRow, publisher: publisherRow } = draft
+      const coauthors = draft.coauthors as PublicProfile[]
 
       const { renderArticle } = await import("@/lib/ui/rich-text")
       const { estimateReadingTime } = await import("@/lib/ui/reading-time")
-      const typedResult = result as Result
+      const typedResult = result
       const { html, toc } = renderArticle(
         typedResult.content as Record<string, unknown> | null,
       )

@@ -4,32 +4,11 @@ import { AppLink } from "@/components/shared/app-link";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/components/layout/auth-provider";
-import { createClient } from "@/lib/supabase/client";
+import { listMyRecruitments, type OwnedRecruitment } from "@/lib/actions/recruitment";
 import { useT } from "@/lib/i18n/locale-provider";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
-type OwnedRecruitment = {
-  id: string;
-  title: string;
-  image: string | null;
-  event_slug: string;
-  event_name: string;
-};
-
-type OwnerRow = {
-  competition_id: string;
-  competitions: {
-    id: string;
-    title: string;
-    image: string | null;
-    events: {
-      slug: string;
-      name: string;
-    } | null;
-  } | null;
-};
 
 export function VendorEventsSection() {
   const t = useT();
@@ -39,23 +18,11 @@ export function VendorEventsSection() {
   useEffect(() => {
     if (!user) return;
     async function fetchOwnedRecruitments() {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("competition_owners")
-        .select("competition_id, competitions(id, title, image, events(slug, name))")
-        .eq("user_id", user!.id);
-      if (error) { console.error("Failed to fetch owned recruitments:", error); toast.error(t.profile.loadRecruitmentsError); }
-      const rows = ((data as unknown as OwnerRow[] | null) ?? [])
-        .map((r) => r.competitions && r.competitions.events
-          ? {
-              id: r.competitions.id,
-              title: r.competitions.title,
-              image: r.competitions.image,
-              event_slug: r.competitions.events.slug,
-              event_name: r.competitions.events.name,
-            }
-          : null)
-        .filter((r): r is OwnedRecruitment => r !== null);
+      const rows = await listMyRecruitments().catch((error) => {
+        console.error("Failed to fetch owned recruitments:", error);
+        toast.error(t.profile.loadRecruitmentsError);
+        return [];
+      });
       setRecruitments(rows);
     }
     fetchOwnedRecruitments();
