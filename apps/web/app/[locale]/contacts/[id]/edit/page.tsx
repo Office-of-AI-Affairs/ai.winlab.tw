@@ -1,6 +1,9 @@
 import { ContactEditClient } from "./client";
-import { requireAdminServer } from "@/lib/supabase/require-admin-server";
-import type { Contact } from "@winlab/db";
+import { requireAdmin } from "@/lib/auth/viewer";
+import { db } from "@/lib/db";
+import { contacts } from "@/lib/db/schema";
+import { isUuid } from "@/lib/db/uuid";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
 export default async function ContactEditPage({
@@ -9,17 +12,11 @@ export default async function ContactEditPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { supabase } = await requireAdminServer();
+  await requireAdmin();
+  if (!isUuid(id)) redirect("/contacts");
 
-  const { data, error } = await supabase
-    .from("contacts")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const [contact] = await db.select().from(contacts).where(eq(contacts.id, id)).limit(1);
+  if (!contact) redirect("/contacts");
 
-  if (error || !data) {
-    redirect("/contacts");
-  }
-
-  return <ContactEditClient id={id} initialContact={data as Contact} />;
+  return <ContactEditClient id={id} initialContact={contact} />;
 }

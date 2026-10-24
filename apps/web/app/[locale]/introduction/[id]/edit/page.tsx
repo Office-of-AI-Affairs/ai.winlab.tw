@@ -1,6 +1,9 @@
 import { OrganizationMemberEditClient } from "./client";
-import { requireAdminServer } from "@/lib/supabase/require-admin-server";
-import type { OrganizationMember } from "@winlab/db";
+import { requireAdmin } from "@/lib/auth/viewer";
+import { db } from "@/lib/db";
+import { organization_members } from "@/lib/db/schema";
+import { isUuid } from "@/lib/db/uuid";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
 export default async function OrganizationMemberEditPage({
@@ -9,22 +12,15 @@ export default async function OrganizationMemberEditPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { supabase } = await requireAdminServer();
+  await requireAdmin();
+  if (!isUuid(id)) redirect("/introduction");
 
-  const { data, error } = await supabase
-    .from("organization_members")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const [member] = await db
+    .select()
+    .from(organization_members)
+    .where(eq(organization_members.id, id))
+    .limit(1);
+  if (!member) redirect("/introduction");
 
-  if (error || !data) {
-    redirect("/introduction");
-  }
-
-  return (
-    <OrganizationMemberEditClient
-      id={id}
-      initialMember={data as OrganizationMember}
-    />
-  );
+  return <OrganizationMemberEditClient id={id} initialMember={member} />;
 }

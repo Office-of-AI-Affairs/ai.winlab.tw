@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createClient } from "@/lib/supabase/client";
+import { setUserRole } from "@/lib/actions/users";
 import { useT } from "@/lib/i18n/locale-provider";
 
 export type ProfileRole = "admin" | "user" | "vendor" | "member" | "editor";
@@ -78,15 +78,10 @@ function UserEditForm({
 
   async function handleSave() {
     setSaving(true);
-    const supabase = createClient();
+    const result = await setUserRole(user.id, role).catch(() => null);
 
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({ role })
-      .eq("id", user.id);
-
-    if (profileError) {
-      toast.error(profileError.message);
+    if (!result?.ok) {
+      toast.error(result?.error ?? t.common.actionFailed);
       setSaving(false);
       return;
     }

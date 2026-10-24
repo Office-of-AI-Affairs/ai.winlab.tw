@@ -20,7 +20,9 @@ if (!baseURL) throw new Error("BETTER_AUTH_URL is not set");
 // mailed to the account, valid for one hour.
 export const auth = betterAuth({
   baseURL,
-  secret: process.env.BETTER_AUTH_SECRET,
+  secret:
+    process.env.BETTER_AUTH_SECRET ??
+    (process.env.NEXT_PHASE === "phase-production-build" ? "build-time-placeholder-not-a-secret" : undefined),
   database: drizzleAdapter(db, { provider: "pg", schema }),
   // A function, not "uuid": the adapter would otherwise replace ids that
   // Better Auth sets on purpose.
@@ -40,6 +42,7 @@ export const auth = betterAuth({
     "/sign-in/email-otp",
     "/email-otp/verify-email",
     "/email-otp/send-verification-otp",
+    "/forget-password/email-otp",
   ],
   session: { cookieCache: { enabled: true, maxAge: 5 * 60 } },
   plugins: [

@@ -1,32 +1,38 @@
 import SettingsAuditPageClient, { type AuditLogRow } from "./client";
-import { requireAdminServer } from "@/lib/supabase/require-admin-server";
+import { requireAdmin } from "@/lib/auth/viewer";
+import { db } from "@/lib/db";
+import { audit_log, public_profiles } from "@/lib/db/schema";
+import { desc, inArray } from "drizzle-orm";
 
-// Read-only, admin-gated (#47). RLS also restricts `audit_log` SELECT to
-// admin — `requireAdminServer()` is belt-and-suspenders at the route level,
-// same posture as /settings/users.
+// Read-only, admin-gated (#47).
 export default async function SettingsAuditPage() {
-  const { supabase } = await requireAdminServer();
+  await requireAdmin();
 
-  const { data: entries } = await supabase
-    .from("audit_log")
-    .select("id, table_name, row_id, action, actor, changed_fields, created_at")
-    .order("created_at", { ascending: false })
-    .limit(200);
-
-  const rows = (entries as AuditLogRow[] | null) ?? [];
+  // audit_log_action_check limits action to insert, update and delete.
+  const rows = (await db
+    .select({
+      id: audit_log.id,
+      table_name: audit_log.table_name,
+      row_id: audit_log.row_id,
+      action: audit_log.action,
+      actor: audit_log.actor,
+      changed_fields: audit_log.changed_fields,
+      created_at: audit_log.created_at,
+    })
+    .from(audit_log)
+    .orderBy(desc(audit_log.created_at))
+    .limit(200)) as AuditLogRow[];
 
   const actorIds = Array.from(
     new Set(rows.map((r) => r.actor).filter((id): id is string => Boolean(id))),
   );
   let actorNames: Record<string, string> = {};
   if (actorIds.length) {
-    const { data: profiles } = await supabase
-      .from("public_profiles")
-      .select("id, display_name")
-      .in("id", actorIds);
-    actorNames = Object.fromEntries(
-      (profiles ?? []).map((p) => [p.id, p.display_name ?? p.id]),
-    );
+    const profiles = await db
+      .select({ id: public_profiles.id, display_name: public_profiles.display_name })
+      .from(public_profiles)
+      .where(inArray(public_profiles.id, actorIds));
+    actorNames = Object.fromEntries(profiles.map((p) => [p.id, p.display_name ?? p.id]));
   }
 
   return <SettingsAuditPageClient initialEntries={rows} actorNames={actorNames} />;

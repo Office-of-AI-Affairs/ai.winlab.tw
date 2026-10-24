@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
+import { authPost, type AuthResult } from "@/lib/auth/client";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import { useT } from "@/lib/i18n/locale-provider";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
@@ -18,18 +18,15 @@ type Step = "email" | "code" | "success";
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}$/;
 const RESEND_COOLDOWN_SECONDS = 60;
-// Matches the GoTrue `GOTRUE_MAILER_OTP_LENGTH` setting for this project.
+// Matches emailOTP({ otpLength }) in lib/auth/index.ts.
 const OTP_LENGTH = 8;
 
 function friendlyAuthError(
-  err: { status?: number; code?: string; message?: string } | null | undefined,
+  result: Exclude<AuthResult, { ok: true }>,
   t: Dictionary["auth"]["forgotPassword"],
 ): string {
-  if (!err) return t.sendFailed;
-  // Supabase throttles same-email sends; surface cooldown hint instead of a generic error.
-  if (err.status === 429 || err.code === "over_email_send_rate_limit" || /rate limit/i.test(err.message ?? "")) {
-    return t.rateLimited;
-  }
+  // Better Auth throttles repeated sends; surface the cooldown hint instead of a generic error.
+  if (result.status === 429) return t.rateLimited;
   return t.sendFailed;
 }
 
@@ -52,12 +49,11 @@ export default function ForgotPasswordPage() {
   }, [cooldown]);
 
   async function sendCode(targetEmail: string) {
-    const supabase = createClient();
-    // No redirectTo — recovery email is pure OTP (template uses {{ .Token }}),
-    // so URL scanners (Defender Safe Links etc.) can't consume the token
-    // before the real user opens the mail.
-    const { error } = await supabase.auth.resetPasswordForEmail(targetEmail);
-    return error;
+    // The mail carries only the code, no link, so URL scanners (Defender
+    // Safe Links etc.) can't consume it before the real user opens the mail.
+    // An unknown email gets the same answer, so this does not reveal accounts.
+    const result = await authPost("/email-otp/request-password-reset", { email: targetEmail });
+    return result.ok ? null : result;
   }
 
   async function handleEmailSubmit(e: FormEvent<HTMLFormElement>) {
@@ -118,27 +114,19 @@ export default function ForgotPasswordPage() {
     }
 
     setIsLoading(true);
-    const supabase = createClient();
-
-    const { error: verifyError } = await supabase.auth.verifyOtp({
-      email,
-      token: code,
-      type: "recovery",
-    });
-    if (verifyError) {
-      setError(t.auth.forgotPassword.otpInvalid);
+    // One call checks the code and sets the password; it also signs the
+    // account out everywhere (revokeSessionsOnPasswordReset).
+    const result = await authPost("/email-otp/reset-password", { email, otp: code, password });
+    if (!result.ok) {
+      setError(
+        result.code === "INVALID_OTP" || result.code === "OTP_EXPIRED" || result.code === "TOO_MANY_ATTEMPTS"
+          ? t.auth.forgotPassword.otpInvalid
+          : t.auth.forgotPassword.updateFailed,
+      );
       setIsLoading(false);
       return;
     }
 
-    const { error: updateError } = await supabase.auth.updateUser({ password });
-    if (updateError) {
-      setError(t.auth.forgotPassword.updateFailed);
-      setIsLoading(false);
-      return;
-    }
-
-    await supabase.auth.signOut();
     setStep("success");
     setIsLoading(false);
   }

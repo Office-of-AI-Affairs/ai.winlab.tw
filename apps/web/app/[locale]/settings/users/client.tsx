@@ -18,7 +18,7 @@ import { UserEditDialog } from "@/components/admin/user-edit-dialog";
 import { PageShell } from "@/components/shared/page-shell";
 import { UsersTable } from "@/components/admin/users-table";
 import type { UserRow } from "@/components/admin/users-table";
-import { createClient } from "@/lib/supabase/client";
+import { deleteUser, importUsers, listUsers, setUserTags } from "@/lib/actions/users";
 import { buildUsersCsv, parseUsersCsv } from "@/lib/users-csv";
 import { useT } from "@/lib/i18n/locale-provider";
 import { ArrowLeft } from "lucide-react";
@@ -41,7 +41,6 @@ export default function SettingsUsersPageClient({
   initialUsers: UserRow[];
 }) {
   const t = useT();
-  const supabase = createClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [users, setUsers] = useState<UserRow[]>(initialUsers);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -56,8 +55,7 @@ export default function SettingsUsersPageClient({
   } | null>(null);
 
   async function refreshUsers() {
-    const { data } = await supabase.rpc("get_all_users");
-    setUsers((data as UserRow[]) ?? []);
+    setUsers(await listUsers());
   }
 
   async function handleAddTag(userId: string, tag: string) {
@@ -69,12 +67,9 @@ export default function SettingsUsersPageClient({
       prev.map((u) => (u.id === userId ? { ...u, tags: newTags } : u))
     );
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({ tags: newTags })
-      .eq("id", userId);
+    const result = await setUserTags(userId, newTags).catch(() => null);
 
-    if (error) {
+    if (!result?.ok) {
       toast.error(t.admin.users.toast.addTagFailed);
       setUsers((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, tags: user.tags } : u))
@@ -91,12 +86,9 @@ export default function SettingsUsersPageClient({
       prev.map((u) => (u.id === userId ? { ...u, tags: newTags } : u))
     );
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({ tags: newTags })
-      .eq("id", userId);
+    const result = await setUserTags(userId, newTags).catch(() => null);
 
-    if (error) {
+    if (!result?.ok) {
       toast.error(t.admin.users.toast.removeTagFailed);
       setUsers((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, tags: user.tags } : u))
@@ -109,12 +101,10 @@ export default function SettingsUsersPageClient({
     setIsDeleting(true);
 
     try {
-      const { error } = await supabase.rpc("admin_delete_user", {
-        p_user_id: deletingUser.id,
-      });
+      const result = await deleteUser(deletingUser.id);
 
-      if (error) {
-        toast.error(error.message);
+      if (!result.ok) {
+        toast.error(result.error);
       } else {
         toast.success(
           t.admin.users.toast.deleted.replace(
@@ -147,15 +137,11 @@ export default function SettingsUsersPageClient({
     setIsImporting(true);
     setImportResult(null);
 
-    const { data: result, error } = await supabase.functions.invoke("import-users", {
-      body: { users: rows },
-    });
-
-    if (error) {
-      toast.error(error.message ?? t.admin.users.toast.importFailed);
-    } else {
-      setImportResult(result);
+    try {
+      setImportResult(await importUsers(rows));
       await refreshUsers();
+    } catch {
+      toast.error(t.admin.users.toast.importFailed);
     }
     setIsImporting(false);
   };
