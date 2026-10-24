@@ -5,12 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useLocale, useT } from "@/lib/i18n/locale-provider"
 import { localizedField } from "@/lib/i18n/localized-field"
-import { createClient } from "@/lib/supabase/client"
-import { isUuid } from "@/lib/slug"
+import { getRow } from "@/lib/actions/rows"
 import type { TocItem } from "@/lib/ui/article"
 import type { Announcement } from "@winlab/db"
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { EventAnnouncementArticleClient } from "./article-client"
 
 type State =
@@ -36,39 +35,24 @@ export function EventAnnouncementDraftFallback({ slug, id }: { slug: string; id:
   const locale = useLocale()
   const { isAdmin, isLoading } = useAuth()
   const [state, setState] = useState<State>({ kind: "loading" })
-  const supabaseRef = useRef(createClient())
 
   useEffect(() => {
     if (isLoading || !isAdmin) return
     let cancelled = false
     void (async () => {
+      // Admin drafts might be reached by slug (table link) or by the raw id.
       const [announcementRes, eventRes] = await Promise.all([
-        (async () => {
-          // Admin drafts might be reached by slug (table link) or by the raw
-          // id (right after creation, before a title — and thus a slug —
-          // exists).
-          const bySlug = await supabaseRef.current
-            .from("announcements")
-            .select("*")
-            .eq("slug", id)
-            .maybeSingle()
-          if (bySlug.data || !isUuid(id)) return bySlug
-          return supabaseRef.current.from("announcements").select("*").eq("id", id).maybeSingle()
-        })(),
-        supabaseRef.current
-          .from("events")
-          .select("name, name_en")
-          .eq("slug", slug)
-          .single(),
+        getRow("announcements", id).catch(() => null),
+        getRow("events", slug).catch(() => null),
       ])
       if (cancelled) return
-      if (!announcementRes.data) {
+      if (!announcementRes?.ok) {
         setState({ kind: "missing" })
         return
       }
       const { renderArticle } = await import("@/lib/ui/rich-text")
       const { estimateReadingTime } = await import("@/lib/ui/reading-time")
-      const announcement = announcementRes.data as Announcement
+      const announcement = announcementRes.row as unknown as Announcement
       const { html, toc } = renderArticle(
         announcement.content as Record<string, unknown> | null,
       )
@@ -78,8 +62,8 @@ export function EventAnnouncementDraftFallback({ slug, id }: { slug: string; id:
       setState({
         kind: "draft",
         announcement,
-        eventName: eventRes.data
-          ? localizedField(eventRes.data, "name", locale).value
+        eventName: eventRes?.ok
+          ? localizedField(eventRes.row as { name: string; name_en: string | null }, "name", locale).value
           : t.events.meta.fallbackName,
         html,
         toc,

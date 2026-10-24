@@ -85,7 +85,9 @@ export function buildNewsArticleJsonLd(input: NewsArticleJsonLdInput): Record<st
   };
   if (input.dateModified) data.dateModified = input.dateModified;
   if (input.articleSection) data.articleSection = input.articleSection;
-  if (input.image) data.image = input.image;
+  // Uploaded images are stored as site paths (/files/...); JSON-LD wants
+  // an absolute URL.
+  if (input.image) data.image = input.image.startsWith("/") ? `https://ai.winlab.tw${input.image}` : input.image;
   return data;
 }
 

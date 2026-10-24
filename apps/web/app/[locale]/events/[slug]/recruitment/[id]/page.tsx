@@ -4,13 +4,9 @@ import { RecruitmentInterestList } from "@/components/events/recruitment-interes
 import { JsonLd } from "@/components/seo/json-ld";
 import { buildBreadcrumbJsonLd } from "@/lib/seo/breadcrumb";
 import { composeRecruitment } from "@winlab/domain";
-import { isRecruitmentOwner } from "@/lib/supabase/check-recruitment-owner";
-import { createClient } from "@/lib/supabase/server";
-import type {
-  Recruitment,
-  RecruitmentPrivateDetails,
-  RecruitmentSummary,
-} from "@winlab/db";
+import { getViewer } from "@/lib/auth/viewer";
+import { getRecruitmentMeta, getRecruitmentPageData } from "@/lib/data/recruitment";
+import type { Recruitment } from "@winlab/db";
 import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/site";
 import { redirect } from "next/navigation";
@@ -28,20 +24,12 @@ export async function generateMetadata({
   const { slug, id, locale: raw } = await params;
   const locale: Locale = isLocale(raw) ? raw : defaultLocale;
   const dict = await getDictionary(locale);
-  const supabase = await createClient();
-  const [competitionRes, eventRes] = await Promise.all([
-    supabase
-      .from("competitions")
-      .select("title, company_description, image")
-      .eq("id", id)
-      .single(),
-    supabase.from("events").select("cover_image").eq("slug", slug).single(),
-  ]);
-  const title = competitionRes.data?.title ?? dict.recruitment.meta.fallbackTitle;
+  const meta = await getRecruitmentMeta(id, slug);
+  const title = meta.competition?.title ?? dict.recruitment.meta.fallbackTitle;
   const description =
-    competitionRes.data?.company_description ??
+    meta.competition?.company_description ??
     dict.recruitment.meta.fallbackDescription.replace("{title}", title);
-  const ogImageUrl = competitionRes.data?.image ?? eventRes.data?.cover_image ?? null;
+  const ogImageUrl = meta.competition?.image ?? meta.eventCover ?? null;
   const ogImages = ogImageUrl
     ? [{ url: ogImageUrl, width: 1200, height: 630, alt: title }]
     : [{ url: "/og.png", width: 1200, height: 630, alt: title }];
@@ -87,119 +75,12 @@ export default async function EventRecruitmentDetailPage({
   const { slug, id, locale: raw } = await params;
   const locale: Locale = isLocale(raw) ? raw : defaultLocale;
   const dict = await getDictionary(locale);
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: summary, error } = await supabase
-    .from("competitions")
-    .select("id, created_at, updated_at, title, link, image, company_description, start_date, end_date, event_id, created_by")
-    .eq("id", id)
-    .single();
-
-  if (error || !summary) redirect(`/events/${slug}/recruitment`);
-
-  if (!summary.event_id) redirect(`/events/${slug}/recruitment`);
-
-  let details: RecruitmentPrivateDetails | null = null;
-  if (user) {
-    const { data, error: detailsError } = await supabase
-      .from("competition_private_details")
-      .select("competition_id, created_at, updated_at, positions, application_method, contact, required_documents")
-      .eq("competition_id", id)
-      .maybeSingle();
-    if (detailsError) console.error("Failed to fetch competition_private_details:", detailsError);
-    details = (data as RecruitmentPrivateDetails | null) ?? null;
-  }
-
-  const recruitment: Recruitment = composeRecruitment(
-    summary as RecruitmentSummary,
-    details
-  );
-
-  // Determine viewer role
-  let isAdmin = false;
-  let isOwner = false;
-  let hasResume = false;
-
-  if (user) {
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role, resume")
-      .eq("id", user.id)
-      .single();
-    if (profileError) console.error("Failed to fetch viewer profile:", profileError);
-
-    if (profile) {
-      isAdmin = profile.role === "admin";
-      hasResume = Boolean(profile.resume);
-      if (!isAdmin) {
-        isOwner = await isRecruitmentOwner(supabase, user.id, id);
-      }
-    }
-  }
-
-  const canViewApplicants = isAdmin || isOwner;
-
-  // Fetch interest count
-  const { data: countData, error: countError } = await supabase.rpc("get_interest_count", {
-    p_competition_id: id,
-  });
-  if (countError) console.error("Failed to fetch interest count:", countError);
-  const interestCount = (countData as number | null) ?? 0;
-
-  // Check if current user is already interested
-  let userIsInterested = false;
-  if (user && !canViewApplicants) {
-    const { data: interestRow, error: interestError } = await supabase
-      .from("recruitment_interests")
-      .select("id")
-      .eq("competition_id", id)
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (interestError) console.error("Failed to check user interest:", interestError);
-    userIsInterested = Boolean(interestRow);
-  }
-
-  // Fetch applicant list for vendor/admin
-  type ApplicantRow = {
-    id: string;
-    display_name: string | null;
-    avatar_url: string | null;
-    bio: string | null;
-    resume: string | null;
-  };
-  let applicants: ApplicantRow[] = [];
-  if (canViewApplicants) {
-    const { data: interestRows, error: interestListError } = await supabase
-      .from("recruitment_interests")
-      .select("user_id")
-      .eq("competition_id", id);
-    if (interestListError) console.error("Failed to fetch interest list:", interestListError);
-
-    if (interestRows && interestRows.length > 0) {
-      const userIds = interestRows.map((r) => r.user_id);
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, display_name, avatar_url, bio, resume")
-        .in("id", userIds);
-      if (profilesError) console.error("Failed to fetch applicant profiles:", profilesError);
-      applicants = (profiles as ApplicantRow[]) ?? [];
-    }
-  }
-
-  // Sanitized positions (name/type/location/count only) — readable by anon
-  // via SECURITY DEFINER RPC so JobPosting JSON-LD stays complete for
-  // unauthenticated crawlers.
-  const { data: publicPositionsData } = await supabase.rpc(
-    "get_public_recruitment_positions",
-    { p_competition_id: id }
-  );
-  type PublicPosition = { name: string | null; type: string | null; location: string | null; count: number | null };
-  const publicPositions: PublicPosition[] = Array.isArray(publicPositionsData)
-    ? (publicPositionsData as PublicPosition[])
-    : [];
+  const viewer = await getViewer();
+  const data = await getRecruitmentPageData(id, slug, viewer);
+  if (!data) redirect(`/events/${slug}/recruitment`);
+  const { summary, interestCount, userIsInterested, applicants, publicPositions, hasResume } = data;
+  const recruitment: Recruitment = composeRecruitment(summary, data.details);
+  const canViewApplicants = data.isAdmin || data.isOwner;
 
   const employmentTypeMap: Record<string, string> = {
     full_time: "FULL_TIME",
@@ -247,13 +128,8 @@ export default async function EventRecruitmentDetailPage({
     ...(employmentTypes.length ? { employmentType: employmentTypes } : {}),
   };
 
-  const { data: eventRow } = await supabase
-    .from("events")
-    .select("name, name_en")
-    .eq("slug", slug)
-    .maybeSingle();
-  const eventName = eventRow
-    ? localizedField(eventRow, "name", locale).value
+  const eventName = data.eventName
+    ? localizedField(data.eventName, "name", locale).value
     : dict.events.meta.fallbackName;
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: dict.common.home, path: "/" },
@@ -270,11 +146,11 @@ export default async function EventRecruitmentDetailPage({
         recruitment={recruitment as Recruitment}
         backHref={`/events/${slug}/recruitment`}
         backLabel={dict.events.backToEvent}
-        canViewPrivateDetails={Boolean(user)}
+        canViewPrivateDetails={Boolean(viewer)}
         t={dict.recruitment}
       />
 
-      {user && !canViewApplicants && (
+      {viewer && !canViewApplicants && (
         <RecruitmentInterestButton
           competitionId={id}
           initialInterested={userIsInterested}

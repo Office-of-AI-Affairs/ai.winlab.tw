@@ -1,18 +1,17 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { and, eq, gte, sql } from "drizzle-orm";
 import { z } from "zod";
+import type { Viewer } from "@/lib/auth/viewer";
+import { asUser } from "@/lib/db";
+import { upload_tokens } from "@/lib/db/schema";
+import { uploadImageFile } from "@/lib/files/upload";
+import { fetchPublicImage, readBodyCapped } from "@/lib/mcp/fetch-image";
+import { error, success } from "@/lib/mcp/tools/common";
 
-const BUCKET = "announcement-images";
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
-const FETCH_TIMEOUT_MS = 10_000;
-const ALLOWED_MIME_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-];
 
-const CATEGORY_PREFIXES: Record<string, string> = {
+/** Upload category → folder in announcement-images (lib/files/upload.ts rules apply). */
+export const CATEGORY_PREFIXES: Record<string, string> = {
   announcement: "",
   recruitment: "recruitment/",
   result: "results/",
@@ -21,194 +20,27 @@ const CATEGORY_PREFIXES: Record<string, string> = {
   organization: "organization/",
 };
 
-// upload_image accepts a public URL — make sure it's actually public-internet,
-// not pointing at our own infra or cloud metadata endpoints (SSRF).
-function assertPublicHttpUrl(raw: string) {
-  let parsed: URL;
-  try {
-    parsed = new URL(raw);
-  } catch {
-    throw new Error("invalid URL");
-  }
-  if (!["http:", "https:"].includes(parsed.protocol)) {
-    throw new Error(`unsupported scheme: ${parsed.protocol}`);
-  }
-  const host = parsed.hostname.toLowerCase();
-  if (
-    host === "localhost" ||
-    host.endsWith(".localhost") ||
-    host === "metadata.google.internal" ||
-    host.endsWith(".internal")
-  ) {
-    throw new Error(`refusing to fetch from internal host: ${host}`);
-  }
-  // crude IPv4 / IPv6 private range check — DNS rebinding still defeats this
-  // (the resolved A record can flip between check and fetch), but the obvious
-  // 169.254.169.254 / 10.x / 192.168.x / 127.x cases get caught.
-  if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
-    const [a, b] = host.split(".").map((n) => Number.parseInt(n, 10));
-    if (
-      a === 10 ||
-      a === 127 ||
-      (a === 169 && b === 254) ||
-      (a === 172 && b >= 16 && b <= 31) ||
-      (a === 192 && b === 168) ||
-      a === 0
-    ) {
-      throw new Error(`refusing to fetch from private IP: ${host}`);
-    }
-  }
-  if (host === "::1" || host.startsWith("fc") || host.startsWith("fd") || host.startsWith("fe80")) {
-    throw new Error(`refusing to fetch from private IPv6: ${host}`);
-  }
-}
+const CATEGORIES = ["announcement", "recruitment", "result", "event", "carousel", "organization"] as const;
 
-export const MAX_REDIRECTS = 5;
+const baseUrl = process.env.BETTER_AUTH_URL ?? "https://ai.winlab.tw";
 
-// Fetch following redirects MANUALLY, re-validating every hop against the SSRF
-// allowlist. The default `fetch` auto-follows redirects without re-checking the
-// target, so an attacker-controlled public URL could 302 us to 169.254.169.254
-// or an internal host. `redirect: "manual"` lets us inspect each Location.
-export async function fetchPublicImage(initialUrl: string): Promise<Response> {
-  let url = initialUrl;
-  for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
-    assertPublicHttpUrl(url);
-    const response = await fetch(url, {
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      redirect: "manual",
-    });
-    if (response.status >= 300 && response.status < 400) {
-      const location = response.headers.get("location");
-      if (!location) return response;
-      url = new URL(location, url).toString();
-      continue;
-    }
-    return response;
-  }
-  throw new Error("too many redirects");
-}
+/** The stored path (as the site stores it) and a full link to look at. */
+export const uploaded = (url: string, path: string) => ({ url, public_url: `${baseUrl}${url}`, path });
 
-// Read the body with a hard byte cap, aborting mid-stream once exceeded. A
-// server can omit/understate content-length and stream gigabytes; buffering the
-// whole response before checking size would OOM us, so cap as we read.
-export async function readBodyCapped(response: Response, maxBytes: number): Promise<Uint8Array> {
-  const reader = response.body?.getReader();
-  if (!reader) {
-    const buf = new Uint8Array(await response.arrayBuffer());
-    if (buf.byteLength > maxBytes) throw new Error("image exceeds size limit");
-    return buf;
-  }
-  const chunks: Uint8Array[] = [];
-  let total = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (!value) continue;
-    total += value.byteLength;
-    if (total > maxBytes) {
-      await reader.cancel();
-      throw new Error("image exceeds size limit");
-    }
-    chunks.push(value);
-  }
-  const out = new Uint8Array(total);
-  let offset = 0;
-  for (const chunk of chunks) {
-    out.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return out;
-}
-
-function success(data: unknown) {
-  return {
-    content: [{ type: "text" as const, text: JSON.stringify({ success: true, data }) }],
-  };
-}
-
-function error(message: string) {
-  return {
-    content: [{ type: "text" as const, text: JSON.stringify({ success: false, error: message }) }],
-    isError: true,
-  };
-}
-
-function getExtFromMime(mime: string): string {
-  const map: Record<string, string> = {
-    "image/jpeg": "jpg",
-    "image/png": "png",
-    "image/webp": "webp",
-    "image/gif": "gif",
-  };
-  return map[mime] || "jpg";
-}
-
-function generatePath(category: string, ext: string): string {
-  const prefix = CATEGORY_PREFIXES[category] || "";
-  return `${prefix}${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-}
-
-async function uploadToStorage(
-  supabase: SupabaseClient,
-  path: string,
-  buffer: Buffer | Uint8Array,
-  contentType: string,
-) {
-  const { error: uploadError } = await supabase.storage
-    .from(BUCKET)
-    .upload(path, buffer, {
-      contentType,
-      cacheControl: "3600",
-      upsert: false,
-    });
-
-  if (uploadError) return error(uploadError.message);
-
-  const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path);
-  return success({ url: publicUrl, path });
-}
-
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ai.winlab.tw";
-
-export function registerImageTools(
-  server: McpServer,
-  supabase: SupabaseClient,
-  userId: string,
-) {
-  // --- create_upload_url: for local file uploads ---
+export function registerImageTools(server: McpServer, viewer: Viewer) {
   server.tool(
     "create_upload_url",
     `Generate a one-time upload URL for uploading a LOCAL file from disk. Returns a URL that can be used with curl WITHOUT any Authorization header. The URL expires in 10 minutes and can only be used once.
 
 Usage: call this tool first, then use the returned upload_url with curl:
   curl -X POST "<upload_url>" -F "file=@/path/to/local/image.jpg"
-The curl response JSON contains { "url": "<public_url>" } which you can use in other tools.`,
-    {
-      category: z
-        .enum([
-          "announcement",
-          "recruitment",
-          "result",
-          "event",
-          "carousel",
-          "organization",
-        ])
-        .describe("Category determines storage path prefix"),
-    },
+
+The curl response JSON contains { "url": "<path>" } which you can use in other tools.`,
+    { category: z.enum(CATEGORIES).describe("Category determines storage path prefix") },
     async ({ category }) => {
       const token = crypto.randomUUID();
-
-      // upload_tokens no longer stores the caller's JWT — the upload route
-      // resolves user_id + category from consume_upload_token (SECURITY DEFINER
-      // RPC) and uploads via service-role on behalf of that user.
-      const { error: dbError } = await supabase.from("upload_tokens").insert({
-        token,
-        user_id: userId,
-        category,
-      });
-
-      if (dbError) return error(`Failed to create upload token: ${dbError.message}`);
-
+      // The upload runs as this user with the usual folder rules.
+      await asUser(viewer.id, (tx) => tx.insert(upload_tokens).values({ token, user_id: viewer.id, category }));
       const uploadUrl = `${baseUrl}/api/upload?token=${token}`;
       return success({
         upload_url: uploadUrl,
@@ -218,25 +50,15 @@ The curl response JSON contains { "url": "<public_url>" } which you can use in o
     },
   );
 
-  // --- upload_image: for web URLs ---
   server.tool(
     "upload_image",
-    `Upload an image from a public URL to storage. Returns the public URL for use in other tools.
+    `Upload an image from a public URL to storage. Returns the image path for use in other tools.
 
 For images on the web: use this tool, pass the URL directly.
 For LOCAL files on disk: use create_upload_url instead, then curl the file.`,
     {
       url: z.string().url().describe("Public URL of the image to download and upload"),
-      category: z
-        .enum([
-          "announcement",
-          "recruitment",
-          "result",
-          "event",
-          "carousel",
-          "organization",
-        ])
-        .describe("Category determines storage path prefix"),
+      category: z.enum(CATEGORIES).describe("Category determines storage path prefix"),
     },
     async ({ url, category }) => {
       let response: Response;
@@ -246,31 +68,32 @@ For LOCAL files on disk: use create_upload_url instead, then curl the file.`,
       } catch (e) {
         return error(e instanceof Error ? e.message : "URL rejected");
       }
-      if (!response.ok) {
-        return error(`Failed to download image: ${response.status} ${response.statusText}`);
-      }
-
+      if (!response.ok) return error(`Failed to download image: ${response.status} ${response.statusText}`);
       const declared = Number.parseInt(response.headers.get("content-length") ?? "0", 10);
       if (declared > MAX_SIZE_BYTES) {
         return error(`Image too large (declared ${(declared / 1024 / 1024).toFixed(1)}MB). Max: 5MB`);
       }
-
-      const contentType = response.headers.get("content-type")?.split(";")[0] || "image/jpeg";
-      if (!ALLOWED_MIME_TYPES.includes(contentType)) {
-        return error(`Unsupported image type: ${contentType}. Allowed: ${ALLOWED_MIME_TYPES.join(", ")}`);
-      }
-
       let bytes: Uint8Array;
       try {
         bytes = await readBodyCapped(response, MAX_SIZE_BYTES);
       } catch {
         return error("Image too large. Max: 5MB");
       }
-
-      const ext = getExtFromMime(contentType);
-      const path = generatePath(category, ext);
-
-      return uploadToStorage(supabase, path, bytes, contentType);
+      // The type comes from the file's first bytes, not the server's header.
+      const result = await uploadImageFile(viewer, CATEGORY_PREFIXES[category] ?? "", Buffer.from(bytes));
+      return result.ok ? success(uploaded(result.url!, result.path)) : error(result.error);
     },
   );
+}
+
+/** Uses a create_upload_url token once; the user and folder it was made for. */
+export async function consumeUploadToken(token: string) {
+  const [row] = await asUser(null, (tx) =>
+    tx
+      .update(upload_tokens)
+      .set({ used: true })
+      .where(and(eq(upload_tokens.token, token), eq(upload_tokens.used, false), gte(upload_tokens.expires_at, sql`now()`)))
+      .returning({ user_id: upload_tokens.user_id, category: upload_tokens.category }),
+  );
+  return row ?? null;
 }

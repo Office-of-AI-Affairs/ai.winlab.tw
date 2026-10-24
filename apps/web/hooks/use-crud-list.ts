@@ -1,16 +1,12 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
-import type { Database } from "@winlab/db";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { deleteRow, insertRow, listRows, reorderRows } from "@/lib/actions/rows";
+import type { RowTable } from "@/lib/permissions/rows";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-// See use-content-editor.ts for why the internal client is cast loose.
-type TableName = keyof Database["public"]["Tables"];
-
-type Options<T, N extends TableName> = {
-  table: N;
+type Options<T> = {
+  table: RowTable;
   orderBy: string;
   ascending?: boolean;
   initialItems?: T[];
@@ -18,15 +14,14 @@ type Options<T, N extends TableName> = {
   onAfterMutation?: () => void | Promise<void>;
 };
 
-export function useCrudList<T extends { id: string }, N extends TableName = TableName>({
+export function useCrudList<T extends { id: string }>({
   table,
   orderBy,
   ascending = true,
   initialItems,
   onCreated,
   onAfterMutation,
-}: Options<T, N>) {
-  const supabaseRef = useRef(createClient() as unknown as SupabaseClient);
+}: Options<T>) {
   const onCreatedRef = useRef(onCreated);
   const onAfterMutationRef = useRef(onAfterMutation);
   useEffect(() => { onCreatedRef.current = onCreated; }, [onCreated]);
@@ -40,8 +35,8 @@ export function useCrudList<T extends { id: string }, N extends TableName = Tabl
   useEffect(() => {
     if (initialItems) return;
     async function fetch() {
-      const { data } = await supabaseRef.current.from(table).select("*").order(orderBy, { ascending });
-      setItems((data as T[] | null) ?? []);
+      const rows = await listRows(table, {}, [{ column: orderBy, ascending }]);
+      setItems(rows as unknown as T[]);
       setIsLoading(false);
     }
     fetch();
@@ -50,17 +45,13 @@ export function useCrudList<T extends { id: string }, N extends TableName = Tabl
   const create = useCallback(
     async (defaults: Record<string, unknown> = {}): Promise<T | null> => {
       setIsCreating(true);
-      const { data, error } = await supabaseRef.current
-        .from(table)
-        .insert(defaults)
-        .select()
-        .single();
+      const result = await insertRow(table, defaults).catch(() => null);
       setIsCreating(false);
-      if (error) {
+      if (!result?.ok) {
         toast.error("建立失敗");
         return null;
       }
-      const item = data as T;
+      const item = result.row as unknown as T;
       onCreatedRef.current?.(item);
       await onAfterMutationRef.current?.();
       return item;
@@ -72,9 +63,9 @@ export function useCrudList<T extends { id: string }, N extends TableName = Tabl
     async (id: string) => {
       if (!confirm("確定要刪除嗎？")) return;
       setDeletingId(id);
-      const { error } = await supabaseRef.current.from(table).delete().eq("id", id);
+      const result = await deleteRow(table, id).catch(() => null);
       setDeletingId(null);
-      if (error) {
+      if (!result?.ok) {
         toast.error("刪除失敗");
         return;
       }
@@ -88,14 +79,8 @@ export function useCrudList<T extends { id: string }, N extends TableName = Tabl
     async (reorderedItems: T[]) => {
       const prev = items;
       setItems(reorderedItems);
-      const updates = reorderedItems.map((item, index) =>
-        supabaseRef.current
-          .from(table)
-          .update({ sort_order: index })
-          .eq("id", item.id),
-      );
-      const results = await Promise.all(updates);
-      if (results.some((r) => r.error)) {
+      const result = await reorderRows(table, reorderedItems.map((item) => item.id)).catch(() => null);
+      if (!result?.ok) {
         toast.error("排序更新失敗");
         setItems(prev);
         return;

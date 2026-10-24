@@ -1,5 +1,15 @@
-import { createPublicClient } from "@/lib/supabase/public";
-import { livePublishAtFilter } from "@/lib/scheduling";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { liveAnnouncement } from "@/lib/db/filters";
+import {
+  announcements,
+  competitions,
+  event_participants,
+  events,
+  public_profiles,
+  result_coauthors,
+  results as resultsTable,
+} from "@/lib/db/schema";
 import { composeRecruitment } from "@winlab/domain";
 import type { ResultWithMeta } from "@/components/events/result-card";
 import type {
@@ -26,134 +36,115 @@ export type EventPagePayload = {
 };
 
 // Everything the public /events/[slug] render needs.
-// Intentionally NOT wrapped in unstable_cache: the MCP server writes directly
-// to Supabase (bypassing Server Actions / updateTag), so this page reads fresh
-// on every request to stay in sync. Draft-only data (admin announcements,
-// admin-only recruitment private details) is merged in from the client side —
-// see EventDetailClient.
+// Intentionally NOT wrapped in unstable_cache: MCP tools write rows directly,
+// so this page reads fresh on every request to stay in sync. Draft-only data
+// (admin announcements, recruitment private details) is merged in from the
+// client side — see EventDetailClient.
 export async function getEventPageData(
   slug: string,
 ): Promise<EventPagePayload | null> {
-    const supabase = createPublicClient();
+  const [eventRow] = await db
+    .select()
+    .from(events)
+    .where(and(eq(events.slug, slug), eq(events.status, "published")))
+    .limit(1);
+  if (!eventRow) return null;
 
-    const { data: event } = await supabase
-      .from("events")
-      .select(
-        "id, slug, name, name_en, description, cover_image, status, pinned, sort_order, created_at, updated_at",
-      )
-      .eq("slug", slug)
-      .eq("status", "published")
-      .maybeSingle();
-    if (!event) return null;
-    const eventRow = event as Event;
-
-    const [announcementsRes, resultsRes, recruitmentsRes, participantsRes] = await Promise.all([
-      supabase
-        .from("announcements")
-        .select(
-          "id, slug, event_id, title, title_en, category, date, content, status, publish_at, author_id, created_at, updated_at",
-        )
-        .eq("event_id", eventRow.id)
-        .eq("status", "published")
-        .or(livePublishAtFilter())
-        .order("date", { ascending: false }),
-      supabase
-        .from("results")
-        .select(
-          "id, event_id, title, title_en, summary, content, header_image, date, pinned, status, author_id, created_at, updated_at",
-        )
-        .eq("event_id", eventRow.id)
-        .eq("status", "published")
-        .order("pinned", { ascending: false })
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("competitions")
-        .select("id, created_at, updated_at, title, link, image, company_description, start_date, end_date, event_id, created_by, pinned")
-        .eq("event_id", eventRow.id)
-        .order("pinned", { ascending: false })
-        .order("created_at", { ascending: true }),
-      supabase.from("event_participants").select("user_id").eq("event_id", eventRow.id),
-    ]);
-
-    const participantUserIds = (participantsRes.data ?? []).map(
-      (row: { user_id: string }) => row.user_id,
-    );
+  const [announcementRows, rawResults, recruitmentRows, participantRows] = await Promise.all([
+    db
+      .select()
+      .from(announcements)
+      .where(and(eq(announcements.event_id, eventRow.id), liveAnnouncement()))
+      .orderBy(desc(announcements.date)),
+    db
+      .select()
+      .from(resultsTable)
+      .where(and(eq(resultsTable.event_id, eventRow.id), eq(resultsTable.status, "published")))
+      .orderBy(desc(resultsTable.pinned), asc(resultsTable.created_at)),
+    db
+      .select({
+        id: competitions.id,
+        created_at: competitions.created_at,
+        updated_at: competitions.updated_at,
+        title: competitions.title,
+        link: competitions.link,
+        image: competitions.image,
+        company_description: competitions.company_description,
+        start_date: competitions.start_date,
+        end_date: competitions.end_date,
+        event_id: competitions.event_id,
+        created_by: competitions.created_by,
+        pinned: competitions.pinned,
+      })
+      .from(competitions)
+      .where(eq(competitions.event_id, eventRow.id))
+      .orderBy(desc(competitions.pinned), asc(competitions.created_at)),
     // has_profile_data is denormalised onto public_profiles by a trigger, so
-    // this one public read replaces the authenticated profiles query the
-    // original page did — critical for the SSG fetcher.
-    const { data: participantPublic } = participantUserIds.length
-      ? await supabase
-          .from("public_profiles")
-          .select("id, display_name, avatar_url, has_profile_data")
-          .in("id", participantUserIds)
-      : { data: [] };
+    // members come from one public read.
+    db
+      .select({
+        id: public_profiles.id,
+        display_name: public_profiles.display_name,
+        avatar_url: public_profiles.avatar_url,
+        has_profile_data: public_profiles.has_profile_data,
+      })
+      .from(event_participants)
+      .innerJoin(public_profiles, eq(public_profiles.id, event_participants.user_id))
+      .where(eq(event_participants.event_id, eventRow.id)),
+  ]);
 
-    const members: EventMember[] = (
-      (participantPublic as {
-        id: string;
-        display_name: string | null;
-        avatar_url: string | null;
-        has_profile_data: boolean;
-      }[]) ?? []
-    )
-      .map((m) => ({
-        id: m.id,
-        display_name: m.display_name,
-        avatar_url: m.avatar_url,
-        hasProfileData: m.has_profile_data,
-      }))
-      .sort((a, b) => {
-        if (a.hasProfileData !== b.hasProfileData) return a.hasProfileData ? -1 : 1;
-        return (a.display_name ?? "").localeCompare(b.display_name ?? "");
-      });
+  const members: EventMember[] = participantRows
+    .map((m) => ({
+      id: m.id,
+      display_name: m.display_name,
+      avatar_url: m.avatar_url,
+      hasProfileData: m.has_profile_data,
+    }))
+    .sort((a, b) => {
+      if (a.hasProfileData !== b.hasProfileData) return a.hasProfileData ? -1 : 1;
+      return (a.display_name ?? "").localeCompare(b.display_name ?? "");
+    });
 
-    const rawResults = (resultsRes.data as Result[]) ?? [];
-    const authorIds = [...new Set(rawResults.map((r) => r.author_id).filter(Boolean))] as string[];
-    const profilesRes = authorIds.length
-      ? await supabase.from("public_profiles").select("id, display_name").in("id", authorIds)
-      : { data: [] };
-    const profileMap = Object.fromEntries(
-      (((profilesRes.data as unknown) as { id: string; display_name: string | null }[]) ?? []).map(
-        (p) => [p.id, p.display_name],
-      ),
-    );
+  const resultIds = rawResults.map((r) => r.id);
+  const coauthorRows = resultIds.length
+    ? await db
+        .select({ result_id: result_coauthors.result_id, user_id: result_coauthors.user_id })
+        .from(result_coauthors)
+        .where(inArray(result_coauthors.result_id, resultIds))
+    : [];
+  const profileIds = [
+    ...new Set([
+      ...rawResults.map((r) => r.author_id).filter((id): id is string => Boolean(id)),
+      ...coauthorRows.map((r) => r.user_id),
+    ]),
+  ];
+  const names = profileIds.length
+    ? await db
+        .select({ id: public_profiles.id, display_name: public_profiles.display_name })
+        .from(public_profiles)
+        .where(inArray(public_profiles.id, profileIds))
+    : [];
+  const profileMap = Object.fromEntries(names.map((p) => [p.id, p.display_name]));
 
-    const resultIds = rawResults.map((r) => r.id);
-    const { data: coauthorRows } = resultIds.length
-      ? await supabase.from("result_coauthors").select("result_id, user_id").in("result_id", resultIds)
-      : { data: [] };
-    const coauthorUserIds = [...new Set((coauthorRows ?? []).map((r) => r.user_id))];
-    if (coauthorUserIds.length) {
-      const { data: coProfiles } = await supabase
-        .from("public_profiles")
-        .select("id, display_name")
-        .in("id", coauthorUserIds);
-      for (const p of (coProfiles as { id: string; display_name: string | null }[]) ?? []) {
-        if (!profileMap[p.id]) profileMap[p.id] = p.display_name;
-      }
-    }
-    const coauthorsByResult = new Map<string, { id: string; name: string }[]>();
-    for (const row of (coauthorRows ?? []) as { result_id: string; user_id: string }[]) {
-      const list = coauthorsByResult.get(row.result_id) ?? [];
-      list.push({ id: row.user_id, name: profileMap[row.user_id] ?? "未知使用者" });
-      coauthorsByResult.set(row.result_id, list);
-    }
+  const coauthorsByResult = new Map<string, { id: string; name: string }[]>();
+  for (const row of coauthorRows) {
+    const list = coauthorsByResult.get(row.result_id) ?? [];
+    list.push({ id: row.user_id, name: profileMap[row.user_id] ?? "未知使用者" });
+    coauthorsByResult.set(row.result_id, list);
+  }
 
-    const results: ResultWithMeta[] = rawResults.map((r) => ({
-      ...r,
-      author_name: r.author_id ? profileMap[r.author_id] ?? null : null,
-      coauthors: coauthorsByResult.get(r.id) ?? [],
-    }));
+  // The Result overlay narrows content and summary (see packages/db).
+  const results: ResultWithMeta[] = (rawResults as Result[]).map((r) => ({
+    ...r,
+    author_name: r.author_id ? profileMap[r.author_id] ?? null : null,
+    coauthors: coauthorsByResult.get(r.id) ?? [],
+  }));
 
-    const recruitments: Recruitment[] = ((recruitmentsRes.data as RecruitmentSummary[]) ?? []).map(
-      (item) => composeRecruitment(item),
-    );
-
-    return {
-      event: eventRow,
-      announcements: (announcementsRes.data as Announcement[]) ?? [],
-      results,
-      recruitments,
-      members,
-    };
+  return {
+    event: eventRow,
+    announcements: announcementRows,
+    results,
+    recruitments: (recruitmentRows as RecruitmentSummary[]).map((item) => composeRecruitment(item)),
+    members,
+  };
 }

@@ -14,7 +14,7 @@ Official website for the National Yang Ming Chiao Tung University (NYCU) Office 
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router)
-- **Backend**: Supabase
+- **Backend**: PostgreSQL 18 + Drizzle ORM, Better Auth
 - **Styling**: Tailwind CSS + shadcn/ui
 - **Package Manager**: Bun
 
@@ -27,12 +27,16 @@ bun dev
 
 ## Environment Variables
 
-Create a `.env.local` file:
+Start a local Postgres (`apps/web/infra/postgres/compose.yaml` works) and
+create `apps/web/.env.local`:
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=
+DATABASE_URL=postgres://ai:<password>@127.0.0.1:5432/ai
+BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_SECRET=<random 32+ characters>
 ```
+
+The app applies the migrations in `apps/web/drizzle/` on start.
 
 ## Documentation
 
@@ -44,13 +48,12 @@ For humans:
   YAML frontmatter for AI agents + Markdown body for humans. Live gallery
   at [`/design`](https://ai.winlab.tw/design).
 - [`CLAUDE.md`](CLAUDE.md) — codebase conventions (architecture, ISR
-  pattern, hooks, auth, schema regen). Read this before opening a PR.
+  pattern, hooks, auth, schema). Read this before opening a PR.
 
 For Claude Code (load on demand):
 
 - [`.claude/skills/`](.claude/skills) — project-scoped agent skills.
-  `isr-page`, `rls-permissions`, `supabase-storage`, `inline-view-edit`,
-  `cdn-deploy`, `perf-audit`. Each loads only when relevant — see
+  `isr-page`, `inline-view-edit`, `perf-audit`. Each loads only when relevant — see
   [`.claude/skills/README.md`](.claude/skills/README.md) for the index.
 
 ## License

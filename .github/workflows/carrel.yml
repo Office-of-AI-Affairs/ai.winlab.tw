@@ -28,21 +28,21 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      # Public values only: they are inlined into the browser bundle anyway.
+      # No database at build time: pages render per request on the machine.
       - name: Build
         working-directory: apps/web
         env:
-          NEXT_PUBLIC_SUPABASE_URL: https://hwezfbhjcetpezfuvelf.supabase.co
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: sb_publishable_0xFoLCvOO9u0ntpugOv6dg_mcd2CABU
           NEXT_TELEMETRY_DISABLED: "1"
         run: bun run build
 
       # The start command is `node apps/web/server.js` from the release root.
+      # server.js runs from apps/web, where it finds drizzle/ to migrate.
       - name: Pack
         working-directory: apps/web
         run: |
           cp -r .next/static .next/standalone/apps/web/.next/static
           cp -r public .next/standalone/apps/web/public
+          cp -r drizzle .next/standalone/apps/web/drizzle
           tar czf "$RUNNER_TEMP/ai.tar.gz" -C .next/standalone .
 
       - uses: NYCU-WinLab/carrel-deploy@v1

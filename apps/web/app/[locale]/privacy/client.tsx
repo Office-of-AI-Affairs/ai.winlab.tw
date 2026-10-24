@@ -13,21 +13,13 @@ import { Separator } from "@/components/ui/separator"
 import { useEditMode } from "@/hooks/use-edit-mode"
 import { useT } from "@/lib/i18n/locale-provider"
 import { formatDate } from "@/lib/date"
-import { createClient } from "@/lib/supabase/client"
 import type { TocItem } from "@/lib/ui/article"
 import { Check, LogOut, RotateCcw, Send } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
-import { revalidatePrivacy } from "./actions"
+import { listPrivacyVersions, publishPrivacyVersion, revalidatePrivacy, type PrivacyVersion } from "./actions"
 
-type VersionRecord = {
-  id: string
-  version: number
-  content: Record<string, unknown>
-  note: string | null
-  created_at: string
-  profiles: { display_name: string | null } | null
-}
+type VersionRecord = PrivacyVersion
 
 type Props = {
   initialContent: Record<string, unknown> | null
@@ -61,7 +53,6 @@ export function PrivacyClient({
   const [actionsOpen, setActionsOpen] = useState(false)
   const [versionsLoaded, setVersionsLoaded] = useState(false)
   const [versions, setVersions] = useState<VersionRecord[]>([])
-  const supabaseRef = useRef(createClient())
 
   const hasChanges = useMemo(
     () => JSON.stringify(content) !== JSON.stringify(savedContent),
@@ -80,15 +71,12 @@ export function PrivacyClient({
   const loadVersions = useCallback(
     async (force = false) => {
       if (versionsLoaded && !force) return
-      const { data, error } = await supabaseRef.current
-        .from("privacy_policy")
-        .select("id, version, content, note, created_at, profiles!created_by(display_name)")
-        .order("version", { ascending: false })
-      if (error) {
+      const data = await listPrivacyVersions().catch(() => null)
+      if (!data) {
         toast.error(t.privacy.loadVersionsError)
         return
       }
-      setVersions((data ?? []) as unknown as VersionRecord[])
+      setVersions(data)
       setVersionsLoaded(true)
     },
     [versionsLoaded, t],
@@ -97,18 +85,8 @@ export function PrivacyClient({
   const publish = useCallback(async () => {
     if (!user || !hasChanges || isPublishing) return
     setIsPublishing(true)
-    const nextVersion = latestVersion + 1
-    const { data, error } = await supabaseRef.current
-      .from("privacy_policy")
-      .insert({
-        content: content as never,
-        version: nextVersion,
-        note: note.trim() || null,
-        created_by: user.id,
-      })
-      .select("id, version, content, created_at")
-      .single()
-    if (error || !data) {
+    const data = await publishPrivacyVersion({ content, note: note.trim() || null }).catch(() => null)
+    if (!data?.ok) {
       toast.error(t.privacy.publishError)
       setIsPublishing(false)
       return

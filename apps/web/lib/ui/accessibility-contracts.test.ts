@@ -16,7 +16,6 @@ const tiptapEditor = readFileSync(resolve(process.cwd(), "components/editor/tipt
 const tiptapEditorShared = readFileSync(resolve(process.cwd(), "components/editor/tiptap-editor-shared.tsx"), "utf8")
 const loginPage = readFileSync(resolve(process.cwd(), "app/[locale]/login/page.tsx"), "utf8")
 const forgotPasswordPage = readFileSync(resolve(process.cwd(), "app/[locale]/forgot-password/page.tsx"), "utf8")
-const resetPasswordPage = readFileSync(resolve(process.cwd(), "app/[locale]/reset-password/page.tsx"), "utf8")
 const usersTable = readFileSync(resolve(process.cwd(), "components/admin/users-table.tsx"), "utf8")
 const homeEvents = readFileSync(resolve(process.cwd(), "components/home/home-events.tsx"), "utf8")
 const homeAnnouncement = readFileSync(resolve(process.cwd(), "components/home/home-announcement.tsx"), "utf8")
@@ -113,9 +112,7 @@ describe("accessibility contracts", () => {
     assert.ok(loginPage.includes('role="alert"'))
     assert.ok(forgotPasswordPage.includes('autoComplete="email"'))
     assert.ok(forgotPasswordPage.includes('role="status"'))
-    assert.ok(resetPasswordPage.includes('autoComplete="new-password"'))
-    assert.ok(resetPasswordPage.includes('role="status"'))
-    assert.ok(resetPasswordPage.includes('role="alert"'))
+    assert.ok(forgotPasswordPage.includes('autoComplete="new-password"'))
     assert.ok(usersTable.includes('aria-live="polite"'))
   })
 

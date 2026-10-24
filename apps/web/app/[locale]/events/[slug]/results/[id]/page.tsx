@@ -1,4 +1,7 @@
-import { createPublicClient } from "@/lib/supabase/public";
+import { and, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { events, public_profiles, result_coauthors, results } from "@/lib/db/schema";
+import { isUuid } from "@/lib/slug";
 import type { PublicProfile, Result } from "@winlab/db";
 import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
@@ -19,12 +22,15 @@ export async function generateMetadata({
   const { slug, id, locale: raw } = await params;
   const locale: Locale = isLocale(raw) ? raw : defaultLocale;
   const dict = await getDictionary(locale);
-  const supabase = createPublicClient();
-  const { data } = await supabase
-    .from("results")
-    .select("title, title_en, summary, header_image")
-    .eq("id", id)
-    .maybeSingle();
+  // Published only: RLS hid drafts from visitors, and a draft's title must
+  // not reach the metadata.
+  const [data] = isUuid(id)
+    ? await db
+        .select({ title: results.title, title_en: results.title_en, summary: results.summary })
+        .from(results)
+        .where(and(eq(results.id, id), eq(results.status, "published")))
+        .limit(1)
+    : [];
   const title = (data ? localizedField(data, "title", locale).value : null) ?? dict.results.meta.fallbackTitle;
   const description =
     data?.summary ?? dict.results.meta.fallbackDescription.replace("{title}", title);
@@ -63,46 +69,46 @@ export default async function EventResultDetailPage({
   const { slug, id, locale: raw } = await params;
   const locale: Locale = isLocale(raw) ? raw : defaultLocale;
   const dict = await getDictionary(locale);
-  const supabase = createPublicClient();
-
-  const { data: published } = await supabase
-    .from("results")
-    .select("*")
-    .eq("id", id)
-    .eq("status", "published")
-    .maybeSingle();
+  const [published] = isUuid(id)
+    ? await db
+        .select()
+        .from(results)
+        .where(and(eq(results.id, id), eq(results.status, "published")))
+        .limit(1)
+    : [];
 
   if (!published) {
     return <ResultDraftFallback slug={slug} id={id} />;
   }
 
+  // The Result overlay narrows content and summary (see packages/db).
   const result = published as Result;
 
-  const [{ data: eventRow }, { data: publisherRow }, { data: coauthorRows }] =
-    await Promise.all([
-      supabase.from("events").select("name, name_en").eq("slug", slug).maybeSingle(),
-      result.author_id
-        ? supabase
-            .from("public_profiles")
-            .select("id, display_name")
-            .eq("id", result.author_id)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-      supabase
-        .from("result_coauthors")
-        .select("user_id")
-        .eq("result_id", result.id),
-    ]);
-
-  let coauthors: PublicProfile[] = [];
-  if (coauthorRows?.length) {
-    const userIds = coauthorRows.map((row) => row.user_id);
-    const { data: profiles } = await supabase
-      .from("public_profiles")
-      .select("id, created_at, updated_at, display_name")
-      .in("id", userIds);
-    coauthors = (profiles ?? []) as PublicProfile[];
-  }
+  const [[eventRow], [publisherRow], coauthors] = await Promise.all([
+    db
+      .select({ name: events.name, name_en: events.name_en })
+      .from(events)
+      .where(and(eq(events.slug, slug), eq(events.status, "published")))
+      .limit(1),
+    result.author_id
+      ? db
+          .select({ id: public_profiles.id, display_name: public_profiles.display_name })
+          .from(public_profiles)
+          .where(eq(public_profiles.id, result.author_id))
+          .limit(1)
+      : Promise.resolve([]),
+    db
+      .select({
+        id: public_profiles.id,
+        created_at: public_profiles.created_at,
+        updated_at: public_profiles.updated_at,
+        display_name: public_profiles.display_name,
+      })
+      .from(result_coauthors)
+      .innerJoin(public_profiles, eq(public_profiles.id, result_coauthors.user_id))
+      .where(eq(result_coauthors.result_id, result.id))
+      .then((rows) => rows as PublicProfile[]),
+  ]);
 
   const publisher: ResultPublisher = publisherRow
     ? { id: publisherRow.id, name: publisherRow.display_name || dict.common.unknownUser }

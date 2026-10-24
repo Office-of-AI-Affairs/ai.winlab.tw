@@ -1,11 +1,9 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-
 /** RFC 4122 UUID (any version) — used to tell a legacy `/announcement/[id]`
  *  URL apart from a slug so the detail route can 301 old links forward. */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export function isUuid(value: string): boolean {
-  return UUID_RE.test(value);
+export function isUuid(value: unknown): value is string {
+  return typeof value === "string" && UUID_RE.test(value);
 }
 
 /**
@@ -13,7 +11,7 @@ export function isUuid(value: string): boolean {
  * whitespace runs to a single hyphen, strip characters that are hostile
  * inside a URL path segment, and keep CJK characters as-is (no
  * transliteration). Mirrors the backfill logic in
- * `supabase/migrations/20260824000001_announcements_slug.sql` — keep the two
+ * `announcement_slug_from_title()` in `drizzle/0001_baseline.sql` — keep the two
  * in sync if this changes.
  *
  * Returns "" for titles that normalize away entirely (e.g. all punctuation);
@@ -44,29 +42,3 @@ export function nextSlugCandidate(base: string, taken: ReadonlySet<string>): str
   return `${base}-${suffix}`;
 }
 
-/**
- * Resolve a unique announcement slug for `title`, checking the live table.
- * Round-trips once per collision (rare in practice — most titles are
- * unique), same collision policy as the migration backfill.
- *
- * `excludeId` lets an update check uniqueness against every *other* row —
- * pass the announcement's own id when re-deriving a slug for an existing
- * draft that never got one.
- */
-export async function generateUniqueAnnouncementSlug(
-  supabase: SupabaseClient,
-  title: string,
-  excludeId?: string,
-): Promise<string> {
-  const base = toAnnouncementSlugBase(title);
-  let candidate = base;
-  let suffix = 1;
-  for (;;) {
-    let query = supabase.from("announcements").select("id").eq("slug", candidate).limit(1);
-    if (excludeId) query = query.neq("id", excludeId);
-    const { data } = await query.maybeSingle();
-    if (!data) return candidate;
-    suffix += 1;
-    candidate = `${base}-${suffix}`;
-  }
-}

@@ -1,6 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { SupabaseClient } from "@supabase/supabase-js";
-
+import type { Viewer } from "@/lib/auth/viewer";
 import { registerAnnouncementTools } from "@/lib/mcp/tools/announcements";
 import { registerCarouselTools } from "@/lib/mcp/tools/carousel";
 import { registerContactTools } from "@/lib/mcp/tools/contacts";
@@ -13,24 +12,20 @@ import { registerRecruitmentTools } from "@/lib/mcp/tools/recruitment";
 import { registerResultTools } from "@/lib/mcp/tools/results";
 import { registerUserTools } from "@/lib/mcp/tools/users";
 
-export function createMcpServer(supabase: SupabaseClient, userId: string) {
-  const server = new McpServer({
-    name: "nycu-ai-office",
-    version: "0.1.0",
-  });
-
-  // Register all tool groups
-  registerImageTools(server, supabase, userId);
-  registerAnnouncementTools(server, supabase, userId);
-  registerInsightTools(server, supabase, userId);
-  registerResultTools(server, supabase, userId);
-  registerRecruitmentTools(server, supabase, userId);
-  registerEventTools(server, supabase);
-  registerContactTools(server, supabase);
-  registerCarouselTools(server, supabase);
-  registerIntroductionTools(server, supabase);
-  registerProfileTools(server, supabase, userId);
-  registerUserTools(server, supabase);
-
+// One server per request (stateless). Tools act as `viewer`; app/mcp/route.ts
+// runs them inside runAsViewer, so the site's permission checks apply.
+export function createMcpServer(viewer: Viewer) {
+  const server = new McpServer({ name: "nycu-ai-office", version: "0.2.0" });
+  registerImageTools(server, viewer);
+  registerAnnouncementTools(server, viewer);
+  registerInsightTools(server, viewer);
+  registerResultTools(server, viewer);
+  registerRecruitmentTools(server);
+  registerEventTools(server, viewer);
+  registerContactTools(server);
+  registerCarouselTools(server);
+  registerIntroductionTools(server);
+  registerProfileTools(server, viewer);
+  registerUserTools(server);
   return server;
 }

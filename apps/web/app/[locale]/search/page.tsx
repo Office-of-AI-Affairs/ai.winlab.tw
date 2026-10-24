@@ -9,7 +9,7 @@ import { groupSearchResults } from "@/lib/search/group-results";
 import { isSearchQueryValid, normalizeSearchQuery } from "@/lib/search/query";
 import { searchResultPath } from "@/lib/search/result-path";
 import type { SearchResultRow, SearchResultType } from "@/lib/search/types";
-import { createPublicClient } from "@/lib/supabase/public";
+import { searchSite } from "@/lib/search/run";
 
 const GROUP_LABEL_KEY: Record<SearchResultType, "groupAnnouncement" | "groupEvent" | "groupResult"> = {
   announcement: "groupAnnouncement",
@@ -45,9 +45,9 @@ export async function generateMetadata({
 /**
  * No-JS / crawler fallback for global search (#45). The cmd/ctrl-K palette
  * (`components/search/site-search-command.tsx`) is the primary interactive
- * surface; this route runs the exact same `search_site()` RPC server-side
- * (cookieless `createPublicClient`, so RLS still gates rows to published
- * content) and renders results directly into the HTML — a plain GET `<form>`
+ * surface; this route runs the exact same `search_site()` function
+ * server-side (it only matches published content) and renders results
+ * directly into the HTML — a plain GET `<form>`
  * works with JavaScript disabled.
  */
 export default async function SearchPage({
@@ -68,9 +68,7 @@ export default async function SearchPage({
 
   let rows: SearchResultRow[] = [];
   if (queryIsValid) {
-    const supabase = createPublicClient();
-    const { data } = await supabase.rpc("search_site", { query, locale });
-    rows = (data ?? []) as SearchResultRow[];
+    rows = await searchSite(query, locale);
   }
   const groups = groupSearchResults(rows);
 

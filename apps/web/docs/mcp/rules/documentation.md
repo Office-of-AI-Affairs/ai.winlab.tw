@@ -19,7 +19,7 @@ When `README.md` is created or updated, it should cover at least:
 - local development commands
 - required environment variables
 - deployment base URL or runtime assumptions when relevant
-- any important integration constraints, such as Supabase or upload behavior
+- any important integration constraints, such as auth or upload behavior
 
 ## When README Must Be Updated
 

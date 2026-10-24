@@ -3,20 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 
 import { isSearchQueryValid, normalizeSearchQuery } from "@/lib/search/query";
-import { createClient } from "@/lib/supabase/client";
 import type { Locale } from "@/lib/i18n/config";
 import type { SearchResultRow } from "@/lib/search/types";
 
 const DEBOUNCE_MS = 250;
 
 /**
- * Debounced `search_site()` RPC call for the cmd/ctrl-K palette. Runs
- * through the browser Supabase client (publishable key, RLS-scoped) — same
- * client every render via `useRef`, matching the project's hook convention
- * (see `isr-page` skill / `useAutoSave`).
+ * Debounced `search_site()` call for the cmd/ctrl-K palette, through
+ * GET /api/search.
  */
 export function useSiteSearch(rawQuery: string, locale: Locale) {
-  const supabaseRef = useRef(createClient());
   const [results, setResults] = useState<SearchResultRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,20 +36,25 @@ export function useSiteSearch(rawQuery: string, locale: Locale) {
       setIsLoading(true);
       setError(null);
 
-      supabaseRef.current
-        .rpc("search_site", { query, locale })
-        .then(({ data, error: rpcError }) => {
-          // A newer request already started — drop this stale response.
-          if (requestId !== requestIdRef.current) return;
-
-          if (rpcError) {
-            setError(rpcError.message);
+      fetch(`/api/search?${new URLSearchParams({ q: query, locale })}`)
+        .then(async (res) => {
+          if (!res.ok) throw new Error(`search failed (${res.status})`);
+          return (await res.json()) as SearchResultRow[];
+        })
+        .then(
+          (rows) => {
+            // A newer request already started — drop this stale response.
+            if (requestId !== requestIdRef.current) return;
+            setResults(rows);
+            setIsLoading(false);
+          },
+          (err: Error) => {
+            if (requestId !== requestIdRef.current) return;
+            setError(err.message);
             setResults([]);
-          } else {
-            setResults((data ?? []) as SearchResultRow[]);
-          }
-          setIsLoading(false);
-        });
+            setIsLoading(false);
+          },
+        );
     }, DEBOUNCE_MS);
 
     return () => clearTimeout(timer);

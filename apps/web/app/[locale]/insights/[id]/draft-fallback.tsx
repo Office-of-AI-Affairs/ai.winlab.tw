@@ -4,12 +4,13 @@ import type { ArticleListItem } from "@/app/[locale]/insights/data";
 import { useAuth } from "@/components/layout/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { createClient } from "@/lib/supabase/client";
+import { getRow } from "@/lib/actions/rows";
+import { getPublicName } from "@/lib/actions/public-profiles";
 import { useT } from "@/lib/i18n/locale-provider";
 import type { Article } from "@winlab/db";
 import type { TocItem } from "@/lib/ui/article";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { InsightArticleClient } from "./article-client";
 
 type State =
@@ -33,7 +34,6 @@ export function InsightDraftFallback({ id }: { id: string }) {
   const { user, isAdmin, isMember, isLoading } = useAuth();
   const t = useT();
   const [state, setState] = useState<State>({ kind: "loading" });
-  const supabaseRef = useRef(createClient());
 
   const canCheck = isAdmin || isMember;
 
@@ -41,11 +41,8 @@ export function InsightDraftFallback({ id }: { id: string }) {
     if (isLoading || !canCheck) return;
     let cancelled = false;
     void (async () => {
-      const { data } = await supabaseRef.current
-        .from("articles")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const result = await getRow("articles", id).catch(() => null);
+      const data = result?.ok ? result.row : null;
       if (cancelled) return;
       if (!data) {
         setState({ kind: "missing" });
@@ -59,13 +56,8 @@ export function InsightDraftFallback({ id }: { id: string }) {
       }
       // Look up author display_name so the byline renders right.
       let authorName: string | null = null;
-      const { data: profile } = await supabaseRef.current
-        .from("public_profiles")
-        .select("display_name")
-        .eq("id", article.author_id)
-        .maybeSingle();
+      authorName = await getPublicName(article.author_id).catch(() => null);
       if (cancelled) return;
-      authorName = profile?.display_name ?? null;
 
       const { renderArticle } = await import("@/lib/ui/rich-text");
       const { estimateReadingTime } = await import("@/lib/ui/reading-time");

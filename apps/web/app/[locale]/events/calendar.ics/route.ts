@@ -1,7 +1,8 @@
 import { buildAllEventsIcs, ICS_RESPONSE_HEADERS } from "@/lib/feeds/events-calendar";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 
-export const revalidate = 600;
+// Reads Postgres, so never prerendered at build; Cache-Control caches it.
+export const dynamic = "force-dynamic";
 
 /** Subscribable calendar of every published event (#46) — one VEVENT per
  *  event, see `lib/feeds/events-calendar.ts` for the all-day-date caveat. */

@@ -1,4 +1,4 @@
-// Pure helpers for scheduled publishing (#47). No Supabase/React imports —
+// Pure helpers for scheduled publishing (#47). No database/React imports —
 // keep this file trivially unit-testable.
 
 export type PublishGate = {
@@ -8,10 +8,9 @@ export type PublishGate = {
 
 /**
  * Whether a row should be visible to an anonymous/public reader right now.
- * Mirrors the RLS predicate on `announcements`
- * (`status = 'published' and (publish_at is null or publish_at <= now())`)
- * — this is belt-and-suspenders for app-level filters in data.ts files, RLS
- * is the actual security boundary.
+ * Same predicate as `liveAnnouncement()` in lib/db/filters.ts
+ * (`status = 'published' and (publish_at is null or publish_at <= now())`),
+ * for rows already in the browser.
  */
 export function isLive(row: PublishGate, now: Date = new Date()): boolean {
   if (row.status !== "published") return false;
@@ -19,15 +18,6 @@ export function isLive(row: PublishGate, now: Date = new Date()): boolean {
   const publishAt = new Date(row.publish_at).getTime();
   if (Number.isNaN(publishAt)) return true;
   return publishAt <= now.getTime();
-}
-
-/**
- * Supabase `.or()` filter string for the same predicate, ANDed onto an
- * existing `.eq("status", "published")` filter by every call site — see
- * app/[locale]/announcement/data.ts for the canonical usage.
- */
-export function livePublishAtFilter(now: Date = new Date()): string {
-  return `publish_at.is.null,publish_at.lte.${now.toISOString()}`;
 }
 
 /**

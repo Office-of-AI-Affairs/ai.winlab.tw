@@ -1,0 +1,25 @@
+# Postgres for ai.winlab.tw, on the Carrel machine `ai` next to the app.
+# Deploy: copy to /opt/ai-db/, put POSTGRES_PASSWORD in /opt/ai-db/.env,
+# then `sudo docker compose up -d`. The app connects with
+# DATABASE_URL=postgres://ai:<password>@127.0.0.1:5432/ai and migrates on boot.
+name: ai-db
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ai
+      POSTGRES_USER: ai
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - postgres:/var/lib/postgresql
+    ports:
+      - 127.0.0.1:5432:5432
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "ai", "-d", "ai"]
+      interval: 5s
+      retries: 20
+
+volumes:
+  postgres:

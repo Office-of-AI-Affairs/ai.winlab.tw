@@ -1,14 +1,12 @@
 import { ContactsAdminPageClient } from "./client";
-import { requireAdminServer } from "@/lib/supabase/require-admin-server";
-import type { Contact } from "@winlab/db";
+import { requireAdmin } from "@/lib/auth/viewer";
+import { db } from "@/lib/db";
+import { contacts } from "@/lib/db/schema";
+import { asc } from "drizzle-orm";
 
 export default async function ContactsAdminPage() {
-  const { supabase } = await requireAdminServer();
-  const { data } = await supabase
-    .from("contacts")
-    .select("*")
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: true });
+  await requireAdmin();
+  const rows = await db.select().from(contacts).orderBy(asc(contacts.sort_order), asc(contacts.created_at));
 
-  return <ContactsAdminPageClient initialContacts={(data as Contact[]) ?? []} />;
+  return <ContactsAdminPageClient initialContacts={rows} />;
 }

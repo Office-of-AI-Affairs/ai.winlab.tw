@@ -2,7 +2,8 @@
 
 ## Project overview
 
-- Stack: Next.js 16 App Router, Supabase, Tailwind CSS v4, shadcn/ui
+- Stack: Next.js 16 App Router, Postgres 18 + Drizzle, Better Auth, Tailwind CSS v4, shadcn/ui
+- Self-hosted on the Carrel machine `ai` (tenant winfra); Postgres runs next to it (`infra/postgres/compose.yaml`)
 - Package manager: `bun`
 - Rich text content stored as Tiptap JSON
 
@@ -11,9 +12,9 @@
 - `bun dev` / `bun build` / `bun start` / `bun lint`
 - `bunx shadcn add <name>`
 - `.env.local`：
-  - Required：`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`
-  - Admin API：`SUPABASE_SERVICE_ROLE_KEY`（`/api/admin/import-users` 用）
-  - CDN opt-in：`NEXT_PUBLIC_CDN_BASE_URL`（見「CDN」段；未設則 `toCdnUrl` no-op）
+  - Required：`DATABASE_URL`、`BETTER_AUTH_URL`（public origin，例如 `https://ai.winlab.tw`）、`BETTER_AUTH_SECRET`
+  - Mail（忘記密碼驗證碼）：`SMTP_HOST`、`SMTP_PORT`、`SMTP_USER`、`SMTP_PASSWORD`、`MAIL_FROM`；dev 用 `MAIL_REDIRECT_TO` 把所有信改寄給自己
+  - MCP revalidate：`WEB_BASE_URL`（machine 上設 `http://127.0.0.1:3000`）、`REVALIDATE_SECRET`
   - Analytics kill switch：`NEXT_PUBLIC_ANALYTICS_DISABLED=1` 關閉 `<AnalyticsBeacon />`（見「Analytics」段）
   - Playwright E2E：`CLAUDE_AGENT_EMAIL` / `CLAUDE_AGENT_PASSWORD` / `CLAUDE_AGENT_USER_ID`（dedicated admin account）
   - Cron：`CRON_SECRET`（gate `/api/cron/publish-scheduled`，未設時該 route 回
@@ -27,25 +28,29 @@
 - `bun run analyze` — bundle analyzer (`ANALYZE=true next build`)
 - Lighthouse baseline + methodology: `perf-audit` skill (`.claude/skills/perf-audit/`)
 
-### Schema regen
+### Schema
 
-- `bun run gen:types` — regenerates `packages/db/src/database.types.ts`
-  from the live project. Requires `SUPABASE_ACCESS_TOKEN` in
-  `apps/web/.env.local` (grab from <https://supabase.com/dashboard/account/tokens>).
-- Single source of truth lives in `packages/db`; consume it via
-  `@winlab/db`, no manual copy needed.
+- Migrations are hand-written SQL in `drizzle/` with `drizzle/meta/_journal.json`;
+  the app applies them on boot (`instrumentation.ts` → `lib/db/migrate.ts`).
+  A new migration = a new numbered file + a journal entry with a larger `when`.
+- `lib/db/schema.ts` mirrors the SQL for typed queries (column names as keys,
+  timestamptz as ISO strings). `packages/db` keeps the row types the
+  components use (`@winlab/db`); keep both in step with the SQL.
+- `0001_baseline.sql` is the Supabase schema as of 2026-10-24 without RLS;
+  `scripts/import-supabase.ts` copied the data over at the cutover.
 
 ## Architecture
 
 - Root layout is **cookieless** — `AuthProvider` hydrates `useAuth()`
-  from the browser Supabase client on mount (see `isr-page` skill)
+  from `GET /api/me` on mount (see `isr-page` skill)
 - `useAuth()`: `user`, `profile`, `isAdmin`, `isVendor`, `isLoading`, `signIn`, `signOut`, `refreshProfile`
 - `NuqsAdapter` in root layout for URL search param state
 - Root layout fetches pinned events through the cached `getPinnedEvents()`
   helper (no cookies) so every downstream page can still ISR
-- Sibling MCP app: `../mcp/` (same monorepo). Shared types/composers in
-  `packages/{db,domain}`. Schema / RLS / admin workflow 改了 → 兩個 app
-  自動跟著 `@winlab/db` + `@winlab/domain`，不用手動同步。
+- MCP lives in this app at `/mcp` (`lib/mcp/`). Better Auth is the OAuth
+  server; tools run as the token's user (`runAsViewer`) through the same
+  server actions and permission rules as the site. Shared composers in
+  `packages/domain`.
 
 ## Components
 
@@ -74,46 +79,49 @@ domains and isn't shadcn output, it goes in `shared/`.
 ## ISR / SSG pattern
 
 Public-facing pages (`/`, `/introduction`, `/announcement`, `/events`,
-`/privacy`, plus detail pages) render statically via a four-piece
-pattern: `page.tsx` (server, cookieless) + `data.ts`
-(`unstable_cache` + `createPublicClient`) + `actions.ts` (Server
+`/privacy`, plus detail pages) use a four-piece pattern: `page.tsx`
+(server, cookieless, rendered per request because the CI build has no
+database) + `data.ts` (`unstable_cache` + Drizzle) + `actions.ts` (Server
 Actions that `updateTag`) + `client.tsx` (admin UI + draft merge via
 `useAuth`). Full playbook, cache-tag inventory, and add-a-new-page
 checklist live in the `isr-page` skill.
 
 ## Auth
 
-| 情境 | 匯入路徑 |
+Postgres has no RLS: every permission rule lives in server code.
+
+| 情境 | 用什麼 |
 |------|----------|
-| Client Component | `@/lib/supabase/client` |
-| Server Component / Route Handler | `@/lib/supabase/server` |
-| Cookieless public read (ISR data.ts) | `@/lib/supabase/public` |
+| Client Component | `useAuth()`；寫入呼叫 server actions（`lib/actions/*`） |
+| Server Component / Route Handler | `getViewer()` / `requireViewer()` / `requireAdmin()` in `lib/auth/viewer.ts` |
+| Server action | `actor(...roles)`（throws Forbidden），或 `lib/actions/rows.ts` 的 generic row actions |
+| 表格權限 | `lib/permissions/rows.ts`（正式站 RLS 2026-10-24 逐條翻譯；update 前後都檢查） |
+| Cookieless public read (data.ts) | Drizzle + `liveAnnouncement()` 等 filter（`lib/db/filters.ts`） |
 
 - 未登入 → 只看 `status: published` 且已到 `publish_at`（announcements 限定，見
   「Editorial workflow」段）
 - 登入非 admin/editor → 自己的草稿 + 所有已上線 published
 - admin → 完整讀寫（`profile.role === 'admin'`）
 - editor → `profile.role === 'editor'`；能建立/編輯 announcements + results 的
-  **draft**，不能設 `status: 'published'`、不能改已 published 的 row（RLS
-  `WITH CHECK` 擋，不只是 UI 隱藏），無 users/carousel/contacts/introduction
+  **draft**，不能設 `status: 'published'`、不能改已 published 的 row（row
+  actions 在同一交易鎖列後檢查前後狀態，不只是 UI 隱藏），無 users/carousel/contacts/introduction
   管理權；`useAuth().isEditor`
 - vendor → 被 admin 指派為**某筆 recruitment 的 owner** 後才有權限（`competition_owners` pivot）
   - Owner = 能編輯該筆 recruitment + 查看應徵者
   - **只有 admin 能管理 owner 清單**（新增/移除）
   - 同一筆 recruitment 可有多名 owner（同企業多人共管）
-- `isRecruitmentOwner()` in `lib/supabase/check-recruitment-owner.ts` — client-callable
+- `isRecruitmentOwner()` in `lib/data/recruitment.ts` — server only
 - Admin gate：
   - ISR 客戶端：`useAuth().isAdmin`
-  - Server Component edit 頁：`requireAdminServer()` in
-    `lib/supabase/require-admin-server.ts` — 非 admin 自動 redirect；
+  - Server Component edit 頁：`requireAdmin()` in
+    `lib/auth/viewer.ts` — 非 admin 自動 redirect；
     `/carousel`、`/contacts`、`/introduction/edit`、
     `/settings/users`、各 `[id]/edit` 都用它
   - Inline view+edit 共用同一條路由（`?mode=edit` 透過
     `useEditMode` 切換）：`/privacy` 已採此 pattern，由 `useAuth().isAdmin`
     + `RichTextSurface` 在客戶端動態載入 Tiptap，不污染訪客 bundle
-  - `getViewer()` 只剩 `/settings/page.tsx` 與 `/profile/[id]/page.tsx`
 
-## Data model (`lib/supabase/types.ts`)
+## Data model (`packages/db/src/types.ts`, `lib/db/app-schema.ts`)
 
 - **Announcement** — Tiptap JSON，`status: draft|published`，`event_id`（null = 全域），
   `publish_at`（選填 timestamptz，排程發布，見「Editorial workflow」段）
@@ -144,31 +152,32 @@ Conventions:
 
 ## Database & storage
 
-- Migrations: `supabase/migrations/`，依序在 SQL Editor 執行，所有表 RLS
-- Buckets — see `supabase-storage` skill for the full layout, RLS, and
-  maintenance scripts:
-  - `announcement-images` (public) — visitor-facing images, WebP-first
-  - `resumes` (private) — per-user folders, session-gated download via
-    `app/profile/[id]/resume/route.ts`
-- Maintenance scripts in `scripts/` (gitignored, force-added):
-  - `recompress-images.ts` — direct-column URLs
-  - `recompress-tiptap-images.ts` — jsonb Tiptap embeds
-  - `cleanup-orphans.ts` — DB-unreferenced storage objects
+- Migrations: `drizzle/`（見「Schema」段），開機時自動套用
+- Files live in Postgres (`files` table, `bytea`), two buckets:
+  - `announcement-images` (public) — served by `app/files/[bucket]/[...path]`
+    at `/files/announcement-images/<path>`; rows and Tiptap JSON store that
+    path. Uploads: `POST /api/files` (`lib/files/upload.ts`: type by magic
+    bytes, no SVG, folder rules from the old storage policy)
+  - `resumes` (private) — `<userId>/...`; any signed-in user downloads via
+    `app/[locale]/profile/[id]/resume/route.ts`; MCP gets HMAC-signed links
+    (`lib/files/signed.ts`)
+- `/files/*` has its own CSP (`sandbox`) in `next.config.ts`
+- Backups: `infra/postgres/backup.sh`（pg_dump，見檔內說明）
 
 ## Editorial workflow (#47)
 
 - **Scheduled publishing** — `announcements.publish_at` (nullable
   timestamptz). A row is "live" for anon/authenticated non-privileged reads
   when `status = 'published' and (publish_at is null or publish_at <= now())`
-  — enforced in RLS (the actual boundary, so the MCP app inherits it too;
-  see `lib/scheduling.ts`'s `isLive`/`livePublishAtFilter` for the app-level
-  mirror used by every public `data.ts`/feed/sitemap read). `results` and
+  — enforced by `liveAnnouncement()` in `lib/db/filters.ts`, used by every
+  public `data.ts`/feed/sitemap read, and by the announcements read rule in
+  `lib/permissions/rows.ts` (MCP goes through the same rule). `results` and
   `events` deliberately don't get this column — no scheduling need there yet.
   - Cache freshness: `GET /api/cron/publish-scheduled` (`CRON_SECRET`-gated)
     finds announcements whose `publish_at` passed in the last 10 minutes and
     invalidates the `announcements-published` ISR tag. Without it a scheduled
     post can sit invisible on the cached list/home page for up to the 1h
-    `revalidate` window even though RLS already allows reading it.
+    `revalidate` window even though the filter already lets it through.
     `/events/[slug]` never needed this — that route is already `ƒ Dynamic`
     (see the `isr-page` skill), so scheduling reflects there immediately.
   - **No scheduler currently calls that route.** It was a Vercel Cron when
@@ -179,14 +188,14 @@ Conventions:
     at all for two weeks. No announcement uses `publish_at` yet, so the
     schedule was invalidating nothing while blocking every deploy; `vercel.json`
     was deleted rather than downgraded to daily. Scheduled publishing still
-    works (RLS is the boundary); the only cost is cached pages lagging go-live
+    works (the filter is the boundary); the only cost is cached pages lagging go-live
     by up to 1h. To restore sub-hour freshness, call the route from a
     scheduler (for example a systemd timer on the Carrel machine) with the
     `CRON_SECRET` bearer token.
 - **Version history** — `content_revisions` (table_name, row_id, snapshot
   jsonb, changed_by, created_at). An `AFTER UPDATE` trigger on
   `announcements` + `results` snapshots the OLD row's editorial fields
-  before every real change. Admin/editor-only read via RLS. The
+  before every real change. Admin/editor-only read (`listRevisions`). The
   announcement editor's History panel lists revisions + a one-click
   "restore" (an UPDATE — which itself creates a new revision, so a restore
   can always be undone). No diff view by design.
@@ -194,25 +203,15 @@ Conventions:
   changed_fields, created_at), populated by a generic `AFTER INSERT OR
   UPDATE OR DELETE` trigger on `announcements`, `results`, `events`,
   `carousel_slides`, `organization_members`. Admin-only read
-  (`requireAdminServer()`) at `/settings/audit`. Both trigger functions are
-  `SECURITY DEFINER` with a hard-coded `search_path` — no client INSERT
-  policy exists on either table, every row comes from the trigger.
+  (`requireAdmin()`) at `/settings/audit`. Every row comes from the
+  triggers; the actor is `app_user_id()`, which writes set through
+  `asUser(userId, ...)` in `lib/db/index.ts`.
 - **`editor` role** — new `profiles.role` value. Can create/edit *draft*
-  announcements + results; RLS `WITH CHECK` blocks setting
-  `status = 'published'` and blocks touching a row that's already
-  published — this is a hard DB-level boundary, not just a hidden button,
-  so it also applies to writes through the MCP app (user-JWT-bound client)
-  and any future reader/writer. No access to users/carousel/contacts/
+  announcements + results; the row actions refuse setting
+  `status = 'published'` and touching a row that's already published —
+  checked on the server, not just a hidden button, so it also applies to
+  MCP tools. No access to users/carousel/contacts/
   introduction management. `useAuth().isEditor`.
-
-## CDN
-
-- `cdn.winlab.tw` 前擋 Supabase Storage 公開桶，由 `infra/cdn-worker/`
-  Cloudflare Worker 代理 + edge cache，省 Supabase egress
-- `toCdnUrl()` in `lib/cdn.ts` — 把 Supabase public storage URL 改寫成
-  CDN domain；未設 `NEXT_PUBLIC_CDN_BASE_URL` 就是 no-op，可先 deploy
-  程式再切流量
-- Setup 步驟：`cdn-deploy` skill
 
 ## Pages
 
@@ -224,9 +223,9 @@ Conventions:
 
 **帳號** `/account`、`/profile/[id]`（vendor 可見 My Events）
 
-**Auth flow** `/login`、`/forgot-password`、`/reset-password`（8 位 OTP，避開企業 link scanner）、`/auth/callback`
+**Auth flow** `/login`、`/forgot-password`（8 位驗證碼，避開企業 link scanner）；`/reset-password` 與 `/auth/callback` 只把舊信件連結導到 `/forgot-password`；MCP 授權同意頁 `/oauth/consent`
 
-**Admin** `/settings`、`/settings/users`、`/settings/audit`（admin-only 稽核紀錄，見「Editorial workflow」段）、`/api/admin/import-users`（server-only，需 `SUPABASE_SERVICE_ROLE_KEY`）
+**Admin** `/settings`、`/settings/users`、`/settings/audit`（admin-only 稽核紀錄，見「Editorial workflow」段）（使用者 CRUD 與 CSV 匯入：`lib/actions/users.ts`）
 
 **Design system** `/design` — shadcn gallery + 專案 UI patterns 展示
 
@@ -246,7 +245,7 @@ Hooks own state + logic，components 只負責 UI render。
 - `useEventActions` — event detail: create content, toggle pins
 
 Conventions:
-- All hooks 用 `useRef(createClient())` 穩定 Supabase reference
+- 寫入一律呼叫 server actions；hooks 不直接碰資料庫
 - Callback props（`uploadFn`, `onBeforeSave` 等）用 `useRef` 穩定（同 `useAutoSave` 的 `onSaveRef` 模式）
 - All CRUD operations must show `toast.error` on failure
 - Edit pages 接收 server-passed `initialData`（page.tsx fetch → client props），不做 client-side fetch
@@ -306,15 +305,14 @@ Quick reminders that bite during implementation (full rationale in
 **Stack notes**: shadcn/ui in `components/ui/`, Tailwind v4 in
 `app/globals.css` (no `tailwind.config.js`), `next-themes` defaultTheme
 `light`. `card.tsx` stays a plain `<div>` Server Component; `data-slot`
-is the standard selector hook; `next/image` allows `*.supabase.co` and
-`cdn.winlab.tw`.
+is the standard selector hook; `next/image` serves `/files/...` locally
+and allows `ai.winlab.tw/files/announcement-images/**` for absolute URLs.
 
 ## Analytics
 
-- First-party, cookieless pageview + web-vitals beacon for public
-  ISR/static pages (they're served from the CDN and never hit the
-  Next.js server, so they produce no server-side OTel telemetry on their
-  own — see `instrumentation.ts`)
+- First-party, cookieless pageview + web-vitals beacon for public pages
+  (client-side vitals and navigations that server spans don't capture —
+  see `instrumentation.ts`)
 - `<AnalyticsBeacon />` (`components/layout/analytics-beacon.tsx`) mounted once
   in the root layout: pageview on load + every App Router navigation
   (`usePathname` effect), web-vitals via `useReportWebVitals`

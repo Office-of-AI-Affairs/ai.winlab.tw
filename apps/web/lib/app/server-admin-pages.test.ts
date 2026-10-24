@@ -42,12 +42,12 @@ describe("server admin page contracts", () => {
   test("carousel, contacts, and settings users pages are server-gated", () => {
     for (const content of [carouselPage, contactsPage, settingsUsersPage]) {
       assert.ok(!content.includes('"use client"'))
-      assert.ok(content.includes("requireAdminServer()"))
+      assert.ok(content.includes("requireAdmin()"))
     }
   })
 
   test("dedicated admin guard helper and client components exist", () => {
-    assert.ok(existsSync(resolve(process.cwd(), "lib/supabase/require-admin-server.ts")))
+    assert.ok(existsSync(resolve(process.cwd(), "lib/auth/viewer.ts")))
     assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/carousel/client.tsx")))
     assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/contacts/client.tsx")))
     assert.ok(existsSync(resolve(process.cwd(), "app/[locale]/settings/users/client.tsx")))
@@ -87,18 +87,17 @@ describe("server admin page contracts", () => {
     // Pages excluded from this list have moved to cookieless cached fetchers
     // (see "statically cached public pages" test below). Anything still
     // branching on role server-side must keep using getViewer().
-    assert.ok(existsSync(resolve(process.cwd(), "lib/supabase/get-viewer.ts")))
+    assert.ok(existsSync(resolve(process.cwd(), "lib/auth/viewer.ts")))
     for (const content of [settingsPage]) {
-      assert.ok(content.includes('from "@/lib/supabase/get-viewer"'))
-      assert.ok(content.includes("getViewer(") || content.includes("await getViewer("))
-      assert.ok(!content.includes('.from("profiles").select("role")'))
+      assert.ok(content.includes('from "@/lib/auth/viewer"'))
+      assert.ok(content.includes("requireAdmin("))
     }
   })
 
-  test("statically cached public pages fetch via cookieless cached helpers", () => {
-    // Contract: pages that can safely render the same HTML for every visitor
-    // fetch from app/<route>/data.ts helpers wrapped in unstable_cache,
-    // using createPublicClient — never getViewer(). Admin-only UI hydrates
+  test("public pages fetch via cookieless cached helpers", () => {
+    // Contract: pages that render the same HTML for every visitor fetch from
+    // app/<route>/data.ts helpers wrapped in unstable_cache, reading Postgres
+    // through Drizzle — never getViewer(). Admin-only UI hydrates
     // client-side inside the matching client component.
     const cases = [
       { page: organizationPage, route: "introduction", tags: ["introduction", "organization-members"] },
@@ -114,7 +113,7 @@ describe("server admin page contracts", () => {
       const data = readFileSync(resolve(process.cwd(), `app/[locale]/${route}/data.ts`), "utf8")
       assert.ok(data.includes('from "next/cache"'))
       assert.ok(data.includes("unstable_cache"))
-      assert.ok(data.includes('from "@/lib/supabase/public"'))
+      assert.ok(data.includes('from "@/lib/db"'))
       for (const tag of tags) {
         assert.ok(data.includes(`tags: ["${tag}"]`), `${route}/data.ts must declare tag ${tag}`)
       }
@@ -162,7 +161,8 @@ describe("server admin page contracts", () => {
       organizationEditPage,
     ]) {
       assert.ok(!content.includes('"use client"'))
-      assert.ok(content.includes('from "@/lib/supabase/require-admin-server"'))
+      assert.ok(content.includes('from "@/lib/auth/viewer"'))
+      assert.ok(content.includes("requireAdmin()"))
       assert.ok(content.includes('from "./client"'))
       assert.ok(!content.includes("useAuth("))
       assert.ok(!content.includes("useEffect("))
@@ -238,18 +238,13 @@ describe("server admin page contracts", () => {
 
   test("root layout stays cookieless so downstream pages can SSG/ISR", () => {
     // Layout must not read cookies / auth — otherwise every page gets poisoned
-    // into dynamic rendering. AuthProvider hydrates from the browser Supabase
-    // client instead.
+    // into dynamic rendering. AuthProvider hydrates from /api/me instead.
     assert.ok(rootLayout.includes("<AuthProvider"))
     assert.ok(!rootLayout.includes('from "@/lib/supabase/server"'))
     assert.ok(!rootLayout.includes("auth.getUser()"))
     assert.ok(!rootLayout.includes("initialUser={"))
     assert.ok(!rootLayout.includes("initialProfile={"))
-
-    // AuthProvider still supports seeded props (optional) for anywhere that
-    // wants to hand-off a pre-fetched user — layout just doesn't use them.
-    assert.ok(authProvider.includes("initialUser?: User | null"))
-    assert.ok(authProvider.includes("initialProfile?: Profile | null"))
+    assert.ok(authProvider.includes('fetch("/api/me"'))
   })
 
   test("homepage is statically renderable with no server-side auth dependency", () => {

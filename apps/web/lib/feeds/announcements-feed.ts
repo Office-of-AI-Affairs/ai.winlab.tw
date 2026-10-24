@@ -2,8 +2,10 @@ import { buildRssFeed, type RssItemInput } from "@/lib/feeds/rss";
 import { localePrefix, type Locale } from "@/lib/i18n/config";
 import { localizedField } from "@/lib/i18n/localized-field";
 import { SITE_URL } from "@/lib/site";
-import { livePublishAtFilter } from "@/lib/scheduling";
-import { createPublicClient } from "@/lib/supabase/public";
+import { and, desc, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { liveAnnouncement } from "@/lib/db/filters";
+import { announcements as announcementsTable, events } from "@/lib/db/schema";
 
 const CHANNEL_TITLE: Record<Locale, string> = {
   "zh-TW": "人工智慧專責辦公室 公告",
@@ -34,33 +36,28 @@ const CHANNEL_LANGUAGE: Record<Locale, string> = {
  * between locales; the underlying announcement set is identical.
  */
 export async function buildAnnouncementsRssXml(locale: Locale): Promise<string> {
-  const supabase = createPublicClient();
-
-  const { data: announcements } = await supabase
-    .from("announcements")
-    .select("id, slug, title, title_en, date, category, event_id, updated_at")
-    .eq("status", "published")
-    .or(livePublishAtFilter())
-    .order("date", { ascending: false })
+  const announcements = await db
+    .select({
+      slug: announcementsTable.slug,
+      title: announcementsTable.title,
+      title_en: announcementsTable.title_en,
+      date: announcementsTable.date,
+      category: announcementsTable.category,
+      event_slug: events.slug,
+    })
+    .from(announcementsTable)
+    // Only published events: a live announcement in a draft event links
+    // to /announcement/<slug>, as it did when RLS hid the event.
+    .leftJoin(events, and(eq(events.id, announcementsTable.event_id), eq(events.status, "published")))
+    .where(liveAnnouncement())
+    .orderBy(desc(announcementsTable.date))
     .limit(30);
 
-  const eventIds = Array.from(
-    new Set((announcements ?? []).map((a) => a.event_id).filter(Boolean)),
-  ) as string[];
-  let slugMap: Record<string, string> = {};
-  if (eventIds.length) {
-    const { data: events } = await supabase
-      .from("events")
-      .select("id, slug")
-      .in("id", eventIds);
-    slugMap = Object.fromEntries((events ?? []).map((e) => [e.id, e.slug]));
-  }
-
   const prefix = localePrefix(locale);
-  const items: RssItemInput[] = (announcements ?? []).map((a) => {
+  const items: RssItemInput[] = announcements.map((a) => {
     const url =
-      a.event_id && slugMap[a.event_id]
-        ? `${SITE_URL}${prefix}/events/${slugMap[a.event_id]}/announcements/${encodeURIComponent(a.slug)}`
+      a.event_slug
+        ? `${SITE_URL}${prefix}/events/${a.event_slug}/announcements/${encodeURIComponent(a.slug)}`
         : `${SITE_URL}${prefix}/announcement/${encodeURIComponent(a.slug)}`;
     return {
       title: localizedField(a, "title", locale).value,

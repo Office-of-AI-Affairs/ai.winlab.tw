@@ -14,7 +14,7 @@ This document captures the coding style already visible in the repository and sh
 
 - Use descriptive verb-based names for actions: `createMcpServer`, `registerImageTools`, `verifyPkce`.
 - Name registration functions as `register<Domain>Tools`.
-- Name Supabase helpers by capability, for example `createClientWithToken` and `createServiceClient`.
+- Name helpers by capability, for example `runAsViewer` and `uploadImageFile`.
 - Keep constant names uppercase when they are static configuration values, such as `BUCKET` or `MAX_SIZE_BYTES`.
 
 ## Functions and Modules
@@ -39,13 +39,10 @@ This document captures the coding style already visible in the repository and sh
 - Keep route handlers deterministic and easy to read.
 - Use `export const dynamic = "force-dynamic";` only where runtime behavior requires it.
 
-## Supabase Conventions
+## Data access
 
-- Use the correct client for the context:
-  - bearer-token scoped access for user-authenticated requests
-  - service-role access only when truly required
-- Keep Supabase table, storage, and auth interactions close to the domain they serve.
-- Reuse generated types from `lib/supabase/types.ts` instead of hand-writing duplicate shapes when types are available.
+- Tools read and write through `lib/actions/*` and `lib/data/*`; add a server action there before querying from a tool.
+- Reuse row types from `@winlab/db` and the schema in `lib/db/schema.ts` instead of hand-writing duplicate shapes.
 
 ## Comments and Complexity
 

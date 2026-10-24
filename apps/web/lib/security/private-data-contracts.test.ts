@@ -3,15 +3,10 @@ import { existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { describe, test } from "node:test"
 
-const migration = readFileSync(
-  resolve(
-    process.cwd(),
-    "supabase/migrations/20260321000001_split_public_private_profile_recruitment.sql"
-  ),
-  "utf8"
-)
+const baseline = readFileSync(resolve(process.cwd(), "drizzle/0001_baseline.sql"), "utf8")
 const profilePage = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/page.tsx"), "utf8")
 const profileLayout = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/layout.tsx"), "utf8")
+const profileData = readFileSync(resolve(process.cwd(), "lib/data/profile.ts"), "utf8")
 const eventPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/page.tsx"), "utf8")
 const eventData = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/data.ts"), "utf8")
 const eventResultPage = readFileSync(
@@ -25,27 +20,24 @@ const eventRecruitmentDetailPage = readFileSync(
 const recruitmentDialog = readFileSync(resolve(process.cwd(), "components/events/recruitment-dialog.tsx"), "utf8")
 
 describe("private data contracts", () => {
-  test("migration splits public profile reads away from private profile fields", () => {
-    assert.ok(migration.includes("create table if not exists public.public_profiles"))
-    assert.ok(migration.includes('drop policy if exists "Anyone can read profiles" on public.profiles;'))
-    assert.ok(migration.includes('create policy "Anyone can read public_profiles"'))
-  })
-
-  test("migration moves private recruitment fields into a gated table", () => {
-    assert.ok(migration.includes("create table if not exists public.competition_private_details"))
-    assert.ok(migration.includes("drop column if exists positions"))
-    assert.ok(migration.includes("drop column if exists application_method"))
-    assert.ok(migration.includes('create policy "Authenticated can read competition_private_details"'))
-    assert.ok(!migration.includes('create policy "Public read competition_private_details"'))
+  test("the schema keeps public profile fields apart from private ones", () => {
+    assert.ok(baseline.includes('CREATE TABLE IF NOT EXISTS "public"."public_profiles"'))
+    assert.ok(baseline.includes('CREATE TABLE IF NOT EXISTS "public"."competition_private_details"'))
+    // public_profiles has no phone column: the private row stays private.
+    const publicProfiles = baseline.slice(baseline.indexOf('"public"."public_profiles" ('))
+    assert.ok(!publicProfiles.slice(0, publicProfiles.indexOf(");")).includes('"phone"'))
   })
 
   test("public profile reads no longer query private profile rows", () => {
-    assert.ok(profilePage.includes('.from("public_profiles")'))
-    assert.ok(profileLayout.includes('.from("public_profiles")'))
+    assert.ok(profilePage.includes(".from(public_profiles)"))
+    assert.ok(profileLayout.includes(".from(public_profiles)"))
+    // The private profiles row is read only behind mayReadPrivateProfile.
+    assert.ok(profileData.includes("mayReadPrivateProfile(viewer, id)"))
     // The /events/[slug] page moved its data fetches into data.ts for ISR.
     // Contract still holds: public reads must hit public_profiles.
-    assert.ok(eventData.includes('.from("public_profiles")'))
-    assert.ok(eventResultPage.includes('.from("public_profiles")'))
+    assert.ok(eventData.includes("public_profiles.display_name"))
+    assert.ok(!eventData.includes("profiles.phone"))
+    assert.ok(eventResultPage.includes("public_profiles.display_name"))
   })
 
   test("teams subsystem is fully removed", () => {
@@ -64,7 +56,12 @@ describe("private data contracts", () => {
   test("recruitment pages fetch summary rows separately from private details", () => {
     assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/recruitment/page.tsx")))
     assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/recruitment/[id]/page.tsx")))
-    assert.ok(eventRecruitmentDetailPage.includes('.from("competition_private_details")'))
-    assert.ok(recruitmentDialog.includes('.from("competition_private_details")'))
+    // Private details are read and written only behind the server checks.
+    const recruitmentData = readFileSync(resolve(process.cwd(), "lib/data/recruitment.ts"), "utf8")
+    const recruitmentActions = readFileSync(resolve(process.cwd(), "lib/actions/recruitment.ts"), "utf8")
+    assert.ok(eventRecruitmentDetailPage.includes("getRecruitmentPageData("))
+    assert.ok(recruitmentData.includes(".from(competition_private_details)"))
+    assert.ok(recruitmentDialog.includes("saveRecruitment("))
+    assert.ok(recruitmentActions.includes("isRecruitmentOwner(viewer.id, input.id)"))
   })
 })

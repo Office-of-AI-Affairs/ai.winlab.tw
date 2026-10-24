@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
+import { addCoauthor as addCoauthorAction, removeCoauthor as removeCoauthorAction, searchProfiles } from "@/lib/actions/results";
 import { useT } from "@/lib/i18n/locale-provider";
 import type { PublicProfile } from "@winlab/db";
 import { Loader2, Search, UserPlus, X } from "lucide-react";
@@ -26,7 +26,6 @@ export function CoauthorEditor({
   onCoauthorsChange,
 }: Props) {
   const t = useT();
-  const supabaseRef = useRef(createClient());
   const [coauthors, setCoauthorsState] = useState<PublicProfile[]>(initialCoauthors);
   const onCoauthorsChangeRef = useRef(onCoauthorsChange);
   useEffect(() => {
@@ -60,12 +59,8 @@ export function CoauthorEditor({
       return;
     }
     setSearching(true);
-    const { data } = await supabaseRef.current
-      .from("public_profiles")
-      .select("id, created_at, updated_at, display_name")
-      .ilike("display_name", `%${q.trim()}%`)
-      .limit(10);
-    const filtered = (data ?? []).filter(
+    const data = await searchProfiles(q).catch(() => []);
+    const filtered = data.filter(
       (p) => p.id !== authorId && !coauthorIds.has(p.id)
     ) as PublicProfile[];
     setResults(filtered);
@@ -96,10 +91,8 @@ export function CoauthorEditor({
 
   async function addCoauthor(profile: PublicProfile) {
     setAdding(profile.id);
-    const { error } = await supabaseRef.current
-      .from("result_coauthors")
-      .insert({ result_id: resultId, user_id: profile.id });
-    if (error) {
+    const result = await addCoauthorAction(resultId, profile.id).catch(() => null);
+    if (!result?.ok) {
       toast.error(t.coauthor.addError);
     } else {
       setCoauthors((prev) => [...prev, profile]);
@@ -117,12 +110,8 @@ export function CoauthorEditor({
 
   async function removeCoauthor(userId: string) {
     setRemoving(userId);
-    const { error } = await supabaseRef.current
-      .from("result_coauthors")
-      .delete()
-      .eq("result_id", resultId)
-      .eq("user_id", userId);
-    if (error) {
+    const result = await removeCoauthorAction(resultId, userId).catch(() => null);
+    if (!result?.ok) {
       toast.error(t.coauthor.removeError);
     } else {
       setCoauthors((prev) => prev.filter((c) => c.id !== userId));

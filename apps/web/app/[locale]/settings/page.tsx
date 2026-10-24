@@ -1,10 +1,9 @@
 import { SettingsMenu } from "@/components/admin/settings-menu";
 import { PageShell } from "@/components/shared/page-shell";
-import { getViewer } from "@/lib/supabase/get-viewer";
+import { requireAdmin } from "@/lib/auth/viewer";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { FileText, Image, ScrollText, Users } from "lucide-react";
-import { redirect } from "next/navigation";
 
 export default async function SettingsPage({
   params,
@@ -16,9 +15,7 @@ export default async function SettingsPage({
   const dict = await getDictionary(locale);
   const settings = dict.admin.settings;
 
-  const { user, isAdmin } = await getViewer();
-  if (!user) redirect("/login");
-  if (!isAdmin) redirect("/");
+  await requireAdmin();
 
   const items = [
     {

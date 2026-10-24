@@ -4,7 +4,6 @@ import { describe, test } from "node:test";
 import {
   fromDatetimeLocalValue,
   isLive,
-  livePublishAtFilter,
   toDatetimeLocalValue,
 } from "@/lib/scheduling";
 
@@ -48,16 +47,6 @@ describe("isLive", () => {
     assert.equal(
       isLive({ status: "published", publish_at: "not-a-date" }, now),
       true,
-    );
-  });
-});
-
-describe("livePublishAtFilter", () => {
-  test("produces a Supabase .or() filter string pinned to the given instant", () => {
-    const now = new Date("2026-08-24T12:00:00.000Z");
-    assert.equal(
-      livePublishAtFilter(now),
-      "publish_at.is.null,publish_at.lte.2026-08-24T12:00:00.000Z",
     );
   });
 });

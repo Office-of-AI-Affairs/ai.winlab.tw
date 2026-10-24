@@ -22,7 +22,23 @@ export default function LoginPage() {
     setError(null);
     setIsLoading(true);
     const formData = new FormData(e.currentTarget);
-    const result = await signIn(formData.get("email") as string, formData.get("password") as string);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    // An MCP client sent the user here with a signed query (sig=...): sign
+    // in through the OAuth-aware client so the authorization resumes.
+    if (new URLSearchParams(window.location.search).has("sig")) {
+      const { oauthAuthClient } = await import("@/lib/auth/oauth-client");
+      const { data, error: signInError } = await oauthAuthClient.signIn.email({ email, password });
+      const next = (data as { url?: string } | null)?.url;
+      if (signInError || !next) {
+        setError(signInError?.code ?? "sign_in_failed");
+        setIsLoading(false);
+        return;
+      }
+      window.location.href = next;
+      return;
+    }
+    const result = await signIn(email, password);
     if (result.error) setError(result.error);
     setIsLoading(false);
   }

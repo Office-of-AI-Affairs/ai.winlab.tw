@@ -1,5 +1,7 @@
-import { createPublicClient } from "@/lib/supabase/public";
-import { livePublishAtFilter } from "@/lib/scheduling";
+import { and, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { liveAnnouncement } from "@/lib/db/filters";
+import { announcements, events } from "@/lib/db/schema";
 import type { Announcement } from "@winlab/db";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
@@ -22,30 +24,20 @@ function decodeParam(value: string): string {
   }
 }
 
-async function findAnnouncement(
-  supabase: ReturnType<typeof createPublicClient>,
-  eventId: string,
-  param: string,
-): Promise<Announcement | null> {
-  const { data: bySlug } = await supabase
-    .from("announcements")
-    .select("*")
-    .eq("event_id", eventId)
-    .eq("status", "published")
-    .or(livePublishAtFilter())
-    .eq("slug", param)
-    .maybeSingle();
-  if (bySlug) return bySlug as Announcement;
+async function findAnnouncement(eventId: string, param: string): Promise<Announcement | null> {
+  const [bySlug] = await db
+    .select()
+    .from(announcements)
+    .where(and(eq(announcements.event_id, eventId), liveAnnouncement(), eq(announcements.slug, param)))
+    .limit(1);
+  if (bySlug) return bySlug;
   if (!isUuid(param)) return null;
-  const { data: byId } = await supabase
-    .from("announcements")
-    .select("*")
-    .eq("event_id", eventId)
-    .eq("status", "published")
-    .or(livePublishAtFilter())
-    .eq("id", param)
-    .maybeSingle();
-  return (byId as Announcement | null) ?? null;
+  const [byId] = await db
+    .select()
+    .from(announcements)
+    .where(and(eq(announcements.event_id, eventId), liveAnnouncement(), eq(announcements.id, param)))
+    .limit(1);
+  return byId ?? null;
 }
 
 export default async function Image({
@@ -57,23 +49,19 @@ export default async function Image({
   const id = decodeParam(rawId);
   const locale: Locale = isLocale(raw) ? raw : defaultLocale;
   const dict = await getDictionary(locale);
-  const supabase = createPublicClient();
-
-  const eventRes = await supabase
-    .from("events")
-    .select("id, cover_image")
-    .eq("slug", slug)
-    .maybeSingle();
-  const announcement = eventRes.data
-    ? await findAnnouncement(supabase, eventRes.data.id, id)
-    : null;
+  const [event] = await db
+    .select({ id: events.id, cover_image: events.cover_image })
+    .from(events)
+    .where(and(eq(events.slug, slug), eq(events.status, "published")))
+    .limit(1);
+  const announcement = event ? await findAnnouncement(event.id, id) : null;
 
   const title = announcement
     ? localizedField(announcement, "title", locale).value
     : dict.announcement.meta.fallbackTitle;
   const coverImageUrl =
     (announcement ? extractFirstImage(announcement.content as Record<string, unknown> | null) : null) ??
-    eventRes.data?.cover_image ??
+    event?.cover_image ??
     null;
 
   return renderOgImage({

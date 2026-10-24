@@ -5,10 +5,10 @@ import { InsightCard } from "@/components/insights/insight-card";
 import { PageShell } from "@/components/shared/page-shell";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n/locale-provider";
-import { createClient } from "@/lib/supabase/client";
+import { insertRow, listRows } from "@/lib/actions/rows";
 import { Loader2, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { ArticleListItem } from "./data";
 
@@ -20,7 +20,6 @@ export function InsightsPageClient({
   const router = useRouter();
   const t = useT();
   const { user, profile, isAdmin, isMember } = useAuth();
-  const supabaseRef = useRef(createClient());
   const [isCreating, setIsCreating] = useState(false);
   const [drafts, setDrafts] = useState<ArticleListItem[]>([]);
 
@@ -30,13 +29,10 @@ export function InsightsPageClient({
     if (!canWrite) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabaseRef.current
-        .from("articles")
-        .select("*")
-        .eq("status", "draft")
-        .order("created_at", { ascending: false });
+      const rows = (await listRows("articles", { status: "draft" }, [
+        { column: "created_at", ascending: false },
+      ])) as ArticleListItem[];
       if (cancelled) return;
-      const rows = (data as ArticleListItem[] | null) ?? [];
       const ownName = profile?.display_name ?? null;
       setDrafts(
         rows.map((r) => ({
@@ -62,22 +58,18 @@ export function InsightsPageClient({
   const handleCreate = async () => {
     if (!user?.id || !canWrite) return;
     setIsCreating(true);
-    const { data, error } = await supabaseRef.current
-      .from("articles")
-      .insert({
-        author_id: user.id,
-        title: t.insights.newTitle,
-        content: {},
-        status: "draft",
-      })
-      .select()
-      .single();
-    if (error) {
+    const result = await insertRow("articles", {
+      author_id: user.id,
+      title: t.insights.newTitle,
+      content: {},
+      status: "draft",
+    }).catch(() => null);
+    if (!result?.ok) {
       toast.error(t.common.createFailed);
       setIsCreating(false);
       return;
     }
-    router.push(`/insights/${data.id}?mode=edit`);
+    router.push(`/insights/${result.row.id}?mode=edit`);
   };
 
   return (

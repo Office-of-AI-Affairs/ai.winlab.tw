@@ -1,21 +1,18 @@
 import { CarouselEditClient } from "./client";
-import { requireAdminServer } from "@/lib/supabase/require-admin-server";
-import type { CarouselSlide } from "@winlab/db";
+import { requireAdmin } from "@/lib/auth/viewer";
+import { db } from "@/lib/db";
+import { carousel_slides } from "@/lib/db/schema";
+import { isUuid } from "@/lib/slug";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
 export default async function CarouselEditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { supabase } = await requireAdminServer();
+  await requireAdmin();
+  if (!isUuid(id)) redirect("/carousel");
 
-  const { data, error } = await supabase
-    .from("carousel_slides")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const [slide] = await db.select().from(carousel_slides).where(eq(carousel_slides.id, id)).limit(1);
+  if (!slide) redirect("/carousel");
 
-  if (error || !data) {
-    redirect("/carousel");
-  }
-
-  return <CarouselEditClient id={id} initialSlide={data as CarouselSlide} />;
+  return <CarouselEditClient id={id} initialSlide={slide} />;
 }

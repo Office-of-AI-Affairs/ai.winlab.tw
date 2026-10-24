@@ -9,7 +9,6 @@ import { localeAlternates, ogAlternateLocales, ogLocale } from "@/lib/i18n/seo"
 import { PrivacyClient } from "./client"
 import { getCurrentPrivacyPolicy } from "./data"
 
-export const revalidate = 3600
 
 export async function generateMetadata({
   params,
