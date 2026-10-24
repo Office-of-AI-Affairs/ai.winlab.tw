@@ -1,6 +1,8 @@
 import { revalidateTag } from "next/cache";
 import { timingSafeEqual } from "node:crypto";
-import { createPublicClient } from "@/lib/supabase/public";
+import { and, eq, gte, isNotNull, lte } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { announcements } from "@/lib/db/schema";
 
 // Constant-time comparison, same pattern as app/api/revalidate/route.ts.
 function safeEqual(a: string, b: string): boolean {
@@ -14,8 +16,8 @@ export const dynamic = "force-dynamic";
 
 // Cache-invalidation hook for scheduled announcements — NOT the thing that
 // publishes them. A row with `status = 'published'` and a past `publish_at`
-// becomes readable on its own once RLS's `publish_at <= now()` gate opens,
-// with no app code involved. What RLS can't do is invalidate the
+// becomes readable on its own once the `publish_at <= now()` filter in
+// lib/db/filters.ts lets it through. What that filter can't do is invalidate the
 // `announcements-published` ISR tag (unstable_cache, revalidate: 3600), so a
 // scheduled post can sit invisible on the cached /announcement list and home
 // page for up to an hour after go-live. Calling this route closes that gap.
@@ -49,20 +51,17 @@ export async function GET(req: Request) {
   // delayed, or briefly-failed run never misses a row that just went live.
   const lookback = new Date(now.getTime() - 10 * 60 * 1000);
 
-  const supabase = createPublicClient();
-  const { data, error } = await supabase
-    .from("announcements")
-    .select("id")
-    .eq("status", "published")
-    .not("publish_at", "is", null)
-    .lte("publish_at", now.toISOString())
-    .gte("publish_at", lookback.toISOString());
-
-  if (error) {
-    return Response.json({ error: error.message }, { status: 500 });
-  }
-
-  const justWentLive = data ?? [];
+  const justWentLive = await db
+    .select({ id: announcements.id })
+    .from(announcements)
+    .where(
+      and(
+        eq(announcements.status, "published"),
+        isNotNull(announcements.publish_at),
+        lte(announcements.publish_at, now.toISOString()),
+        gte(announcements.publish_at, lookback.toISOString()),
+      ),
+    );
   if (justWentLive.length > 0) {
     // { expire: 0 } = immediate invalidation, same profile /api/revalidate
     // uses for webhook-driven cache busts.

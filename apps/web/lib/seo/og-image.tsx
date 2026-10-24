@@ -58,12 +58,27 @@ export type OgImageInput = {
 // outside this set to JPEG with `sharp` before embedding.
 const SATORI_SAFE_IMAGE_TYPES = new Set(["image/png", "image/jpeg"]);
 
+/** Uploaded images (/files/announcement-images/...) come straight from Postgres. */
+async function loadImage(url: string): Promise<{ contentType: string; buffer: Buffer } | null> {
+  const local = url.match(/^\/files\/announcement-images\/(.+)$/);
+  if (local) {
+    const { readFile } = await import("@/lib/files");
+    const file = await readFile("announcement-images", decodeURIComponent(local[1]));
+    return file ? { contentType: file.content_type, buffer: file.data } : null;
+  }
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  return {
+    contentType: res.headers.get("content-type") ?? "image/jpeg",
+    buffer: Buffer.from(await res.arrayBuffer()),
+  };
+}
+
 async function fetchAsDataUri(url: string): Promise<string | null> {
   try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const contentType = res.headers.get("content-type") ?? "image/jpeg";
-    const buffer = Buffer.from(await res.arrayBuffer());
+    const image = await loadImage(url);
+    if (!image) return null;
+    const { contentType, buffer } = image;
 
     if (SATORI_SAFE_IMAGE_TYPES.has(contentType)) {
       return `data:${contentType};base64,${buffer.toString("base64")}`;

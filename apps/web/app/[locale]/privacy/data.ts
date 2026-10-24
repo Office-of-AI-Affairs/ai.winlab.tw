@@ -1,5 +1,7 @@
 import { unstable_cache } from "next/cache"
-import { createPublicClient } from "@/lib/supabase/public"
+import { desc } from "drizzle-orm"
+import { db } from "@/lib/db"
+import { privacy_policy } from "@/lib/db/schema"
 
 export type PrivacyPolicySnapshot = {
   id: string
@@ -10,25 +12,23 @@ export type PrivacyPolicySnapshot = {
 
 /**
  * Returns the highest-versioned privacy policy row, or null if none exists.
- * Cookieless + cache-tagged so /privacy can keep rendering as ○ Static and
- * still flip within a request after `revalidatePrivacy()` updates the tag.
+ * Cache-tagged so /privacy flips within a request after
+ * `revalidatePrivacy()` updates the tag.
  */
 export const getCurrentPrivacyPolicy = unstable_cache(
   async (): Promise<PrivacyPolicySnapshot | null> => {
-    const supabase = createPublicClient()
-    const { data } = await supabase
-      .from("privacy_policy")
-      .select("id, version, content, created_at")
-      .order("version", { ascending: false })
+    const [row] = await db
+      .select({
+        id: privacy_policy.id,
+        version: privacy_policy.version,
+        content: privacy_policy.content,
+        created_at: privacy_policy.created_at,
+      })
+      .from(privacy_policy)
+      .orderBy(desc(privacy_policy.version))
       .limit(1)
-      .maybeSingle()
-    if (!data) return null
-    return {
-      id: data.id,
-      version: data.version,
-      content: (data.content as Record<string, unknown>) ?? {},
-      created_at: data.created_at,
-    }
+    if (!row) return null
+    return { ...row, content: (row.content as Record<string, unknown>) ?? {} }
   },
   ["privacy"],
   { tags: ["privacy"], revalidate: 3600 },

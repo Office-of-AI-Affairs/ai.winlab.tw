@@ -6,8 +6,10 @@ import { type Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import { localizedField } from "@/lib/i18n/localized-field";
 import { localizedPath } from "@/lib/i18n/routing";
-import { createPublicClient } from "@/lib/supabase/public";
-import { livePublishAtFilter } from "@/lib/scheduling";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { liveAnnouncement } from "@/lib/db/filters";
+import { announcements, competitions, events as eventsTable, public_profiles, results } from "@/lib/db/schema";
 import Link from "next/link";
 
 type ActivityItem = {
@@ -43,42 +45,55 @@ export async function HomeActivity({
   kindLabels: Dictionary["activityKind"];
   locale: Locale;
 }) {
-  const supabase = createPublicClient();
+  const events = await db
+    .select({ id: eventsTable.id, slug: eventsTable.slug, name: eventsTable.name, name_en: eventsTable.name_en })
+    .from(eventsTable)
+    .where(and(eq(eventsTable.pinned, true), eq(eventsTable.status, "published")))
+    .orderBy(asc(eventsTable.sort_order));
 
-  const { data: events } = await supabase
-    .from("events")
-    .select("id, slug, name, name_en")
-    .eq("pinned", true)
-    .eq("status", "published")
-    .order("sort_order", { ascending: true });
-
-  if (!events?.length) return null;
+  if (!events.length) return null;
   const eventIds = events.map((e) => e.id);
   const idToEvent = Object.fromEntries(
     events.map((e) => [e.id, { slug: e.slug, name: localizedField(e, "name", locale).value }]),
   );
 
-  const [annsRes, resultsRes, recruitsRes] = await Promise.all([
-    supabase
-      .from("announcements")
-      .select("id, slug, title, title_en, event_id, created_at")
-      .in("event_id", eventIds)
-      .eq("status", "published")
-      .or(livePublishAtFilter())
-      .order("created_at", { ascending: false })
+  const [annRows, resultRows, recruitRows] = await Promise.all([
+    db
+      .select({
+        id: announcements.id,
+        slug: announcements.slug,
+        title: announcements.title,
+        title_en: announcements.title_en,
+        event_id: announcements.event_id,
+        created_at: announcements.created_at,
+      })
+      .from(announcements)
+      .where(and(inArray(announcements.event_id, eventIds), liveAnnouncement()))
+      .orderBy(desc(announcements.created_at))
       .limit(15),
-    supabase
-      .from("results")
-      .select("id, title, title_en, event_id, created_at, author_id")
-      .in("event_id", eventIds)
-      .eq("status", "published")
-      .order("created_at", { ascending: false })
+    db
+      .select({
+        id: results.id,
+        title: results.title,
+        title_en: results.title_en,
+        event_id: results.event_id,
+        created_at: results.created_at,
+        author_id: results.author_id,
+      })
+      .from(results)
+      .where(and(inArray(results.event_id, eventIds), eq(results.status, "published")))
+      .orderBy(desc(results.created_at))
       .limit(15),
-    supabase
-      .from("competitions")
-      .select("id, title, event_id, created_at")
-      .in("event_id", eventIds)
-      .order("created_at", { ascending: false })
+    db
+      .select({
+        id: competitions.id,
+        title: competitions.title,
+        event_id: competitions.event_id,
+        created_at: competitions.created_at,
+      })
+      .from(competitions)
+      .where(inArray(competitions.event_id, eventIds))
+      .orderBy(desc(competitions.created_at))
       .limit(15),
   ]);
 
@@ -87,24 +102,24 @@ export async function HomeActivity({
   // credit isn't interesting on a public timeline.
   const authorIds = Array.from(
     new Set(
-      (resultsRes.data ?? [])
+      resultRows
         .map((r) => r.author_id)
         .filter((id): id is string => Boolean(id)),
     ),
   );
   const authorNameMap: Record<string, string> = {};
   if (authorIds.length) {
-    const { data: profiles } = await supabase
-      .from("public_profiles")
-      .select("id, display_name")
-      .in("id", authorIds);
-    for (const p of profiles ?? []) {
+    const profiles = await db
+      .select({ id: public_profiles.id, display_name: public_profiles.display_name })
+      .from(public_profiles)
+      .where(inArray(public_profiles.id, authorIds));
+    for (const p of profiles) {
       if (p.display_name) authorNameMap[p.id] = p.display_name;
     }
   }
 
   const items: ActivityItem[] = [];
-  for (const a of annsRes.data ?? []) {
+  for (const a of annRows) {
     const e = a.event_id ? idToEvent[a.event_id] : null;
     if (!e) continue;
     items.push({
@@ -117,7 +132,7 @@ export async function HomeActivity({
       createdAt: a.created_at,
     });
   }
-  for (const r of resultsRes.data ?? []) {
+  for (const r of resultRows) {
     const e = r.event_id ? idToEvent[r.event_id] : null;
     if (!e) continue;
     items.push({
@@ -130,7 +145,7 @@ export async function HomeActivity({
       authorName: r.author_id ? authorNameMap[r.author_id] ?? null : null,
     });
   }
-  for (const c of recruitsRes.data ?? []) {
+  for (const c of recruitRows) {
     const e = c.event_id ? idToEvent[c.event_id] : null;
     if (!e) continue;
     items.push({

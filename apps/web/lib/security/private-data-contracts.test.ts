@@ -44,8 +44,9 @@ describe("private data contracts", () => {
     assert.ok(profileLayout.includes('.from("public_profiles")'))
     // The /events/[slug] page moved its data fetches into data.ts for ISR.
     // Contract still holds: public reads must hit public_profiles.
-    assert.ok(eventData.includes('.from("public_profiles")'))
-    assert.ok(eventResultPage.includes('.from("public_profiles")'))
+    assert.ok(eventData.includes("public_profiles.display_name"))
+    assert.ok(!eventData.includes("profiles.phone"))
+    assert.ok(eventResultPage.includes("public_profiles.display_name"))
   })
 
   test("teams subsystem is fully removed", () => {

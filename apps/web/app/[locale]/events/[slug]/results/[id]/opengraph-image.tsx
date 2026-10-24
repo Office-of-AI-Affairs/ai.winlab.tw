@@ -1,4 +1,7 @@
-import { createPublicClient } from "@/lib/supabase/public";
+import { and, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { results } from "@/lib/db/schema";
+import { isUuid } from "@/lib/slug";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { localizedField } from "@/lib/i18n/localized-field";
@@ -16,13 +19,13 @@ export default async function Image({
   const { locale: raw, id } = await params;
   const locale: Locale = isLocale(raw) ? raw : defaultLocale;
   const dict = await getDictionary(locale);
-  const supabase = createPublicClient();
-  const { data } = await supabase
-    .from("results")
-    .select("title, title_en, header_image")
-    .eq("id", id)
-    .eq("status", "published")
-    .maybeSingle();
+  const [data] = isUuid(id)
+    ? await db
+        .select({ title: results.title, title_en: results.title_en, header_image: results.header_image })
+        .from(results)
+        .where(and(eq(results.id, id), eq(results.status, "published")))
+        .limit(1)
+    : [];
 
   const title = data
     ? localizedField(data, "title", locale).value

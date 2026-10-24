@@ -1,5 +1,7 @@
-import { createPublicClient } from "@/lib/supabase/public";
-import { livePublishAtFilter } from "@/lib/scheduling";
+import { and, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { liveAnnouncement } from "@/lib/db/filters";
+import { announcements, events } from "@/lib/db/schema";
 import type { Announcement } from "@winlab/db";
 import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
@@ -32,21 +34,32 @@ function decodeParam(value: string): string {
 // `param` is whatever arrived in the `[id]` route segment — a slug for every
 // link this app generates, or a legacy UUID for old bookmarks/backlinks.
 // Slug lookup first; UUID fallback only if the param actually looks like one.
-async function findAnnouncement(
-  supabase: ReturnType<typeof createPublicClient>,
-  eventId: string,
-  param: string,
-  { publishedOnly }: { publishedOnly: boolean },
-): Promise<Announcement | null> {
-  let query = supabase.from("announcements").select("*").eq("event_id", eventId);
-  if (publishedOnly) query = query.eq("status", "published").or(livePublishAtFilter());
-  const { data: bySlug } = await query.eq("slug", param).maybeSingle();
-  if (bySlug) return bySlug as Announcement;
+// Live rows only: visitors never saw drafts here (RLS), and the metadata
+// must not leak a draft's title either. Drafts render through the
+// client-side fallback for editors.
+async function findAnnouncement(eventId: string, param: string): Promise<Announcement | null> {
+  const [bySlug] = await db
+    .select()
+    .from(announcements)
+    .where(and(eq(announcements.event_id, eventId), liveAnnouncement(), eq(announcements.slug, param)))
+    .limit(1);
+  if (bySlug) return bySlug;
   if (!isUuid(param)) return null;
-  let byIdQuery = supabase.from("announcements").select("*").eq("event_id", eventId);
-  if (publishedOnly) byIdQuery = byIdQuery.eq("status", "published").or(livePublishAtFilter());
-  const { data: byId } = await byIdQuery.eq("id", param).maybeSingle();
-  return (byId as Announcement | null) ?? null;
+  const [byId] = await db
+    .select()
+    .from(announcements)
+    .where(and(eq(announcements.event_id, eventId), liveAnnouncement(), eq(announcements.id, param)))
+    .limit(1);
+  return byId ?? null;
+}
+
+async function findEvent(slug: string) {
+  const [event] = await db
+    .select({ id: events.id, name: events.name, name_en: events.name_en })
+    .from(events)
+    .where(and(eq(events.slug, slug), eq(events.status, "published")))
+    .limit(1);
+  return event ?? null;
 }
 
 export async function generateMetadata({
@@ -58,15 +71,8 @@ export async function generateMetadata({
   const id = decodeParam(rawId);
   const locale: Locale = isLocale(raw) ? raw : defaultLocale;
   const dict = await getDictionary(locale);
-  const supabase = createPublicClient();
-  const eventRes = await supabase
-    .from("events")
-    .select("id, cover_image, name")
-    .eq("slug", slug)
-    .maybeSingle();
-  const announcement = eventRes.data
-    ? await findAnnouncement(supabase, eventRes.data.id, id, { publishedOnly: false })
-    : null;
+  const event = await findEvent(slug);
+  const announcement = event ? await findAnnouncement(event.id, id) : null;
   const title = announcement
     ? localizedField(announcement, "title", locale).value
     : dict.announcement.meta.fallbackTitle;
@@ -117,13 +123,8 @@ export default async function EventAnnouncementDetailPage({
   const id = decodeParam(rawId);
   const locale: Locale = isLocale(raw) ? raw : defaultLocale;
   const dict = await getDictionary(locale);
-  const supabase = createPublicClient();
-
-  const eventRes = await supabase.from("events").select("id, name, name_en").eq("slug", slug).maybeSingle();
-  const eventId = eventRes.data?.id;
-  const announcement = eventId
-    ? await findAnnouncement(supabase, eventId, id, { publishedOnly: true })
-    : null;
+  const event = await findEvent(slug);
+  const announcement = event ? await findAnnouncement(event.id, id) : null;
 
   if (!announcement) {
     return <EventAnnouncementDraftFallback slug={slug} id={id} />;
@@ -140,8 +141,8 @@ export default async function EventAnnouncementDetailPage({
     );
   }
 
-  const eventName = eventRes.data
-    ? localizedField(eventRes.data, "name", locale).value
+  const eventName = event
+    ? localizedField(event, "name", locale).value
     : dict.events.meta.fallbackName;
 
   const { html, toc } = renderArticle(announcement.content);

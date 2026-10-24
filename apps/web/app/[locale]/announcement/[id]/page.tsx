@@ -1,4 +1,4 @@
-import { getPublishedAnnouncementByParam, getPublishedAnnouncementSlugs } from "@/app/[locale]/announcement/data";
+import { getPublishedAnnouncementByParam } from "@/app/[locale]/announcement/data";
 import { renderArticle } from "@/lib/ui/rich-text";
 import { estimateReadingTime } from "@/lib/ui/reading-time";
 import type { Metadata } from "next";
@@ -25,11 +25,6 @@ function decodeParam(value: string): string {
   } catch {
     return value;
   }
-}
-
-export async function generateStaticParams() {
-  const slugs = await getPublishedAnnouncementSlugs();
-  return slugs.map((slug) => ({ id: slug }));
 }
 
 export async function generateMetadata({

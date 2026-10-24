@@ -16,8 +16,8 @@ describe("events access contracts", () => {
     // New architecture: the server-side page only loads published events via
     // a cookieless cached fetcher, so non-admin visitors physically cannot see
     // drafts regardless of any client code. Admin drafts are merged in on the
-    // client — gated on useAuth().isAdmin and still bounded by RLS.
-    assert.ok(eventsData.includes('.eq("status", "published")'))
+    // client — gated on useAuth().isAdmin.
+    assert.ok(eventsData.includes('eq(events.status, "published")'))
     assert.ok(eventsPage.includes("getPublishedEvents()"))
     assert.ok(!eventsPage.includes("draft"))
     assert.ok(eventsClient.includes("const { isAdmin } = useAuth()"))
@@ -30,7 +30,7 @@ describe("events access contracts", () => {
     // events, so draft slugs render the not-found client for everyone. Admins
     // get a "go to editor" button there; authenticated users merge their own
     // draft announcements/results client-side under useAuth + RLS.
-    assert.ok(eventDetailData.includes('.eq("status", "published")'))
+    assert.ok(eventDetailData.includes('eq(events.status, "published")'))
     assert.ok(eventDetailPage.includes("getEventPageData"))
     assert.ok(!eventDetailPage.includes("getViewer"))
     assert.ok(eventDetailClient.includes('useAuth()'))
