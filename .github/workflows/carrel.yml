@@ -38,11 +38,13 @@ jobs:
         run: bun run build
 
       # The start command is `node apps/web/server.js` from the release root.
+      # server.js runs from apps/web, where it finds drizzle/ to migrate.
       - name: Pack
         working-directory: apps/web
         run: |
           cp -r .next/static .next/standalone/apps/web/.next/static
           cp -r public .next/standalone/apps/web/public
+          cp -r drizzle .next/standalone/apps/web/drizzle
           tar czf "$RUNNER_TEMP/ai.tar.gz" -C .next/standalone .
 
       - uses: NYCU-WinLab/carrel-deploy@v1
