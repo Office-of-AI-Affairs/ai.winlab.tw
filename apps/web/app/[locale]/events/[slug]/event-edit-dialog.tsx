@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useContentEditor } from "@/hooks/use-content-editor"
 import { useImageUpload } from "@/hooks/use-image-upload"
-import { createClient } from "@/lib/supabase/client"
+import { getRow } from "@/lib/actions/rows"
 import { useT } from "@/lib/i18n/locale-provider"
 import type { Event } from "@winlab/db"
 import { uploadEventImage } from "@/lib/upload-image"
@@ -32,7 +32,6 @@ type Props = {
 export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Props) {
   const t = useT()
   const router = useRouter()
-  const supabaseRef = useRef(createClient())
   const savedSlugRef = useRef(initialEvent.slug)
   const [slugError, setSlugError] = useState<string | null>(null)
 
@@ -55,13 +54,9 @@ export function EventEditDialog({ open, onOpenChange, event: initialEvent }: Pro
     onBeforeSave: async () => {
       setSlugError(null)
       if (event.slug !== savedSlugRef.current) {
-        const { data: existing } = await supabaseRef.current
-          .from("events")
-          .select("id")
-          .eq("slug", event.slug)
-          .neq("id", initialEvent.id)
-          .single()
-        if (existing) {
+        // Only admins edit events, and they can read every event.
+        const existing = await getRow("events", event.slug).catch(() => null)
+        if (existing?.ok && existing.row.id !== initialEvent.id) {
           setSlugError(t.events.edit.slugTaken)
           return false
         }

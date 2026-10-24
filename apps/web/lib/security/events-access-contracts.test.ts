@@ -22,7 +22,7 @@ describe("events access contracts", () => {
     assert.ok(!eventsPage.includes("draft"))
     assert.ok(eventsClient.includes("const { isAdmin } = useAuth()"))
     assert.ok(eventsClient.includes('if (!isAdmin)'))
-    assert.ok(eventsClient.includes('.eq("status", "draft")'))
+    assert.ok(eventsClient.includes('listRows("events", { status: "draft" }'))
   })
 
   test("event detail restricts event draft visibility to admins", () => {
@@ -34,11 +34,11 @@ describe("events access contracts", () => {
     assert.ok(eventDetailPage.includes("getEventPageData"))
     assert.ok(!eventDetailPage.includes("getViewer"))
     assert.ok(eventDetailClient.includes('useAuth()'))
-    assert.ok(eventDetailClient.includes('.eq("status", "draft")'))
+    assert.ok(eventDetailClient.includes("getEventViewerData("))
   })
 
   test("newly added event members preserve their profile completeness state", () => {
-    assert.ok(memberEditor.includes("avatar_url, has_profile_data"))
+    assert.ok(memberEditor.includes("listPublicProfiles()"))
     assert.ok(eventDetailClient.includes("hasProfileData: profile.has_profile_data"))
     assert.ok(!eventDetailClient.includes("hasProfileData: false"))
   })

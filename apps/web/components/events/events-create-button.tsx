@@ -1,7 +1,7 @@
 "use client";
 
 import { FloatingActionPill } from "@/components/shared/floating-action-pill";
-import { createClient } from "@/lib/supabase/client";
+import { insertRow } from "@/lib/actions/rows";
 import { useT } from "@/lib/i18n/locale-provider";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -15,23 +15,18 @@ export function EventsCreateButton() {
 
   const handleCreate = async () => {
     setIsCreating(true);
-    const supabase = createClient();
     const tempSlug = `event-${Date.now()}`;
-    const { data, error } = await supabase
-      .from("events")
-      .insert({
-        name: "新活動",
-        slug: tempSlug,
-        description: null,
-        cover_image: null,
-        status: "draft",
-        pinned: false,
-        sort_order: 0,
-      })
-      .select()
-      .single();
-    if (error) { toast.error(error.message ?? t.common.createFailed); setIsCreating(false); return; }
-    router.push(`/events/${data.slug}?mode=edit`);
+    const result = await insertRow("events", {
+      name: "新活動",
+      slug: tempSlug,
+      description: null,
+      cover_image: null,
+      status: "draft",
+      pinned: false,
+      sort_order: 0,
+    }).catch(() => null);
+    if (!result?.ok) { toast.error(result?.error ?? t.common.createFailed); setIsCreating(false); return; }
+    router.push(`/events/${result.row.slug}?mode=edit`);
   };
 
   return (

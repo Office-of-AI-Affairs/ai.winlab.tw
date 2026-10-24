@@ -73,7 +73,19 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      // Everything except uploaded files gets the page policy.
+      { source: "/((?!files/).*)", headers: securityHeaders },
+      // Uploaded files are data, never a page: no script, no plugins, and
+      // a sandbox in case a browser renders one as a document.
+      {
+        source: "/files/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Content-Security-Policy", value: "default-src 'none'; style-src 'unsafe-inline'; sandbox" },
+        ],
+      },
+    ];
   },
   async redirects() {
     return [

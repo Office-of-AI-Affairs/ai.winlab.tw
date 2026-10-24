@@ -4,7 +4,7 @@ import { desc, eq } from "drizzle-orm";
 import { actor, type Role } from "@/lib/auth/viewer";
 import { asUser, db } from "@/lib/db";
 import { profiles, user as users } from "@/lib/db/schema";
-import { isUuid } from "@/lib/db/uuid";
+import { isUuid } from "@/lib/slug";
 import type { UserRow } from "@/components/admin/users-table";
 
 // Admin user management. Each action checks the caller itself: a server

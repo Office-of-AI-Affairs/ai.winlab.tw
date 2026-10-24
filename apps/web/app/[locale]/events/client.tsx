@@ -8,11 +8,11 @@ import { Block } from "@/components/shared/block";
 import { SubButton } from "@/components/shared/sub-button";
 import { useLocale, useT } from "@/lib/i18n/locale-provider";
 import { localizedPath } from "@/lib/i18n/routing";
-import { createClient } from "@/lib/supabase/client";
+import { listRows } from "@/lib/actions/rows";
 import type { Event } from "@winlab/db";
 import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export function EventsPageClient({
   publishedEvents,
@@ -22,7 +22,6 @@ export function EventsPageClient({
   const t = useT();
   const locale = useLocale();
   const { isAdmin } = useAuth();
-  const supabaseRef = useRef(createClient());
   const [drafts, setDrafts] = useState<Event[]>([]);
 
   // No reset on !isAdmin — useMemo below returns published-only when
@@ -31,13 +30,11 @@ export function EventsPageClient({
     if (!isAdmin) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabaseRef.current
-        .from("events")
-        .select("*")
-        .eq("status", "draft")
-        .order("sort_order", { ascending: true })
-        .order("created_at", { ascending: false });
-      if (!cancelled) setDrafts((data as Event[] | null) ?? []);
+      const rows = await listRows("events", { status: "draft" }, [
+        { column: "sort_order" },
+        { column: "created_at", ascending: false },
+      ]);
+      if (!cancelled) setDrafts(rows as Event[]);
     })();
     return () => { cancelled = true; };
   }, [isAdmin]);
