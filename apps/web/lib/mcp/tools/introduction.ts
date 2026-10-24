@@ -1,62 +1,17 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { markdownToTiptap } from "@/lib/mcp/markdown-to-tiptap";
+import { listRows, updateRow } from "@/lib/actions/rows";
 import { revalidate } from "@/lib/mcp/revalidate";
+import { answer, defined, error, processContent, success } from "@/lib/mcp/tools/common";
 
-function success(data: unknown) {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify({ success: true, data }),
-      },
-    ],
-  };
-}
-
-function error(message: string) {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify({ success: false, error: message }),
-      },
-    ],
-    isError: true,
-  };
-}
-
-function processContent(
-  content: string,
-  contentFormat: string
-): Record<string, unknown> {
-  if (contentFormat === "tiptap") {
-    return JSON.parse(content);
-  }
-  return markdownToTiptap(content);
-}
-
-export function registerIntroductionTools(
-  server: McpServer,
-  supabase: SupabaseClient
-) {
-  // --- get_introduction ---
+// The table is introduction (the old tools asked for "introductions",
+// which does not exist, so they always failed).
+export function registerIntroductionTools(server: McpServer) {
   server.tool("get_introduction", {}, async () => {
-    const { data, error: dbError } = await supabase
-      .from("introductions")
-      .select("*")
-      .limit(1)
-      .single();
-
-    if (dbError) {
-      return error(dbError.message);
-    }
-
-    return success(data);
+    const [row] = await listRows("introduction", {}, [{ column: "created_at" }]);
+    return row ? success(row) : error("Not found");
   });
 
-  // --- update_introduction ---
   server.tool(
     "update_introduction",
     {
@@ -65,51 +20,19 @@ export function registerIntroductionTools(
       content_format: z.enum(["markdown", "tiptap"]).optional(),
     },
     async ({ title, content, content_format }) => {
-      // Get the first record's ID
-      const { data: existing, error: fetchError } = await supabase
-        .from("introductions")
-        .select("id")
-        .limit(1)
-        .single();
-
-      if (fetchError) {
-        return error(fetchError.message);
+      const [existing] = await listRows("introduction", {}, [{ column: "created_at" }]);
+      if (!existing) return error("Not found");
+      let tiptap: Record<string, unknown> | undefined;
+      try {
+        tiptap = content === undefined ? undefined : processContent(content, content_format);
+      } catch (e) {
+        return error(`Failed to process content: ${e instanceof Error ? e.message : String(e)}`);
       }
-
-      const updates: Record<string, unknown> = {};
-
-      if (title !== undefined) updates.title = title;
-
-      if (content !== undefined) {
-        try {
-          updates.content = processContent(
-            content,
-            content_format ?? "markdown"
-          );
-        } catch (e) {
-          return error(
-            `Failed to process content: ${e instanceof Error ? e.message : String(e)}`
-          );
-        }
-      }
-
-      if (Object.keys(updates).length === 0) {
-        return error("No fields to update");
-      }
-
-      const { data, error: dbError } = await supabase
-        .from("introductions")
-        .update(updates)
-        .eq("id", existing.id)
-        .select()
-        .single();
-
-      if (dbError) {
-        return error(dbError.message);
-      }
-
-      await revalidate("introduction");
-      return success(data);
-    }
+      const updates = defined({ title, content: tiptap });
+      if (Object.keys(updates).length === 0) return error("No fields to update");
+      const result = await updateRow("introduction", String(existing.id), updates);
+      if (result.ok) await revalidate("introduction");
+      return answer(result);
+    },
   );
 }

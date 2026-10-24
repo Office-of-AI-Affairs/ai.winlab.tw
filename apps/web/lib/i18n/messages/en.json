@@ -779,6 +779,18 @@
       "loading": "Loading…",
       "title": "Reset Password",
       "subtitle": "Set your new password"
+    },
+    "consent": {
+      "title": "Allow {name} to act as you?",
+      "host": "If you allow it, the app gets access and sends it to {host}.",
+      "expired": "This authorization link has expired",
+      "expiredHint": "Go back to the app and connect again.",
+      "allow": "Allow",
+      "allowing": "Allowing…",
+      "deny": "Deny",
+      "denying": "Denying…",
+      "failed": "No response. Please try again.",
+      "metaTitle": "Authorize app｜NYCU Office of AI Affairs"
     }
   },
   "profile": {

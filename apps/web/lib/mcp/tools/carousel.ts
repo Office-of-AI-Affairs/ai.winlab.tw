@@ -1,119 +1,37 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { insertRow, listRows, updateRow } from "@/lib/actions/rows";
 import { revalidate } from "@/lib/mcp/revalidate";
+import { answer, defined, success } from "@/lib/mcp/tools/common";
 
-function success(data: unknown) {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify({ success: true, data }),
-      },
-    ],
-  };
-}
-
-function error(message: string) {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify({ success: false, error: message }),
-      },
-    ],
-    isError: true,
-  };
-}
-
-export function registerCarouselTools(
-  server: McpServer,
-  supabase: SupabaseClient
-) {
-  // --- list_carousel ---
-  server.tool("list_carousel", {}, async () => {
-    const { data, error: dbError } = await supabase
-      .from("carousel")
-      .select("*")
-      .order("sort_order", { ascending: true });
-
-    if (dbError) {
-      return error(dbError.message);
-    }
-
-    return success(data);
-  });
-
-  // --- create_carousel_slide ---
-  server.tool(
-    "create_carousel_slide",
-    {
-      title: z.string(),
-      description: z.string().optional(),
-      link: z.string().optional(),
-      image: z.string().optional(),
-      sort_order: z.number().int().optional(),
-    },
-    async ({ title, description, link, image, sort_order }) => {
-      const row: Record<string, unknown> = { title };
-
-      if (description !== undefined) row.description = description;
-      if (link !== undefined) row.link = link;
-      if (image !== undefined) row.image = image;
-      if (sort_order !== undefined) row.sort_order = sort_order;
-
-      const { data, error: dbError } = await supabase
-        .from("carousel")
-        .insert(row)
-        .select()
-        .single();
-
-      if (dbError) {
-        return error(dbError.message);
-      }
-
-      await revalidate("carousel-slides");
-      return success(data);
-    }
+// The table is carousel_slides (the old tools asked for "carousel", which
+// does not exist, so they always failed).
+export function registerCarouselTools(server: McpServer) {
+  server.tool("list_carousel", {}, async () =>
+    success(await listRows("carousel_slides", {}, [{ column: "sort_order" }])),
   );
 
-  // --- update_carousel_slide ---
+  const fields = {
+    title: z.string(),
+    description: z.string().optional(),
+    link: z.string().optional(),
+    image: z.string().optional(),
+    sort_order: z.number().int().optional(),
+  };
+
+  server.tool("create_carousel_slide", fields, async (args) => {
+    const result = await insertRow("carousel_slides", defined(args));
+    if (result.ok) await revalidate("carousel-slides");
+    return answer(result);
+  });
+
   server.tool(
     "update_carousel_slide",
-    {
-      id: z.string().uuid(),
-      title: z.string().optional(),
-      description: z.string().optional(),
-      link: z.string().optional(),
-      image: z.string().optional(),
-      sort_order: z.number().int().optional(),
+    { id: z.string().uuid(), ...fields, title: z.string().optional() },
+    async ({ id, ...args }) => {
+      const result = await updateRow("carousel_slides", id, defined(args));
+      if (result.ok) await revalidate("carousel-slides");
+      return answer(result);
     },
-    async ({ id, title, description, link, image, sort_order }) => {
-      const updates: Record<string, unknown> = {};
-
-      if (title !== undefined) updates.title = title;
-      if (description !== undefined) updates.description = description;
-      if (link !== undefined) updates.link = link;
-      if (image !== undefined) updates.image = image;
-      if (sort_order !== undefined) updates.sort_order = sort_order;
-
-      if (Object.keys(updates).length === 0) {
-        return error("No fields to update");
-      }
-
-      const { data, error: dbError } = await supabase
-        .from("carousel")
-        .update(updates)
-        .eq("id", id)
-        .select()
-        .single();
-
-      if (dbError) {
-        return error(dbError.message);
-      }
-
-      await revalidate("carousel-slides");
-      return success(data);
-    }
   );
 }

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "bun test && bun test ./app/.well-known",
+    "test": "bun test",
     "typecheck": "tsc --noEmit",
     "check": "bun run test && bun run typecheck",
     "gen:types": "bunx supabase gen types typescript --project-id hwezfbhjcetpezfuvelf > lib/supabase/database.types.ts",
@@ -17,6 +17,9 @@
     "analyze": "ANALYZE=true next build --webpack"
   },
   "dependencies": {
+    "@better-auth/cimd": "1.7.12",
+    "@better-auth/mcp": "1.7.12",
+    "@better-auth/oauth-provider": "1.7.12",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -49,7 +52,7 @@
     "@winlab/db": "workspace:*",
     "@winlab/domain": "workspace:*",
     "bcryptjs": "^3.0.3",
-    "better-auth": "1.7.7",
+    "better-auth": "1.7.12",
     "browser-image-compression": "^2.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

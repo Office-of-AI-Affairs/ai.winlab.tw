@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, test } from "node:test";
 
-import { fetchPublicImage, readBodyCapped } from "./images";
+import { fetchPublicImage, readBodyCapped } from "./fetch-image";
 
 const realFetch = globalThis.fetch;
 afterEach(() => {

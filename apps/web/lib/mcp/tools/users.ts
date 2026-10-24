@@ -1,173 +1,83 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { createUser, deleteUser, listUsers, setUserRole, setUserTags } from "@/lib/actions/users";
+import { actor } from "@/lib/auth/viewer";
+import { asUser, db } from "@/lib/db";
+import { profiles, user as users } from "@/lib/db/schema";
+import { answer, error, success } from "@/lib/mcp/tools/common";
 
-function success(data: unknown) {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify({ success: true, data }),
-      },
-    ],
-  };
+const ROLES = ["admin", "user", "vendor", "member", "editor"] as const;
+
+/** Admin-only actions throw Forbidden for anyone else; answer it as an error. */
+async function asAdmin<T>(fn: () => Promise<T>) {
+  try {
+    return await fn();
+  } catch {
+    return null;
+  }
 }
 
-function error(message: string) {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify({ success: false, error: message }),
-      },
-    ],
-    isError: true,
-  };
-}
-
-const roleSchema = z.enum(["admin", "user", "vendor", "member"]);
-
-export function registerUserTools(server: McpServer, supabase: SupabaseClient) {
-  // --- list_users (admin only) ---
-  // Mirrors /settings/users — returns email + display_name + role + tags via
-  // the `get_all_users` RPC. RLS rejects non-admin callers at the RPC layer.
+export function registerUserTools(server: McpServer) {
   server.tool("list_users", {}, async () => {
-    const { data, error: dbError } = await supabase.rpc("get_all_users");
-
-    if (dbError) {
-      return error(dbError.message);
-    }
-
-    return success(data ?? []);
+    const rows = await asAdmin(() => listUsers());
+    return rows ? success(rows) : error("Forbidden: admin only");
   });
 
-  // --- create_user (admin only) ---
-  // Creates an auth user + profile row. The new account has no password —
-  // the recipient must use "forgot password" to set one.
   server.tool(
     "create_user",
-    {
-      email: z.string(),
-      name: z.string().optional(),
-      role: roleSchema.optional(),
-    },
+    { email: z.string(), name: z.string().optional(), role: z.enum(ROLES).optional() },
     async ({ email, name, role }) => {
-      const { data, error: dbError } = await supabase.rpc("admin_create_user", {
-        p_email: email,
-        p_name: name,
-        p_role: role,
-      });
-
-      if (dbError) {
-        return error(dbError.message);
-      }
-
-      // Report what the database actually persisted instead of echoing the
-      // inputs — echoing once masked admin_create_user dropping p_name/p_role.
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("id, display_name, role")
-        .eq("id", data as string)
-        .single();
-
-      if (profileError) {
-        return error(profileError.message);
-      }
-
-      return success({ ...profile, email });
-    }
-  );
-
-  // --- delete_user (admin only) ---
-  server.tool(
-    "delete_user",
-    {
-      user_id: z.string().uuid(),
+      const result = await asAdmin(() => createUser({ email, name: name ?? "", role: role ?? "user" }));
+      if (!result) return error("Forbidden: admin only");
+      if (!result.ok) return error(result.error);
+      const [row] = await db
+        .select({ id: profiles.id, display_name: profiles.display_name, role: profiles.role })
+        .from(profiles)
+        .innerJoin(users, eq(users.id, profiles.id))
+        .where(eq(users.email, email.trim().toLowerCase()))
+        .limit(1);
+      return success(row ?? null);
     },
-    async ({ user_id }) => {
-      const { error: dbError } = await supabase.rpc("admin_delete_user", {
-        p_user_id: user_id,
-      });
-
-      if (dbError) {
-        return error(dbError.message);
-      }
-
-      return success({ id: user_id });
-    }
   );
 
-  // --- update_user_role (admin only) ---
-  server.tool(
-    "update_user_role",
-    {
-      user_id: z.string().uuid(),
-      role: roleSchema,
-    },
-    async ({ user_id, role }) => {
-      const { data, error: dbError } = await supabase
-        .from("profiles")
-        .update({ role })
-        .eq("id", user_id)
-        .select("id, role")
-        .single();
+  server.tool("delete_user", { user_id: z.string().uuid() }, async ({ user_id }) => {
+    const result = await asAdmin(() => deleteUser(user_id));
+    return result ? answer(result) : error("Forbidden: admin only");
+  });
 
-      if (dbError) {
-        return error(dbError.message);
-      }
+  server.tool("update_user_role", { user_id: z.string().uuid(), role: z.enum(ROLES) }, async ({ user_id, role }) => {
+    const result = await asAdmin(() => setUserRole(user_id, role));
+    if (!result) return error("Forbidden: admin only");
+    return result.ok ? success({ id: user_id, role }) : error(result.error);
+  });
 
-      return success(data);
-    }
-  );
-
-  // --- update_user_display_name (admin only) ---
-  // Covers vendor renames and accounts created before admin_create_user
-  // persisted p_name. Writes profiles only — public_profiles is a
-  // trigger-maintained projection with no client write policy, so writing
-  // it directly is at best a silent no-op.
   server.tool(
     "update_user_display_name",
-    {
-      user_id: z.string().uuid(),
-      display_name: z.string(),
-    },
+    { user_id: z.string().uuid(), display_name: z.string() },
     async ({ user_id, display_name }) => {
-      const { data, error: dbError } = await supabase
-        .from("profiles")
-        .update({ display_name })
-        .eq("id", user_id)
-        .select("id, display_name")
-        .single();
-
-      if (dbError) {
-        return error(dbError.message);
-      }
-
-      return success(data);
-    }
+      const result = await asAdmin(async () => {
+        const viewer = await actor("admin");
+        const name = display_name.trim().slice(0, 100);
+        const updated = await asUser(viewer.id, (tx) =>
+          tx.update(profiles).set({ display_name: name || null }).where(eq(profiles.id, user_id)).returning({
+            id: profiles.id,
+            display_name: profiles.display_name,
+          }),
+        );
+        return updated[0] ?? null;
+      });
+      return result ? success(result) : error("Forbidden or not found");
+    },
   );
 
-  // --- update_user_tags (admin only) ---
-  // Replaces the whole tags array. Pass [] to clear.
   server.tool(
     "update_user_tags",
-    {
-      user_id: z.string().uuid(),
-      tags: z.array(z.string()),
-    },
+    { user_id: z.string().uuid(), tags: z.array(z.string()) },
     async ({ user_id, tags }) => {
-      const { data, error: dbError } = await supabase
-        .from("profiles")
-        .update({ tags })
-        .eq("id", user_id)
-        .select("id, tags")
-        .single();
-
-      if (dbError) {
-        return error(dbError.message);
-      }
-
-      return success(data);
-    }
+      const result = await asAdmin(() => setUserTags(user_id, tags));
+      if (!result) return error("Forbidden: admin only");
+      return result.ok ? success({ id: user_id, tags }) : error(result.error);
+    },
   );
 }

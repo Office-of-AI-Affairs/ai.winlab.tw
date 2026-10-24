@@ -209,3 +209,68 @@ export async function listMyRecruitments(): Promise<OwnedRecruitment[]> {
     );
   return rows;
 }
+
+const summaryColumns = {
+  id: competitions.id,
+  created_at: competitions.created_at,
+  updated_at: competitions.updated_at,
+  title: competitions.title,
+  link: competitions.link,
+  image: competitions.image,
+  company_description: competitions.company_description,
+  start_date: competitions.start_date,
+  end_date: competitions.end_date,
+  event_id: competitions.event_id,
+};
+
+const detailColumns = {
+  competition_id: competition_private_details.competition_id,
+  created_at: competition_private_details.created_at,
+  updated_at: competition_private_details.updated_at,
+  positions: competition_private_details.positions,
+  application_method: competition_private_details.application_method,
+  contact: competition_private_details.contact,
+  required_documents: competition_private_details.required_documents,
+};
+
+/** A recruitment with its private details when the viewer is signed in (RLS rule). */
+export async function getRecruitmentRecord(id: string) {
+  const viewer = await getViewer();
+  if (!isUuid(id)) return null;
+  const [summary] = await db.select(summaryColumns).from(competitions).where(eq(competitions.id, id)).limit(1);
+  if (!summary) return null;
+  const [details] = viewer
+    ? await db.select(detailColumns).from(competition_private_details).where(eq(competition_private_details.competition_id, id)).limit(1)
+    : [];
+  return { summary, details: details ?? null };
+}
+
+/**
+ * Changes only the given fields (MCP update_recruitment). Admins and this
+ * recruitment's owners; only admins may move it to another event.
+ */
+export async function patchRecruitment(
+  id: string,
+  publicPatch: Record<string, unknown>,
+  privatePatch: Record<string, unknown>,
+): Promise<Done> {
+  const viewer = await getViewer();
+  if (!viewer || !isUuid(id)) return FORBIDDEN;
+  const isAdmin = viewer.role === "admin";
+  if (!isAdmin && !(await isRecruitmentOwner(viewer.id, id))) return FORBIDDEN;
+  if ("event_id" in publicPatch && !isAdmin) return FORBIDDEN;
+  const allowedPublic = ["title", "link", "image", "company_description", "start_date", "end_date", "event_id"];
+  const allowedPrivate = ["positions", "application_method", "contact", "required_documents"];
+  const pub = Object.fromEntries(Object.entries(publicPatch).filter(([k]) => allowedPublic.includes(k)));
+  const priv = Object.fromEntries(Object.entries(privatePatch).filter(([k]) => allowedPrivate.includes(k)));
+  await asUser(viewer.id, async (tx) => {
+    if (Object.keys(pub).length) await tx.update(competitions).set(pub).where(eq(competitions.id, id));
+    if (Object.keys(priv).length) {
+      await tx
+        .insert(competition_private_details)
+        .values({ competition_id: id, ...priv })
+        .onConflictDoUpdate({ target: competition_private_details.competition_id, set: priv });
+    }
+  });
+  return { ok: true, id };
+}
