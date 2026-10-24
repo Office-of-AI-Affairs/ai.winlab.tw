@@ -1,11 +1,11 @@
 ---
 name: isr-page
-description: Use when adding a new public-facing page on ai.winlab.tw, refactoring an existing dynamic (ƒ) route into static (○/●), wiring an admin edit flow to invalidate cache tags, or debugging why a page won't go static. Triggers on "ISR", "static page", "unstable_cache", "updateTag", "revalidateTag", "createPublicClient", "cache tag", "public page", "cookieless", "data.ts", "actions.ts", "draft merge".
+description: Use when adding a new public-facing page on ai.winlab.tw, refactoring an existing dynamic (ƒ) route into static (○/●), wiring an admin edit flow to invalidate cache tags, or debugging why a page won't go static. Triggers on "ISR", "static page", "unstable_cache", "updateTag", "revalidateTag", "liveAnnouncement", "cache tag", "public page", "cookieless", "data.ts", "actions.ts", "draft merge".
 ---
 
 # ISR / SSG pattern — ai.winlab.tw
 
-Public pages render statically against Supabase while still reflecting admin mutations within a second. The whole tree is cookieless by default; auth is hydrated client-side via `AuthProvider`, so a single cookie read on the root layout would poison every downstream page into `ƒ Dynamic`.
+Public pages render per request (the `[locale]` layout is `force-dynamic`: the CI build cannot reach Postgres), but their data comes from `unstable_cache`, so the database sees one query per tag per hour and admin mutations show within a second via `updateTag`. The tree stays cookieless: auth is hydrated client-side via `AuthProvider` (`/api/me`), so the HTML is the same for every visitor.
 
 ## When this skill applies
 
@@ -21,7 +21,7 @@ Every public page follows this layout. `app/events/` is the canonical reference:
 ```
 app/<route>/
 ├── page.tsx       # server, cookieless, imports from ./data
-├── data.ts        # unstable_cache + createPublicClient
+├── data.ts        # unstable_cache + Drizzle
 ├── actions.ts     # "use server" updateTag helpers
 └── client.tsx     # "use client", reads useAuth, draft merge
 
@@ -48,20 +48,18 @@ export default async function EventsPage() {
 
 ```ts
 import { unstable_cache } from "next/cache";
-import { createPublicClient } from "@/lib/supabase/public";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { events } from "@/lib/db/schema";
 
 export const getPublishedEvents = unstable_cache(
-  async () => {
-    const sb = createPublicClient();
-    const { data } = await sb.from("events").select("*").eq("status", "published");
-    return data ?? [];
-  },
+  async () => db.select().from(events).where(eq(events.status, "published")),
   ["events-published"],
   { tags: ["events-published"], revalidate: 3600 },
 );
 ```
 
-`createPublicClient` uses the publishable key **without** cookies. RLS gates anything `authenticated`-only out, so cached payloads only ever contain visitor-safe data. Admin drafts merge in client-side via `useAuth`.
+There is no RLS: the WHERE clause is the only gate, so every public read filters to what a visitor may see (`status = 'published'`; announcements use `liveAnnouncement()` from `lib/db/filters.ts`). Admin drafts merge in client-side via `useAuth` and server actions (`lib/actions/rows.ts`) that check `lib/permissions/rows.ts`.
 
 ### 3. `actions.ts` — Server Action invalidators
 
@@ -180,19 +178,19 @@ if (!data) return <EventDetailNotFoundClient slug={slug} />;
 
 Non-public routes (admin editor, `/account`, `/profile/[id]`, `/settings/*`) intentionally stay `ƒ` — user-specific, cache-share doesn't apply.
 
-`/events/[slug]` is the one public exception running `ƒ Dynamic`: the recruitment data is mutated by the sibling MCP server (`~/mcp.ai.winlab.tw`) which writes Supabase directly and bypasses the Server Action `updateTag()` flow. Adding a `/api/revalidate` webhook would break the "no API routes" convention, so this page reads on every request. Traffic is low enough that the extra Supabase egress is acceptable.
+`/events/[slug]` reads without `unstable_cache`: MCP tools write rows directly and the streaming MCP response cannot run `updateTag()`, so this page reads on every request.
 
 ## Contract tests
 
 `lib/app/server-admin-pages.test.ts` codifies the pattern so drift is caught on CI:
 
-- Public pages must not import `@/lib/supabase/get-viewer` or `@/lib/supabase/server`
+- Public pages must not call `getViewer()`
 - They must import from `./data`
-- Their `data.ts` must declare `tags: [...]` and import from `@/lib/supabase/public`
+- Their `data.ts` must declare `tags: [...]` and import from `@/lib/db`
 
 Add new pages to the cached-public-pages loop when you add them.
 
 ## Related skills
 
 - `inline-view-edit` — when admin edit shouldn't live on a separate `/edit` route
-- `rls-permissions` — when the new page reads tables you need to verify the policies on
+- `docs/permissions.md` and `lib/permissions/rows.ts` — who may see which rows

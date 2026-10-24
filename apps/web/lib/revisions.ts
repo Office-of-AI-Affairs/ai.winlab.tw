@@ -1,7 +1,7 @@
 // Pure helpers for the version-history feature (#47). `content_revisions
-// .snapshot` is jsonb — untyped from Supabase's point of view — so the
+// .snapshot` is jsonb — untyped from the database's point of view — so the
 // History panel needs a defensive parser rather than trusting the shape.
-// No Supabase/React imports; trivially unit-testable.
+// No database/React imports; trivially unit-testable.
 
 export type AnnouncementRevisionSnapshot = {
   title: string | null;

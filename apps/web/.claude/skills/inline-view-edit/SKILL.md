@@ -109,4 +109,4 @@ All share `border bg-background/95 shadow-lg backdrop-blur-sm`. Bottom-anchored 
 ## Related skills
 
 - `isr-page` — the four-piece pattern that makes the read route static
-- `rls-permissions` — admin SELECT must align with what `useAuth().isAdmin` gates client-side
+- `lib/permissions/rows.ts` — the server read rule must allow what `useAuth().isAdmin` gates client-side

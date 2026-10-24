@@ -47,7 +47,7 @@ Shared across pages:                    401 KB in 6 files (rootMain)
 Top chunks:
   412 KB  — framework / editor vendor bundle
   220 KB  — React + Next runtime
-  200 KB  — Supabase client
+  200 KB  — Supabase client (removed 2026-10; rerun to update)
   112 KB  — Radix primitives + shadcn
    84 KB  — helpers / utilities
 ```
@@ -88,5 +88,4 @@ Full first-pass scores:
 
 ## Related skills
 
-- `supabase-storage` — image compression + CDN setup (egress side)
 - `isr-page` — the architecture that gives FCP/TBT their headroom

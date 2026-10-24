@@ -11,7 +11,7 @@ export function isUuid(value: unknown): value is string {
  * whitespace runs to a single hyphen, strip characters that are hostile
  * inside a URL path segment, and keep CJK characters as-is (no
  * transliteration). Mirrors the backfill logic in
- * `supabase/migrations/20260824000001_announcements_slug.sql` — keep the two
+ * `announcement_slug_from_title()` in `drizzle/0001_baseline.sql` — keep the two
  * in sync if this changes.
  *
  * Returns "" for titles that normalize away entirely (e.g. all punctuation);

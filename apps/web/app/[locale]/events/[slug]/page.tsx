@@ -5,7 +5,7 @@ import type { EventTab } from "./client";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { localizedPath } from "@/lib/i18n/routing";
 
-// MCP server writes directly to Supabase, bypassing Next.js Server Actions and
+// MCP tools write rows directly, bypassing Next.js Server Actions and
 // updateTag(). Force dynamic rendering so admin edits made through MCP show up
 // on the next visit instead of waiting for the 1h ISR fallback.
 export const dynamic = "force-dynamic";

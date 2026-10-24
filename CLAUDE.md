@@ -8,7 +8,7 @@ bun workspaces monorepo for the WinLab AI Office stack.
 apps/
   web/      Next.js web app + MCP server — ai.winlab.tw, MCP at /mcp  (CLAUDE.md inside)
 packages/
-  db/       @winlab/db     — Supabase types + database.types.ts
+  db/       @winlab/db     — row types for components (database.types.ts, from the 2026-10 Supabase schema)
   domain/   @winlab/domain — pure composers (recruitment / profile records)
 ```
 
@@ -28,11 +28,11 @@ standalone server (`node apps/web/server.js`, port 3000).
   `http://127.0.0.1:3000/` is unhealthy. Roll back by hand with the Carrel
   `app_rollback` tool.
 - Runtime secrets live in `/srv/apps/ai/env` on the machine.
-- `mcp.ai.winlab.tw` points at the same machine. It still serves `/mcp`,
-  `/oauth/*`, `/.well-known/*` and `/api/upload` (a cross-origin redirect
-  would drop the MCP client's Authorization header), and the OAuth server
-  accepts its old resource URL. Every other path 308-redirects to
-  `ai.winlab.tw` (`next.config.ts`).
+- Postgres 18 runs on the same machine from `/opt/ai-db/compose.yaml`
+  (copy of `apps/web/infra/postgres/compose.yaml`), bound to 127.0.0.1.
+  The app migrates it on boot. Daily dump: `apps/web/infra/postgres/backup.sh`.
+- `mcp.ai.winlab.tw` points at the same machine and 308-redirects every
+  path to `ai.winlab.tw` (`next.config.ts`).
 
 ## Working commands
 
@@ -46,16 +46,16 @@ bun run --filter '@winlab/web' dev   # run only the web app
 
 Or `cd apps/<name>` and use the app's own scripts (`bun dev`, `bun run check`).
 
-## Schema regen
+## Schema
 
-`bun run gen:types` from `apps/web` writes to `packages/db/src/database.types.ts`.
-Single source for the whole repo.
+SQL migrations in `apps/web/drizzle/` are the source of truth; see the
+"Schema" section of `apps/web/CLAUDE.md`.
 
 ## Conventions
 
-- New shared logic → `packages/domain` (if pure) or `packages/db` (if Supabase typing)
+- New shared logic → `packages/domain` (if pure) or `packages/db` (row types)
 - New UI / routes → `apps/web`; MCP tools → `apps/web/lib/mcp/tools/`
-- `packages/db` must NEVER import `next/headers` (would poison the MCP token-bound client)
+- `packages/db` holds types only: no runtime imports
 - `packages/domain` must NEVER import Next or React (pure functions only)
 
 ## Per-app docs
@@ -72,6 +72,10 @@ with manually-synced `database.types.ts` and drifting `recruitment-records` /
 Original mcp.ai.winlab.tw repo is read-only / archived; do not commit
 there anymore.
 
-2026-10: `apps/mcp` folded into `apps/web` (routes `/mcp`, `/oauth/*`,
+2026-10: `apps/mcp` folded into `apps/web` (routes `/mcp`,
 `/.well-known/*`, `/api/upload`; code in `lib/mcp/`), and both left Vercel
 for Carrel.
+
+2026-10-24: off Supabase (#88). Own Postgres with Drizzle, Better Auth
+(imported bcrypt passwords still work), files in Postgres, permission
+rules in server code instead of RLS, Better Auth as the MCP OAuth server.

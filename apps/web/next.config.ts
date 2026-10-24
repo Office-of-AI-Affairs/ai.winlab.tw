@@ -4,12 +4,6 @@ import path from "node:path";
 
 const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
 
-// Lock the image optimizer to OUR Supabase project rather than any *.supabase.co
-// host, so it can't be used as an open image proxy for arbitrary projects.
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseImageHost = supabaseUrl ? new URL(supabaseUrl).hostname : "*.supabase.co";
-const supabaseOrigin = supabaseUrl ? new URL(supabaseUrl).origin : "https://*.supabase.co";
-
 // Conservative CSP, not a strict nonce-based policy: this app has no
 // middleware/proxy, so wiring per-request nonces into every inline script
 // without breaking Next's hydration bootstrap is a separate, tracked
@@ -17,8 +11,8 @@ const supabaseOrigin = supabaseUrl ? new URL(supabaseUrl).origin : "https://*.su
 // sanitizer (lib/ui/rich-text-sanitize.ts), which is the primary defense
 // against stored XSS in article content.
 //   - script-src/style-src need 'unsafe-inline' because there's no nonce
-//   - connect-src/img-src cover the Supabase project the browser talks to
-//     directly (auth, storage upload/download) — see lib/supabase/client.ts
+//   - connect-src is this site only (plus Google Fonts); img-src allows any
+//     https image because article content may embed external images
 //   - style-src/font-src allow Google Fonts (app/layout.tsx loads Noto Sans TC
 //     as a <link> tag, not next/font, because it needs the CJK glyphs)
 //   - frame-src only allows YouTube embeds (lib/ui/rich-text-sanitize.ts only
@@ -29,7 +23,7 @@ const cspDirectives = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: https:",
-  `connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com ${supabaseOrigin}`,
+  "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",
   "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
   "object-src 'none'",
   "base-uri 'self'",
@@ -59,16 +53,13 @@ const nextConfig: NextConfig = {
     // Serve AVIF first, WebP fallback, then the original. Shaves the LCP
     // hero on mobile by ~30 % versus WebP-only at the same visual quality.
     formats: ["image/avif", "image/webp"],
+    // Uploads are served from /files on this site. Rows written through MCP
+    // may hold the absolute URL of the same files.
     remotePatterns: [
       {
         protocol: "https",
-        hostname: supabaseImageHost,
-        pathname: "/storage/v1/object/public/**",
-      },
-      {
-        protocol: "https",
-        hostname: "cdn.winlab.tw",
-        pathname: "/announcement-images/**",
+        hostname: "ai.winlab.tw",
+        pathname: "/files/announcement-images/**",
       },
     ],
   },

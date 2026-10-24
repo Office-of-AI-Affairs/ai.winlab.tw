@@ -3,13 +3,7 @@ import { existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { describe, test } from "node:test"
 
-const migration = readFileSync(
-  resolve(
-    process.cwd(),
-    "supabase/migrations/20260321000001_split_public_private_profile_recruitment.sql"
-  ),
-  "utf8"
-)
+const baseline = readFileSync(resolve(process.cwd(), "drizzle/0001_baseline.sql"), "utf8")
 const profilePage = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/page.tsx"), "utf8")
 const profileLayout = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/layout.tsx"), "utf8")
 const profileData = readFileSync(resolve(process.cwd(), "lib/data/profile.ts"), "utf8")
@@ -26,18 +20,12 @@ const eventRecruitmentDetailPage = readFileSync(
 const recruitmentDialog = readFileSync(resolve(process.cwd(), "components/events/recruitment-dialog.tsx"), "utf8")
 
 describe("private data contracts", () => {
-  test("migration splits public profile reads away from private profile fields", () => {
-    assert.ok(migration.includes("create table if not exists public.public_profiles"))
-    assert.ok(migration.includes('drop policy if exists "Anyone can read profiles" on public.profiles;'))
-    assert.ok(migration.includes('create policy "Anyone can read public_profiles"'))
-  })
-
-  test("migration moves private recruitment fields into a gated table", () => {
-    assert.ok(migration.includes("create table if not exists public.competition_private_details"))
-    assert.ok(migration.includes("drop column if exists positions"))
-    assert.ok(migration.includes("drop column if exists application_method"))
-    assert.ok(migration.includes('create policy "Authenticated can read competition_private_details"'))
-    assert.ok(!migration.includes('create policy "Public read competition_private_details"'))
+  test("the schema keeps public profile fields apart from private ones", () => {
+    assert.ok(baseline.includes('CREATE TABLE IF NOT EXISTS "public"."public_profiles"'))
+    assert.ok(baseline.includes('CREATE TABLE IF NOT EXISTS "public"."competition_private_details"'))
+    // public_profiles has no phone column: the private row stays private.
+    const publicProfiles = baseline.slice(baseline.indexOf('"public"."public_profiles" ('))
+    assert.ok(!publicProfiles.slice(0, publicProfiles.indexOf(");")).includes('"phone"'))
   })
 
   test("public profile reads no longer query private profile rows", () => {
