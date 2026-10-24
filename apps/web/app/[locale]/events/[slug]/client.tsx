@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useEventActions } from "@/hooks/use-event-actions";
 import { formatDate } from "@/lib/date";
-import { createClient } from "@/lib/supabase/client";
+import { getEventViewerData, removeEventMember } from "@/lib/actions/events";
 import { getSurnameStrokes } from "@/lib/chinese-stroke";
 import { useLocale, useT } from "@/lib/i18n/locale-provider";
 import { localizedField } from "@/lib/i18n/localized-field";
@@ -32,7 +32,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Loader2, Pencil, Plus, Search, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 // Admin-only dialogs. Lazy-load so the visitor critical path never ships
@@ -115,7 +115,6 @@ export function EventDetailClient({
   const eventName = localizedField(event, "name", locale).value;
   const { user, isAdmin } = useAuth();
   const userId = user?.id ?? null;
-  const supabaseRef = useRef(createClient());
   const {
     isCreatingAnnouncement,
     isCreatingResult,
@@ -138,12 +137,8 @@ export function EventDetailClient({
 
   async function removeMember(memberId: string) {
     setRemovingMemberId(memberId);
-    const { error } = await supabaseRef.current
-      .from("event_participants")
-      .delete()
-      .eq("event_id", event.id)
-      .eq("user_id", memberId);
-    if (error) {
+    const result = await removeEventMember(event.id, memberId).catch(() => null);
+    if (!result?.ok) {
       toast.error(t.events.members.removeError);
     } else {
       setCurrentMembers((prev) => prev.filter((m) => m.id !== memberId));
@@ -159,123 +154,25 @@ export function EventDetailClient({
   const [privateFetch, setPrivateFetch] = useState<Map<string, RecruitmentPrivateDetails> | null>(null);
   const [ownedRecruitmentIds, setOwnedRecruitmentIds] = useState<Set<string>>(new Set());
 
-  // Admin / owner drafts for announcements. RLS filters: admin sees all,
-  // author sees their own. No reset on !userId — useMemo guards on draft
-  // length so signed-out viewers see published-only without a state poke.
+  // Drafts and editable recruitment details for the signed-in viewer, from
+  // one server call that applies the permission rules. No reset on !userId —
+  // the memos below guard on length, so signed-out viewers see published-only.
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
     (async () => {
-      const query = supabaseRef.current
-        .from("announcements")
-        .select("*")
-        .eq("event_id", event.id)
-        .eq("status", "draft");
-      if (!isAdmin) query.eq("author_id", userId);
-      const { data } = await query.order("date", { ascending: false });
-      if (!cancelled) setDraftAnnouncements((data as Announcement[] | null) ?? []);
+      const data = await getEventViewerData(
+        event.id,
+        publishedRecruitments.map((r) => r.id),
+      ).catch(() => null);
+      if (cancelled || !data) return;
+      setDraftAnnouncements(data.draftAnnouncements);
+      setDraftResults(data.draftResults);
+      setOwnedRecruitmentIds(new Set(data.ownedRecruitmentIds));
+      setPrivateFetch(new Map(data.privateDetails.map((row) => [row.competition_id, row])));
     })();
     return () => { cancelled = true; };
-  }, [event.id, isAdmin, userId]);
-
-  // Admin / owner drafts for results. Same stale-state argument as the
-  // announcement draft effect above.
-  useEffect(() => {
-    if (!userId) return;
-    let cancelled = false;
-    (async () => {
-      const query = supabaseRef.current
-        .from("results")
-        .select("*")
-        .eq("event_id", event.id)
-        .eq("status", "draft");
-      if (!isAdmin) query.eq("author_id", userId);
-      const { data: rawDrafts } = await query;
-      const drafts = (rawDrafts as Result[] | null) ?? [];
-      if (drafts.length === 0) { if (!cancelled) setDraftResults([]); return; }
-
-      const authorIds = [...new Set(drafts.map((r) => r.author_id).filter(Boolean))] as string[];
-      const [{ data: authors }, { data: coauthorRows }] = await Promise.all([
-        authorIds.length
-          ? supabaseRef.current.from("public_profiles").select("id, display_name").in("id", authorIds)
-          : Promise.resolve({ data: [] as { id: string; display_name: string | null }[] }),
-        supabaseRef.current
-          .from("result_coauthors")
-          .select("result_id, user_id")
-          .in("result_id", drafts.map((r) => r.id)),
-      ]);
-      const profileMap = Object.fromEntries(
-        ((authors as { id: string; display_name: string | null }[] | null) ?? []).map((p) => [p.id, p.display_name]),
-      );
-      const coauthorsByResult = new Map<string, { id: string; name: string }[]>();
-      const coauthorUserIds = [...new Set(((coauthorRows as { user_id: string }[] | null) ?? []).map((r) => r.user_id))];
-      if (coauthorUserIds.length) {
-        const { data: coProfiles } = await supabaseRef.current
-          .from("public_profiles")
-          .select("id, display_name")
-          .in("id", coauthorUserIds);
-        for (const p of ((coProfiles as { id: string; display_name: string | null }[] | null) ?? [])) {
-          if (!profileMap[p.id]) profileMap[p.id] = p.display_name;
-        }
-      }
-      for (const row of (coauthorRows as { result_id: string; user_id: string }[] | null) ?? []) {
-        const list = coauthorsByResult.get(row.result_id) ?? [];
-        list.push({ id: row.user_id, name: profileMap[row.user_id] ?? t.common.unknownUser });
-        coauthorsByResult.set(row.result_id, list);
-      }
-      const composed: ResultWithMeta[] = drafts.map((r) => ({
-        ...r,
-        author_name: r.author_id ? profileMap[r.author_id] ?? null : null,
-        coauthors: coauthorsByResult.get(r.id) ?? [],
-      }));
-      if (!cancelled) setDraftResults(composed);
-    })();
-    return () => { cancelled = true; };
-  }, [event.id, isAdmin, userId, t]);
-
-  // Per-recruitment ownership for non-admins (powers the inline edit gate).
-  // Admins skip this fetch entirely; the empty initial Set covers them.
-  useEffect(() => {
-    if (!userId || isAdmin) return;
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabaseRef.current
-        .from("competition_owners")
-        .select("competition_id")
-        .eq("user_id", userId);
-      if (cancelled) return;
-      setOwnedRecruitmentIds(new Set(((data as { competition_id: string }[] | null) ?? []).map((r) => r.competition_id)));
-    })();
-    return () => { cancelled = true; };
-  }, [isAdmin, userId]);
-
-  // Recruitment private details. Admin fetches everything; owners fetch only
-  // recruitments they own so the dialog pre-fills correctly when they click
-  // edit without leaking other companies' private info. Skip the fetch when
-  // there's nothing to ask for; visibility-gating happens in the derived
-  // `privateDetails` memo below regardless of the cached fetch.
-  useEffect(() => {
-    if (publishedRecruitments.length === 0) return;
-    if (!isAdmin && ownedRecruitmentIds.size === 0) return;
-    const ids = isAdmin
-      ? publishedRecruitments.map((r) => r.id)
-      : publishedRecruitments.filter((r) => ownedRecruitmentIds.has(r.id)).map((r) => r.id);
-    if (ids.length === 0) return;
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabaseRef.current
-        .from("competition_private_details")
-        .select("competition_id, created_at, updated_at, positions, application_method, contact, required_documents")
-        .in("competition_id", ids);
-      if (cancelled) return;
-      const map = new Map<string, RecruitmentPrivateDetails>();
-      for (const row of ((data as RecruitmentPrivateDetails[] | null) ?? [])) {
-        map.set(row.competition_id, row);
-      }
-      setPrivateFetch(map);
-    })();
-    return () => { cancelled = true; };
-  }, [isAdmin, publishedRecruitments, ownedRecruitmentIds]);
+  }, [event.id, isAdmin, publishedRecruitments, userId]);
 
   // Derived view of privateFetch that re-applies the permission gate every
   // render. If a non-admin loses ownership of a recruitment, the cached

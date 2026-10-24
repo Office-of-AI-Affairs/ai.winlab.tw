@@ -4,17 +4,10 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { formatDate } from "@/lib/date"
 import { useT } from "@/lib/i18n/locale-provider"
-import { createClient } from "@/lib/supabase/client"
+import { listRevisions, type Revision } from "@/lib/actions/revisions"
 import type { ContentRevisionTableName } from "@winlab/db"
 import { History, Loader2, RotateCcw } from "lucide-react"
-import { useCallback, useEffect, useRef, useState } from "react"
-
-type Revision = {
-  id: string
-  created_at: string
-  changed_by: string | null
-  snapshot: unknown
-}
+import { useCallback, useEffect, useState } from "react"
 
 /**
  * Minimal version-history + one-click restore panel (#47). Lives inside
@@ -36,7 +29,6 @@ export function RevisionHistoryPanel({
   onRestore: (snapshot: Record<string, unknown>) => Promise<void> | void
 }) {
   const t = useT()
-  const supabaseRef = useRef(createClient())
   const [open, setOpen] = useState(false)
   // null = not loaded yet (shows the spinner). Deliberately no separate
   // "loading" boolean set synchronously at the top of `load()` — every
@@ -48,44 +40,33 @@ export function RevisionHistoryPanel({
   const [actorNames, setActorNames] = useState<Record<string, string>>({})
   const [restoringId, setRestoringId] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
-    const { data, error } = await supabaseRef.current
-      .from("content_revisions")
-      .select("id, created_at, changed_by, snapshot")
-      .eq("table_name", tableName)
-      .eq("row_id", rowId)
-      .order("created_at", { ascending: false })
-      .limit(20)
+  const fetchRevisions = useCallback(
+    () => listRevisions(tableName, rowId).catch(() => ({ ok: false as const })),
+    [tableName, rowId],
+  )
 
-    if (error) {
+  const apply = useCallback((result: Awaited<ReturnType<typeof fetchRevisions>>) => {
+    if (!result.ok) {
       setLoadFailed(true)
       return
     }
     setLoadFailed(false)
+    setRevisions(result.revisions)
+    setActorNames(result.actorNames)
+  }, [])
 
-    const rows = (data as Revision[] | null) ?? []
-    setRevisions(rows)
-
-    const actorIds = Array.from(
-      new Set(rows.map((r) => r.changed_by).filter((id): id is string => Boolean(id))),
-    )
-    if (actorIds.length) {
-      const { data: profiles } = await supabaseRef.current
-        .from("public_profiles")
-        .select("id, display_name")
-        .in("id", actorIds)
-      const map: Record<string, string> = {}
-      for (const p of profiles ?? []) {
-        if (p.display_name) map[p.id] = p.display_name
-      }
-      setActorNames(map)
-    }
-  }, [tableName, rowId])
+  const load = useCallback(async () => apply(await fetchRevisions()), [apply, fetchRevisions])
 
   useEffect(() => {
     if (!open) return
-    void load()
-  }, [open, load])
+    let cancelled = false
+    fetchRevisions().then((result) => {
+      if (!cancelled) apply(result)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [open, apply, fetchRevisions])
 
   const handleRestore = async (revision: Revision) => {
     if (!window.confirm(t.editor.history.restoreConfirm)) return

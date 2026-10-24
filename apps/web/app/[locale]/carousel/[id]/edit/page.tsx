@@ -2,7 +2,7 @@ import { CarouselEditClient } from "./client";
 import { requireAdmin } from "@/lib/auth/viewer";
 import { db } from "@/lib/db";
 import { carousel_slides } from "@/lib/db/schema";
-import { isUuid } from "@/lib/db/uuid";
+import { isUuid } from "@/lib/slug";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 

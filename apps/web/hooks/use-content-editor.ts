@@ -1,20 +1,16 @@
 "use client";
 
 import { useAutoSave } from "@/hooks/use-auto-save";
-import { createClient } from "@/lib/supabase/client";
-import type { Database } from "@winlab/db";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { deleteRow, updateRow } from "@/lib/actions/rows";
+import type { RowTable } from "@/lib/permissions/rows";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-// Generic hook over any table — the caller types the table name via N, but
-// the internal query chain is loosely typed on purpose because Supabase's
-// conditional types don't resolve safely under a still-generic N.
-type TableName = keyof Database["public"]["Tables"];
-
-type Options<T extends Record<string, unknown>, N extends TableName> = {
-  table: N;
+// Generic editor over any table in lib/permissions/rows.ts; the server
+// actions check who may write what.
+type Options<T extends Record<string, unknown>> = {
+  table: RowTable;
   id: string;
   initialData: T;
   fields: (keyof T & string)[];
@@ -27,7 +23,7 @@ type Options<T extends Record<string, unknown>, N extends TableName> = {
   onAfterRemove?: () => void | Promise<void>;
 };
 
-export function useContentEditor<T extends Record<string, unknown>, N extends TableName = TableName>({
+export function useContentEditor<T extends Record<string, unknown>>({
   table,
   id,
   initialData,
@@ -39,9 +35,8 @@ export function useContentEditor<T extends Record<string, unknown>, N extends Ta
   onAfterSave,
   onAfterPublish,
   onAfterRemove,
-}: Options<T, N>) {
+}: Options<T>) {
   const router = useRouter();
-  const supabaseRef = useRef(createClient() as unknown as SupabaseClient);
 
   const [data, setData] = useState<T>(initialData);
   const [savedData, setSavedData] = useState<T>(initialData);
@@ -73,8 +68,8 @@ export function useContentEditor<T extends Record<string, unknown>, N extends Ta
     }
     setIsSaving(true);
     const payload = Object.fromEntries(fields.map((f) => [f, data[f] ?? null]));
-    const { error } = await supabaseRef.current.from(table).update(payload).eq("id", id);
-    if (error) {
+    const result = await updateRow(table, id, payload).catch(() => null);
+    if (!result?.ok) {
       toast.error("儲存失敗");
     } else {
       setSavedData({ ...data });
@@ -94,8 +89,8 @@ export function useContentEditor<T extends Record<string, unknown>, N extends Ta
       ...Object.fromEntries(fields.map((f) => [f, data[f] ?? null])),
       [statusField]: newStatus,
     };
-    const { error } = await supabaseRef.current.from(table).update(payload).eq("id", id);
-    if (error) {
+    const result = await updateRow(table, id, payload).catch(() => null);
+    if (!result?.ok) {
       toast.error("發布失敗");
     } else {
       const updated = { ...data, [statusField]: newStatus } as T;
@@ -110,8 +105,8 @@ export function useContentEditor<T extends Record<string, unknown>, N extends Ta
   const remove = useCallback(async () => {
     if (!confirm("確定要刪除嗎？")) return;
     setIsDeleting(true);
-    const { error } = await supabaseRef.current.from(table).delete().eq("id", id);
-    if (error) {
+    const result = await deleteRow(table, id).catch(() => null);
+    if (!result?.ok) {
       toast.error("刪除失敗");
       setIsDeleting(false);
       return;

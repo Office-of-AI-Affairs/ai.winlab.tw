@@ -16,9 +16,7 @@ export async function GET(
     headers: {
       "Content-Type": file.content_type,
       "Cache-Control": "public, max-age=31536000, immutable",
-      "X-Content-Type-Options": "nosniff",
-      // An uploaded SVG must never run script in our origin.
-      "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+      // nosniff and a sandboxing CSP come from next.config.ts headers().
     },
   });
 }

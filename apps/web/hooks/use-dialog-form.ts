@@ -1,17 +1,13 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
-import type { Database } from "@winlab/db";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { deleteRow, insertRow, updateRow } from "@/lib/actions/rows";
+import type { RowTable } from "@/lib/permissions/rows";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-// See use-content-editor.ts for why the internal client is cast loose.
-type TableName = keyof Database["public"]["Tables"];
-
-type Options<T extends Record<string, unknown>, N extends TableName> = {
-  table: N;
+type Options<T extends Record<string, unknown>> = {
+  table: RowTable;
   editingId: string | null;
   getDefaults: () => T;
   buildPayload: (form: T) => Record<string, unknown>;
@@ -21,7 +17,7 @@ type Options<T extends Record<string, unknown>, N extends TableName> = {
   onAfterRemove?: () => void | Promise<void>;
 };
 
-export function useDialogForm<T extends Record<string, unknown>, N extends TableName = TableName>({
+export function useDialogForm<T extends Record<string, unknown>>({
   table,
   editingId,
   getDefaults,
@@ -30,9 +26,8 @@ export function useDialogForm<T extends Record<string, unknown>, N extends Table
   onClose,
   onAfterSave,
   onAfterRemove,
-}: Options<T, N>) {
+}: Options<T>) {
   const router = useRouter();
-  const supabaseRef = useRef(createClient() as unknown as SupabaseClient);
   const getDefaultsRef = useRef(getDefaults);
   const buildPayloadRef = useRef(buildPayload);
   const validateRef = useRef(validate);
@@ -67,16 +62,13 @@ export function useDialogForm<T extends Record<string, unknown>, N extends Table
     setIsSaving(true);
     const payload = buildPayloadRef.current(formData);
 
-    let error;
-    if (editingId) {
-      ({ error } = await supabaseRef.current.from(table).update(payload).eq("id", editingId));
-    } else {
-      ({ error } = await supabaseRef.current.from(table).insert(payload));
-    }
+    const result = await (editingId ? updateRow(table, editingId, payload) : insertRow(table, payload)).catch(
+      () => null,
+    );
 
     setIsSaving(false);
-    if (error) {
-      toast.error(error.message);
+    if (!result?.ok) {
+      toast.error(result?.error ?? "操作失敗");
     } else {
       toast.success(editingId ? "已更新" : "已建立");
       onCloseRef.current();
@@ -88,10 +80,10 @@ export function useDialogForm<T extends Record<string, unknown>, N extends Table
   const remove = useCallback(async () => {
     if (!editingId) return;
     setIsDeleting(true);
-    const { error } = await supabaseRef.current.from(table).delete().eq("id", editingId);
+    const result = await deleteRow(table, editingId).catch(() => null);
     setIsDeleting(false);
-    if (error) {
-      toast.error(error.message);
+    if (!result?.ok) {
+      toast.error(result?.error ?? "操作失敗");
     } else {
       toast.success("已刪除");
       onCloseRef.current();

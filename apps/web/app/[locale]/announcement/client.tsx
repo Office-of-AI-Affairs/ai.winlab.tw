@@ -5,12 +5,11 @@ import { useAuth } from "@/components/layout/auth-provider";
 import { PageShell } from "@/components/shared/page-shell";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n/locale-provider";
-import { createClient } from "@/lib/supabase/client";
-import { generateUniqueAnnouncementSlug } from "@/lib/slug";
+import { insertRow, listRows } from "@/lib/actions/rows";
 import type { Announcement } from "@winlab/db";
 import { Loader2, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export function AnnouncementPageClient({
@@ -22,25 +21,23 @@ export function AnnouncementPageClient({
   const router = useRouter();
   const { user, isAdmin, isEditor } = useAuth();
   const canManage = isAdmin || isEditor;
-  const supabaseRef = useRef(createClient());
   const [isCreating, setIsCreating] = useState(false);
   const [drafts, setDrafts] = useState<Announcement[]>([]);
 
-  // Admin/editor: fetch drafts client-side (RLS filters everyone else to
-  // empty — see the editorial-workflow migration). No reset on
+  // Admin/editor: fetch drafts client-side (the server returns none to
+  // anyone else — see lib/permissions/rows.ts). No reset on
   // !canManage — useMemo below returns published-only when canManage flips
   // false, so any stale drafts in state are inert.
   useEffect(() => {
     if (!canManage) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabaseRef.current
-        .from("announcements")
-        .select("*")
-        .eq("status", "draft")
-        .is("event_id", null)
-        .order("date", { ascending: false });
-      if (!cancelled) setDrafts((data as Announcement[] | null) ?? []);
+      const rows = await listRows(
+        "announcements",
+        { status: "draft", event_id: null },
+        [{ column: "date", ascending: false }],
+      );
+      if (!cancelled) setDrafts(rows as Announcement[]);
     })();
     return () => { cancelled = true; };
   }, [canManage]);
@@ -55,14 +52,10 @@ export function AnnouncementPageClient({
   const handleCreate = async () => {
     if (!user?.id || !canManage) return;
     setIsCreating(true);
-    const slug = await generateUniqueAnnouncementSlug(supabaseRef.current, t.announcement.newTitle);
-    const { data, error } = await supabaseRef.current
-      .from("announcements")
-      .insert({ title: t.announcement.newTitle, slug, category: t.announcement.defaultCategory, content: {}, status: "draft", author_id: user.id, event_id: null })
-      .select()
-      .single();
-    if (error) { toast.error(t.common.createFailed); setIsCreating(false); return; }
-    router.push(`/announcement/${encodeURIComponent(data.slug)}?mode=edit`);
+    // No slug: the announcements_set_slug trigger derives a unique one.
+    const result = await insertRow("announcements", { title: t.announcement.newTitle, category: t.announcement.defaultCategory, content: {}, status: "draft", author_id: user.id, event_id: null }).catch(() => null);
+    if (!result?.ok) { toast.error(t.common.createFailed); setIsCreating(false); return; }
+    router.push(`/announcement/${encodeURIComponent(String(result.row.slug))}?mode=edit`);
   };
 
   return (

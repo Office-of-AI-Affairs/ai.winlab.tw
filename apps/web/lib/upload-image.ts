@@ -1,8 +1,5 @@
-import { createClient } from "@/lib/supabase/client";
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionary";
-
-const BUCKET = "announcement-images";
 
 // 這個模組不是 React component，拿不到 useT / getDictionary（後者是 server-only）。
 // 上傳一律在瀏覽器觸發，locale 就是 URL 第一段（預設 zh-TW 無前綴），據此 lazy-load
@@ -71,29 +68,28 @@ export async function uploadImage(
   }
 
   const processed = await compressIfNeeded(file);
-  const supabase = createClient();
-  const ext =
-    processed.type === "image/webp"
-      ? "webp"
-      : file.name.split(".").pop() || "jpg";
-  const path = `${prefix}${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const result = await postFile(processed, { bucket: "announcement-images", prefix });
+  if ("error" in result) return result;
+  return { url: result.url! };
+}
 
-  const { error } = await supabase.storage.from(BUCKET).upload(path, processed, {
-    cacheControl: "31536000",
-    upsert: false,
-    contentType: processed.type,
-  });
-
-  if (error) {
-    console.error("Upload error:", error);
-    return { error: error.message };
+/** POST /api/files; the server names the file and checks who may upload where. */
+async function postFile(
+  file: Blob,
+  fields: Record<string, string>,
+): Promise<{ url?: string; path: string } | { error: string }> {
+  const form = new FormData();
+  form.append("file", file);
+  for (const [key, value] of Object.entries(fields)) form.append(key, value);
+  try {
+    const res = await fetch("/api/files", { method: "POST", body: form, credentials: "same-origin" });
+    const body = (await res.json().catch(() => ({}))) as { url?: string; path?: string; error?: string };
+    if (!res.ok || !body.path) return { error: body.error ?? `Upload failed (${res.status})` };
+    return { url: body.url, path: body.path };
+  } catch (err) {
+    console.error("Upload error:", err);
+    return { error: "Upload failed" };
   }
-
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from(BUCKET).getPublicUrl(path);
-
-  return { url: publicUrl };
 }
 
 export const uploadAnnouncementImage = (file: File) => uploadImage(file);
@@ -105,7 +101,6 @@ export const uploadOrganizationImage = (file: File) => uploadImage(file, "organi
 export const uploadExternalResultImage = (file: File) => uploadImage(file, "external-results/");
 
 const PDF_MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
-const RESUME_BUCKET = "resumes";
 
 export async function uploadResumePdf(
   file: File,
@@ -122,19 +117,7 @@ export async function uploadResumePdf(
     return { error: errors.resumeLoginRequired };
   }
 
-  const supabase = createClient();
-  const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
-
-  const { error } = await supabase.storage.from(RESUME_BUCKET).upload(path, file, {
-    cacheControl: "3600",
-    upsert: false,
-    contentType: "application/pdf",
-  });
-
-  if (error) {
-    console.error("Resume upload error:", error);
-    return { error: error.message };
-  }
-
-  return { path };
+  const result = await postFile(file, { bucket: "resumes" });
+  if ("error" in result) return result;
+  return { path: result.path };
 }

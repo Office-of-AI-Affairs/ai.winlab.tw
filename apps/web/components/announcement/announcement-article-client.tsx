@@ -19,8 +19,7 @@ import { formatDate } from "@/lib/date"
 import { parseAnnouncementRevisionSnapshot } from "@/lib/revisions"
 import { fromDatetimeLocalValue, toDatetimeLocalValue } from "@/lib/scheduling"
 import { buildBreadcrumbJsonLd, buildNewsArticleJsonLd } from "@/lib/seo/jsonld"
-import { generateUniqueAnnouncementSlug } from "@/lib/slug"
-import { createClient } from "@/lib/supabase/client"
+import { updateRow } from "@/lib/actions/rows"
 import { extractFirstImage, type TocItem } from "@/lib/ui/article"
 import type { Announcement } from "@winlab/db"
 import { ArrowLeft, Loader2, LogOut, Send, Trash2 } from "lucide-react"
@@ -90,7 +89,6 @@ export function AnnouncementArticleClient({
 
   // Own client just for the slug backstop below — useContentEditor keeps its
   // Supabase reference internal.
-  const slugSupabaseRef = useRef(createClient())
   // Latest announcement state + setter, mirrored via the effect below so
   // onBeforeSave (defined before the hook call that produces them, to avoid
   // a circular reference) always reads current values.
@@ -98,29 +96,6 @@ export function AnnouncementArticleClient({
   const setAnnouncementRef = useRef<((updater: (prev: Announcement) => Announcement) => void) | null>(
     null,
   )
-
-  // Slugs are assigned on create; this is a backstop for rows that somehow
-  // reach the editor without one (e.g. pre-migration data before the
-  // backfill lands). Stable once set — never regenerated from a later title
-  // edit.
-  const onBeforeSaveAssignSlug = useCallback(async () => {
-    const current = announcementRef.current
-    if (current.slug || !current.title) return true
-    const slug = await generateUniqueAnnouncementSlug(
-      slugSupabaseRef.current,
-      current.title,
-      current.id,
-    )
-    const { error } = await slugSupabaseRef.current
-      .from("announcements")
-      .update({ slug })
-      .eq("id", current.id)
-    if (!error) {
-      announcementRef.current = { ...current, slug }
-      setAnnouncementRef.current?.((prev) => ({ ...prev, slug }))
-    }
-    return true
-  }, [])
 
   // Restore writes immediately (not through the 3s autosave debounce) so
   // the admin sees the effect right away. The write itself is a plain
@@ -141,15 +116,8 @@ export function AnnouncementArticleClient({
         date: snap.date ?? current.date,
         publish_at: snap.publish_at,
       }
-      // `content` is `Record<string, unknown>` in the domain type
-      // (@winlab/db's `Announcement`) vs. `Json` on the generated client's
-      // column type — same widening `.update()` calls elsewhere in this
-      // codebase route around; `as never` sidesteps it for this one call.
-      const { error } = await slugSupabaseRef.current
-        .from("announcements")
-        .update(payload as never)
-        .eq("id", initialAnnouncement.id)
-      if (error) {
+      const result = await updateRow("announcements", initialAnnouncement.id, payload).catch(() => null)
+      if (!result?.ok) {
         toast.error(t.editor.history.restoreFailed)
         return
       }
@@ -175,7 +143,6 @@ export function AnnouncementArticleClient({
     initialData: initialAnnouncement,
     fields: ["title", "title_en", "category", "date", "content", "publish_at"],
     redirectTo: backHref,
-    onBeforeSave: onBeforeSaveAssignSlug,
     onAfterSave: onCacheInvalidate,
     onAfterPublish: onCacheInvalidate,
     onAfterRemove: onCacheInvalidate,

@@ -11,10 +11,11 @@ import {
 import { FloatingActionPill } from "@/components/shared/floating-action-pill";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n/locale-provider";
-import { createClient } from "@/lib/supabase/client";
+import { addEventMember } from "@/lib/actions/events";
+import { listPublicProfiles } from "@/lib/actions/public-profiles";
 import type { PublicProfile } from "@winlab/db";
 import { Check, Loader2, Plus, Search } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 type Props = {
@@ -27,7 +28,6 @@ type Props = {
 
 export function AddMemberButton({ eventId, memberIds, onMemberAdded, inline }: Props) {
   const t = useT();
-  const supabaseRef = useRef(createClient());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [allUsers, setAllUsers] = useState<PublicProfile[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
@@ -36,11 +36,7 @@ export function AddMemberButton({ eventId, memberIds, onMemberAdded, inline }: P
 
   const fetchAllUsers = useCallback(async () => {
     setLoadingUsers(true);
-    const { data } = await supabaseRef.current
-      .from("public_profiles")
-      .select("id, created_at, updated_at, display_name, avatar_url, has_profile_data")
-      .order("display_name");
-    setAllUsers((data as PublicProfile[]) ?? []);
+    setAllUsers(await listPublicProfiles().catch(() => []));
     setLoadingUsers(false);
   }, []);
 
@@ -52,10 +48,8 @@ export function AddMemberButton({ eventId, memberIds, onMemberAdded, inline }: P
 
   async function addMember(profile: PublicProfile) {
     setAdding(profile.id);
-    const { error } = await supabaseRef.current
-      .from("event_participants")
-      .insert({ event_id: eventId, user_id: profile.id });
-    if (error) {
+    const result = await addEventMember(eventId, profile.id).catch(() => null);
+    if (!result?.ok) {
       toast.error(t.events.addMemberError);
     } else {
       onMemberAdded(profile);

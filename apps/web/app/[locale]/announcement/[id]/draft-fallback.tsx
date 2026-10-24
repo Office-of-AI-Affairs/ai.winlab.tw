@@ -4,12 +4,11 @@ import { useAuth } from "@/components/layout/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useT } from "@/lib/i18n/locale-provider"
-import { createClient } from "@/lib/supabase/client"
-import { isUuid } from "@/lib/slug"
+import { getRow } from "@/lib/actions/rows"
 import type { TocItem } from "@/lib/ui/article"
 import type { Announcement } from "@winlab/db"
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { AnnouncementArticleClient } from "./article-client"
 
 type State =
@@ -28,7 +27,6 @@ export function AnnouncementDraftFallback({ id }: { id: string }) {
   const t = useT()
   const { isAdmin, isLoading } = useAuth()
   const [state, setState] = useState<State>({ kind: "loading" })
-  const supabaseRef = useRef(createClient())
 
   useEffect(() => {
     if (isLoading || !isAdmin) return
@@ -36,19 +34,8 @@ export function AnnouncementDraftFallback({ id }: { id: string }) {
     void (async () => {
       // Admin drafts might be reached by slug (table link) or by the raw id
       // (right after creation, before a title — and thus a slug — exists).
-      let { data } = await supabaseRef.current
-        .from("announcements")
-        .select("*")
-        .eq("slug", id)
-        .maybeSingle()
-      if (!data && isUuid(id)) {
-        const byId = await supabaseRef.current
-          .from("announcements")
-          .select("*")
-          .eq("id", id)
-          .maybeSingle()
-        data = byId.data
-      }
+      const result = await getRow("announcements", id).catch(() => null)
+      const data = result?.ok ? result.row : null
       if (cancelled) return
       if (!data) {
         setState({ kind: "missing" })
@@ -56,7 +43,7 @@ export function AnnouncementDraftFallback({ id }: { id: string }) {
       }
       const { renderArticle } = await import("@/lib/ui/rich-text")
       const { estimateReadingTime } = await import("@/lib/ui/reading-time")
-      const announcement = data as Announcement
+      const announcement = data as unknown as Announcement
       const { html, toc } = renderArticle(
         announcement.content as Record<string, unknown> | null,
       )
