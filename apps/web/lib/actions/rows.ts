@@ -41,12 +41,9 @@ async function lockRow(tx: Tx, policy: RowPolicy, id: string): Promise<Row | nul
   return (row as Row | undefined) ?? null;
 }
 
-/** Only admins may hand a row to someone else: author_id stays put on update. */
-function withoutOwnerChange(viewer: Viewer, before: Row, clean: Row): Row {
-  if (viewer.role === "admin" || !("author_id" in clean) || clean.author_id === before.author_id) return clean;
-  const { author_id: _ignored, ...rest } = clean;
-  return rest;
-}
+/** Only admins may hand a row to someone else (author_id). */
+const changesOwner = (viewer: Viewer, before: Row, clean: Row) =>
+  viewer.role !== "admin" && "author_id" in clean && clean.author_id !== before.author_id;
 
 /** One row the viewer may read, by id (or by slug for announcements and events). */
 export async function getRow(table: RowTable, key: string): Promise<RowResult> {
@@ -117,7 +114,8 @@ export async function updateRow(table: RowTable, id: string, patch: Row): Promis
   return asUser(viewer.id, async (tx): Promise<RowResult> => {
     const before = await lockRow(tx, policy, id);
     if (!before) return NOT_FOUND;
-    const clean = withoutOwnerChange(viewer, before, writableValues(policy, patch ?? {}));
+    const clean = writableValues(policy, patch ?? {});
+    if (changesOwner(viewer, before, clean)) return DENIED;
     // Checked before and after the change, like RLS USING and WITH CHECK.
     if (!(await policy.update!(viewer, before)) || !(await policy.update!(viewer, { ...before, ...clean }))) {
       return DENIED;
@@ -150,7 +148,8 @@ export async function reorderRows(table: RowTable, ids: string[]): Promise<Done>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!(policy.table as any).sort_order) return DENIED;
   return asUser(viewer.id, async (tx): Promise<Done> => {
-    for (const id of ids) {
+    // Lock in a fixed order, so two reorders at once cannot deadlock.
+    for (const id of [...ids].sort()) {
       const before = await lockRow(tx, policy, id);
       if (!before || !(await policy.update!(viewer, before))) return DENIED;
     }

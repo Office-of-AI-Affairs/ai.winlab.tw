@@ -14,9 +14,9 @@ export async function POST(request: Request) {
   if (!origin || !allowed.includes(origin)) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
-  // Refuse a large body before reading it.
-  const length = Number(request.headers.get("content-length"));
-  if (!Number.isFinite(length) || length <= 0) return Response.json({ error: "Length required" }, { status: 411 });
+  // Refuse a declared large body before reading it. A chunked body (HTTP/2
+  // through the gateway may omit the length) is capped at 10 MB by Next.
+  const length = Number(request.headers.get("content-length") ?? 0);
   if (length > MAX_BODY) return Response.json({ error: "File too large" }, { status: 413 });
   const viewer = await getViewer();
   if (!viewer) return Response.json({ error: "Unauthorized" }, { status: 401 });
