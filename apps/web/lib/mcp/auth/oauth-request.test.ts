@@ -181,6 +181,34 @@ describe("validateOAuthClientRequest", () => {
     );
   });
 
+  test("accepts the legacy mcp.ai.winlab.tw resource indicator", async () => {
+    const store = createOAuthClientStore({
+      insert: async () => {},
+      selectById: async () => ({
+        client_id: "client-123",
+        client_name: "Codex",
+        redirect_uris: ["http://127.0.0.1:4000/callback"],
+        grant_types: ["authorization_code", "refresh_token"],
+        response_types: ["code"],
+        created_at: new Date().toISOString(),
+      }),
+    });
+
+    const client = await validateOAuthClientRequest(
+      {
+        clientId: "client-123",
+        redirectUri: "http://127.0.0.1:4000/callback",
+        resource: "https://mcp.ai.winlab.tw/mcp",
+      },
+      {
+        expectedResource: "https://ai.winlab.tw/mcp",
+        store,
+      },
+    );
+
+    assert.equal(client.client_id, "client-123");
+  });
+
   test("rejects a stored redirect URI whose host is not on the allowlist", async () => {
     // Simulates a rogue oauth_clients row (e.g. inserted by a direct PostgREST
     // write that bypassed the registration host allowlist). Even though the

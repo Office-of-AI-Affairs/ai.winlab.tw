@@ -4,6 +4,7 @@ import {
   getOAuthClient,
   type OAuthClientStore,
 } from "@/lib/mcp/auth/oauth-clients";
+import { LEGACY_MCP_RESOURCE_URL } from "@/lib/mcp/auth/urls";
 
 const authorizeRequestSchema = z.object({
   client_id: z.string().min(1),
@@ -87,7 +88,11 @@ export async function validateOAuthClientRequest(
   // to an attacker domain and the victim's session stolen.
   assertAllowedRedirectUri(input.redirectUri);
 
-  if (input.resource && input.resource !== options.expectedResource) {
+  if (
+    input.resource &&
+    input.resource !== options.expectedResource &&
+    input.resource !== LEGACY_MCP_RESOURCE_URL
+  ) {
     throw new Error("Invalid resource");
   }
 

@@ -78,11 +78,13 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       // The MCP server used to live on its own host; it is now /mcp here.
-      // 308 keeps the method, so POST /mcp from old client configs still works.
+      // Its API paths stay served on the old host: a cross-origin redirect
+      // would drop the Authorization header of existing MCP clients. Every
+      // other path on the old host moves to ai.winlab.tw.
       {
-        source: "/:path*",
+        source: "/:path((?!mcp$|oauth/|\\.well-known/|api/upload$).*)",
         has: [{ type: "host", value: "mcp.ai.winlab.tw" }],
-        destination: "https://ai.winlab.tw/:path*",
+        destination: "https://ai.winlab.tw/:path",
         permanent: true,
       },
       { source: "/team/:id", destination: "/", permanent: true },

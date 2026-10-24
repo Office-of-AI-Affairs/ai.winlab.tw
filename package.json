@@ -19,6 +19,8 @@
     "qs": "^6.16.0",
     "@tiptap/core": "^3.31.3",
     "@tiptap/pm": "^3.31.3",
-    "@tiptap/extension-text-style": "^3.31.3"
+    "@tiptap/extension-text-style": "^3.31.3",
+    "happy-dom": "^21.0.4",
+    "zod": "^4.6.7"
   }
 }
