@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { safeNextPath } from "@/lib/auth/safe-next-path";
+import { SITE_URL } from "@/lib/site";
 
 // Pass-through: Supabase redirects here after verifying the email token.
 // We forward to the target page so the browser-side Supabase client
 // (which holds the PKCE code_verifier) can complete the exchange.
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams, origin: requestOrigin } = new URL(request.url);
+  // The standalone server sees its bind address (http://0.0.0.0:3000) behind
+  // the Carrel gateway, so production redirects to the canonical origin.
+  const origin = process.env.NODE_ENV === "development" ? requestOrigin : SITE_URL;
   const code = searchParams.get("code");
   const next = safeNextPath(searchParams.get("next") ?? "/", origin);
   const error = searchParams.get("error");

@@ -1,0 +1,52 @@
+name: carrel
+
+# Builds apps/web as a Next.js standalone server and ships it to the Carrel
+# machine `ai` (tenant winfra). carrel-deployd on the machine switches the
+# release and rolls back if http://127.0.0.1:3000/ is unhealthy. Runtime
+# secrets live in /srv/apps/ai/env on the machine, never in this repo.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: carrel-${{ github.ref }}
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      # Public values only: they are inlined into the browser bundle anyway.
+      - name: Build
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://hwezfbhjcetpezfuvelf.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: sb_publishable_0xFoLCvOO9u0ntpugOv6dg_mcd2CABU
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: bun run build
+
+      # The start command is `node apps/web/server.js` from the release root.
+      - name: Pack
+        working-directory: apps/web
+        run: |
+          cp -r .next/static .next/standalone/apps/web/.next/static
+          cp -r public .next/standalone/apps/web/public
+          tar czf "$RUNNER_TEMP/ai.tar.gz" -C .next/standalone .
+
+      - uses: NYCU-WinLab/carrel-deploy@v1
+        with:
+          tenant: winfra
+          app: ai
+          artifact: ${{ runner.temp }}/ai.tar.gz
