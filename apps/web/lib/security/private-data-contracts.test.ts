@@ -12,6 +12,7 @@ const migration = readFileSync(
 )
 const profilePage = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/page.tsx"), "utf8")
 const profileLayout = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/layout.tsx"), "utf8")
+const profileData = readFileSync(resolve(process.cwd(), "lib/data/profile.ts"), "utf8")
 const eventPage = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/page.tsx"), "utf8")
 const eventData = readFileSync(resolve(process.cwd(), "app/[locale]/events/[slug]/data.ts"), "utf8")
 const eventResultPage = readFileSync(
@@ -40,8 +41,10 @@ describe("private data contracts", () => {
   })
 
   test("public profile reads no longer query private profile rows", () => {
-    assert.ok(profilePage.includes('.from("public_profiles")'))
-    assert.ok(profileLayout.includes('.from("public_profiles")'))
+    assert.ok(profilePage.includes(".from(public_profiles)"))
+    assert.ok(profileLayout.includes(".from(public_profiles)"))
+    // The private profiles row is read only behind mayReadPrivateProfile.
+    assert.ok(profileData.includes("mayReadPrivateProfile(viewer, id)"))
     // The /events/[slug] page moved its data fetches into data.ts for ISR.
     // Contract still holds: public reads must hit public_profiles.
     assert.ok(eventData.includes("public_profiles.display_name"))
@@ -65,7 +68,12 @@ describe("private data contracts", () => {
   test("recruitment pages fetch summary rows separately from private details", () => {
     assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/recruitment/page.tsx")))
     assert.ok(!existsSync(resolve(process.cwd(), "app/[locale]/recruitment/[id]/page.tsx")))
-    assert.ok(eventRecruitmentDetailPage.includes('.from("competition_private_details")'))
-    assert.ok(recruitmentDialog.includes('.from("competition_private_details")'))
+    // Private details are read and written only behind the server checks.
+    const recruitmentData = readFileSync(resolve(process.cwd(), "lib/data/recruitment.ts"), "utf8")
+    const recruitmentActions = readFileSync(resolve(process.cwd(), "lib/actions/recruitment.ts"), "utf8")
+    assert.ok(eventRecruitmentDetailPage.includes("getRecruitmentPageData("))
+    assert.ok(recruitmentData.includes(".from(competition_private_details)"))
+    assert.ok(recruitmentDialog.includes("saveRecruitment("))
+    assert.ok(recruitmentActions.includes("isRecruitmentOwner(viewer.id, input.id)"))
   })
 })

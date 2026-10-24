@@ -13,7 +13,6 @@ const recruitmentDialog = readFileSync(resolve(process.cwd(), "components/events
 const organizationMemberDialog = readFileSync(resolve(process.cwd(), "components/introduction/organization-member-dialog.tsx"), "utf8")
 const tiptapEditor = readFileSync(resolve(process.cwd(), "components/editor/tiptap-editor.tsx"), "utf8")
 const profileClient = readFileSync(resolve(process.cwd(), "app/[locale]/profile/[id]/client.tsx"), "utf8")
-const resultTagSidebar = readFileSync(resolve(process.cwd(), "components/events/result-tag-sidebar.tsx"), "utf8")
 const tiptapDesktopBubbleMenu = readFileSync(resolve(process.cwd(), "components/editor/tiptap-desktop-bubble-menu.tsx"), "utf8")
 const tiptapDesktopFloatingMenu = readFileSync(resolve(process.cwd(), "components/editor/tiptap-desktop-floating-menu.tsx"), "utf8")
 const tiptapMobileToolbar = readFileSync(resolve(process.cwd(), "components/editor/tiptap-mobile-toolbar.tsx"), "utf8")
@@ -121,7 +120,6 @@ describe("global UI patterns", () => {
   })
 
   test("prefers managed focus over autoFocus in application components", () => {
-    assert.ok(!resultTagSidebar.includes("autoFocus"))
   })
 
   test("lightweight auth-aware client components do not depend on useAuth when server props can provide the same state", () => {

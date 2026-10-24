@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n/locale-provider";
-import { createClient } from "@/lib/supabase/client";
+import { setRecruitmentInterest } from "@/lib/actions/recruitment";
 import { Heart } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -42,33 +42,9 @@ export function RecruitmentInterestButton({
     setInterested(nextInterested);
     setCount(nextCount);
 
-    const supabase = createClient();
-    let error: unknown = null;
+    const result = await setRecruitmentInterest(competitionId, nextInterested).catch(() => null);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setInterested((prev) => !prev);
-      setCount((prev) => nextInterested ? prev - 1 : prev + 1);
-      setIsPending(false);
-      toast.error(t.common.loginFirst);
-      return;
-    }
-
-    if (nextInterested) {
-      const result = await supabase
-        .from("recruitment_interests")
-        .insert({ competition_id: competitionId, user_id: user.id });
-      error = result.error;
-    } else {
-      const result = await supabase
-        .from("recruitment_interests")
-        .delete()
-        .eq("competition_id", competitionId)
-        .eq("user_id", user.id);
-      error = result.error;
-    }
-
-    if (error) {
+    if (!result?.ok) {
       // Revert on error using functional updaters to avoid stale closure
       setInterested((prev) => !prev);
       setCount((prev) => nextInterested ? prev - 1 : prev + 1);

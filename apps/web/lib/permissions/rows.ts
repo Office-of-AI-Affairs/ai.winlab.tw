@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, getTableColumns } from "drizzle-orm";
+import { and, eq, getTableColumns, sql } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import type { Viewer } from "@/lib/auth/viewer";
 import { db } from "@/lib/db";
@@ -11,6 +11,7 @@ import {
   competitions,
   contacts,
   events,
+  external_results,
   introduction,
   organization_members,
   results,
@@ -133,12 +134,22 @@ export const ROW_POLICIES = {
   },
   competitions: {
     table: competitions,
-    // Set by the server to the creator; the owner trigger reads it.
-    readOnly: ["created_by"],
+    // created_by is set by the server to the creator (the owner trigger
+    // reads it). Moving a recruitment to another event is an admin action
+    // (patchRecruitment), not a generic update.
+    readOnly: ["created_by", "event_id"],
     read: everyone,
     insert: adminOnly,
     update: competitionWrite,
     delete: competitionWrite,
+  },
+  external_results: {
+    table: external_results,
+    // "owner insert/update/delete external_results": your own rows only.
+    read: everyone,
+    insert: (v, row) => row.user_id === v.id,
+    update: (v, row) => row.user_id === v.id,
+    delete: (v, row) => row.user_id === v.id,
   },
   tags: {
     table: tags,
@@ -164,3 +175,20 @@ export function writableValues(policy: RowPolicy, values: Row): Row {
 
 export const isRowTable = (value: unknown): value is RowTable =>
   typeof value === "string" && Object.hasOwn(ROW_POLICIES, value);
+
+/**
+ * "Self, admin, or recruitment_owner can read profiles": the private
+ * profiles row (phone, resume) of `targetId`. A recruitment owner may read
+ * the profile of anyone who registered interest in one of their recruitments.
+ */
+export async function mayReadPrivateProfile(viewer: Viewer | null, targetId: string): Promise<boolean> {
+  if (!viewer) return false;
+  if (viewer.id === targetId || isAdmin(viewer)) return true;
+  const { rows } = await db.execute<{ ok: boolean }>(sql`
+    select exists (
+      select 1 from recruitment_interests ri
+      join competition_owners co on co.competition_id = ri.competition_id
+      where ri.user_id = ${targetId} and co.user_id = ${viewer.id}
+    ) as ok`);
+  return Boolean(rows[0]?.ok);
+}

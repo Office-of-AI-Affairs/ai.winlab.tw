@@ -1,9 +1,24 @@
 import { JsonLd } from "@/components/seo/json-ld";
-import { createClient } from "@/lib/supabase/server";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { public_profiles } from "@/lib/db/schema";
+import { isUuid } from "@/lib/slug";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { defaultLocale, isLocale } from "@/lib/i18n/config";
 import { localeAlternates } from "@/lib/i18n/seo";
 import type { Metadata } from "next";
+import { cache } from "react";
+
+// Shared by generateMetadata and the layout within one request.
+const getProfileMeta = cache(async (id: string) => {
+  if (!isUuid(id)) return null;
+  const [row] = await db
+    .select({ display_name: public_profiles.display_name, avatar_url: public_profiles.avatar_url })
+    .from(public_profiles)
+    .where(eq(public_profiles.id, id))
+    .limit(1);
+  return row ?? null;
+});
 
 export async function generateMetadata({
   params,
@@ -13,12 +28,7 @@ export async function generateMetadata({
   const { locale: rawLocale, id } = await params;
   const locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
   const dict = await getDictionary(locale);
-  const supabase = await createClient();
-  const { data: publicProfile } = await supabase
-    .from("public_profiles")
-    .select("display_name, avatar_url")
-    .eq("id", id)
-    .single();
+  const publicProfile = await getProfileMeta(id);
 
   const name = publicProfile?.display_name ?? dict.profile.metaNameFallbackGeneric;
   const description = dict.profile.layoutMetaDescription.replace("{name}", name);
@@ -52,12 +62,7 @@ export default async function Layout({
   const { locale: rawLocale, id } = await params;
   const locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
   const dict = await getDictionary(locale);
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("public_profiles")
-    .select("display_name")
-    .eq("id", id)
-    .single();
+  const data = await getProfileMeta(id);
   const name = data?.display_name ?? dict.profile.metaNameFallbackGeneric;
   const structuredData = {
     "@context": "https://schema.org",

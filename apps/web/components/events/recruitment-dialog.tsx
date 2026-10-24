@@ -13,7 +13,8 @@ import {
 import { toast } from "sonner";
 
 import { revalidateAllEventCaches } from "@/app/[locale]/events/actions";
-import { createClient } from "@/lib/supabase/client";
+import { deleteRow } from "@/lib/actions/rows";
+import { saveRecruitment } from "@/lib/actions/recruitment";
 import { useAuth } from "@/components/layout/auth-provider";
 import { RecruitmentOwnerPicker } from "@/components/events/recruitment-owner-picker";
 import { normalizeApplicationMethod } from "@/lib/recruitment-application-method";
@@ -277,7 +278,6 @@ export function RecruitmentDialog({
     }
 
     setSaving(true);
-    const supabase = createClient();
 
     // Clean up optional fields
     const am = normalizeApplicationMethod(formData.application_method);
@@ -306,54 +306,18 @@ export function RecruitmentDialog({
       privatePayload.required_documents
     );
 
-    let error;
-    if (recruitment) {
-      const { error: publicError } = await supabase
-        .from("competitions")
-        .update(publicPayload)
-        .eq("id", recruitment.id);
-      error = publicError;
-
-      if (!error) {
-        if (hasPrivatePayload) {
-          const { error: privateError } = await supabase
-            .from("competition_private_details")
-            .upsert({
-              competition_id: recruitment.id,
-              ...privatePayload,
-            });
-          error = privateError;
-        } else {
-          const { error: privateError } = await supabase
-            .from("competition_private_details")
-            .delete()
-            .eq("competition_id", recruitment.id);
-          error = privateError;
-        }
-      }
-    } else {
-      if (!user) {
-        toast.error(t.common.loginFirst);
-        setSaving(false);
-        return;
-      }
-      const { data, error: publicError } = await supabase
-        .from("competitions")
-        .insert({ ...publicPayload, event_id: eventId, created_by: user.id })
-        .select("id")
-        .single();
-      error = publicError;
-
-      if (!error && data?.id && hasPrivatePayload) {
-        const { error: privateError } = await supabase
-          .from("competition_private_details")
-          .insert({
-            competition_id: data.id,
-            ...privatePayload,
-          });
-        error = privateError;
-      }
+    if (!recruitment && !user) {
+      toast.error(t.common.loginFirst);
+      setSaving(false);
+      return;
     }
+    const result = await saveRecruitment({
+      id: recruitment?.id ?? null,
+      eventId,
+      public: publicPayload,
+      private: hasPrivatePayload ? privatePayload : null,
+    }).catch(() => null);
+    const error = result?.ok ? null : { message: result?.error ?? t.common.actionFailedRetry };
 
     setSaving(false);
     if (error) {
@@ -369,14 +333,10 @@ export function RecruitmentDialog({
   async function handleDelete() {
     if (!recruitment) return;
     setDeleting(true);
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("competitions")
-      .delete()
-      .eq("id", recruitment.id);
+    const result = await deleteRow("competitions", recruitment.id).catch(() => null);
     setDeleting(false);
-    if (error) {
-      toast.error(error.message);
+    if (!result?.ok) {
+      toast.error(result?.error ?? t.common.actionFailedRetry);
     } else {
       toast.success(t.common.deleted);
       onOpenChange(false);

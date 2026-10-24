@@ -1,6 +1,7 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
+import { deleteRow, insertRow, updateRow } from "@/lib/actions/rows";
+import { updateMyLinks, updateMyProfileField } from "@/lib/actions/profile";
 import type { ExternalResult, Profile } from "@winlab/db";
 import { uploadExternalResultImage, uploadResumePdf } from "@/lib/upload-image";
 import { useRouter } from "next/navigation";
@@ -37,7 +38,6 @@ export function useProfileEditor({
   refreshProfile,
 }: Options) {
   const router = useRouter();
-  const supabaseRef = useRef(createClient());
   const refreshProfileRef = useRef(refreshProfile);
   useEffect(() => {
     refreshProfileRef.current = refreshProfile;
@@ -72,23 +72,10 @@ export function useProfileEditor({
     async (field: string, value: string | null) => {
       if (!userId) return;
       setSavingField(field);
-      const sb = supabaseRef.current;
-      const { error: updateError } = await sb
-        .from("profiles")
-        .update({ [field]: value || null } as never)
-        .eq("id", userId);
-      if (updateError) { toast.error("儲存失敗"); setSavingField(null); return; }
-      const { data } = await sb
-        .from("profiles")
-        .select(
-          "id, display_name, avatar_url, bio, phone, linkedin, facebook, github, website, resume, social_links",
-        )
-        .eq("id", userId)
-        .single();
-      if (data) {
-        setProfile(data as Profile);
-        await refreshProfileRef.current();
-      }
+      const result = await updateMyProfileField(field, value || null).catch(() => null);
+      if (!result?.ok) { toast.error("儲存失敗"); setSavingField(null); return; }
+      setProfile(result.profile);
+      await refreshProfileRef.current();
       setSavingField(null);
     },
     [userId],
@@ -99,17 +86,8 @@ export function useProfileEditor({
       if (!userId) return;
       setSavingField("links");
       const filtered = next.filter((l) => l.trim() !== "");
-      const { error } = await supabaseRef.current
-        .from("profiles")
-        .update({
-          social_links: filtered,
-          linkedin: null,
-          facebook: null,
-          github: null,
-          website: null,
-        })
-        .eq("id", userId);
-      if (error) { toast.error("儲存失敗"); setSavingField(null); return; }
+      const result = await updateMyLinks(filtered).catch(() => null);
+      if (!result?.ok) { toast.error("儲存失敗"); setSavingField(null); return; }
       setLinks(filtered);
       setSavingField(null);
     },
@@ -184,7 +162,6 @@ export function useProfileEditor({
   const submitExternalResult = useCallback(async () => {
     if (!userId || !exForm.title.trim()) return;
     setExSaving(true);
-    const sb = supabaseRef.current;
     const payload = {
       title: exForm.title.trim(),
       description: exForm.description.trim() || null,
@@ -192,45 +169,32 @@ export function useProfileEditor({
       image: exForm.image.trim() || null,
     };
     if (exEditingId) {
-      const { data, error } = await sb
-        .from("external_results")
-        .update(payload)
-        .eq("id", exEditingId)
-        .select()
-        .single();
-      if (error) { toast.error("儲存失敗"); setExSaving(false); return; }
-      if (data)
-        setExternalResults((prev) =>
-          prev.map((r) =>
-            r.id === exEditingId ? (data as ExternalResult) : r,
-          ),
-        );
+      const result = await updateRow("external_results", exEditingId, payload).catch(() => null);
+      if (!result?.ok) { toast.error("儲存失敗"); setExSaving(false); return; }
+      setExternalResults((prev) =>
+        prev.map((r) =>
+          r.id === exEditingId ? (result.row as unknown as ExternalResult) : r,
+        ),
+      );
     } else {
-      const { data, error } = await sb
-        .from("external_results")
-        .insert({ user_id: userId, ...payload })
-        .select()
-        .single();
-      if (error) { toast.error("儲存失敗"); setExSaving(false); return; }
-      if (data)
-        setExternalResults((prev) => [data as ExternalResult, ...prev]);
+      const result = await insertRow("external_results", { user_id: userId, ...payload }).catch(() => null);
+      if (!result?.ok) { toast.error("儲存失敗"); setExSaving(false); return; }
+      setExternalResults((prev) => [result.row as unknown as ExternalResult, ...prev]);
     }
     setExSaving(false);
     setExDialogOpen(false);
   }, [exEditingId, exForm, userId]);
 
   const deleteExternalResult = useCallback(async (id: string) => {
-    const { error } = await supabaseRef.current.from("external_results").delete().eq("id", id);
-    if (error) { toast.error("刪除失敗"); return; }
+    const result = await deleteRow("external_results", id).catch(() => null);
+    if (!result?.ok) { toast.error("刪除失敗"); return; }
     setExternalResults((prev) => prev.filter((r) => r.id !== id));
   }, []);
 
   const createEventResult = useCallback(async (eventId: string, slug: string) => {
     if (!userId) return;
     setCreatingEventResultId(eventId);
-    const { data, error } = await supabaseRef.current
-      .from("results")
-      .insert({
+    const result = await insertRow("results", {
         title: "新成果",
         date: new Date().toISOString().slice(0, 10),
         header_image: null,
@@ -239,15 +203,13 @@ export function useProfileEditor({
         status: "draft",
         author_id: userId,
         event_id: eventId,
-      })
-      .select()
-      .single();
-    if (error) {
+    }).catch(() => null);
+    if (!result?.ok) {
       toast.error("建立成果失敗");
       setCreatingEventResultId(null);
       return;
     }
-    router.push(`/events/${slug}/results/${data.id}?mode=edit`);
+    router.push(`/events/${slug}/results/${result.row.id}?mode=edit`);
   }, [userId, router]);
 
   return {
