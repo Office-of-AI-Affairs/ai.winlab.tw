@@ -51,7 +51,10 @@ const nextConfig: NextConfig = {
   // assets — sharp's .node binary, resvg's wasm — from the traced functions,
   // 500-ing every route that imports `lib/seo/og-image` (#79).
   outputFileTracingRoot: path.resolve(process.cwd(), "..", ".."),
+  // Self-hosted on Carrel: `node server.js` from .next/standalone.
+  output: "standalone",
   transpilePackages: ["@winlab/db", "@winlab/domain"],
+  serverExternalPackages: ["@modelcontextprotocol/sdk"],
   images: {
     // Serve AVIF first, WebP fallback, then the original. Shaves the LCP
     // hero on mobile by ~30 % versus WebP-only at the same visual quality.
@@ -74,6 +77,14 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // The MCP server used to live on its own host; it is now /mcp here.
+      // 308 keeps the method, so POST /mcp from old client configs still works.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "mcp.ai.winlab.tw" }],
+        destination: "https://ai.winlab.tw/:path*",
+        permanent: true,
+      },
       { source: "/team/:id", destination: "/", permanent: true },
       { source: "/recruitment", destination: "/events", permanent: true },
       { source: "/recruitment/:id", destination: "/events", permanent: true },

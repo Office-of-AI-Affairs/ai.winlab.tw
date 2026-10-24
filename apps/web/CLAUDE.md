@@ -32,8 +32,8 @@
 - `bun run gen:types` — regenerates `packages/db/src/database.types.ts`
   from the live project. Requires `SUPABASE_ACCESS_TOKEN` in
   `apps/web/.env.local` (grab from <https://supabase.com/dashboard/account/tokens>).
-- Single source of truth lives in `packages/db` — both `apps/web` and
-  `apps/mcp` consume it via `@winlab/db`, no manual copy needed.
+- Single source of truth lives in `packages/db`; consume it via
+  `@winlab/db`, no manual copy needed.
 
 ## Architecture
 
@@ -171,7 +171,8 @@ Conventions:
     `revalidate` window even though RLS already allows reading it.
     `/events/[slug]` never needed this — that route is already `ƒ Dynamic`
     (see the `isr-page` skill), so scheduling reflects there immediately.
-  - **No scheduler currently calls that route.** It was a Vercel Cron
+  - **No scheduler currently calls that route.** It was a Vercel Cron when
+    the site ran on Vercel
     (`apps/web/vercel.json`, `*/5 * * * *`), but that cadence exceeds the
     Hobby plan's once-per-day limit and failed *every* production deployment
     from #77 (2026-08-24) until #78 (2026-09-06) — the site could not deploy
@@ -179,9 +180,9 @@ Conventions:
     schedule was invalidating nothing while blocking every deploy; `vercel.json`
     was deleted rather than downgraded to daily. Scheduled publishing still
     works (RLS is the boundary); the only cost is cached pages lagging go-live
-    by up to 1h. To restore sub-hour freshness: upgrade the Vercel plan and
-    re-add a `crons` entry, or call the route from an external scheduler with
-    the `CRON_SECRET` bearer token.
+    by up to 1h. To restore sub-hour freshness, call the route from a
+    scheduler (for example a systemd timer on the Carrel machine) with the
+    `CRON_SECRET` bearer token.
 - **Version history** — `content_revisions` (table_name, row_id, snapshot
   jsonb, changed_by, created_at). An `AFTER UPDATE` trigger on
   `announcements` + `results` snapshots the OLD row's editorial fields
@@ -210,7 +211,7 @@ Conventions:
   Cloudflare Worker 代理 + edge cache，省 Supabase egress
 - `toCdnUrl()` in `lib/cdn.ts` — 把 Supabase public storage URL 改寫成
   CDN domain；未設 `NEXT_PUBLIC_CDN_BASE_URL` 就是 no-op，可先 deploy
-  程式再從 Vercel 切流量
+  程式再切流量
 - Setup 步驟：`cdn-deploy` skill
 
 ## Pages
