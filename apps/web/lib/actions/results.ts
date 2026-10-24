@@ -41,16 +41,15 @@ export type ResultDraft = {
  * page shows around it. Uses the results read rule; coauthor rows of a
  * readable result are readable too.
  */
-export async function getResultDraft(id: string, eventSlug: string): Promise<ResultDraft | null> {
+export async function getResultDraft(id: string): Promise<ResultDraft | null> {
   const viewer = await getViewer();
   const result = await loadResult(id);
   if (!result || !(await ROW_POLICIES.results.read(viewer, result))) return null;
-  const [[event], [publisher], coauthors] = await Promise.all([
-    db
-      .select({ name: events.name, name_en: events.name_en })
-      .from(events)
-      .where(eq(events.slug, eventSlug))
-      .limit(1),
+  // The result's own event, and only if the viewer may read it.
+  const [[eventRow], [publisher], coauthors] = await Promise.all([
+    result.event_id
+      ? db.select().from(events).where(eq(events.id, result.event_id)).limit(1)
+      : Promise.resolve([]),
     result.author_id
       ? db
           .select({ id: public_profiles.id, display_name: public_profiles.display_name })
@@ -58,13 +57,20 @@ export async function getResultDraft(id: string, eventSlug: string): Promise<Res
           .where(eq(public_profiles.id, result.author_id))
           .limit(1)
       : Promise.resolve([]),
-    db
-      .select(coauthorColumns)
-      .from(result_coauthors)
-      .innerJoin(public_profiles, eq(public_profiles.id, result_coauthors.user_id))
-      .where(eq(result_coauthors.result_id, result.id)),
+    // Coauthor rows of a draft: its author and admins (RLS on result_coauthors).
+    result.status === "published" || mayEditCoauthors(viewer, result)
+      ? db
+          .select(coauthorColumns)
+          .from(result_coauthors)
+          .innerJoin(public_profiles, eq(public_profiles.id, result_coauthors.user_id))
+          .where(eq(result_coauthors.result_id, result.id))
+      : Promise.resolve([]),
   ]);
-  return { result, event: event ?? null, publisher: publisher ?? null, coauthors };
+  const event =
+    eventRow && (await ROW_POLICIES.events.read(viewer, eventRow))
+      ? { name: eventRow.name, name_en: eventRow.name_en }
+      : null;
+  return { result, event, publisher: publisher ?? null, coauthors };
 }
 
 /** Public profiles whose name contains `query`, for the coauthor picker. */

@@ -42,7 +42,7 @@ export function ResultDraftFallback({ slug, id }: { slug: string; id: string }) 
     if (isLoading || !user) return
     let cancelled = false
     void (async () => {
-      const draft = await getResultDraft(id, slug).catch(() => null)
+      const draft = await getResultDraft(id).catch(() => null)
       if (cancelled) return
       if (!draft) {
         setState({ kind: "missing" })

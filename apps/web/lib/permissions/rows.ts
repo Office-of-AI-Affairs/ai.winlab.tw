@@ -134,8 +134,10 @@ export const ROW_POLICIES = {
   },
   competitions: {
     table: competitions,
-    // Set by the server to the creator; the owner trigger reads it.
-    readOnly: ["created_by"],
+    // created_by is set by the server to the creator (the owner trigger
+    // reads it). Moving a recruitment to another event is an admin action
+    // (patchRecruitment), not a generic update.
+    readOnly: ["created_by", "event_id"],
     read: everyone,
     insert: adminOnly,
     update: competitionWrite,

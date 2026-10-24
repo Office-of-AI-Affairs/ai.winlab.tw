@@ -66,6 +66,7 @@ function publicValues(input: PublicFields) {
 
 function privateValues(input: PrivateFields | null) {
   if (!input) return null;
+  if (input.positions != null && !Array.isArray(input.positions)) throw new Error("positions must be a list");
   const values = {
     positions: Array.isArray(input.positions) && input.positions.length ? (input.positions as Json) : null,
     application_method: json(input.application_method),
@@ -90,7 +91,12 @@ export async function saveRecruitment(input: {
   if (!viewer || !input || typeof input !== "object") return FORBIDDEN;
   const isAdmin = viewer.role === "admin";
   const pub = publicValues(input.public ?? {});
-  const priv = privateValues(input.private);
+  let priv: ReturnType<typeof privateValues>;
+  try {
+    priv = privateValues(input.private);
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Invalid details" };
+  }
 
   if (input.id) {
     if (!isUuid(input.id)) return { ok: false, error: "Not found" };

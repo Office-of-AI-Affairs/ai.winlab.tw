@@ -43,7 +43,7 @@ export async function updateMyProfileField(field: string, value: string | null):
   if (!(TEXT_FIELDS as readonly string[]).includes(field)) return { ok: false, error: "Unknown field" };
   const clean = typeof value === "string" ? value.trim().slice(0, 5000) || null : null;
   // A resume is a path the upload route made under your own folder.
-  if (field === "resume" && clean !== null && !clean.startsWith(`${viewer.id}/`)) {
+  if (field === "resume" && clean !== null && (!clean.startsWith(`${viewer.id}/`) || clean.includes(".."))) {
     return { ok: false, error: "Invalid resume" };
   }
   await asUser(viewer.id, (tx) =>
