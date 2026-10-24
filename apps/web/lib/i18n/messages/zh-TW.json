@@ -779,6 +779,18 @@
       "loading": "載入中…",
       "title": "重設密碼",
       "subtitle": "設定您的新密碼"
+    },
+    "consent": {
+      "title": "允許 {name} 以你的身分操作？",
+      "host": "授權後，此應用程式會取得存取權並送往 {host}。",
+      "expired": "授權連結已失效",
+      "expiredHint": "請回到應用程式重新連線。",
+      "allow": "允許",
+      "allowing": "允許中…",
+      "deny": "拒絕",
+      "denying": "拒絕中…",
+      "failed": "沒有回應，請再試一次。",
+      "metaTitle": "授權應用程式｜人工智慧專責辦公室"
     }
   },
   "profile": {

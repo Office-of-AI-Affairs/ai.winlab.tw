@@ -1,60 +1,44 @@
+import { requireMcpAuth } from "@better-auth/mcp";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { auth, mcpResource } from "@/lib/auth";
+import { runAsViewer, viewerById } from "@/lib/auth/viewer";
 import { createMcpServer } from "@/lib/mcp/server";
-import { getBaseUrlFor, getProtectedResourceMetadataUrl } from "@/lib/mcp/auth/urls";
-import { verifyMcpToken } from "@/lib/mcp/auth/jwt";
-import { createClientWithToken } from "@/lib/mcp/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(request: Request) {
-  const authHeader = request.headers.get("authorization");
-  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+// The signing keys come from this same server over loopback, not through
+// the public gateway; Better Auth caches them for 5 minutes either way.
+const jwksUrl = `http://127.0.0.1:${process.env.PORT ?? 3000}/api/auth/jwks`;
 
-  if (!token) {
-    return Response.json(
-      { error: "Missing Authorization header" },
-      {
-        status: 401,
-        headers: {
-          "WWW-Authenticate": `Bearer resource_metadata="${getProtectedResourceMetadataUrl(getBaseUrlFor(request))}"`,
-        },
-      }
-    );
-  }
+// Every other /mcp error is JSON-RPC, so a refusal is too.
+const refuse = (status: number, message: string) =>
+  Response.json({ jsonrpc: "2.0", error: { code: -32000, message }, id: null }, { status });
 
-  const claims = await verifyMcpToken(token);
-  if (!claims) {
-    return Response.json(
-      { error: "Invalid or expired token" },
-      {
-        status: 401,
-        headers: {
-          "WWW-Authenticate": `Bearer resource_metadata="${getProtectedResourceMetadataUrl(getBaseUrlFor(request))}"`,
-        },
-      }
-    );
-  }
-
-  const supabase = createClientWithToken(token);
-  const server = createMcpServer(supabase, claims.sub);
-  const transport = new WebStandardStreamableHTTPServerTransport({
-    sessionIdGenerator: undefined,
-  });
-  await server.connect(transport);
-
-  return transport.handleRequest(request);
-}
+// Better Auth checks the bearer token (JWKS signature, issuer, audience,
+// expiry) and answers 401 with the RFC 9728 challenge. The token's sub is
+// the user every tool acts as, with the same permission checks as the site.
+export const POST = requireMcpAuth(
+  auth,
+  async (request, claims) => {
+    // A client_credentials token names the client, not a user.
+    const clientId = String(claims.azp ?? claims.client_id ?? "");
+    if (!claims.sub || claims.sub === clientId) return refuse(403, "not a user token");
+    const viewer = await viewerById(claims.sub);
+    if (!viewer) return refuse(403, "account no longer exists");
+    return runAsViewer(viewer, async () => {
+      const server = createMcpServer(viewer);
+      const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+      await server.connect(transport);
+      return transport.handleRequest(request);
+    });
+  },
+  { resource: mcpResource, jwksUrl },
+);
 
 export async function GET() {
-  return Response.json(
-    { error: "SSE not supported in stateless mode" },
-    { status: 405 }
-  );
+  return Response.json({ error: "SSE not supported in stateless mode" }, { status: 405 });
 }
 
 export async function DELETE() {
-  return Response.json(
-    { error: "Sessions not supported in stateless mode" },
-    { status: 405 }
-  );
+  return Response.json({ error: "Sessions not supported in stateless mode" }, { status: 405 });
 }

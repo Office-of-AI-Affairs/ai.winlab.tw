@@ -1,16 +1,34 @@
 import "server-only";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { profiles } from "@/lib/db/schema";
+import { profiles, user as userTable } from "@/lib/db/schema";
 
 export type Role = "admin" | "user" | "vendor" | "member" | "editor";
 
 /** The signed-in person, as every permission check sees them. */
 export type Viewer = { id: string; email: string; role: Role };
+
+// An MCP request has no session cookie: the token names the user, and the
+// tools run inside runAsViewer so every permission check sees that user.
+const tokenViewer = new AsyncLocalStorage<Viewer>();
+
+export const runAsViewer = <T>(viewer: Viewer, fn: () => T): T => tokenViewer.run(viewer, fn);
+
+/** The viewer a user id stands for, with the role read now; null if the account is gone. */
+export async function viewerById(userId: string): Promise<Viewer | null> {
+  const [row] = await db
+    .select({ role: profiles.role, email: userTable.email })
+    .from(profiles)
+    .innerJoin(userTable, eq(userTable.id, profiles.id))
+    .where(eq(profiles.id, userId))
+    .limit(1);
+  return row ? { id: userId, email: row.email, role: row.role as Role } : null;
+}
 
 /**
  * The signed-in viewer, or null. Reads cookies, so server only; once per
@@ -18,6 +36,8 @@ export type Viewer = { id: string; email: string; role: Role };
  * a session revoked by a password reset stops working at once.
  */
 export const getViewer = cache(async (): Promise<Viewer | null> => {
+  const fromToken = tokenViewer.getStore();
+  if (fromToken) return fromToken;
   const session = await auth.api.getSession({
     headers: await headers(),
     query: { disableCookieCache: true },

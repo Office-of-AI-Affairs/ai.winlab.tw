@@ -1,91 +1,28 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
+import { updateMyProfileField } from "@/lib/actions/profile";
+import type { Viewer } from "@/lib/auth/viewer";
+import { getProfilePageData } from "@/lib/data/profile";
+import { db } from "@/lib/db";
+import { public_profiles } from "@/lib/db/schema";
+import { signedResumeUrl } from "@/lib/files/signed";
+import { defined, error, page, success } from "@/lib/mcp/tools/common";
 
-import { composeProfile } from "@winlab/domain";
-import type { Profile, PublicProfile } from "@winlab/db";
-
-const RESUME_BUCKET = "resumes";
-const RESUME_SIGNED_TTL_SEC = 3600;
-
-// profiles.resume stores an object path (e.g. "<uid>/xxx.pdf") since the
-// migration to the private resumes bucket. Pre-migration rows may still
-// carry an absolute URL — keep those as-is for backward compat.
-async function resolveResumeUrl(
-  supabase: SupabaseClient,
-  resume: string | null | undefined,
-): Promise<string | null> {
-  if (!resume) return null;
-  if (resume.startsWith("http://") || resume.startsWith("https://")) return resume;
-  const { data } = await supabase.storage
-    .from(RESUME_BUCKET)
-    .createSignedUrl(resume, RESUME_SIGNED_TTL_SEC);
-  return data?.signedUrl ?? null;
-}
-
-function success(data: unknown) {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify({ success: true, data }),
-      },
-    ],
-  };
-}
-
-function error(message: string) {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify({ success: false, error: message }),
-      },
-    ],
-    isError: true,
-  };
-}
-
-export function registerProfileTools(
-  server: McpServer,
-  supabase: SupabaseClient,
-  userId: string
-) {
-  // --- get_my_profile ---
-  server.tool("get_my_profile", {}, async () => {
-    const [publicRes, privateRes] = await Promise.all([
-      supabase
-        .from("public_profiles")
-        .select("id, created_at, updated_at, display_name")
-        .eq("id", userId)
-        .single(),
-      supabase
-        .from("profiles")
-        .select("id, created_at, updated_at, display_name, avatar_url, role, bio, phone, linkedin, facebook, github, website, resume, social_links")
-        .eq("id", userId)
-        .single(),
-    ]);
-
-    if (publicRes.error) {
-      return error(publicRes.error.message);
-    }
-
-    if (privateRes.error) {
-      return error(privateRes.error.message);
-    }
-
-    const privateProfile = privateRes.data as Profile;
-    const resumeUrl = await resolveResumeUrl(supabase, privateProfile.resume);
-
-    const data = composeProfile(
-      publicRes.data as PublicProfile,
-      { ...privateProfile, resume: resumeUrl }
-    );
-
-    return success(data);
+/** Your profile, with the resume as a link valid for an hour. */
+async function myProfile(viewer: Viewer) {
+  const data = await getProfilePageData(viewer.id, viewer);
+  if (!data) return error("Not found");
+  const resume = data.profile.resume;
+  return success({
+    ...data.profile,
+    resume: resume && !/^https?:\/\//.test(resume) ? signedResumeUrl(resume) : resume,
   });
+}
 
-  // --- update_my_profile ---
+export function registerProfileTools(server: McpServer, viewer: Viewer) {
+  server.tool("get_my_profile", {}, async () => myProfile(viewer));
+
   server.tool(
     "update_my_profile",
     {
@@ -97,108 +34,38 @@ export function registerProfileTools(
       website: z.string().optional(),
       facebook: z.string().optional(),
     },
-    async ({ display_name, bio, phone, linkedin, github, website, facebook }) => {
-      const publicUpdates: Record<string, unknown> = {};
-      const privateUpdates: Record<string, unknown> = {};
-
-      if (display_name !== undefined) {
-        publicUpdates.display_name = display_name;
-        privateUpdates.display_name = display_name;
+    async (args) => {
+      const updates = Object.entries(defined(args));
+      if (updates.length === 0) return error("No fields to update");
+      for (const [field, value] of updates) {
+        const result = await updateMyProfileField(field, value ?? null);
+        if (!result.ok) return error(result.error);
       }
-      if (bio !== undefined) privateUpdates.bio = bio;
-      if (phone !== undefined) privateUpdates.phone = phone;
-      if (linkedin !== undefined) privateUpdates.linkedin = linkedin;
-      if (github !== undefined) privateUpdates.github = github;
-      if (website !== undefined) privateUpdates.website = website;
-      if (facebook !== undefined) privateUpdates.facebook = facebook;
-
-      if (Object.keys(publicUpdates).length === 0 && Object.keys(privateUpdates).length === 0) {
-        return error("No fields to update");
-      }
-
-      if (Object.keys(publicUpdates).length > 0) {
-        const { error: publicError } = await supabase
-          .from("public_profiles")
-          .update(publicUpdates)
-          .eq("id", userId);
-
-        if (publicError) {
-          return error(publicError.message);
-        }
-      }
-
-      if (Object.keys(privateUpdates).length > 0) {
-        const { error: privateError } = await supabase
-          .from("profiles")
-          .update(privateUpdates)
-          .eq("id", userId);
-
-        if (privateError) {
-          return error(privateError.message);
-        }
-      }
-
-      const [publicRes, privateRes] = await Promise.all([
-        supabase
-          .from("public_profiles")
-          .select("id, created_at, updated_at, display_name")
-          .eq("id", userId)
-          .single(),
-        supabase
-          .from("profiles")
-          .select("id, created_at, updated_at, display_name, avatar_url, role, bio, phone, linkedin, facebook, github, website, resume, social_links")
-          .eq("id", userId)
-          .single(),
-      ]);
-
-      if (publicRes.error) {
-        return error(publicRes.error.message);
-      }
-
-      if (privateRes.error) {
-        return error(privateRes.error.message);
-      }
-
-      const privateProfile = privateRes.data as Profile;
-      const resumeUrl = await resolveResumeUrl(supabase, privateProfile.resume);
-
-      return success(
-        composeProfile(publicRes.data as PublicProfile, { ...privateProfile, resume: resumeUrl })
-      );
-    }
+      return myProfile(viewer);
+    },
   );
 
-  // --- list_profiles ---
-  // Reads from `public_profiles` rather than `profiles` because the latter's
-  // SELECT policy was tightened 2026-05-18 to self / admin / recruitment_owner
-  // and would otherwise return an empty list for any non-admin caller asking
-  // for a directory listing. `public_profiles` is trigger-maintained and
-  // mirrors display fields + role.
+  // public_profiles: the directory everyone may read.
   server.tool(
     "list_profiles",
     {
-      role: z.enum(["admin", "user", "vendor", "member"]).optional(),
+      role: z.enum(["admin", "user", "vendor", "member", "editor"]).optional(),
       limit: z.number().int().positive().optional(),
       offset: z.number().int().nonnegative().optional(),
     },
     async ({ role, limit, offset }) => {
-      let query = supabase
-        .from("public_profiles")
-        .select("id, display_name, avatar_url, role, created_at")
-        .order("created_at", { ascending: false })
-        .range(offset ?? 0, (offset ?? 0) + (limit ?? 20) - 1);
-
-      if (role) {
-        query = query.eq("role", role);
-      }
-
-      const { data, error: dbError } = await query;
-
-      if (dbError) {
-        return error(dbError.message);
-      }
-
-      return success(data ?? []);
-    }
+      const rows = await db
+        .select({
+          id: public_profiles.id,
+          display_name: public_profiles.display_name,
+          avatar_url: public_profiles.avatar_url,
+          role: public_profiles.role,
+          created_at: public_profiles.created_at,
+        })
+        .from(public_profiles)
+        .where(role ? eq(public_profiles.role, role) : undefined)
+        .orderBy(desc(public_profiles.created_at));
+      return success(page(rows, null, limit, offset));
+    },
   );
 }
