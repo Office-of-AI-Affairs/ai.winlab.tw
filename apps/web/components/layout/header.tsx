@@ -136,15 +136,15 @@ export function Header({
 
         <nav className="hidden min-[1152px]:flex items-center gap-8 text-lg">
           {staticNavItems.map((item) => (
-            <AppLink key={item.href} href={item.href} className={`nav-bracket inline-block ${isActive(item.href) ? "nav-bracket-active" : ""}`}>
+            <AppLink key={item.href} href={item.href} prefetch className={`nav-bracket inline-block ${isActive(item.href) ? "nav-bracket-active" : ""}`}>
               {item.label}
             </AppLink>
           ))}
-          <AppLink href="/events" className={`nav-bracket inline-block ${isActive("/events") ? "nav-bracket-active" : ""}`}>
+          <AppLink href="/events" prefetch className={`nav-bracket inline-block ${isActive("/events") ? "nav-bracket-active" : ""}`}>
             {t.nav.events}
           </AppLink>
           {pinnedEvents.map((event) => (
-            <AppLink key={event.slug} href={`/events/${event.slug}`} className={`nav-bracket inline-block ${isActive(`/events/${event.slug}`) ? "nav-bracket-active" : ""}`}>
+            <AppLink key={event.slug} href={`/events/${event.slug}`} prefetch className={`nav-bracket inline-block ${isActive(`/events/${event.slug}`) ? "nav-bracket-active" : ""}`}>
               {localizedField(event, "name", locale).value}
             </AppLink>
           ))}
@@ -181,6 +181,7 @@ export function Header({
           <div className="flex flex-col text-lg font-bold">
             {staticNavItems.map((item) => (
               <AppLink
+                prefetch
                 key={item.href}
                 href={item.href}
                 className={`rounded-lg px-3 py-2 hover:bg-black/10 ${isActive(item.href) ? "bg-black/15" : ""}`}
@@ -190,6 +191,7 @@ export function Header({
               </AppLink>
             ))}
             <AppLink
+              prefetch
               href="/events"
               className={`rounded-lg px-3 py-2 hover:bg-black/10 ${isActive("/events") ? "bg-black/15" : ""}`}
               onClick={() => setOpen(false)}
@@ -198,6 +200,7 @@ export function Header({
             </AppLink>
             {pinnedEvents.map((event) => (
               <AppLink
+                prefetch
                 key={event.slug}
                 href={`/events/${event.slug}`}
                 className={`rounded-lg px-3 py-2 hover:bg-black/10 ${isActive(`/events/${event.slug}`) ? "bg-black/15" : ""}`}
