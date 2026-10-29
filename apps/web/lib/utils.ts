@@ -35,3 +35,10 @@ export function normalizeMultilineText(text: string | null | undefined): string 
     .replace(/\\r/g, "\n")
     .replace(/\\t/g, "\t")
 }
+
+// Drops a row's article body for list payloads, where cards never show it.
+export function omitContent<T extends { content: unknown }>(row: T): Omit<T, "content"> {
+  const copy: Partial<T> = { ...row }
+  delete copy.content
+  return copy as Omit<T, "content">
+}

@@ -20,7 +20,8 @@ import Image from "next/image";
 
 export type CoauthorMeta = { id: string; name: string };
 
-export type ResultWithMeta = Result & {
+// Cards never show the article body, so lists leave it out of the payload.
+export type ResultWithMeta = Omit<Result, "content"> & {
   author_name?: string | null;
   coauthors?: CoauthorMeta[];
 };

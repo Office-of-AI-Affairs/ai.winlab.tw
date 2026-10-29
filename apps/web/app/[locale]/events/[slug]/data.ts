@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { omitContent } from "@/lib/utils";
 import { liveAnnouncement } from "@/lib/db/filters";
 import {
   announcements,
@@ -135,7 +136,7 @@ export async function getEventPageData(
 
   // The Result overlay narrows content and summary (see packages/db).
   const results: ResultWithMeta[] = (rawResults as Result[]).map((r) => ({
-    ...r,
+    ...omitContent(r),
     author_name: r.author_id ? profileMap[r.author_id] ?? null : null,
     coauthors: coauthorsByResult.get(r.id) ?? [],
   }));
