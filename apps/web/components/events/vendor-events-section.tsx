@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/components/layout/auth-provider";
 import { listMyRecruitments, type OwnedRecruitment } from "@/lib/actions/recruitment";
 import { useT } from "@/lib/i18n/locale-provider";
+import { isExternalImage } from "@/lib/utils";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -65,8 +66,9 @@ export function VendorEventsSection() {
                       src={item.image}
                       alt={item.title}
                       fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 384px"
                       className="object-cover"
-                      unoptimized
+                      unoptimized={isExternalImage(item.image)}
                     />
                   ) : (
                     <div className="w-full h-full bg-primary" />

@@ -50,9 +50,10 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@winlab/db", "@winlab/domain"],
   serverExternalPackages: ["@modelcontextprotocol/sdk"],
   images: {
-    // Serve AVIF first, WebP fallback, then the original. Shaves the LCP
-    // hero on mobile by ~30 % versus WebP-only at the same visual quality.
-    formats: ["image/avif", "image/webp"],
+    // WebP only. On the 2-vCPU machine a cold AVIF encode takes 1 to 2.4 s
+    // per image versus 0.16 s for WebP, and a page of cold images queues
+    // behind it. AVIF saves about 15 KB per image, not worth the wait.
+    formats: ["image/webp"],
     // Uploads are served from /files on this site. Rows written through MCP
     // may hold the absolute URL of the same files.
     remotePatterns: [

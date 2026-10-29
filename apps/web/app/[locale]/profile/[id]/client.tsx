@@ -555,6 +555,7 @@ export function ProfilePageClient({
                                   src={result.header_image!}
                                   alt={result.title}
                                   fill
+                                  sizes="(max-width: 1024px) 100vw, 576px"
                                   className="object-cover"
                                   unoptimized={isExternalImage(result.header_image)}
                                 />
@@ -588,6 +589,7 @@ export function ProfilePageClient({
                                   src={result.header_image!}
                                   alt={result.title}
                                   fill
+                                  sizes="(max-width: 1024px) 100vw, 576px"
                                   className="object-cover"
                                   unoptimized={isExternalImage(result.header_image)}
                                 />

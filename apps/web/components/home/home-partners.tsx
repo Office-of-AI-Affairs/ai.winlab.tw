@@ -36,6 +36,7 @@ export async function HomePartners({
                   src={resolveImageSrc(partner.image)}
                   alt={partner.name}
                   fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 192px"
                   className="object-contain p-3 grayscale hover:grayscale-0 transition-[filter] duration-200"
                   unoptimized={isExternalImage(partner.image)}
                 />
