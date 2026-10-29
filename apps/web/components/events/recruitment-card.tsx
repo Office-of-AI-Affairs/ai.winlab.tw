@@ -21,9 +21,10 @@ type RecruitmentCardProps = {
   isAdmin?: boolean;
   onEdit?: () => void;
   onPinToggle?: (id: string, pinned: boolean) => void;
+  priority?: boolean;
 };
 
-export function RecruitmentCard({ item, href, isAdmin, onEdit, onPinToggle }: RecruitmentCardProps) {
+export function RecruitmentCard({ item, href, isAdmin, onEdit, onPinToggle, priority }: RecruitmentCardProps) {
   const t = useT();
   const isExpired = item.end_date ? new Date(item.end_date) < new Date() : false;
 
@@ -36,6 +37,7 @@ export function RecruitmentCard({ item, href, isAdmin, onEdit, onPinToggle }: Re
             alt={item.title}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 384px"
+            priority={priority}
             className="object-cover"
             unoptimized={isExternalImage(item.image)}
           />

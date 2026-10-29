@@ -439,7 +439,7 @@ export function EventDetailClient({
                 <div className="text-center py-12 text-muted-foreground">{t.events.search.noResults}</div>
               ) : (
                 <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
-                  {displayedResults.map((item) => {
+                  {displayedResults.map((item, index) => {
                     const isOwner = userId === item.author_id;
                     const showStatus = isAdmin || isOwner;
                     return (
@@ -455,6 +455,7 @@ export function EventDetailClient({
                         showStatus={showStatus}
                         isAdmin={isAdmin}
                         onPinToggle={isAdmin ? (id, pinned) => togglePin("results", id, pinned) : undefined}
+                        priority={index < 3}
                       />
                     );
                   })}
@@ -481,7 +482,7 @@ export function EventDetailClient({
                 <div className="text-center py-12 text-muted-foreground">{t.events.search.noRecruitment}</div>
               ) : (
                 <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
-                  {displayedRecruitments.map((item) => (
+                  {displayedRecruitments.map((item, index) => (
                     <RecruitmentCard
                       key={item.id}
                       item={item}
@@ -489,6 +490,7 @@ export function EventDetailClient({
                       isAdmin={isAdmin}
                       onPinToggle={isAdmin ? (id, pinned) => togglePin("competitions", id, pinned) : undefined}
                       onEdit={(isAdmin || ownedRecruitmentIds.has(item.id)) ? () => openEditSheet(item) : undefined}
+                      priority={index < 3}
                     />
                   ))}
                 </div>
