@@ -14,21 +14,12 @@ import { LocaleProvider } from "@/lib/i18n/locale-provider";
 import { ogAlternateLocales, ogLocale } from "@/lib/i18n/seo";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
-import { Instrument_Serif, Noto_Sans, Noto_Sans_Mono, Noto_Sans_TC } from "next/font/google";
+import { Instrument_Serif, Noto_Sans, Noto_Sans_Mono } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 const notoSans = Noto_Sans({
   variable: "--font-noto-sans",
   subsets: ["latin"],
-});
-
-// Chinese glyphs. Google splits CJK fonts into ~100 unicode-range slices
-// with no subset names, so preload is off; the browser fetches only the
-// slices a page uses. Self-hosted: no render-blocking Google stylesheet.
-const notoSansTC = Noto_Sans_TC({
-  variable: "--font-noto-sans-tc",
-  weight: ["400", "500", "700"],
-  preload: false,
 });
 
 const notoSansMono = Noto_Sans_Mono({
@@ -124,7 +115,7 @@ export default async function RootLayout({
           href={`${localePrefix(locale)}/announcement/rss.xml`}
         />
       </head>
-      <body className={`${notoSans.variable} ${notoSansTC.variable} ${notoSansMono.variable} ${instrumentSerif.variable} antialiased`}>
+      <body className={`${notoSans.variable} ${notoSansMono.variable} ${instrumentSerif.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <LocaleProvider locale={locale} dict={dict}>
             <NuqsAdapter>
