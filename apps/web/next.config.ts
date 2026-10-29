@@ -49,6 +49,11 @@ const nextConfig: NextConfig = {
   output: "standalone",
   transpilePackages: ["@winlab/db", "@winlab/domain"],
   serverExternalPackages: ["@modelcontextprotocol/sdk"],
+  experimental: {
+    // The stylesheet is 18 KB gzipped. Inlining it into the HTML saves the
+    // round trip that held first paint until the CSS arrived.
+    inlineCss: true,
+  },
   images: {
     // WebP only. On the 2-vCPU machine a cold AVIF encode takes 1 to 2.4 s
     // per image versus 0.16 s for WebP, and a page of cold images queues
