@@ -33,6 +33,7 @@ export function ResultCard({
   isAdmin,
   showStatus,
   onPinToggle,
+  priority,
 }: {
   item: ResultWithMeta;
   href: string;
@@ -40,6 +41,7 @@ export function ResultCard({
   isAdmin?: boolean;
   showStatus?: boolean;
   onPinToggle?: (id: string, pinned: boolean) => void;
+  priority?: boolean;
 }) {
   const t = useT();
   const locale = useLocale();
@@ -55,6 +57,7 @@ export function ResultCard({
             alt={title}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 384px"
+            priority={priority}
             className="object-cover"
             unoptimized={isExternalImage(item.header_image)}
           />
