@@ -316,6 +316,7 @@ export function ResultArticleClient({
                   src={resolveImageSrc(result.header_image)}
                   alt={result.title}
                   fill
+                  sizes="160px"
                   className="object-cover"
                   unoptimized={isExternalImage(result.header_image)}
                 />

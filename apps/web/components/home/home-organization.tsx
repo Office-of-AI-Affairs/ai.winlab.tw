@@ -31,6 +31,7 @@ export async function HomeOrganization({ t }: { t: Dictionary["home"] }) {
                     src={resolveImageSrc(member.image)}
                     alt={member.name}
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 384px"
                     className="object-cover"
                     unoptimized={isExternalImage(member.image)}
                   />

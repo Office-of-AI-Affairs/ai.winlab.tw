@@ -72,6 +72,7 @@ function SortableSlideCard({
             src={resolveImageSrc(slide.image)}
             alt={slide.title}
             fill
+            sizes="(max-width: 640px) 100vw, 192px"
             className="object-cover"
             unoptimized={isExternalImage(slide.image)}
           />

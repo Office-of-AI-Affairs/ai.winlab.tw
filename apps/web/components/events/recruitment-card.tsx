@@ -35,6 +35,7 @@ export function RecruitmentCard({ item, href, isAdmin, onEdit, onPinToggle }: Re
             src={resolveImageSrc(item.image)}
             alt={item.title}
             fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 384px"
             className="object-cover"
             unoptimized={isExternalImage(item.image)}
           />
