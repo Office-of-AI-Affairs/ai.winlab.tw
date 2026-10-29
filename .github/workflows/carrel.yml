@@ -43,11 +43,6 @@ jobs:
           cp -r .next/static .next/standalone/apps/web/.next/static
           cp -r public .next/standalone/apps/web/public
           cp -r drizzle .next/standalone/apps/web/drizzle
-          # Optimized images outlive a release: without this every deploy
-          # empties the cache and each image is encoded again on first view.
-          mkdir -p .next/standalone/apps/web/.next/cache
-          rm -rf .next/standalone/apps/web/.next/cache/images
-          ln -s /srv/apps/ai/image-cache .next/standalone/apps/web/.next/cache/images
           tar czf "$RUNNER_TEMP/ai.tar.gz" -C .next/standalone .
 
       - uses: NYCU-WinLab/carrel-deploy@v1

@@ -57,6 +57,8 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     const { migrateDatabase } = await import("@/lib/db/migrate");
     await migrateDatabase();
+    const { linkImageCacheDir } = await import("@/lib/images/cache-dir");
+    await linkImageCacheDir();
   }
 
   const endpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
