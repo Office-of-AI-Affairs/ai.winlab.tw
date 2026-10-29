@@ -31,8 +31,8 @@ standalone server (`node apps/web/server.js`, port 3000).
 - Postgres 18 runs on the same machine from `/opt/ai-db/compose.yaml`
   (copy of `apps/web/infra/postgres/compose.yaml`), bound to 127.0.0.1.
   The app migrates it on boot. Daily dump: `apps/web/infra/postgres/backup.sh`.
-- Optimized images are cached in `/srv/apps/ai/image-cache`, which every
-  release links as `.next/cache/images`, so a deploy keeps the cache.
+- Optimized images are cached in `IMAGE_CACHE_DIR` (`/srv/apps/ai/image-cache`).
+  The app links `.next/cache/images` to it on boot, so a deploy keeps the cache.
 - `mcp.ai.winlab.tw` points at the same machine and 308-redirects every
   path to `ai.winlab.tw` (`next.config.ts`).
 
