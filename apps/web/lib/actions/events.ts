@@ -14,6 +14,7 @@ import {
   results,
 } from "@/lib/db/schema";
 import { isUuid } from "@/lib/slug";
+import { omitContent } from "@/lib/utils";
 import type { Announcement, RecruitmentPrivateDetails, Result } from "@winlab/db";
 
 export type Done = { ok: true } | { ok: false; error: string };
@@ -150,7 +151,7 @@ async function withAuthorsAndCoauthors(rows: Result[]): Promise<ResultWithMeta[]
     coauthors.set(row.result_id, list);
   }
   return rows.map((r) => ({
-    ...r,
+    ...omitContent(r),
     author_name: r.author_id ? nameMap[r.author_id] ?? null : null,
     coauthors: coauthors.get(r.id) ?? [],
   }));
