@@ -154,6 +154,13 @@ export function EventDetailClient({
   const [privateFetch, setPrivateFetch] = useState<Map<string, RecruitmentPrivateDetails> | null>(null);
   const [ownedRecruitmentIds, setOwnedRecruitmentIds] = useState<Set<string>>(new Set());
 
+  // The server action's response refreshes the router (Better Auth renews
+  // its session cookie), which hands this component a new
+  // publishedRecruitments array. Keying the effect on the ids, not the
+  // array, stops that from re-running the action in a loop: 300+ calls per
+  // 10 s, and Safari's replaceState limit turns it into the error page.
+  const recruitmentIdsKey = publishedRecruitments.map((r) => r.id).join(",");
+
   // Drafts and editable recruitment details for the signed-in viewer, from
   // one server call that applies the permission rules. No reset on !userId —
   // the memos below guard on length, so signed-out viewers see published-only.
@@ -163,7 +170,7 @@ export function EventDetailClient({
     (async () => {
       const data = await getEventViewerData(
         event.id,
-        publishedRecruitments.map((r) => r.id),
+        recruitmentIdsKey ? recruitmentIdsKey.split(",") : [],
       ).catch(() => null);
       if (cancelled || !data) return;
       setDraftAnnouncements(data.draftAnnouncements);
@@ -172,7 +179,7 @@ export function EventDetailClient({
       setPrivateFetch(new Map(data.privateDetails.map((row) => [row.competition_id, row])));
     })();
     return () => { cancelled = true; };
-  }, [event.id, isAdmin, publishedRecruitments, userId]);
+  }, [event.id, isAdmin, recruitmentIdsKey, userId]);
 
   // Derived view of privateFetch that re-applies the permission gate every
   // render. If a non-admin loses ownership of a recruitment, the cached
